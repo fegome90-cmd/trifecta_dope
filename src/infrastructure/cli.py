@@ -12,7 +12,12 @@ from src.application.use_cases import (
     CreateTrifectaUseCase,
     ValidateTrifectaUseCase,
     RefreshPrimeUseCase,
+    BuildContextPackUseCase,
+    MacroLoadUseCase,
+    ValidateContextPackUseCase,
+    AutopilotUseCase,
 )
+from src.application.context_service import ContextService
 from src.infrastructure.templates import TemplateRenderer
 from src.infrastructure.file_system import FileSystemAdapter
 
@@ -20,6 +25,9 @@ app = typer.Typer(
     name="trifecta",
     help="Generate and manage Trifecta documentation packs for code segments.",
 )
+
+ctx_app = typer.Typer(help="Manage Trifecta Context Packs (ctx.search, ctx.get).")
+app.add_typer(ctx_app, name="ctx")
 
 # Resolve repo root (parent of trifecta_dope)
 REPO_ROOT = Path(__file__).parent.parent.parent.parent.resolve()
@@ -236,7 +244,7 @@ def validate(
 
     # Validate path exists
     try:
-        target_path = _validate_path(path, must_exist=True)
+        target_path = _validate_path(segment, must_exist=True)
     except PathValidationError as e:
         typer.echo(str(e), err=True)
         raise typer.Exit(1)
@@ -285,7 +293,7 @@ def refresh_prime(
 
     # Validate paths
     try:
-        target_path = _validate_path(path, must_exist=True)
+        target_path = _validate_path(segment, must_exist=True)
         scan_path = _validate_path(scan_docs, must_exist=True)
     except PathValidationError as e:
         typer.echo(str(e), err=True)
@@ -300,6 +308,159 @@ def refresh_prime(
         raise typer.Exit(1)
     except (PermissionError, PathValidationError) as e:
         typer.echo(_format_error(e, "Path Error"), err=True)
+        raise typer.Exit(1)
+
+
+@app.command()
+def load(
+    segment: str = typer.Option(..., "--segment", "-s", "--path", "-p", help="Segment name or path"),
+    task: str = typer.Option(..., "--task", "-t", help="Task description for context selection"),
+    mode: str = typer.Option("pcc", "--mode", "-m", help="Mode: pcc (Plan A) or fullfiles (Plan B)"),
+) -> None:
+    """Macro command to load relevant context for a specific task.
+    
+    If context_pack.json exists, it uses Programmatic Context Calling (Plan A).
+    Otherwise, it falls back to heuristic file selection (Plan B).
+    """
+    _, file_system = _get_dependencies()
+    use_case = MacroLoadUseCase(file_system)
+    
+    try:
+        target_path = _validate_path(segment, must_exist=True)
+        output = use_case.execute(target_path, task, mode=mode)
+        typer.echo(output)
+    except Exception as e:
+        typer.echo(_format_error(e, "Load Error"), err=True)
+        raise typer.Exit(1)
+
+
+@ctx_app.command("build")
+def ctx_build(
+    segment: str = typer.Option(..., "--segment", "-s", "--path", "-p", help="Segment name or path"),
+) -> None:
+    """Build a Context Pack (context_pack.json) for a segment."""
+    _, file_system = _get_dependencies()
+    use_case = BuildContextPackUseCase(file_system)
+    
+    try:
+        target_path = _validate_path(segment, must_exist=True)
+        pack = use_case.execute(target_path)
+        typer.echo(f"✅ Context Pack built: {target_path}/_ctx/context_pack.json")
+        typer.echo(f"   - Chunks: {len(pack.chunks)}")
+        typer.echo(f"   - Created: {pack.created_at}")
+    except Exception as e:
+        typer.echo(_format_error(e, "Context Build Error"), err=True)
+        raise typer.Exit(1)
+
+
+@ctx_app.command("search")
+def ctx_search(
+    segment: str = typer.Option(..., "--segment", "-s", "--path", "-p", help="Segment name or path"),
+    query: str = typer.Option(..., "--query", "-q", help="Search query"),
+    k: int = typer.Option(5, "--limit", "-k", help="Max results"),
+    doc: Optional[str] = typer.Option(None, "--doc", help="Filter by doc type (skill, agent, session, prime)"),
+) -> None:
+    """Search for relevant chunks in the Context Pack."""
+    try:
+        target_path = _validate_path(segment, must_exist=True)
+        service = ContextService(target_path)
+        result = service.search(query, k=k, doc_filter=doc)
+        
+        if not result.hits:
+            typer.echo("🔍 No hits found.")
+            return
+
+        typer.echo(f"🔍 Search results for: '{query}'" + (f" (filter: {doc})" if doc else ""))
+        for hit in result.hits:
+            typer.echo(f"  [{hit.id}] (score: {hit.score:.2f}) {hit.source_path}")
+            typer.echo(f"    Preview: {hit.preview}")
+            typer.echo("")
+    except Exception as e:
+        typer.echo(_format_error(e, "Context Search Error"), err=True)
+        raise typer.Exit(1)
+
+
+@ctx_app.command("sync")
+def ctx_sync(
+    segment: str = typer.Option(..., "--segment", "-s", "--path", "-p", help="Segment name or path"),
+) -> None:
+    """Run Autopilot refresh cycle based on session.md contract."""
+    try:
+        target_path = _validate_path(segment, must_exist=True)
+        _, file_system = _get_dependencies()
+        use_case = AutopilotUseCase(file_system)
+        typer.echo("🔄 Running Autopilot sync...")
+        result = use_case.execute(target_path)
+        
+        if result["status"] == "skipped":
+            typer.echo(f"⏩ Skipped: {result['reason']}")
+        elif result["status"] == "error":
+            typer.echo(f"❌ Error: {result['reason']}")
+            raise typer.Exit(1)
+        else:
+            for res in result.get("results", []):
+                name = res["step"]
+                status = "✅" if res["success"] else "❌"
+                typer.echo(f"  {status} {name}")
+                if not res["success"]:
+                     typer.echo(f"     Error: {res.get('stderr') or res.get('error')}")
+            typer.echo("✅ Sync completed.")
+    except Exception as e:
+        typer.echo(_format_error(e, "Context Sync Error"), err=True)
+        raise typer.Exit(1)
+
+
+@ctx_app.command("get")
+def ctx_get(
+    segment: str = typer.Option(..., "--segment", "-s", "--path", "-p", help="Segment name or path"),
+    ids: str = typer.Option(..., "--ids", help="Comma-separated chunk IDs"),
+    mode: str = typer.Option("raw", "--mode", "-m", help="Mode: raw, excerpt, skeleton"),
+    budget: Optional[int] = typer.Option(None, "--budget", help="Token budget"),
+) -> None:
+    """Retrieve specific chunks from the Context Pack."""
+    try:
+        target_path = _validate_path(segment, must_exist=True)
+        service = ContextService(target_path)
+        id_list = [i.strip() for i in ids.split(",")]
+        
+        result = service.get(id_list, mode=mode, budget_token_est=budget)
+        
+        for chunk in result.chunks:
+            typer.echo(f"--- CHUNK: {chunk.id} ---")
+            typer.echo(chunk.text)
+            typer.echo("")
+            
+        typer.echo(f"📊 Total tokens (est): {result.total_tokens}")
+    except Exception as e:
+        typer.echo(_format_error(e, "Context Get Error"), err=True)
+        raise typer.Exit(1)
+
+
+@ctx_app.command("validate")
+def ctx_validate(
+    segment: str = typer.Option(..., "--segment", "-s", "--path", "-p", help="Segment name or path"),
+) -> None:
+    """Validate Context Pack integrity."""
+    try:
+        target_path = _validate_path(segment, must_exist=True)
+        _, file_system = _get_dependencies()
+        use_case = ValidateContextPackUseCase(file_system)
+        result = use_case.execute(target_path)
+        
+        if result.passed:
+            typer.echo("✅ Context Pack is healthy.")
+        else:
+            typer.echo("❌ Context Pack Validation Failed")
+            for err in result.errors:
+                typer.echo(f"   - Error: {err}")
+        
+        for warn in result.warnings:
+            typer.echo(f"   ⚠️ Warning: {warn}")
+            
+        if not result.passed:
+            raise typer.Exit(1)
+    except Exception as e:
+        typer.echo(_format_error(e, "Context Validation Error"), err=True)
         raise typer.Exit(1)
 
 

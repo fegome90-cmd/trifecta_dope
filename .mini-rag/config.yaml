@@ -1,0 +1,29 @@
+docs_glob:
+- knowledge/**/*.pdf
+- knowledge/**/*.md
+- knowledge/**/*.txt
+- docs/**/*.md
+pdf:
+  enabled: true
+chunking:
+  chunk_size: 800
+  chunk_overlap: 200
+embeddings:
+  provider: ollama
+  model: nomic-embed-text
+retrieval:
+  top_k_default: 8
+  similarity_threshold: 0.35
+document_policies: {}
+filters: {}
+paths:
+  config_dir: .mini-rag
+  index_dir: .mini-rag/index
+  metadata_file: .mini-rag/index/metadata.json
+  embeddings_file: .mini-rag/index/embeddings.npy
+ollama:
+  connection_timeout: 10.0
+  read_timeout: 60.0
+  max_retries: 5
+  retry_delay: 1.0
+  keep_alive: true
