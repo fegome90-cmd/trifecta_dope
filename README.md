@@ -125,7 +125,6 @@ El sistema usa perfiles (nvim-style modeline) para definir contratos de output:
 ## Uso
 
 ### Generar Trifecta (CLI)
-
 ```bash
 # Desde la raíz del repo
 cd trifecta_dope
@@ -186,7 +185,6 @@ python scripts/ingest_trifecta.py --segment eval --output custom/pack.json
 3. **Resultado**: Agente entiende el contexto sin quemar tokens
 
 > Ver [`docs/plans/2025-12-29-context-pack-ingestion.md`](./docs/plans/2025-12-29-context-pack-ingestion.md) para especificación completa.
-
 ## Instalación
 
 ```bash
@@ -214,11 +212,15 @@ uv run typer src/infrastructure/cli.py run create --help
 
 ## Roadmap
 
+<<<<<<< HEAD
 ### CLI & Templates
+=======
+>>>>>>> 070017d (Initial commit)
 - [x] Especificación completa (braindope.md)
 - [x] Clean Architecture implementation
 - [x] CLI con comandos `create`, `validate`, `refresh-prime`
 - [x] README.md automático en cada segmento
+<<<<<<< HEAD
 - [x] Enhanced templates (skill, agent, prime) con ejemplos concretos
 - [x] CLI UX improvements: validación, errores contextuales, dry-run
 - [x] Fish shell completions
@@ -236,3 +238,8 @@ uv run typer src/infrastructure/cli.py run create --help
 - [ ] MCP Discovery Tool para activación automática
 - [ ] Progressive Disclosure (L0/L1/L2) en hooks
 - [ ] Phase 2: SQLite runtime para context packs grandes
+=======
+- [ ] Prueba con segmento real (`eval-harness`)
+- [ ] MCP Discovery Tool para activación automática
+- [ ] Progressive Disclosure (L0/L1/L2) en hooks
+>>>>>>> 070017d (Initial commit)
