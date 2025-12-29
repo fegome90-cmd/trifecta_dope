@@ -324,6 +324,28 @@ output_contract:
 
 ---
 
+## TRIFECTA_SESSION_CONTRACT
+> ⚠️ **Este contrato NO es ejecutado por el sistema en v1.** Es puramente documental.
+
+```yaml
+schema_version: 1
+segment: {config.segment}
+autopilot:
+  enabled: true
+  debounce_ms: 800
+  lock_file: _ctx/.autopilot.lock
+  allow_prefixes: ["trifecta ctx "]
+  steps:
+    - name: build
+      cmd: "trifecta ctx build --segment ."
+      timeout_sec: 60
+    - name: validate
+      cmd: "trifecta ctx validate --segment ."
+      timeout_sec: 30
+```
+
+---
+
 ## History
 ```yaml
 # - session:

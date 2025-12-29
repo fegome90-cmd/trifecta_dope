@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "segment": ".",
+  "created_at": "2025-12-29T16:20:08.552308",
+  "digest": "",
+  "source_files": [
+    {
+      "path": "trifecta_dope/skill.md",
+      "sha256": "56cba30d0d52e25ed865bddeace7709f971835c52965fe862665d252d3f765a8",
+      "mtime": 1767035990.434859,
+      "chars": 2640
+    },
+    {
+      "path": "trifecta_dope/_ctx/agent.md",
+      "sha256": "6707f94421cbe6978e772aedb9f2d82bb84c497bfdcb0132c0b5d137a7b563fb",
+      "mtime": 1767035990.4367094,
+      "chars": 2323
+    },
+    {
+      "path": "trifecta_dope/_ctx/prime_..md",
+      "sha256": "dc26239c356dbf38225ea381647edea605d5a08952dc11710123750dd87cc3c6",
+      "mtime": 1767035990.43653,
+      "chars": 1162
+    },
+    {
+      "path": "trifecta_dope/_ctx/session_..md",
+      "sha256": "0c2ab06cdb3ebce89e894957537b34ffa926ce6a70cf01ed991f470424575e5f",
+      "mtime": 1767035990.4368758,
+      "chars": 567
+    }
+  ],
+  "chunks": [
+    {
+      "id": "skill:19476a0888",
+      "doc": "skill",
+      "title_path": [
+        "skill.md"
+      ],
+      "text": "---\nname: .\ndescription: Use when working on Verification\n---\n\n# .\n\n## Overview\nVerification\n\n**Ubicación**: `/Users/felipe_gonzalez/Developer/agent_h/./`\n\n## ⚠️ ONBOARDING OBLIGATORIO ⚠️\n\n1. **skill.md** (este archivo) - Reglas y roles\n2. **[PRIME](./_ctx/prime_..md)** - Docs obligatorios\n3. **[AGENT](./_ctx/agent.md)** - Stack técnico y gates\n\n> NO ejecutes código sin leer los 3 archivos.\n\n## Core Rules\n1. **Sync First**: Valida `.env` antes de cambios\n2. **Test Locally**: Tests del segmento antes de commit\n3. **Read Before Write**: Lee código antes de modificar\n4. **Document**: Actualiza `session_..md`\n\n## CRITICAL PROTOCOL: History Persistence\nAntes de ejecutar cualquier herramienta, DEBES seguir este estricto orden de operaciones.\n\n1. **GENERA** el historial y resumen de la conversación en formato YAML.\n2. **ESCRIBE** (usando `write_file`) este contenido en: `/Users/felipe_gonzalez/Developer/agent_h/./_ctx/session_..md`\n3. **LEE** el contenido que acabas de preparar (o úsalo de tu memoria).\n4. **EJECUTA** el script de ingestión de trifecta (ej: `python scripts/ingest_trifecta.py --segment .`) pasando ese contenido como el prompt instruction del agente al iniciar tareas.\n\n## Workflow\n```bash\ncd /Users/felipe_gonzalez/Developer/agent_h/.\n# Validar entorno → Ejecutar tests → Hacer cambios → Commitear\n```\n\n## Setup\n\n**Python:**\n```bash\npython3 -m venv .venv && source .venv/bin/activate\npip install -r requirements.txt  # o: uv pip install -r requirements.txt\n```\n\n**Node:**\n```bash\nnpm install  # o: pnpm install\n```\n\n## Commands\n\n**Tests:**\n```bash\npytest tests/unit/ -v              # Unitarios\npytest tests/unit/test_..py -k \"test_name\"\npytest --cov=src tests/             # Con coverage\n```\n\n**Lint:**\n```bash\n# Python\nruff check . --fix && black .\n# Node\nnpm run lint && npm run format\n```\n\n## Troubleshooting\n| Problema | Solución |\n|----------|----------|\n| `ImportError` | `pip install -e .` desde repo root |\n| `.env` faltante | Copiar desde `.env.example` |\n| Lint errors | `ruff check . --fix` o `npm run lint:fix` |\n| TypeError | Check versiones de dependencias |\n\n## Integration Points\n**Upstream:** <!-- listar -->\n**Downstream:** <!-- listar -->\n**API:** <!-- contratos si aplica -->\n\n## Resources (On-Demand)\n- `@_ctx/prime_..md` - Docs obligatorios\n- `@_ctx/agent.md` - Stack y configuración\n- `@_ctx/session_..md` - Log de cambios\n\n## LLM Roles\n| Rol | Modelo | Uso |\n|-----|--------|-----|\n| **Worker** | `deepseek-reasoner` | General |\n| **Senior** | `claude-sonnet-4-5` | Complejo |\n| **Fallback** | `gemini-3.0-flash-preview` | Fallos |\n\n---\n**Profile**: `impl_patch` | **Updated**: 2025-12-29\n",
+      "char_count": 2640,
+      "token_est": 660,
+      "source_path": "skill.md",
+      "chunking_method": "whole_file"
+    },
+    {
+      "id": "agent:65dbafca4c",
+      "doc": "agent",
+      "title_path": [
+        "agent.md"
+      ],
+      "text": "---\nsegment: .\nscope: Verification\nrepo_root: /Users/felipe_gonzalez/Developer/agent_h\nlast_verified: 2025-12-29\ndefault_profile: impl_patch\n---\n\n# Agent Context - .\n\n## Source of Truth\n| Sección | Fuente |\n|---------|--------|\n| LLM Roles | [skill.md](../skill.md) |\n| Providers | `hemdov/src/hemdov/infrastructure/config/providers.yaml` |\n\n## Tech Stack\n<!-- Lenguajes, frameworks, y herramientas principales -->\n\n**Lenguajes:**\n- <!-- Ej: Python 3.11+, TypeScript 5.x -->\n\n**Frameworks:**\n- <!-- Ej: FastAPI, React, Pydantic -->\n\n**Herramientas:**\n- <!-- Ej: pytest, ruff, uv, npm -->\n\n## Dependencies\n\n**Runtime:**\n- <!-- Listar dependencias principales de producción -->\n\n**Development:**\n- <!-- Listar dependencias de desarrollo -->\n\n## Configuration\n\n**Archivos de configuración:**\n```\n./\n├── .env                    # Variables de entorno (local)\n├── .env.example            # Template de variables\n├── pyproject.toml          # Config Python (si aplica)\n└── package.json            # Config Node (si aplica)\n```\n\n**Variables de entorno clave:**\n```bash\n# Agregar variables específicas del segmento\n# Ejemplo:\nDATABASE_URL=              # URL de base de datos\nAPI_KEY=                   # Clave de API externa\nLOG_LEVEL=info             # Nivel de logging\n```\n\n## Gates (Comandos de Verificación)\n\n**Unit Tests:**\n```bash\n# Python\npytest tests/unit/ -v\n\n# Node/TypeScript\nnpm test\n# o\njest tests/unit/\n```\n\n**Integration Tests:**\n```bash\n# Python\npytest tests/integration/ -v\n\n# Node\nnpm run test:integration\n```\n\n**Linting:**\n```bash\n# Python\nruff check .\nblack --check .\n\n# Node\nnpm run lint\n```\n\n**Type Checking:**\n```bash\n# Python (mypy)\nmypy src/\n\n# TypeScript\nnpm run type-check\n```\n\n**Build:**\n```bash\n# Python\npip install -e .\n\n# Node\nnpm run build\n```\n\n## Integration Points\n\n**Upstream Dependencies:**\n- <!-- ¿Qué módulos/deps necesitas primero? -->\n\n**Downstream Consumers:**\n- <!-- ¿Quién usa este segmento? -->\n\n**API Contracts:**\n- <!-- Endpoints, funciones, o interfaces expuestas -->\n\n## Architecture Notes\n\n<!-- Patrones de diseño, decisiones arquitectónicas, trade-offs -->\n\n**Design Patterns:**\n- <!-- Ej: Repository Pattern, Factory, Observer -->\n\n**Key Decisions:**\n- <!-- Por qué se eligió cierta tecnología o enfoque -->\n\n**Known Limitations:**\n- <!-- Limitaciones conocidas del segmento -->\n",
+      "char_count": 2323,
+      "token_est": 580,
+      "source_path": "agent.md",
+      "chunking_method": "whole_file"
+    },
+    {
+      "id": "prime:c40a365510",
+      "doc": "prime",
+      "title_path": [
+        "prime_..md"
+      ],
+      "text": "---\nsegment: .\nprofile: load_only\n---\n\n# Prime . - Lista de Lectura\n\n> **REPO_ROOT**: `/Users/felipe_gonzalez/Developer/agent_h`\n> Todas las rutas son relativas a esta raíz.\n>\n> **Orden de lectura**: Fundamentos → Implementación → Referencias\n\n## 🔴 Prioridad ALTA - Fundamentos\n\n**Leer primero para entender el contexto del segmento.**\n\n<!-- Agregar documentos obligatorios -->\n\n## 🟡 Prioridad MEDIA - Implementación\n\n<!-- Documentación de implementación específica -->\n<!-- Ejemplos: guías de uso, patrones de diseño -->\n\n## 🟢 Prioridad BAJA - Referencias\n\n<!-- Documentación de referencia, archivada -->\n<!-- Ejemplos: API docs, especificaciones -->\n\n## 🗺️ Mapa Mental\n\n```mermaid\nmindmap\n  root(.)\n    <!-- Agregar conceptos clave del segmento -->\n    <!-- Ejemplo:\n    Fundamentos\n    Arquitectura\n    Componentes\n    Interfaces\n    -->\n```\n\n## 📚 Glosario\n\n| Término | Definición |\n|---------|------------|\n| <!-- Agregar términos clave del segmento --> | <!-- Definiciones breves --> |\n\n## 📝 Notas\n\n- **Fecha última actualización**: 2025-12-29\n- **Mantenedor**: <!-- Agregar si aplica -->\n- **Ver también**: [skill.md](../skill.md) | [agent.md](./agent.md)\n",
+      "char_count": 1162,
+      "token_est": 290,
+      "source_path": "prime_..md",
+      "chunking_method": "whole_file"
+    },
+    {
+      "id": "session:ac2bff882c",
+      "doc": "session",
+      "title_path": [
+        "session_..md"
+      ],
+      "text": "---\nsegment: .\nprofile: handoff_log\noutput_contract:\n  append_only: true\n  require_sections: [History, NextUserRequest]\n  max_history_entries: 10\n  forbid: [refactors, long_essays]\n---\n\n# Session Log - .\n\n## Active Session\n- **Objetivo**:\n- **Archivos a tocar**:\n- **Gates a correr**:\n- **Riesgos detectados**:\n\n---\n\n## History\n```yaml\n# - session:\n#     timestamp: \"YYYY-MM-DDTHH:MM:SS\"\n#     user_prompt_summary: \"\"\n#     agent_response_summary: \"\"\n#     files_touched: []\n#     outcome: \"\"\n```\n\n---\n\n## Next User Request\n<!-- El siguiente agente comienza aquí -->\n",
+      "char_count": 567,
+      "token_est": 141,
+      "source_path": "session_..md",
+      "chunking_method": "whole_file"
+    }
+  ],
+  "index": [
+    {
+      "id": "skill:19476a0888",
+      "title_path_norm": "skill.md",
+      "preview": "---\nname: .\ndescription: Use when working on Verification\n---\n\n# .\n\n## Overview\nVerification\n\n**Ubicación**: `/Users/felipe_gonzalez/Developer/agent_h/./`\n\n## ⚠️ ONBOARDING OBLIGATORIO ⚠️\n\n1. **skill....",
+      "token_est": 660
+    },
+    {
+      "id": "agent:65dbafca4c",
+      "title_path_norm": "agent.md",
+      "preview": "---\nsegment: .\nscope: Verification\nrepo_root: /Users/felipe_gonzalez/Developer/agent_h\nlast_verified: 2025-12-29\ndefault_profile: impl_patch\n---\n\n# Agent Context - .\n\n## Source of Truth\n| Sección | Fu...",
+      "token_est": 580
+    },
+    {
+      "id": "prime:c40a365510",
+      "title_path_norm": "prime_..md",
+      "preview": "---\nsegment: .\nprofile: load_only\n---\n\n# Prime . - Lista de Lectura\n\n> **REPO_ROOT**: `/Users/felipe_gonzalez/Developer/agent_h`\n> Todas las rutas son relativas a esta raíz.\n>\n> **Orden de lectura**:...",
+      "token_est": 290
+    },
+    {
+      "id": "session:ac2bff882c",
+      "title_path_norm": "session_..md",
+      "preview": "---\nsegment: .\nprofile: handoff_log\noutput_contract:\n  append_only: true\n  require_sections: [History, NextUserRequest]\n  max_history_entries: 10\n  forbid: [refactors, long_essays]\n---\n\n# Session Log...",
+      "token_est": 141
+    }
+  ]
+}

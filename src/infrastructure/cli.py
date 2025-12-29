@@ -7,7 +7,7 @@ from typing import Optional
 import typer
 
 from src.domain.models import TrifectaConfig
-from src.domain.constants import MAX_SKILL_LINES, validate_profile
+from src.domain.constants import validate_profile
 from src.application.use_cases import (
     CreateTrifectaUseCase,
     ValidateTrifectaUseCase,
@@ -194,18 +194,18 @@ def create(
             typer.echo(f"   ── Files would be created:")
             typer.echo(f"   ├── readme_tf.md ({len(pack.readme_content)} chars)")
             typer.echo(f"   ├── skill.md ({pack.skill_line_count} lines)")
-            typer.echo(f"   └── _ctx/")
+            typer.echo("   └── _ctx/")
             typer.echo(f"       ├── prime_{config.segment}.md ({len(docs)} docs)")
-            typer.echo(f"       ├── agent.md")
+            typer.echo("       ├── agent.md")
             typer.echo(f"       └── session_{config.segment}.md")
-            typer.echo(f"\n   Remove --dry-run to create files.")
+            typer.echo("\n   Remove --dry-run to create files.")
         else:
             typer.echo(f"✅ Trifecta created at {path}")
-            typer.echo(f"   ├── readme_tf.md")
+            typer.echo("   ├── readme_tf.md")
             typer.echo(f"   ├── skill.md ({pack.skill_line_count} lines)")
-            typer.echo(f"   └── _ctx/")
+            typer.echo("   └── _ctx/")
             typer.echo(f"       ├── prime_{config.segment}.md")
-            typer.echo(f"       ├── agent.md")
+            typer.echo("       ├── agent.md")
             typer.echo(f"       └── session_{config.segment}.md")
     except ValueError as e:
         typer.echo(_format_error(e, "Validation Error"), err=True)
@@ -244,7 +244,7 @@ def validate(
 
     # Validate path exists
     try:
-        target_path = _validate_path(segment, must_exist=True)
+        target_path = _validate_path(path, must_exist=True)
     except PathValidationError as e:
         typer.echo(str(e), err=True)
         raise typer.Exit(1)
@@ -293,7 +293,7 @@ def refresh_prime(
 
     # Validate paths
     try:
-        target_path = _validate_path(segment, must_exist=True)
+        target_path = _validate_path(path, must_exist=True)
         scan_path = _validate_path(scan_docs, must_exist=True)
     except PathValidationError as e:
         typer.echo(str(e), err=True)
@@ -415,7 +415,7 @@ def ctx_get(
     segment: str = typer.Option(..., "--segment", "-s", "--path", "-p", help="Segment name or path"),
     ids: str = typer.Option(..., "--ids", help="Comma-separated chunk IDs"),
     mode: str = typer.Option("raw", "--mode", "-m", help="Mode: raw, excerpt, skeleton"),
-    budget: Optional[int] = typer.Option(None, "--budget", help="Token budget"),
+    budget: Optional[int] = typer.Option(None, "--budget-token-est", "--budget", help="Token budget"),
 ) -> None:
     """Retrieve specific chunks from the Context Pack."""
     try:
