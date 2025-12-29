@@ -185,6 +185,26 @@ python scripts/ingest_trifecta.py --segment eval --output custom/pack.json
 3. **Resultado**: Agente entiende el contexto sin quemar tokens
 
 > Ver [`docs/plans/2025-12-29-context-pack-ingestion.md`](./docs/plans/2025-12-29-context-pack-ingestion.md) para especificación completa.
+
+## Mini-RAG (Contexto Local)
+
+Este repo integra Mini-RAG para consultas rápidas sobre la documentación (RAG local).
+
+### Setup (local source)
+
+```bash
+# Desde la raíz del proyecto
+make minirag-setup MINIRAG_SOURCE=~/Developer/Minirag
+make minirag-index
+```
+
+### Consultas
+
+```bash
+make minirag-query MINIRAG_QUERY="PCC"
+```
+
+> El índice usa `docs/**/*.md` y `knowledge/**` definidos en `.mini-rag/config.yaml`.
 ## Instalación
 
 ```bash
@@ -207,20 +227,16 @@ uv run typer src/infrastructure/cli.py run create --help
 
 ## Referencias
 
-- [`braindope.md`](./braindope.md) - Especificación completa del sistema
+- [`docs/braindope.md`](./docs/braindope.md) - Especificación completa del sistema
 - [`writing-skills`](../.claude/skills/superpowers/writing-skills/) - Metodología para crear SKILL.md
 
 ## Roadmap
 
-<<<<<<< HEAD
 ### CLI & Templates
-=======
->>>>>>> 070017d (Initial commit)
 - [x] Especificación completa (braindope.md)
 - [x] Clean Architecture implementation
 - [x] CLI con comandos `create`, `validate`, `refresh-prime`
 - [x] README.md automático en cada segmento
-<<<<<<< HEAD
 - [x] Enhanced templates (skill, agent, prime) con ejemplos concretos
 - [x] CLI UX improvements: validación, errores contextuales, dry-run
 - [x] Fish shell completions
@@ -238,8 +254,3 @@ uv run typer src/infrastructure/cli.py run create --help
 - [ ] MCP Discovery Tool para activación automática
 - [ ] Progressive Disclosure (L0/L1/L2) en hooks
 - [ ] Phase 2: SQLite runtime para context packs grandes
-=======
-- [ ] Prueba con segmento real (`eval-harness`)
-- [ ] MCP Discovery Tool para activación automática
-- [ ] Progressive Disclosure (L0/L1/L2) en hooks
->>>>>>> 070017d (Initial commit)
