@@ -1,6 +1,6 @@
 {
-  "run_id": "run_1767116995",
-  "ts": "2025-12-30T17:49:55.798965+00:00",
+  "run_id": "run_1767134467",
+  "ts": "2025-12-30T22:41:07.573263+00:00",
   "metrics_delta": {
     "ctx_build_count": 1,
     "prime_links_included_total": 3,
@@ -9,8 +9,8 @@
   "latencies": {},
   "top_warnings": [],
   "pack_state": {
-    "pack_sha": "e2d4e68db8438c94",
-    "pack_mtime": 1767116587.1871316,
+    "pack_sha": "f2c1f9e8811b2f74",
+    "pack_mtime": 1767134355.3284922,
     "stale_detected": false
   }
 }
