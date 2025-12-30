@@ -58,7 +58,7 @@ def validate_segment(segment_path: Path) -> bool:
          
     return True
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Trifecta Context Installer")
     parser.add_argument("--cli-root", type=str, default=".", help="Path to trifecta_dope repo")
     parser.add_argument("--segment", type=str, action="append", required=True, help="Target segment path")

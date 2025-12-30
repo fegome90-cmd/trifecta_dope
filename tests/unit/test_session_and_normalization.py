@@ -7,7 +7,7 @@ import pytest
 from src.application.query_normalizer import QueryNormalizer
 
 
-def test_normalization_splits_tokens(tmp_path):
+def test_normalization_splits_tokens(tmp_path: Path) -> None:
     """Verify that normalization splits on separators (snake-case/kebab-case)."""
     normalizer = QueryNormalizer()
     
@@ -34,7 +34,7 @@ def test_normalization_splits_tokens(tmp_path):
     assert "parser" in tokens
 
 
-def test_session_append_creates_file(tmp_path):
+def test_session_append_creates_file(tmp_path: Path) -> None:
     """Verify that session append creates file with correct structure."""
     from src.infrastructure.cli import session_append
     from unittest.mock import patch
@@ -63,7 +63,7 @@ def test_session_append_creates_file(tmp_path):
     assert "ctx sync" in content
 
 
-def test_session_append_appends_second_entry(tmp_path):
+def test_session_append_appends_second_entry(tmp_path: Path) -> None:
     """Verify that session append appends to existing file."""
     from src.infrastructure.cli import session_append
     from unittest.mock import patch
@@ -98,7 +98,7 @@ def test_session_append_appends_second_entry(tmp_path):
     assert content.count("##") >= 3  # Header + 2 entries
 
 
-def test_session_append_includes_pack_sha_when_present(tmp_path):
+def test_session_append_includes_pack_sha_when_present(tmp_path: Path) -> None:
     """Verify that session append includes pack_sha when context_pack.json exists."""
     from src.infrastructure.cli import session_append
     from unittest.mock import patch
@@ -126,7 +126,7 @@ def test_session_append_includes_pack_sha_when_present(tmp_path):
     assert "`" in content  # SHA should be in code block
 
 
-def test_missing_aliases_file_is_ok(tmp_path):
+def test_missing_aliases_file_is_ok(tmp_path: Path) -> None:
     """Verify that missing aliases.yaml doesn't break search."""
     from src.infrastructure.alias_loader import AliasLoader
     

@@ -70,7 +70,7 @@ class Telemetry:
         args: Dict[str, Any], 
         result: Dict[str, Any], 
         timing_ms: int, 
-        warnings: List[str] = None
+        warnings: List[str] | None = None
     ) -> None:
         """Log a discrete event."""
         if not self.enabled:

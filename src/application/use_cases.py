@@ -1,10 +1,10 @@
 import json
 import subprocess
-import yaml
+import yaml  # type: ignore[import-untyped]
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from src.domain.models import TrifectaConfig, TrifectaPack, ValidationResult
 from src.domain.context_models import (
@@ -161,7 +161,7 @@ class RefreshPrimeUseCase:
 class BuildContextPackUseCase:
     """Build a Context Pack for a segment."""
 
-    def __init__(self, file_system: FileSystemAdapter, telemetry=None):
+    def __init__(self, file_system: FileSystemAdapter, telemetry: Any = None) -> None:
         self.file_system = file_system
         self.telemetry = telemetry
 
@@ -171,7 +171,7 @@ class BuildContextPackUseCase:
         """Extract referenced files from Prime content with STRICT SECURITY."""
         import re
 
-        refs = {}
+        refs: dict[str, Path] = {}
         visited_paths = set()
         MAX_LINKS = 25
 
@@ -411,7 +411,7 @@ class BuildContextPackUseCase:
 class MacroLoadUseCase:
     """Macro command 'trifecta load' implementation."""
 
-    def __init__(self, file_system: FileSystemAdapter, telemetry=None):
+    def __init__(self, file_system: FileSystemAdapter, telemetry: Any = None) -> None:
         self.file_system = file_system
         self.telemetry = telemetry
 
@@ -440,7 +440,7 @@ class MacroLoadUseCase:
 
         # Execute search for each expanded piece
         service = ContextService(target_path)
-        combined_hits = {}  # chunk_id -> (hit, max_weighted_score)
+        combined_hits: dict[str, tuple[Any, float]] = {}  # chunk_id -> (hit, max_weighted_score)
 
         for term, weight in expanded_terms:
             search_res = service.search(term, k=10)
@@ -540,7 +540,7 @@ class MacroLoadUseCase:
 class ValidateContextPackUseCase:
     """Validator for Context Pack integrity and invariants."""
 
-    def __init__(self, file_system: FileSystemAdapter, telemetry=None):
+    def __init__(self, file_system: FileSystemAdapter, telemetry: Any = None) -> None:
         self.file_system = file_system
         self.telemetry = telemetry
 
@@ -640,7 +640,7 @@ class AutopilotUseCase:
     def __init__(self, file_system: FileSystemAdapter):
         self.file_system = file_system
 
-    def execute(self, target_path: Path) -> dict:
+    def execute(self, target_path: Path) -> dict[str, Any]:
         """Read autopilot config and run steps."""
         ctx_dir = target_path / "_ctx"
         session_files = list(ctx_dir.glob("session_*.md"))

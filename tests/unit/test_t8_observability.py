@@ -9,7 +9,7 @@ import pytest
 from src.infrastructure.telemetry import Telemetry
 
 
-def test_telemetry_off_writes_nothing(tmp_path):
+def test_telemetry_off_writes_nothing(tmp_path: Path) -> None:
     """Verify that telemetry=off creates no files."""
     telemetry = Telemetry(tmp_path, level="off")
     telemetry.event("test", {}, {}, 100)
@@ -20,7 +20,7 @@ def test_telemetry_off_writes_nothing(tmp_path):
     assert not telemetry_dir.exists(), "Telemetry dir should not exist when level=off"
 
 
-def test_events_jsonl_appends(tmp_path):
+def test_events_jsonl_appends(tmp_path: Path) -> None:
     """Verify that events are appended to events.jsonl."""
     telemetry = Telemetry(tmp_path, level="lite", run_id="test_run")
     
@@ -40,7 +40,7 @@ def test_events_jsonl_appends(tmp_path):
     assert event1["timing_ms"] == 42
 
 
-def test_events_rotation(tmp_path):
+def test_events_rotation(tmp_path: Path) -> None:
     """Verify that events.jsonl rotates at 5MB."""
     telemetry = Telemetry(tmp_path, level="lite")
     
@@ -56,7 +56,7 @@ def test_events_rotation(tmp_path):
     assert backup_path.exists() or events_path.stat().st_size < 6 * 1024 * 1024
 
 
-def test_metrics_flush_creates_files(tmp_path):
+def test_metrics_flush_creates_files(tmp_path: Path) -> None:
     """Verify that flush() creates metrics.json and last_run.json."""
     telemetry = Telemetry(tmp_path, level="lite", run_id="flush_test")
     
@@ -82,7 +82,7 @@ def test_metrics_flush_creates_files(tmp_path):
     assert last_run["latencies"]["ctx.search"]["p50_ms"] in [100.0, 200.0]
 
 
-def test_ctx_search_emits_event_and_counts(tmp_path):
+def test_ctx_search_emits_event_and_counts(tmp_path: Path) -> None:
     """Verify that SearchUseCase records telemetry correctly."""
     from src.application.search_get_usecases import SearchUseCase
     
@@ -102,7 +102,7 @@ def test_ctx_search_emits_event_and_counts(tmp_path):
     (ctx_dir / "context_pack.json").write_text(json.dumps(pack_data))
     
     telemetry = Telemetry(tmp_path, level="lite")
-    use_case = SearchUseCase(None, telemetry)  # fs not used
+    use_case = SearchUseCase(None, telemetry)  # type: ignore[arg-type]  # fs not used
     
     output = use_case.execute(tmp_path, "test", limit=5)
     telemetry.flush()
@@ -112,7 +112,7 @@ def test_ctx_search_emits_event_and_counts(tmp_path):
     assert metrics["ctx_search_hits_total"] == 1
 
 
-def test_ctx_get_records_budget_trim(tmp_path):
+def test_ctx_get_records_budget_trim(tmp_path: Path) -> None:
     """Verify that GetChunkUseCase records budget_trim_count."""
     from src.application.search_get_usecases import GetChunkUseCase
     
@@ -142,7 +142,7 @@ def test_ctx_get_records_budget_trim(tmp_path):
     (ctx_dir / "context_pack.json").write_text(json.dumps(pack_data))
     
     telemetry = Telemetry(tmp_path, level="lite")
-    use_case = GetChunkUseCase(None, telemetry)  # fs not used
+    use_case = GetChunkUseCase(None, telemetry)  # type: ignore[arg-type]  # fs not used
     
     # Request with low budget to trigger trim
     output = use_case.execute(tmp_path, ["skill:abc"], mode="raw", budget_token_est=500)

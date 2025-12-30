@@ -5,7 +5,7 @@ import logging
 import os
 import time
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Tuple, Literal
 
 import typer
 
@@ -17,7 +17,7 @@ from src.application.use_cases import (
     ValidateTrifectaUseCase,
 )
 from src.application.search_get_usecases import SearchUseCase, GetChunkUseCase, SyncContextUseCase
-from src.domain.models import TrifectaConfig
+from src.domain.models import TrifectaConfig, ValidationResult
 from src.infrastructure.file_system import FileSystemAdapter
 from src.infrastructure.telemetry import Telemetry
 from src.infrastructure.templates import TemplateRenderer
@@ -44,7 +44,7 @@ def _get_telemetry(segment: str, level: str) -> Telemetry:
     return Telemetry(path, level=env_level)
 
 
-def _get_dependencies(segment: str, telemetry: Optional[Telemetry] = None):
+def _get_dependencies(segment: str, telemetry: Optional[Telemetry] = None) -> Tuple[TemplateRenderer, FileSystemAdapter, Optional[Telemetry]]:
     # Simplified: just return filesystem and template renderer
     fs = FileSystemAdapter()
     template_renderer = TemplateRenderer()
@@ -63,7 +63,7 @@ def _format_error(e: Exception, title: str = "Error") -> str:
 @ctx_app.command("stats")
 def ctx_stats(
     segment: str = typer.Option(..., "--segment", "-s", help=HELP_SEGMENT),
-):
+) -> None:
     """[T8] Show telemetry stats for a segment."""
     path = Path(segment).resolve()
     telemetry_dir = path / "_ctx" / "telemetry"
@@ -188,7 +188,7 @@ def search(
 def get(
     ids: str = typer.Option(..., "--ids", "-i", help="Comma-separated Chunk IDs"),
     segment: str = typer.Option(..., "--segment", "-s", help=HELP_SEGMENT),
-    mode: str = typer.Option("excerpt", "--mode", "-m", help="Output mode: raw, excerpt, summary"),
+    mode: Literal["raw", "excerpt", "skeleton"] = typer.Option("excerpt", "--mode", "-m", help="Output mode: raw, excerpt, summary"),
     budget_token_est: int = typer.Option(1500, "--budget-token-est", "-b", help="Max token budget"),
     telemetry_level: str = typer.Option("lite", "--telemetry", help=HELP_TELEMETRY),
 ) -> None:
@@ -226,12 +226,20 @@ def validate(
     use_case = ValidateContextPackUseCase(file_system, telemetry)
     
     try:
-        output = use_case.execute(Path(segment))
+        result = use_case.execute(Path(segment))
+        # Format ValidationResult for display
+        if result.passed:
+            output = "✅ Validation Passed"
+            if result.warnings:
+                output += f"\n\n⚠️  Warnings:\n" + "\n".join(f"   - {w}" for w in result.warnings)
+        else:
+            output = "❌ Validation Failed\n\n" + "\n".join(f"   - {e}" for e in result.errors)
+        
         typer.echo(output)
         telemetry.observe("ctx.validate", int((time.time() - start_time) * 1000))
         
-        # Check output for failure string if exception not raised
-        if "Validation Failed" in output or "Error" in output:
+        # Exit with error code if validation failed
+        if not result.passed:
              raise typer.Exit(code=1)
 
     except Exception as e:
@@ -261,12 +269,21 @@ def sync(
         
         typer.echo("✅ Build complete. Validating...")
         validate_uc = ValidateContextPackUseCase(file_system, telemetry)
-        output = validate_uc.execute(Path(segment))
+        result = validate_uc.execute(Path(segment))
+        
+        # Format ValidationResult for display
+        if result.passed:
+            output = "✅ Validation Passed"
+            if result.warnings:
+                output += f"\n\n⚠️  Warnings:\n" + "\n".join(f"   - {w}" for w in result.warnings)
+        else:
+            output = "❌ Validation Failed\n\n" + "\n".join(f"   - {e}" for e in result.errors)
+        
         typer.echo(output)
         
         telemetry.event("ctx.sync", {"segment": segment}, {"status": "ok"}, int((time.time() - start_time) * 1000))
 
-        if "Validation Failed" in output:
+        if not result.passed:
              raise typer.Exit(code=1)
 
     except Exception as e:
@@ -451,10 +468,12 @@ def refresh_prime(
     use_case = RefreshPrimeUseCase(template_renderer, file_system)
 
     # Validate paths
-    path = Path(segment)
+    path = Path(segment).resolve()
+    repo_root = path.parent if path.parent != path else path
+    scan_path = path
 
     try:
-        output = use_case.execute(path)
+        output = use_case.execute(path, scan_path, repo_root)
         typer.echo(output)
     except Exception as e:
          typer.echo(_format_error(e, "Refresh Error"), err=True)

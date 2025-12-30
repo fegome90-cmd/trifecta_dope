@@ -1,8 +1,29 @@
-# Context Pack Implementation - Technical Documentation
+# Context Pack Implementation - Foundational Design Document
 
-**Date**: 2025-12-29
-**Version**: 1.0
-**Script**: `scripts/ingest_trifecta.py`
+**Date**: 2025-12-29 (Original Design)
+**Version**: 1.0 (Foundational Spec)
+**Status**: 📚 **Historical Reference & Knowledge Base**
+
+---
+
+> **📌 About This Document**
+>
+> Este es el **documento de diseño original** donde nació la arquitectura del Context Pack.
+> Contiene el conocimiento fundacional del sistema de 3 capas (Digest/Index/Chunks) y
+> la lógica fence-aware que aún se usa en producción.
+>
+> **Evolución del Sistema**:
+> - **Original**: `scripts/ingest_trifecta.py` (referenciado aquí)
+> - **Actual**: `uv run trifecta ctx build` (CLI en `src/infrastructure/cli.py`)
+> - **Lógica Core**: Ahora en `src/application/use_cases.py` (Clean Architecture)
+>
+> **Por qué mantener este documento**:
+> - Explica el "por qué" detrás de decisiones de diseño
+> - Documenta algoritmos de chunking, scoring y normalización
+> - Referencia educativa para entender el sistema completo
+> - Fuente de ideas para futuras mejoras (ej: SQLite Phase 2)
+>
+> **Para comandos actuales**, ver: [README.md](../../README.md) o `uv run trifecta --help`
 
 ---
 
@@ -477,28 +498,26 @@ class ContextPackBuilder:
             "segment": self.segment,
             "created_at": datetime.now(timezone.utc).isoformat(),
             "generator_version": "0.1.0",
-            "source_files": [...],
-            "chunking": {"method": "headings+paragraph_fallback+fence_aware", "max_chars": 6000},
-            "docs": docs,
-            "digest": digest,
-            "index": index,
-            "chunks": all_chunks,
-        }
+            "source_files": [...] (Diseño Original)
 
-        # 6. Escribir a disco
-        if output_path is None:
-            output_path = self.segment_path / "_ctx" / "context_pack.json"
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(json.dumps(pack, ensure_ascii=False, indent=2))
-
-        return pack
-```
-
----
-
-## CLI
-
-### Interfaz de Línea de Comandos
+> **⚠️ Comandos Actualizados**:
+> 
+> El diseño original usaba `scripts/ingest_trifecta.py`. En v1.0+, usa:
+> ```bash
+> # Generar context pack
+> uv run trifecta ctx build --segment .
+> 
+> # Sincronizar (build + validate)
+> uv run trifecta ctx sync --segment .
+> 
+> # Buscar en el pack
+> uv run trifecta ctx search --segment . --query "tema"
+> 
+> # Obtener chunks específicos
+> uv run trifecta ctx get --segment . --ids "chunk_id" --mode raw
+> ```
+>
+> El código siguiente documenta la **arquitectura original** (referencia educativa):
 
 ```python
 def main():
@@ -531,6 +550,49 @@ def main():
         print(f"[dry-run] Would generate Context Pack: ...")
     else:
         print(f"[ok] Context Pack generated: ...")
+
+    if args.verbose:
+        print(f"\n[verbose] Digest entries:")
+        for d in pack["digest"]:
+            print(f"  - {d['doc']}: {d['summary']}")
+```
+
+### Uso (Diseño Original → Comandos Actuales)
+
+```bash
+# DISEÑO ORIGINAL (scripts/ingest_trifecta.py)
+# ─────────────────────────────────────────────────────────────────
+
+# Básico
+python scripts/ingest_trifecta.py --segment debug_terminal
+
+# Con repo root personalizado
+python scripts/ingest_trifecta.py --segment hemdov --repo-root /path/to/projects
+
+# Dry-run + verbose (preview)
+python scripts/ingest_trifecta.py --segment debug_terminal --dry-run --verbose
+
+# Output personalizado
+python scripts/ingest_trifecta.py --segment eval --output custom/pack.json
+
+
+# COMANDOS ACTUALES (v1.0+ CLI)
+# ─────────────────────────────────────────────────────────────────
+
+# Generar pack (equivalente a ingest básico)
+uv run trifecta ctx build --segment .
+
+# Sincronizar (build + validate automático)
+uv run trifecta ctx sync --segment .
+
+# Validar pack existente
+uv run trifecta ctx validate --segment .
+
+# Buscar en pack (nuevo en v1.0)
+uv run trifecta ctx search --segment . --query "core rules" --limit 5
+
+# Ver estadísticas
+uv run trifecta ctx stats --segment .
 
     if args.verbose:
         print(f"\n[verbose] Digest entries:")
@@ -619,7 +681,13 @@ python scripts/ingest_trifecta.py --segment eval --output custom/pack.json
       "line_count": 3,
       "start_line": 11,
       "end_line": 13
-    }
+# Diseño original:
+$ python scripts/ingest_trifecta.py --segment debug_terminal
+
+# Comando actual (v1.0+):
+$ uv run trifecta ctx build --segment debug_terminal
+
+# Output (ambos generan estructura similar):
   ]
 }
 ```
@@ -690,32 +758,60 @@ $ python scripts/ingest_trifecta.py --segment debug_terminal
 ```
 
 ### Digest Output
+ - Ideas Avanzadas)
 
+> **💡 Idea Original para Escalabilidad**
+>
+> Esta sección describe una **propuesta futura** para cuando el context pack crezca.
+> Actualmente (v1.0), usamos JSON simple que funciona bien para <100 chunks.
+> 
+> **Estado actual**: JSON en `_ctx/context_pack.json`  
+> **Roadmap**: SQLite cuando superemos ~200 chunks o necesitemos búsqueda compleja
+
+Cuando el context pack crezca, migrar chunks a SQLite:
+
+```sql
+CREATE TABLE chunks (
+    id TEXT PRIMARY KEY,
+    doc TEXT,
+    title_path TEXT,
+    text TEXT,
+    source_path TEXT,
+    heading_level INTEGER,
+    char_count INTEGER,
+    line_count INTEGER,
+    start_line INTEGER,
+    end_line INTEGER
+);
+
+CREATE INDEX idx_chunks_doc ON chunks(doc);
+CREATE INDEX idx_chunks_title_path ON chunks(title_path);
+
+-- Futuro: Full-text search
+CREATE VIRTUAL TABLE chunks_fts USING fts5(
+    id UNINDEXED,
+    title_path,
+    text,
+    content='chunks',
+    content_rowid='rowid'
+);
 ```
-agent: Agent Context - Debug Terminal → Gates (Verification Commands) | Agent Context - Debug Terminal
-prime_debug-terminal: Prime Debug Terminal - Lista de Lectura → Archivos Core DT2 | Prime Debug Terminal - Lista de Lectura
-session_debug-terminal: Session Log - Debug Terminal | Session Log - Debug Terminal → Active Session
-readme_tf: Debug Terminal - Trifecta Documentation | Debug Terminal - Trifecta Documentation → 📁 Estructura
-skill: Debug Terminal → Mandatory Onboarding | Debug Terminal → Instructions → CRITICAL PROTOCOL: History Persistence
-```
 
----
+**Beneficios**:
+- Búsqueda O(1) por ID
+- Soporte para miles de chunks sin degradación
+- Full-text search con BM25 (mejor que grep)
+- Query optimization automático
+- Preparado para embedding vectors (futuro v2.0)
 
-## Estrategia de Uso
+**Decisiones de Diseño a Tomar**:
+- ¿Mantener JSON como fallback? (para portabilidad)
+- ¿Migrar índice también a SQLite o solo chunks?
+- ¿Usar SQLite en memoria para queries frecuentes?
 
-### Prompt del Agente
-
-```python
-# Siempre en el prompt
-context_pack = load_json("context_pack.json")
-
-# Prompt base (siempre incluido)
-prompt = f"""
-You have access to Trifecta documentation for {context_pack['segment']}.
-
-## Digest (Overview)
-{format_digest(context_pack['digest'])}
-
+**Referencias**:
+- Ver `docs/research/braindope.md` para ideas de Progressive Disclosure
+- Relacionado con v2.0 roadmap (embeddings + reranking
 ## Index (Available Sections)
 {format_index(context_pack['index'])}
 

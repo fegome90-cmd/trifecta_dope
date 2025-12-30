@@ -5,7 +5,7 @@ from src.domain.constants import MAX_SKILL_LINES, validate_profile, VALID_PROFIL
 
 
 class TestTrifectaConfig:
-    def test_valid_segment(self):
+    def test_valid_segment(self) -> None:
         config = TrifectaConfig(
             segment="eval-harness",
             scope="Evaluation harness",
@@ -13,7 +13,7 @@ class TestTrifectaConfig:
         )
         assert config.segment == "eval-harness"
 
-    def test_segment_normalization(self):
+    def test_segment_normalization(self) -> None:
         config = TrifectaConfig(
             segment="My_Segment",
             scope="Test",
@@ -21,7 +21,7 @@ class TestTrifectaConfig:
         )
         assert config.segment == "my-segment"
 
-    def test_invalid_segment_with_spaces(self):
+    def test_invalid_segment_with_spaces(self) -> None:
         with pytest.raises(ValueError, match="no spaces"):
             TrifectaConfig(
                 segment="my segment",
@@ -29,7 +29,7 @@ class TestTrifectaConfig:
                 repo_root="/path",
             )
 
-    def test_empty_segment(self):
+    def test_empty_segment(self) -> None:
         with pytest.raises(ValueError, match="non-empty"):
             TrifectaConfig(
                 segment="",
@@ -39,7 +39,7 @@ class TestTrifectaConfig:
 
 
 class TestTrifectaPack:
-    def test_skill_line_count(self):
+    def test_skill_line_count(self) -> None:
         config = TrifectaConfig(
             segment="test",
             scope="Test",
@@ -56,12 +56,12 @@ class TestTrifectaPack:
 
 
 class TestValidationResult:
-    def test_passed_result(self):
+    def test_passed_result(self) -> None:
         result = ValidationResult(passed=True)
         assert result.passed
         assert result.errors == []
 
-    def test_failed_result(self):
+    def test_failed_result(self) -> None:
         result = ValidationResult(
             passed=False,
             errors=["Missing skill.md"],
@@ -71,16 +71,16 @@ class TestValidationResult:
 
 
 class TestValidateProfile:
-    def test_valid_profile_returns_profile(self):
+    def test_valid_profile_returns_profile(self) -> None:
         for profile in VALID_PROFILES:
             result = validate_profile(profile)
             assert result == profile
 
-    def test_invalid_profile_raises_error(self):
+    def test_invalid_profile_raises_error(self) -> None:
         with pytest.raises(ValueError, match="Invalid profile"):
             validate_profile("invalid_profile_name")
 
-    def test_invalid_profile_error_message(self):
+    def test_invalid_profile_error_message(self) -> None:
         with pytest.raises(ValueError) as exc_info:
             validate_profile("bad_profile")
         error_msg = str(exc_info.value)
