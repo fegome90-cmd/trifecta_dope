@@ -105,3 +105,39 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Commands**: ctx sync, session append
 - **Pack SHA**: `c3c0a4a0003f2420`
 
+## 2025-12-30 16:41 UTC
+- **Summary**: MVP Experience Report: Trifecta Performance Analysis (7.2K tokens, 5 queries, 99.9% token precision)
+- **Files**: docs/technical_reports/2025-12-30_trifecta_mvp_experience_report.md
+- **Commands**: ctx build, ctx search (2x), ctx get, session append
+- **Pack SHA**: `8d3f162fcba632d0`
+
+## 2025-12-30 16:52 UTC
+- **Summary**: Generated MVP Experience Report + Session Log update. Plan next: script refactor + deduplication (skill.md). Future: Progressive Disclosure AST/LSP.
+- **Files**: docs/technical_reports/2025-12-30_trifecta_mvp_experience_report.md, docs/technical_reports/SUMMARY_MVP.md
+- **Commands**: ctx sync, session append
+- **Pack SHA**: `9e45196d3636392c`
+
+## 2025-12-30 17:11 UTC
+- **Summary**: PHASE 2 (GREEN) START: Implementing validators.py + REFERENCE_EXCLUSION deduplication fix
+- **Files**: tests/unit/test_validators.py
+- **Commands**: pytest (15 tests RED)
+- **Pack SHA**: `9db6857f8d5d770e`
+
+## 2025-12-30 17:14 UTC
+- **Summary**: PHASE 2 (GREEN) COMPLETE: 15/15 tests PASS, validators.py created, REFERENCE_EXCLUSION added, skill.md deduplicated (7→6 chunks, -646 tokens)
+- **Files**: src/infrastructure/validators.py, src/infrastructure/file_system.py, tests/unit/test_validators.py
+- **Commands**: pytest tests/unit/test_validators.py -v (15 PASS), ctx sync, ctx validate (PASS)
+- **Pack SHA**: `97e765d7137fcc3b`
+
+## 2025-12-30 17:43 UTC
+- **Summary**: AUDIT COMPLETE + PHASE 3 (REFACTOR): Path-aware deduplication proven, nested skill.md support validated, imports migrated to src/, 82/82 tests PASS, ruff clean
+- **Files**: src/application/use_cases.py, src/infrastructure/file_system.py, src/infrastructure/validators.py, tests/unit/test_validators.py, tests/installer_test.py, scripts/install_FP.py
+- **Commands**: pytest tests/ -v (82 PASS), ruff check --fix (5 fixed), ctx sync (PASS)
+- **Pack SHA**: `e2d4e68db8438c94`
+
+## 2025-12-30 17:45 UTC
+- **Summary**: TDD v1.1 COMPLETE: Audit + Phase 3 success. Path-aware deduplication validated (nested skill.md supported), Clean Architecture imports, 82/82 tests PASS, 6 chunks (-646 tokens)
+- **Files**: src/application/use_cases.py, src/infrastructure/file_system.py, src/infrastructure/validators.py, tests/unit/test_validators.py, tests/installer_test.py, scripts/install_FP.py
+- **Commands**: audit (3 points validated), pytest tests/ -v (82 PASS), ruff check --fix (5 fixed), ctx sync (PASS)
+- **Pack SHA**: `e2d4e68db8438c94`
+

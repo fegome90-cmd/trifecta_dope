@@ -158,8 +158,6 @@ class RefreshPrimeUseCase:
         prime_path.write_text(prime_content)
 
         return prime_path.name
-
-
 class BuildContextPackUseCase:
     """Build a Context Pack for a segment."""
 
@@ -326,7 +324,15 @@ class BuildContextPackUseCase:
 
         # 2.5 Extract references from Prime
         refs = self._extract_references(prime_content, target_path, repo_root)
+        
+        # Compute primary source paths for exclusion (path-aware deduplication)
+        primary_skill_path = target_path / "skill.md"
+        excluded_paths = {primary_skill_path.resolve()}
+        
         for name, path in refs.items():
+            # Skip if this exact path is already indexed as a primary source
+            if path.resolve() in excluded_paths:
+                continue
             sources[f"ref:{name}"] = path
 
         # 2.6 FAIL-CLOSED VALIDATION

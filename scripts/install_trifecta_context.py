@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 """
+DEPRECATED: Use scripts/install_FP.py instead.
+
+This script is kept for backward compatibility only.
+The new install_FP.py uses Clean Architecture patterns and
+validators from src/infrastructure/validators.py.
+
 Trifecta Multi-Repo Installer (Hub-Agnostic)
 
 Arguments:
@@ -11,6 +17,8 @@ Behavior:
     1. Validates existence of skill/prime/agent/session
     2. Runs `trifecta ctx sync` (build + validate)
     3. Fails if segment is invalid
+
+Migration: python scripts/install_FP.py --help
 """
 import argparse
 import subprocess
