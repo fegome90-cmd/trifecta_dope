@@ -15,7 +15,7 @@ Status: RED PHASE (Tests fail, code doesn't exist yet)
 
 import pytest
 from pathlib import Path
-from typing import List
+from typing import List, Generator
 import tempfile
 import shutil
 
@@ -37,7 +37,7 @@ class TestValidatorMigration:
     EXPECTED STATE: All tests FAIL with ImportError or AssertionError
     """
 
-    def test_import_validation_result_from_validators(self):
+    def test_import_validation_result_from_validators(self) -> None:
         """
         Contract: ValidationResult dataclass must be importable from src.infrastructure.validators
         
@@ -50,7 +50,7 @@ class TestValidatorMigration:
         except (ModuleNotFoundError, ImportError) as e:
             pytest.fail(f"ValidationResult not found in src.infrastructure.validators: {e}")
 
-    def test_import_validate_segment_structure(self):
+    def test_import_validate_segment_structure(self) -> None:
         """
         Contract: validate_segment_structure must be importable from src.infrastructure.validators
         
@@ -63,7 +63,7 @@ class TestValidatorMigration:
         except (ModuleNotFoundError, ImportError) as e:
             pytest.fail(f"validate_segment_structure not found: {e}")
 
-    def test_validation_result_structure(self):
+    def test_validation_result_structure(self) -> None:
         """
         Contract: ValidationResult must have 'valid' and 'errors' attributes.
         
@@ -82,9 +82,9 @@ class TestValidatorMigration:
         
         # Test frozen constraint
         with pytest.raises(AttributeError):
-            result.valid = False
+            result.valid = False  # type: ignore[misc]
 
-    def test_validate_segment_structure_signature(self):
+    def test_validate_segment_structure_signature(self) -> None:
         """
         Contract: Function signature must be:
             def validate_segment_structure(path: Path) -> ValidationResult
@@ -119,13 +119,13 @@ class TestValidateSegmentStructureBehavior:
     """
 
     @pytest.fixture
-    def temp_segment_dir(self):
+    def temp_segment_dir(self) -> Generator[Path, None, None]:
         """Fixture: Create a temporary segment directory for testing."""
         tmp_dir = tempfile.mkdtemp()
         yield Path(tmp_dir)
         shutil.rmtree(tmp_dir, ignore_errors=True)
 
-    def test_valid_segment_with_dynamic_naming(self, temp_segment_dir):
+    def test_valid_segment_with_dynamic_naming(self, temp_segment_dir: Path) -> None:
         """
         Scenario: Segment named 'marketing' with correct files.
         
@@ -160,7 +160,7 @@ class TestValidateSegmentStructureBehavior:
         assert result.valid is True, f"Expected valid=True, got errors: {result.errors}"
         assert result.errors == [], f"Expected no errors, got: {result.errors}"
 
-    def test_invalid_segment_missing_skill_md(self, temp_segment_dir):
+    def test_invalid_segment_missing_skill_md(self, temp_segment_dir: Path) -> None:
         """
         Scenario: Segment missing skill.md
         
@@ -187,7 +187,7 @@ class TestValidateSegmentStructureBehavior:
         assert any("skill.md" in err.lower() for err in result.errors), \
             f"Error should mention skill.md, got: {result.errors}"
 
-    def test_invalid_segment_missing_ctx_directory(self, temp_segment_dir):
+    def test_invalid_segment_missing_ctx_directory(self, temp_segment_dir: Path) -> None:
         """
         Scenario: Segment missing _ctx/ directory
         
@@ -207,7 +207,7 @@ class TestValidateSegmentStructureBehavior:
         assert any("_ctx" in err.lower() for err in result.errors), \
             f"Error should mention _ctx, got: {result.errors}"
 
-    def test_invalid_segment_missing_dynamic_named_files(self, temp_segment_dir):
+    def test_invalid_segment_missing_dynamic_named_files(self, temp_segment_dir: Path) -> None:
         """
         Scenario: Segment has _ctx/ but missing dynamically-named files.
         
@@ -232,7 +232,7 @@ class TestValidateSegmentStructureBehavior:
         # At least one error should mention the missing files
         assert len(result.errors) > 0, "Should have at least one error"
 
-    def test_segment_path_not_found(self, temp_segment_dir):
+    def test_segment_path_not_found(self, temp_segment_dir: Path) -> None:
         """
         Scenario: Path does not exist.
         
@@ -265,7 +265,7 @@ class TestDeduplicationContract:
     Fails with: ImportError, AttributeError, AssertionError
     """
 
-    def test_reference_exclusion_exists(self):
+    def test_reference_exclusion_exists(self) -> None:
         """
         Contract: Path-aware deduplication must exist in BuildContextPackUseCase.
         
@@ -282,7 +282,7 @@ class TestDeduplicationContract:
         # Verify the use case has the method that performs path-aware exclusion
         assert hasattr(use_case, '_extract_references')
 
-    def test_file_scanner_respects_exclusion(self):
+    def test_file_scanner_respects_exclusion(self) -> None:
         """
         Contract: File scanner must skip root skill.md but NOT nested skill.md files.
         
@@ -299,7 +299,7 @@ class TestDeduplicationContract:
         # Test that the logic exists to check path-aware exclusion
         assert hasattr(use_case, '_extract_references')
 
-    def test_skill_md_indexed_only_once_in_context_pack(self):
+    def test_skill_md_indexed_only_once_in_context_pack(self) -> None:
         """
         Integration test: Verify ROOT skill.md appears exactly once in context pack.
         
@@ -329,7 +329,7 @@ class TestDeduplicationContract:
         assert len(skill_chunks) == 1, f"Expected 1 skill chunk, found {len(skill_chunks)}"
         assert skill_chunks[0]["doc"] == "skill", "skill.md must be indexed as 'skill', not 'ref:skill'"
     
-    def test_nested_skill_md_is_NOT_excluded(self, tmp_path):
+    def test_nested_skill_md_is_NOT_excluded(self, tmp_path: Path) -> None:
         """
         Contract: Nested skill.md files (e.g., library/skill.md) MUST be indexed as references.
         
@@ -392,7 +392,7 @@ class TestTypeSafetyAndImmutability:
     - Type hints are strict (mypy --strict compatible)
     """
 
-    def test_validation_result_is_frozen(self):
+    def test_validation_result_is_frozen(self) -> None:
         """
         Contract: ValidationResult must be frozen (immutable).
         
@@ -403,12 +403,12 @@ class TestTypeSafetyAndImmutability:
         result = ValidationResult(valid=True, errors=[])
         
         with pytest.raises(AttributeError):
-            result.valid = False
+            result.valid = False  # type: ignore[misc]
         
         with pytest.raises(AttributeError):
-            result.errors = ["new error"]
+            result.errors = ["new error"]  # type: ignore[misc]
 
-    def test_validation_result_list_errors_is_type_safe(self):
+    def test_validation_result_list_errors_is_type_safe(self) -> None:
         """
         Contract: ValidationResult.errors must be List[str].
         
@@ -424,7 +424,7 @@ class TestTypeSafetyAndImmutability:
         assert isinstance(errors, list)
         assert all(isinstance(e, str) for e in errors)
 
-    def test_validate_function_has_no_side_effects_visible(self):
+    def test_validate_function_has_no_side_effects_visible(self) -> None:
         """
         Contract: validate_segment_structure must be a pure function.
         
