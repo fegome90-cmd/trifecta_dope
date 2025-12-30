@@ -1,0 +1,21 @@
+schema_version: 1
+aliases:
+  # === CORE DOMAIN ===
+  context: [pack, segment, ctx, index, digest]
+  chunking: [split, headings, fence, tokens]
+  normalization: [query, tokens, lowercase, lowercase_normalize]
+
+  # === USE CASES ===
+  build: [ingest, generate, sync]
+  search: [find, query, expand, alias]
+  get: [retrieve, fetch, excerpt, raw]
+  validate: [verify, check, health, stale]
+
+  # === INFRASTRUCTURE ===
+  cli: [typer, app, command, shell]
+  telemetry: [events, metrics, stats, stats_summary]
+
+  # === DOCUMENTATION ===
+  rules: [skill, protocol, guidelines]
+  foundations: [prime, reading_order, basics]
+  session: [history, log, handoff, append]

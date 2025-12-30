@@ -1,4 +1,3 @@
-
 import pytest
 from pathlib import Path
 from typer.testing import CliRunner
@@ -7,6 +6,7 @@ from src.application.use_cases import BuildContextPackUseCase
 from src.infrastructure.file_system import FileSystemAdapter
 
 runner = CliRunner()
+
 
 @pytest.fixture
 def temp_segment(tmp_path):
@@ -17,84 +17,89 @@ def temp_segment(tmp_path):
     (seg / "_ctx" / "agent.md").write_text("Agent")
     return seg
 
+
 # T7.1 — CLI interface hardening
 def test_cli_requires_segment_flag():
-    result = runner.invoke(app, ["ctx", "build"]) # Missing --segment
+    result = runner.invoke(app, ["ctx", "build"])  # Missing --segment
     assert result.exit_code != 0
     assert "Missing option" in result.output or "Error" in result.output
 
+
 def test_cli_requires_segment_arg_load():
-    result = runner.invoke(app, ["load", "--task", "test"]) # Missing --segment
+    result = runner.invoke(app, ["load", "--task", "test"])  # Missing --segment
     assert result.exit_code != 0
+
 
 # T7.2 — Prime link expansion happy path
 def test_prime_expansion_happy_path(temp_segment):
     doc_file = temp_segment / "doc.md"
     doc_file.write_text("Content of linked doc")
-    
+
     prime = temp_segment / "_ctx" / "prime_test.md"
     prime.write_text("- [Link](doc.md)")
-    
+
     uc = BuildContextPackUseCase(FileSystemAdapter())
     pack = uc.execute(temp_segment)
-    
+
     # Check if doc.md content is indexed
     indexed_texts = [c.text for c in pack.chunks]
     assert "Content of linked doc" in indexed_texts
-    
-# T7.3 — Prime link security: path traversal (hard fail/skip)
+
+
+# T7.3 — Prime link security: path traversal (FAIL-CLOSED)
 def test_prime_security_path_traversal(temp_segment):
     # Create a secret file outside segment
     secret = temp_segment.parent / "secret.md"
     secret.write_text("SECRET DATA")
-    
+
     prime = temp_segment / "_ctx" / "prime_test.md"
     prime.write_text("- [Attack](../secret.md)")
-    
+
     uc = BuildContextPackUseCase(FileSystemAdapter())
-    pack = uc.execute(temp_segment)
-    
-    # Should NOT contain secret data
-    indexed_texts = [c.text for c in pack.chunks]
-    assert "SECRET DATA" not in indexed_texts
+
+    # Should raise ValueError (fail-closed policy)
+    with pytest.raises(ValueError, match="PROHIBITED.*outside segment"):
+        uc.execute(temp_segment)
+
 
 # T7.4 — Cycle detection (Explicit warning check)
 def test_prime_cycles_warning(temp_segment, capsys):
     # Create simple cycle A -> A (via duplicate link)
     doc_path = temp_segment / "doc.md"
     doc_path.write_text("Doc content")
-    
+
     # Same file referenced twice
-    links = "- [Link1](doc.md)\n- [Link2](doc.md)" 
+    links = "- [Link1](doc.md)\n- [Link2](doc.md)"
     prime = temp_segment / "_ctx" / "prime_test.md"
     prime.write_text(links)
-    
+
     uc = BuildContextPackUseCase(FileSystemAdapter())
     uc.execute(temp_segment)
-    
+
     captured = capsys.readouterr()
     assert "Warning: Cycle/Duplicate detected" in captured.out
+
 
 # T7.5 — Installer Contamination Check
 def test_installer_does_not_write_ctx_in_cli_root(tmp_path):
     # Verify logic: if segment != cli_root, cli_root should remain clean
     cli_root = tmp_path / "cli_root"
     cli_root.mkdir()
-    
+
     segment = tmp_path / "segment"
     segment.mkdir()
     (segment / "skill.md").write_text("Skill")
     (segment / "_ctx").mkdir()
     (segment / "_ctx" / "agent.md").write_text("Agent")
     (segment / "_ctx" / "prime_seg.md").write_text("Prime")
-    
-    # We can't easily run the installer script here as it invokes subprocess, 
+
+    # We can't easily run the installer script here as it invokes subprocess,
     # but we can verify the CLI behavior which the installer uses.
     # Run ctx build targeting segment
     result = runner.invoke(app, ["ctx", "build", "--segment", str(segment)])
-    
+
     assert result.exit_code == 0
-    
+
     # Check NO _ctx in cli_root
     assert not (cli_root / "_ctx").exists()
     # Check _ctx exists in segment

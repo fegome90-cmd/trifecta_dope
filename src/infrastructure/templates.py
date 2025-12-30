@@ -12,99 +12,59 @@ name: {config.segment}
 description: Use when working on {config.scope}
 ---
 
-# {config.segment.replace('-', ' ').title()}
+# {config.segment.replace("-", " ").title()}
 
 ## Overview
 {config.scope}
 
-**Ubicacion**: `{config.repo_root}/{config.segment}/`
+## When to Use
+Working on `{config.repo_root}/{config.segment}/`
 
-## [!] ONBOARDING OBLIGATORIO [!]
+## Core Pattern
 
-1. **skill.md** (este archivo) - Reglas y roles
-2. **[PRIME](./_ctx/prime_{config.segment}.md)** - Docs obligatorios
-3. **[AGENT](./_ctx/agent.md)** - Stack tecnico y gates
+### Session Evidence Persistence (5 Steps)
 
-> NO ejecutes codigo sin leer los 3 archivos.
-
-## Core Rules
-1. **Sync First**: Valida `.env` antes de cambios
-2. **Test Locally**: Tests del segmento antes de commit
-3. **Read Before Write**: Lee codigo antes de modificar
-4. **Document**: Actualiza `session.md`
-
-### CRITICAL PROTOCOL: Session Evidence Persistence (Trifecta)
-
-Antes de ejecutar cualquier herramienta (Trifecta CLI o agentes externos), DEBES seguir este orden. NO tomes atajos.
-
-1) PERSISTE intencion minima (CLI proactivo - NO depende del LLM):
+1) **Persist intention** (CLI proactive):
 ```bash
-trifecta session append --segment . --summary "<que vas a hacer>" --files "<csv>" --commands "<csv>"
+trifecta session append --segment . --summary "<action>" --files "<csv>" --commands "<csv>"
 ```
 
-2) SYNC del segmento
+2) **Sync context**:
 ```bash
 trifecta ctx sync --segment .
 ```
 
-3) LEE lo que acabas de escribir (confirma Objective/Plan registrado en session.md)
+3) **Read** session.md (confirm objective logged)
 
-4) EJECUTA el ciclo de contexto (Plan A por defecto)
+4) **Execute** context cycle:
 ```bash
-trifecta ctx search --segment . --query "<tema>" --limit 6
+trifecta ctx search --segment . --query "<topic>" --limit 6
 trifecta ctx get --segment . --ids "<id1>,<id2>" --mode excerpt --budget-token-est 900
 ```
 
-5) REGISTRA resultado (CLI proactivo):
+5) **Log result**:
 ```bash
 trifecta session append --segment . --summary "Completed <task>" --files "<touched>" --commands "<executed>"
 ```
 
-STALE FAIL-CLOSED PROTOCOL (CRITICAL):
-- Si `ctx validate` falla o `stale_detected=true` -> STOP inmediatamente
-- Ejecutar: `trifecta ctx sync --segment .` + `trifecta ctx validate --segment .`
-- Registrar en session.md: "Stale: true -> sync+validate executed"
-- Prohibido continuar hasta PASS
+### Stale Fail-Closed Protocol
 
-Prohibido:
-- YAML de historial largo
-- rutas absolutas fuera del segmento
-- ejecutar scripts legacy de ingestion
-- "fallback silencioso"
-- continuar con pack stale
+If `ctx validate` fails or `stale_detected=true`:
+- STOP immediately
+- Run: `trifecta ctx sync --segment .` + `trifecta ctx validate --segment .`
+- Log: "Stale: true -> sync+validate executed"
+- Continue ONLY if PASS
 
-## Workflow
-```bash
-cd {config.repo_root}/{config.segment}
-# Setup: python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
-# Test: pytest tests/unit/ -v
-# Lint: ruff check . --fix && black .
-```
-
-## Troubleshooting
-| Problema | Solucion |
-|----------|----------|
-| `ImportError` | `pip install -e .` desde repo root |
-| `.env` faltante | Copiar desde `.env.example` |
-| Lint errors | `ruff check . --fix` o `npm run lint:fix` |
-| TypeError | Check versiones de dependencias |
-
-## Integration Points
-**Upstream:** <!-- listar -->
-**Downstream:** <!-- listar -->
-**API:** <!-- contratos si aplica -->
+## Common Mistakes
+- Skipping session logging
+- Using absolute paths outside segment
+- Continuing with stale pack
+- Silent fallback to Plan B
 
 ## Resources (On-Demand)
-- `@_ctx/prime_{config.segment}.md` - Docs obligatorios
-- `@_ctx/agent.md` - Stack y configuracion
-- `@_ctx/session_{config.segment}.md` - Log de cambios
-
-## LLM Roles
-| Rol | Modelo | Uso |
-|-----|--------|-----|
-| **Worker** | `deepseek-reasoner` | General |
-| **Senior** | `claude-sonnet-4-5` | Complejo |
-| **Fallback** | `gemini-3.0-flash-preview` | Fallos |
+- `@_ctx/prime_{config.segment}.md` - Reading list
+- `@_ctx/agent.md` - Tech stack & gates
+- `@_ctx/session_{config.segment}.md` - Session log
 
 ---
 **Profile**: `{config.default_profile}` | **Updated**: {config.last_verified}
@@ -115,7 +75,7 @@ cd {config.repo_root}/{config.segment}
         formatted_docs = ""
         if docs:
             for i, doc in enumerate(docs):
-                formatted_docs += f"{i+1}. `{doc}`\n"
+                formatted_docs += f"{i + 1}. `{doc}`\n"
         else:
             formatted_docs = "<!-- Agregar documentos obligatorios -->"
 
@@ -124,7 +84,7 @@ segment: {config.segment}
 profile: load_only
 ---
 
-# Prime {config.segment.replace('-', ' ').title()} - Lista de Lectura
+# Prime {config.segment.replace("-", " ").title()} - Lista de Lectura
 
 > **REPO_ROOT**: `{config.repo_root}`
 > Todas las rutas son relativas a esta raiz.
@@ -183,7 +143,7 @@ last_verified: {config.last_verified}
 default_profile: {config.default_profile}
 ---
 
-# Agent Context - {config.segment.replace('-', ' ').title()}
+# Agent Context - {config.segment.replace("-", " ").title()}
 
 ## Source of Truth
 | Seccion | Fuente |
@@ -388,7 +348,7 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \\
 """
 
     def render_readme(self, config: TrifectaConfig) -> str:
-        return f"""# {config.segment.replace('-', ' ').title()} - Trifecta Documentation
+        return f"""# {config.segment.replace("-", " ").title()} - Trifecta Documentation
 
 > **Trifecta System**: Este segmento usa el sistema Trifecta para comprension rapida por agentes de codigo.
 
@@ -466,7 +426,7 @@ name: {config.segment}
 description: Use when working on {config.scope}
 ---
 
-# {config.segment.replace('-', ' ').title()}
+# {config.segment.replace("-", " ").title()}
 
 ## Overview
 <!-- 1-2 sentences describiendo el proposito -->

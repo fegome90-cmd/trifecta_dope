@@ -202,20 +202,25 @@ trifecta create --segment eval-harness --path eval/eval-harness/ --scan-docs eva
 trifecta validate --path eval/eval-harness/
 ```
 
-### Generar Context Pack (Token-Optimized)
+### Generar Context Pack (Programming Context Calling)
 
-El **Context Pack** es un JSON estructurado que permite a los LLMs ingerir documentación de manera eficiente sin cargar textos completos en el prompt.
+El **Context Pack** es un índice estructurado que permite al agente:
+1. Descubrir qué chunks existen (`ctx.search`)
+2. Invocar chunks específicos (`ctx.get --ids X`)
+3. Operar con presupuesto estricto (budget-aware)
+
+**Analogía**: Como "Tool Search Tool" de Anthropic, pero para contexto.
 
 ```bash
-# Generar context_pack.json en _ctx/
-python scripts/ingest_trifecta.py --segment debug_terminal
+# Comando oficial (recomendado)
+trifecta ctx build --segment /path/to/segment
 
-# Con repo root personalizado
-python scripts/ingest_trifecta.py --segment hemdov --repo-root /path/to/projects
-
-# Output personalizado
-python scripts/ingest_trifecta.py --segment eval --output custom/pack.json
+# Validar integridad
+trifecta ctx validate --segment /path/to/segment
 ```
+
+> **DEPRECADO**: `scripts/ingest_trifecta.py` será removido en v2.  
+> Usar solo para debugging interno del CLI.
 
 **Estructura del Context Pack:**
 
@@ -236,19 +241,25 @@ python scripts/ingest_trifecta.py --segment eval --output custom/pack.json
 }
 ```
 
-**Para usarlo en un agente:**
+**Cómo funciona:**
 
-1. **Prompt base** incluye solo `digest` + `index`
-2. **Tool** `get_context(chunk_id)` devuelve `chunks["text"]` cuando se necesita
-3. **Resultado**: Agente entiende el contexto sin quemar tokens
+1. **Prompt base** incluye solo `digest` + `index` (referencias)
+2. **Agente llama** `ctx.get --ids X` cuando necesita evidencia específica
+3. **Sistema entrega** chunks dentro del presupuesto (budget-aware)
+4. **Agente cita** evidencia con `[chunk_id]`
+
+**El agente decide qué cargar, cuándo y con qué presupuesto. NO es recuperación automática.**
 
 > Ver [`docs/plans/2025-12-29-context-pack-ingestion.md`](./docs/plans/2025-12-29-context-pack-ingestion.md) para especificación completa.
 
-## Mini-RAG (Contexto Local)
+## 🔧 Mini-RAG (Herramienta de Desarrollo)
 
-Este repo integra Mini-RAG para consultas rápidas sobre la documentación (RAG local).
+> **NOTA**: Mini-RAG es una herramienta **externa** para que TÚ (desarrollador) consultes  
+> la documentación del CLI. **NO es parte del paradigma Trifecta.**
 
-### Setup (local source)
+Trifecta usa búsqueda lexical (grep-like), NO embeddings.
+
+### Setup (solo para desarrollo del CLI)
 
 ```bash
 # Desde la raíz del proyecto
@@ -263,6 +274,8 @@ make minirag-query MINIRAG_QUERY="PCC"
 ```
 
 > El índice usa `docs/**/*.md` y `knowledge/**` definidos en `.mini-rag/config.yaml`.
+
+**Para agentes**: Usar `trifecta ctx search`, NO Mini-RAG.
 ## Instalación
 
 ```bash

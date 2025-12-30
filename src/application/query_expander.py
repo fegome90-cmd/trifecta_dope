@@ -5,71 +5,84 @@ from typing import Dict, List, Tuple, Set
 
 class QueryExpander:
     """Expand queries using aliases with weighted terms."""
-    
+
     MAX_EXTRA_TERMS = 8
     ORIGINAL_WEIGHT = 1.0
     ALIAS_WEIGHT = 0.7
-    
+
     def __init__(self, aliases: Dict[str, List[str]]):
         """Initialize expander with aliases.
-        
+
         Args:
             aliases: Dict mapping alias keys to synonym lists
         """
         self.aliases = aliases
-    
+
     def expand(self, query: str, tokens: List[str]) -> List[Tuple[str, float]]:
         """Expand query using aliases with weights.
-        
+
         Args:
             query: Normalized query string
             tokens: Query tokens
-            
+
         Returns:
             List of (term, weight) tuples, capped at MAX_EXTRA_TERMS
         """
         if not self.aliases:
             # No aliases -> return original query only
             return [(query, self.ORIGINAL_WEIGHT)]
-        
+
         # Start with original query
         terms: List[Tuple[str, float]] = [(query, self.ORIGINAL_WEIGHT)]
-        
+
         # Track added terms to avoid duplicates
         added_terms: Set[str] = {query}
-        
-        # Check if full query matches an alias key
+
+        # Helper to avoid duplicates and cap terms
+        def add_term(term: str, weight: float):
+            if term not in added_terms and len(added_terms) - 1 < self.MAX_EXTRA_TERMS:
+                terms.append((term, weight))
+                added_terms.add(term)
+
+        # 1. Check full query in keys and synonyms
+        # From key -> add all synonyms
         if query in self.aliases:
             for synonym in self.aliases[query]:
-                if synonym not in added_terms and len(added_terms) - 1 < self.MAX_EXTRA_TERMS:
-                    terms.append((synonym, self.ALIAS_WEIGHT))
-                    added_terms.add(synonym)
-        
-        # Check each token
+                add_term(synonym, self.ALIAS_WEIGHT)
+
+        # From synonym -> add key (reverse lookup)
+        for key, synonyms in self.aliases.items():
+            if query in synonyms:
+                add_term(key, self.ALIAS_WEIGHT)
+
+        # 2. Check each token (if not already found)
         for token in tokens:
-            if token in self.aliases:
-                for synonym in self.aliases[token]:
-                    if synonym not in added_terms and len(added_terms) - 1 < self.MAX_EXTRA_TERMS:
-                        terms.append((synonym, self.ALIAS_WEIGHT))
-                        added_terms.add(synonym)
-            
-            # Stop if we've hit the cap
             if len(added_terms) - 1 >= self.MAX_EXTRA_TERMS:
                 break
-        
+
+            # From key -> add synonyms
+            if token in self.aliases:
+                for synonym in self.aliases[token]:
+                    add_term(synonym, self.ALIAS_WEIGHT)
+
+            # From synonym -> add key
+            for key, synonyms in self.aliases.items():
+                if token in synonyms:
+                    add_term(key, self.ALIAS_WEIGHT)
+
         return terms
-    
+
     def get_expansion_metadata(self, terms: List[Tuple[str, float]]) -> Dict:
         """Get metadata about the expansion for telemetry.
-        
+
         Args:
             terms: List of (term, weight) tuples from expand()
-            
+
         Returns:
             Dict with expansion metadata
         """
         alias_terms = [t for t, w in terms if w == self.ALIAS_WEIGHT]
-        
+
         # Find which alias keys were used
         keys_used = []
         for key, synonyms in self.aliases.items():
@@ -77,9 +90,9 @@ class QueryExpander:
                 if term in synonyms:
                     keys_used.append(key)
                     break
-        
+
         return {
             "alias_expanded": len(alias_terms) > 0,
             "alias_terms_count": len(alias_terms),
-            "alias_keys_used": keys_used[:5]  # Cap at 5 for telemetry
+            "alias_keys_used": keys_used[:5],  # Cap at 5 for telemetry
         }
