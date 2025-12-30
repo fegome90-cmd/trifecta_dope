@@ -4,6 +4,21 @@
 **Status**: Design Complete
 **Schema Version**: 1
 
+> **⚠️ DEPRECACIÓN**: Este documento describe `scripts/ingest_trifecta.py` (legacy).  
+> **CLI Oficial**: Usar `trifecta ctx build --segment .` en su lugar.  
+> **Fecha de deprecación**: 2025-12-30
+
+## Comando Actualizado
+
+```bash
+# Reemplazar:
+python scripts/ingest_trifecta.py --segment debug_terminal
+
+# Por:
+trifecta ctx build --segment /path/to/segment
+trifecta ctx validate --segment /path/to/segment
+```
+
 ---
 
 ## Overview

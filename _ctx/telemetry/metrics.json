@@ -1,14 +1,14 @@
 {
-  "ctx_build_count": 10,
-  "ctx_validate_pass_count": 12,
-  "ctx_search_count": 13,
+  "ctx_build_count": 12,
+  "ctx_validate_pass_count": 14,
+  "ctx_search_count": 14,
   "ctx_search_hits_total": 10,
-  "ctx_search_zero_hits_count": 8,
+  "ctx_search_zero_hits_count": 9,
   "ctx_get_count": 5,
   "ctx_get_chunks_total": 4,
   "ctx_get_mode_excerpt_count": 4,
-  "prime_links_included_total": 15,
-  "ctx_search_alias_expansion_count": 3,
-  "ctx_search_alias_terms_total": 10,
+  "prime_links_included_total": 21,
+  "ctx_search_alias_expansion_count": 4,
+  "ctx_search_alias_terms_total": 14,
   "ctx_get_mode_raw_count": 1
 }

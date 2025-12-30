@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "segment": "trifecta_dope",
-  "created_at": "2025-12-30T07:08:13.638537",
+  "created_at": "2025-12-30T07:56:47.699649",
   "digest": "",
   "source_files": [
     {
@@ -24,9 +24,9 @@
     },
     {
       "path": "_ctx/session_trifecta_dope.md",
-      "sha256": "142110589163dab84bc3a3bd9350c46b9aa35e328ad775aea91ffe87fab9e047",
-      "mtime": 1767053545.7218585,
-      "chars": 3704
+      "sha256": "6f448ebf902a58492f86b4e49da0acbbe8c5c26180e335dcb6d18fcc2cafe58d",
+      "mtime": 1767092140.9255965,
+      "chars": 4024
     },
     {
       "path": "README.md",
@@ -85,14 +85,14 @@
       "chunking_method": "whole_file"
     },
     {
-      "id": "session:2f2cdf0d6e",
+      "id": "session:e4468d37a3",
       "doc": "session",
       "title_path": [
         "session_trifecta_dope.md"
       ],
-      "text": "# session.md - Trifecta Context Runbook\n\nsegment: trifecta-dope\n\n## Purpose\nThis file is a **runbook** for using Trifecta Context tools efficiently:\n- progressive disclosure (search -> get)\n- strict budget/backpressure\n- evidence cited by [chunk_id]\n\n## Quick Commands (CLI)\n```bash\n# SEGMENT=\".\" es valido SOLO si tu cwd es el repo target (el segmento).\n# Si ejecutas trifecta desde otro lugar (p.ej. desde el repo del CLI), usa un path absoluto:\n# SEGMENT=\"/abs/path/to/AST\"\nSEGMENT=\".\"\n\n# Usa un termino que exista en el segmento (ej: nombre de archivo, clase, funcion).\n# Si no hay hits, refina el query o busca por simbolos.\ntrifecta ctx sync --segment \"$SEGMENT\"\ntrifecta ctx search --segment \"$SEGMENT\" --query \"<query>\" --limit 6\ntrifecta ctx get --segment \"$SEGMENT\" --ids \"<id1>,<id2>\" --mode excerpt --budget-token-est 900\ntrifecta ctx validate --segment \"$SEGMENT\"\ntrifecta load --segment \"$SEGMENT\" --mode fullfiles --task \"Explain how symbols are extracted\"\n```\n\n## Rules (must follow)\n\n* Max **1 ctx.search + 1 ctx.get** per user turn.\n* Prefer **mode=excerpt**; use raw only if necessary and within budget.\n* Cite evidence using **[chunk_id]**.\n* If **validate fails**: stop, rebuild. **No silent fallback**.\n* **STALE FAIL-CLOSED**: If `stale_detected=true`, STOP -> `ctx sync` + `ctx validate` -> log \"Stale: true -> sync+validate executed\" -> continue only if PASS.\n\n## Session Log (append-only)\n\n### Entry Template (max 12 lines)\n```md\n## YYYY-MM-DD HH:MM - ctx cycle\n- Segment: .\n- Objective: <que necesitas resolver>\n- Plan: ctx sync -> ctx search -> ctx get (excerpt, budget=900)\n- Commands: (pending/executed)\n- Evidence: (pending/[chunk_id] list)\n- Warnings: (none/<code>)\n- Next: <1 concrete step>\n```\n\nReglas:\n- **append-only** (no reescribir entradas previas)\n- una entrada por run\n- no mas de 12 lineas\n\n## TRIFECTA_SESSION_CONTRACT (NON-EXECUTABLE in v1)\n\n> Documentation only. Not executed automatically in v1.\n\n```yaml\nschema_version: 1\nsegment: .\nautopilot:\n  enabled: false\n  note: \"v2 idea only - NOT executed in v1\"\n```\n\n## Watcher Example (optional)\n\n```bash\n# Ignore _ctx to avoid loops.\nfswatch -o -e \"_ctx/.*\" -i \"skill.md|prime.md|agent.md|session.md\" . \\\n  | while read; do trifecta ctx sync --segment \"$SEGMENT\"; done\n```\n\n## Next User Request\n\n<!-- The next agent starts here -->\n\n## 2025-12-29 23:44 UTC\n- **Summary**: Corrected T9.A to Context Routing Accuracy (not RAG). Updated aliases for routing, created evidence reports.\n- **Files**: implementation_plan.md, t9a_context_routing_accuracy.md, aliases.yaml\n- **Commands**: ctx sync, ctx search, session append\n- **Pack SHA**: `a38f1cacdb4f0afc`\n\n## 2025-12-29 23:49 UTC\n- **Summary**: Demonstrated Trifecta CLI usage: ctx search, ctx get, ctx stats\n- **Files**: skill.md\n- **Commands**: ctx search, ctx get, ctx stats\n- **Pack SHA**: `557f59c5e54ff34c`\n\n## 2025-12-29 23:54 UTC\n- **Summary**: Analyzed scope deviations: T9.A corrected (PCC not RAG), identified pending tasks (trifecta load, MCP, Progressive Disclosure)\n- **Files**: scope_analysis.md\n- **Commands**: mini-rag query, ctx search\n- **Pack SHA**: `557f59c5e54ff34c`\n\n## 2025-12-29 23:58 UTC\n- **Summary**: T9 Correction Evidence Report completed: 7/9 PASS, 1 FAIL (missing prohibition), 1 BELOW (routing 75%)\n- **Files**: t9-correction-evidence.md\n- **Commands**: ctx validate, ctx search, ctx get, pytest\n- **Pack SHA**: `557f59c5e54ff34c`\n\n## 2025-12-30 00:12 UTC\n- **Summary**: Updated prime docs (Paths), agent SOT (Tech Stack/Gates), and synced context pack.\n- **Files**: _ctx/prime_trifecta_dope.md, _ctx/agent.md, _ctx/session_trifecta_dope.md, readme_tf.md\n- **Commands**: ctx sync, session append\n- **Pack SHA**: `c3c0a4a0003f2420`\n\n",
-      "char_count": 3704,
-      "token_est": 926,
+      "text": "# session.md - Trifecta Context Runbook\n\nsegment: trifecta-dope\n\n## Purpose\nThis file is a **runbook** for using Trifecta Context tools efficiently:\n- progressive disclosure (search -> get)\n- strict budget/backpressure\n- evidence cited by [chunk_id]\n\n## Quick Commands (CLI)\n```bash\n# SEGMENT=\".\" es valido SOLO si tu cwd es el repo target (el segmento).\n# Si ejecutas trifecta desde otro lugar (p.ej. desde el repo del CLI), usa un path absoluto:\n# SEGMENT=\"/abs/path/to/AST\"\nSEGMENT=\".\"\n\n# Usa un termino que exista en el segmento (ej: nombre de archivo, clase, funcion).\n# Si no hay hits, refina el query o busca por simbolos.\ntrifecta ctx sync --segment \"$SEGMENT\"\ntrifecta ctx search --segment \"$SEGMENT\" --query \"<query>\" --limit 6\ntrifecta ctx get --segment \"$SEGMENT\" --ids \"<id1>,<id2>\" --mode excerpt --budget-token-est 900\ntrifecta ctx validate --segment \"$SEGMENT\"\ntrifecta load --segment \"$SEGMENT\" --mode fullfiles --task \"Explain how symbols are extracted\"\n```\n\n## Rules (must follow)\n\n* Max **1 ctx.search + 1 ctx.get** per user turn.\n* Prefer **mode=excerpt**; use raw only if necessary and within budget.\n* Cite evidence using **[chunk_id]**.\n* If **validate fails**: stop, rebuild. **No silent fallback**.\n* **STALE FAIL-CLOSED**: If `stale_detected=true`, STOP -> `ctx sync` + `ctx validate` -> log \"Stale: true -> sync+validate executed\" -> continue only if PASS.\n\n## Session Log (append-only)\n\n### Entry Template (max 12 lines)\n```md\n## YYYY-MM-DD HH:MM - ctx cycle\n- Segment: .\n- Objective: <que necesitas resolver>\n- Plan: ctx sync -> ctx search -> ctx get (excerpt, budget=900)\n- Commands: (pending/executed)\n- Evidence: (pending/[chunk_id] list)\n- Warnings: (none/<code>)\n- Next: <1 concrete step>\n```\n\nReglas:\n- **append-only** (no reescribir entradas previas)\n- una entrada por run\n- no mas de 12 lineas\n\n## TRIFECTA_SESSION_CONTRACT (NON-EXECUTABLE in v1)\n\n> Documentation only. Not executed automatically in v1.\n\n```yaml\nschema_version: 1\nsegment: .\nautopilot:\n  enabled: false\n  note: \"v2 idea only - NOT executed in v1\"\n```\n\n## Watcher Example (optional)\n\n```bash\n# Ignore _ctx to avoid loops.\nfswatch -o -e \"_ctx/.*\" -i \"skill.md|prime.md|agent.md|session.md\" . \\\n  | while read; do trifecta ctx sync --segment \"$SEGMENT\"; done\n```\n\n## Next User Request\n\n<!-- The next agent starts here -->\n\n## 2025-12-29 23:44 UTC\n- **Summary**: Corrected T9.A to Context Routing Accuracy (not RAG). Updated aliases for routing, created evidence reports.\n- **Files**: implementation_plan.md, t9a_context_routing_accuracy.md, aliases.yaml\n- **Commands**: ctx sync, ctx search, session append\n- **Pack SHA**: `a38f1cacdb4f0afc`\n\n## 2025-12-29 23:49 UTC\n- **Summary**: Demonstrated Trifecta CLI usage: ctx search, ctx get, ctx stats\n- **Files**: skill.md\n- **Commands**: ctx search, ctx get, ctx stats\n- **Pack SHA**: `557f59c5e54ff34c`\n\n## 2025-12-29 23:54 UTC\n- **Summary**: Analyzed scope deviations: T9.A corrected (PCC not RAG), identified pending tasks (trifecta load, MCP, Progressive Disclosure)\n- **Files**: scope_analysis.md\n- **Commands**: mini-rag query, ctx search\n- **Pack SHA**: `557f59c5e54ff34c`\n\n## 2025-12-29 23:58 UTC\n- **Summary**: T9 Correction Evidence Report completed: 7/9 PASS, 1 FAIL (missing prohibition), 1 BELOW (routing 75%)\n- **Files**: t9-correction-evidence.md\n- **Commands**: ctx validate, ctx search, ctx get, pytest\n- **Pack SHA**: `557f59c5e54ff34c`\n\n## 2025-12-30 00:12 UTC\n- **Summary**: Updated prime docs (Paths), agent SOT (Tech Stack/Gates), and synced context pack.\n- **Files**: _ctx/prime_trifecta_dope.md, _ctx/agent.md, _ctx/session_trifecta_dope.md, readme_tf.md\n- **Commands**: ctx sync, session append\n- **Pack SHA**: `c3c0a4a0003f2420`\n\n## 2025-12-30 10:55 UTC\n- **Summary**: Applying documentation deprecation fixes (3 files)\n- **Files**: docs/plans/2025-12-29-context-pack-ingestion.md, docs/implementation/context-pack-implementation.md, docs/plans/t9-correction-evidence.md\n- **Commands**: multi_replace_file_content\n- **Pack SHA**: `307e1f35d7b883ec`\n\n",
+      "char_count": 4024,
+      "token_est": 1006,
       "source_path": "session_trifecta_dope.md",
       "chunking_method": "whole_file"
     },
@@ -153,10 +153,10 @@
       "token_est": 345
     },
     {
-      "id": "session:2f2cdf0d6e",
+      "id": "session:e4468d37a3",
       "title_path_norm": "session_trifecta_dope.md",
       "preview": "# session.md - Trifecta Context Runbook\n\nsegment: trifecta-dope\n\n## Purpose\nThis file is a **runbook** for using Trifecta Context tools efficiently:\n- progressive disclosure (search -> get)\n- strict b...",
-      "token_est": 926
+      "token_est": 1006
     },
     {
       "id": "ref:README.md:774e61e8d8",

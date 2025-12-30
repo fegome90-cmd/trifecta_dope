@@ -1,22 +1,24 @@
 {
-  "run_id": "run_1767089804",
-  "ts": "2025-12-30T10:16:44.755533+00:00",
+  "run_id": "run_1767092228",
+  "ts": "2025-12-30T10:57:08.536421+00:00",
   "metrics_delta": {
     "ctx_search_count": 1,
     "ctx_search_hits_total": 0,
-    "ctx_search_zero_hits_count": 1
+    "ctx_search_zero_hits_count": 1,
+    "ctx_search_alias_expansion_count": 1,
+    "ctx_search_alias_terms_total": 4
   },
   "latencies": {
     "ctx.search": {
       "count": 1,
-      "p50_ms": 1.0,
-      "p95_ms": 1.0,
-      "max_ms": 1.0
+      "p50_ms": 2.0,
+      "p95_ms": 2.0,
+      "max_ms": 2.0
     }
   },
   "top_warnings": [],
   "pack_state": {
-    "pack_sha": "307e1f35d7b883ec",
-    "pack_mtime": 1767089293.6389554
+    "pack_sha": "7e5a55959d7531a5",
+    "pack_mtime": 1767092207.7000082
   }
 }

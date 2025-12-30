@@ -105,3 +105,15 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Commands**: ctx sync, session append
 - **Pack SHA**: `c3c0a4a0003f2420`
 
+## 2025-12-30 10:55 UTC
+- **Summary**: Applying documentation deprecation fixes (3 files)
+- **Files**: docs/plans/2025-12-29-context-pack-ingestion.md, docs/implementation/context-pack-implementation.md, docs/plans/t9-correction-evidence.md
+- **Commands**: multi_replace_file_content
+- **Pack SHA**: `307e1f35d7b883ec`
+
+## 2025-12-30 10:57 UTC
+- **Summary**: Completed documentation deprecation fixes (3 files)
+- **Files**: docs/plans/2025-12-29-context-pack-ingestion.md, docs/implementation/context-pack-implementation.md, docs/plans/t9-correction-evidence.md
+- **Commands**: trifecta ctx sync, grep
+- **Pack SHA**: `7e5a55959d7531a5`
+
