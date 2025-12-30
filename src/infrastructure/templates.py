@@ -1,5 +1,4 @@
 """Template Renderer for Trifecta files."""
-from datetime import datetime
 
 from src.domain.models import TrifectaConfig
 
@@ -18,68 +17,72 @@ description: Use when working on {config.scope}
 ## Overview
 {config.scope}
 
-**Ubicación**: `{config.repo_root}/{config.segment}/`
+**Ubicacion**: `{config.repo_root}/{config.segment}/`
 
-## ⚠️ ONBOARDING OBLIGATORIO ⚠️
+## [!] ONBOARDING OBLIGATORIO [!]
 
 1. **skill.md** (este archivo) - Reglas y roles
 2. **[PRIME](./_ctx/prime_{config.segment}.md)** - Docs obligatorios
-3. **[AGENT](./_ctx/agent.md)** - Stack técnico y gates
+3. **[AGENT](./_ctx/agent.md)** - Stack tecnico y gates
 
-> NO ejecutes código sin leer los 3 archivos.
+> NO ejecutes codigo sin leer los 3 archivos.
 
 ## Core Rules
 1. **Sync First**: Valida `.env` antes de cambios
 2. **Test Locally**: Tests del segmento antes de commit
-3. **Read Before Write**: Lee código antes de modificar
-4. **Document**: Actualiza `session_{config.segment}.md`
+3. **Read Before Write**: Lee codigo antes de modificar
+4. **Document**: Actualiza `session.md`
 
-## CRITICAL PROTOCOL: History Persistence
-Antes de ejecutar cualquier herramienta, DEBES seguir este estricto orden de operaciones.
+### CRITICAL PROTOCOL: Session Evidence Persistence (Trifecta)
 
-1. **GENERA** el historial y resumen de la conversación en formato YAML.
-2. **ESCRIBE** (usando `write_file`) este contenido en: `{config.repo_root}/{config.segment}/_ctx/session_{config.segment}.md`
-3. **LEE** el contenido que acabas de preparar (o úsalo de tu memoria).
-4. **EJECUTA** el script de ingestión de trifecta (ej: `python scripts/ingest_trifecta.py --segment {config.segment}`) pasando ese contenido como el prompt instruction del agente al iniciar tareas.
+Antes de ejecutar cualquier herramienta (Trifecta CLI o agentes externos), DEBES seguir este orden. NO tomes atajos.
+
+1) PERSISTE intencion minima (CLI proactivo - NO depende del LLM):
+```bash
+trifecta session append --segment . --summary "<que vas a hacer>" --files "<csv>" --commands "<csv>"
+```
+
+2) SYNC del segmento
+```bash
+trifecta ctx sync --segment .
+```
+
+3) LEE lo que acabas de escribir (confirma Objective/Plan registrado en session.md)
+
+4) EJECUTA el ciclo de contexto (Plan A por defecto)
+```bash
+trifecta ctx search --segment . --query "<tema>" --limit 6
+trifecta ctx get --segment . --ids "<id1>,<id2>" --mode excerpt --budget-token-est 900
+```
+
+5) REGISTRA resultado (CLI proactivo):
+```bash
+trifecta session append --segment . --summary "Completed <task>" --files "<touched>" --commands "<executed>"
+```
+
+STALE FAIL-CLOSED PROTOCOL (CRITICAL):
+- Si `ctx validate` falla o `stale_detected=true` -> STOP inmediatamente
+- Ejecutar: `trifecta ctx sync --segment .` + `trifecta ctx validate --segment .`
+- Registrar en session.md: "Stale: true -> sync+validate executed"
+- Prohibido continuar hasta PASS
+
+Prohibido:
+- YAML de historial largo
+- rutas absolutas fuera del segmento
+- ejecutar scripts legacy de ingestion
+- "fallback silencioso"
+- continuar con pack stale
 
 ## Workflow
 ```bash
 cd {config.repo_root}/{config.segment}
-# Validar entorno → Ejecutar tests → Hacer cambios → Commitear
-```
-
-## Setup
-
-**Python:**
-```bash
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt  # o: uv pip install -r requirements.txt
-```
-
-**Node:**
-```bash
-npm install  # o: pnpm install
-```
-
-## Commands
-
-**Tests:**
-```bash
-pytest tests/unit/ -v              # Unitarios
-pytest tests/unit/test_{config.segment}.py -k "test_name"
-pytest --cov=src tests/             # Con coverage
-```
-
-**Lint:**
-```bash
-# Python
-ruff check . --fix && black .
-# Node
-npm run lint && npm run format
+# Setup: python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
+# Test: pytest tests/unit/ -v
+# Lint: ruff check . --fix && black .
 ```
 
 ## Troubleshooting
-| Problema | Solución |
+| Problema | Solucion |
 |----------|----------|
 | `ImportError` | `pip install -e .` desde repo root |
 | `.env` faltante | Copiar desde `.env.example` |
@@ -93,7 +96,7 @@ npm run lint && npm run format
 
 ## Resources (On-Demand)
 - `@_ctx/prime_{config.segment}.md` - Docs obligatorios
-- `@_ctx/agent.md` - Stack y configuración
+- `@_ctx/agent.md` - Stack y configuracion
 - `@_ctx/session_{config.segment}.md` - Log de cambios
 
 ## LLM Roles
@@ -124,27 +127,27 @@ profile: load_only
 # Prime {config.segment.replace('-', ' ').title()} - Lista de Lectura
 
 > **REPO_ROOT**: `{config.repo_root}`
-> Todas las rutas son relativas a esta raíz.
+> Todas las rutas son relativas a esta raiz.
 >
-> **Orden de lectura**: Fundamentos → Implementación → Referencias
+> **Orden de lectura**: Fundamentos -> Implementacion -> Referencias
 
-## 🔴 Prioridad ALTA - Fundamentos
+## [HIGH] Prioridad ALTA - Fundamentos
 
 **Leer primero para entender el contexto del segmento.**
 
 {formatted_docs}
 
-## 🟡 Prioridad MEDIA - Implementación
+## [MED] Prioridad MEDIA - Implementacion
 
-<!-- Documentación de implementación específica -->
-<!-- Ejemplos: guías de uso, patrones de diseño -->
+<!-- Documentacion de implementacion especifica -->
+<!-- Ejemplos: guias de uso, patrones de disenio -->
 
-## 🟢 Prioridad BAJA - Referencias
+## [LOW] Prioridad BAJA - Referencias
 
-<!-- Documentación de referencia, archivada -->
+<!-- Documentacion de referencia, archivada -->
 <!-- Ejemplos: API docs, especificaciones -->
 
-## 🗺️ Mapa Mental
+## [MAP] Mapa Mental
 
 ```mermaid
 mindmap
@@ -158,17 +161,17 @@ mindmap
     -->
 ```
 
-## 📚 Glosario
+## [DICT] Glosario
 
-| Término | Definición |
+| Termino | Definicion |
 |---------|------------|
-| <!-- Agregar términos clave del segmento --> | <!-- Definiciones breves --> |
+| <!-- Agregar terminos clave del segmento --> | <!-- Definiciones breves --> |
 
-## 📝 Notas
+## [NOTE] Notas
 
-- **Fecha última actualización**: {config.last_verified}
+- **Fecha ultima actualizacion**: {config.last_verified}
 - **Mantenedor**: <!-- Agregar si aplica -->
-- **Ver también**: [skill.md](../skill.md) | [agent.md](./agent.md)
+- **Ver tambien**: [skill.md](../skill.md) | [agent.md](./agent.md)
 """
 
     def render_agent(self, config: TrifectaConfig) -> str:
@@ -183,7 +186,7 @@ default_profile: {config.default_profile}
 # Agent Context - {config.segment.replace('-', ' ').title()}
 
 ## Source of Truth
-| Sección | Fuente |
+| Seccion | Fuente |
 |---------|--------|
 | LLM Roles | [skill.md](../skill.md) |
 | Providers | `hemdov/src/hemdov/infrastructure/config/providers.yaml` |
@@ -203,32 +206,32 @@ default_profile: {config.default_profile}
 ## Dependencies
 
 **Runtime:**
-- <!-- Listar dependencias principales de producción -->
+- <!-- Listar dependencias principales de produccion -->
 
 **Development:**
 - <!-- Listar dependencias de desarrollo -->
 
 ## Configuration
 
-**Archivos de configuración:**
+**Archivos de configuracion:**
 ```
 {config.segment}/
-├── .env                    # Variables de entorno (local)
-├── .env.example            # Template de variables
-├── pyproject.toml          # Config Python (si aplica)
-└── package.json            # Config Node (si aplica)
+|-- .env                    # Variables de entorno (local)
+|-- .env.example            # Template de variables
+|-- pyproject.toml          # Config Python (si aplica)
+|__ package.json            # Config Node (si aplica)
 ```
 
 **Variables de entorno clave:**
 ```bash
-# Agregar variables específicas del segmento
+# Agregar variables especificas del segmento
 # Ejemplo:
 DATABASE_URL=              # URL de base de datos
 API_KEY=                   # Clave de API externa
 LOG_LEVEL=info             # Nivel de logging
 ```
 
-## Gates (Comandos de Verificación)
+## Gates (Comandos de Verificacion)
 
 **Unit Tests:**
 ```bash
@@ -281,139 +284,177 @@ npm run build
 ## Integration Points
 
 **Upstream Dependencies:**
-- <!-- ¿Qué módulos/deps necesitas primero? -->
+- <!-- Que modulos/deps necesitas primero? -->
 
 **Downstream Consumers:**
-- <!-- ¿Quién usa este segmento? -->
+- <!-- Quien usa este segmento? -->
 
 **API Contracts:**
 - <!-- Endpoints, funciones, o interfaces expuestas -->
 
 ## Architecture Notes
 
-<!-- Patrones de diseño, decisiones arquitectónicas, trade-offs -->
+<!-- Patrones de disenio, decisiones arquitectonicas, trade-offs -->
 
 **Design Patterns:**
 - <!-- Ej: Repository Pattern, Factory, Observer -->
 
 **Key Decisions:**
-- <!-- Por qué se eligió cierta tecnología o enfoque -->
+- <!-- Por que se eligio cierta tecnologia o enfoque -->
 
 **Known Limitations:**
 - <!-- Limitaciones conocidas del segmento -->
+
 """
 
     def render_session(self, config: TrifectaConfig) -> str:
-        return f"""---
+        return f"""# session.md - Trifecta Context Runbook
+
 segment: {config.segment}
-profile: handoff_log
-output_contract:
-  append_only: true
-  require_sections: [History, NextUserRequest]
-  max_history_entries: 10
-  forbid: [refactors, long_essays]
----
 
-# Session Log - {config.segment.replace('-', ' ').title()}
+## Purpose
+This file is a **runbook** for using Trifecta Context tools efficiently:
+- progressive disclosure (search -> get)
+- strict budget/backpressure
+- evidence cited by [chunk_id]
 
-## Active Session
-- **Objetivo**:
-- **Archivos a tocar**:
-- **Gates a correr**:
-- **Riesgos detectados**:
+## Quick Commands (CLI)
+```bash
+# SEGMENT="." es valido SOLO si tu cwd es el repo target (el segmento).
+# Si ejecutas trifecta desde otro lugar (p.ej. desde el repo del CLI), usa un path absoluto:
+# SEGMENT="/abs/path/to/AST"
+SEGMENT="."
 
----
+# Usa un termino que exista en el segmento (ej: nombre de archivo, clase, funcion).
+# Si no hay hits, refina el query o busca por simbolos.
+trifecta ctx sync --segment "$SEGMENT"
+trifecta ctx search --segment "$SEGMENT" --query "<query>" --limit 6
+trifecta ctx get --segment "$SEGMENT" --ids "<id1>,<id2>" --mode excerpt --budget-token-est 900
+trifecta ctx validate --segment "$SEGMENT"
+trifecta load --segment "$SEGMENT" --mode fullfiles --task "Explain how symbols are extracted"
+```
 
-## TRIFECTA_SESSION_CONTRACT
-> ⚠️ **Este contrato NO es ejecutado por el sistema en v1.** Es puramente documental.
+## Rules (must follow)
+
+* Max **1 ctx.search + 1 ctx.get** per user turn.
+* Prefer **mode=excerpt**; use raw only if necessary and within budget.
+* Cite evidence using **[chunk_id]**.
+* If **validate fails**: stop, rebuild. **No silent fallback**.
+* **STALE FAIL-CLOSED**: If `stale_detected=true`, STOP -> `ctx sync` + `ctx validate` -> log "Stale: true -> sync+validate executed" -> continue only if PASS.
+
+## Session Log (append-only)
+
+### Entry Template (max 12 lines)
+```md
+## YYYY-MM-DD HH:MM - ctx cycle
+- Segment: .
+- Objective: <que necesitas resolver>
+- Plan: ctx sync -> ctx search -> ctx get (excerpt, budget=900)
+- Commands: (pending/executed)
+- Evidence: (pending/[chunk_id] list)
+- Warnings: (none/<code>)
+- Next: <1 concrete step>
+```
+
+Reglas:
+- **append-only** (no reescribir entradas previas)
+- una entrada por run
+- no mas de 12 lineas
+
+## TRIFECTA_SESSION_CONTRACT (NON-EXECUTABLE in v1)
+
+> Documentation only. Not executed automatically in v1.
 
 ```yaml
 schema_version: 1
-segment: {config.segment}
+segment: .
 autopilot:
-  enabled: true
-  debounce_ms: 800
-  lock_file: _ctx/.autopilot.lock
-  allow_prefixes: ["trifecta ctx "]
-  steps:
-    - name: build
-      cmd: "trifecta ctx build --segment ."
-      timeout_sec: 60
-    - name: validate
-      cmd: "trifecta ctx validate --segment ."
-      timeout_sec: 30
+  enabled: false
+  note: "v2 idea only - NOT executed in v1"
 ```
 
----
+## Watcher Example (optional)
 
-## History
-```yaml
-# - session:
-#     timestamp: "YYYY-MM-DDTHH:MM:SS"
-#     user_prompt_summary: ""
-#     agent_response_summary: ""
-#     files_touched: []
-#     outcome: ""
+```bash
+# Ignore _ctx to avoid loops.
+fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \\
+  | while read; do trifecta ctx sync --segment "$SEGMENT"; done
 ```
-
----
 
 ## Next User Request
-<!-- El siguiente agente comienza aquí -->
+
+<!-- The next agent starts here -->
+
 """
 
     def render_readme(self, config: TrifectaConfig) -> str:
         return f"""# {config.segment.replace('-', ' ').title()} - Trifecta Documentation
 
-> **Trifecta System**: Este segmento usa el sistema Trifecta para comprensión rápida por agentes de código.
+> **Trifecta System**: Este segmento usa el sistema Trifecta para comprension rapida por agentes de codigo.
 
-## 📁 Estructura
+## [FILE] Estructura
 
 ```
 {config.segment}/
-├── readme_tf.md                 # Este archivo - guía rápida
-├── skill.md                     # Reglas y contratos (MAX 100 líneas)
-└── _ctx/                        # Context resources
-    ├── prime_{config.segment}.md # Lista de lectura obligatoria
-    ├── agent.md                 # Stack técnico y configuración
-    └── session_{config.segment}.md # Log de handoffs (runtime)
+|-- readme_tf.md                 # Este archivo - guia rapida
+|-- skill.md                     # Reglas y contratos (MAX 100 lineas)
+|__ _ctx/                        # Context resources
+    |-- prime_{config.segment}.md # Lista de lectura obligatoria
+    |-- agent.md                 # Stack tecnico y configuracion
+    |__ session_{config.segment}.md # Log de handoffs (runtime)
 ```
 
-## 🚀 Flujo de Onboarding (Para Agentes)
+## [CLI] CLI Usage
 
-1. **Leer `skill.md`** — Reglas, roles, y contratos del segmento
-2. **Leer `_ctx/prime_{config.segment}.md`** — Lista de documentos obligatorios
-3. **Leer `_ctx/agent.md`** — Stack técnico, configuración, y gates
+### Opcion A: alias con TRIFECTA_CLI_ROOT
+```bash
+export TRIFECTA_CLI_ROOT="/absolute/path/to/trifecta_dope"
+alias trifecta='uv --directory "$TRIFECTA_CLI_ROOT" run trifecta'
+```
+
+### Opcion B: directo
+
+```bash
+uv --directory "$TRIFECTA_CLI_ROOT" run trifecta ctx sync --segment .
+uv --directory "$TRIFECTA_CLI_ROOT" run trifecta ctx search --segment . --query "parser" --limit 6
+uv --directory "$TRIFECTA_CLI_ROOT" run trifecta load --segment . --mode fullfiles --task "My task"
+```
+
+## [GO] Flujo de Onboarding (Para Agentes)
+
+1. **Leer `skill.md`** - Reglas, roles, y contratos del segmento
+2. **Leer `_ctx/prime_{config.segment}.md`** - Lista de documentos obligatorios
+3. **Leer `_ctx/agent.md`** - Stack tecnico, configuracion, y gates
 
 > [!CAUTION]
-> **No ejecutes código sin completar los 3 pasos anteriores.**
+> **No ejecutes codigo sin completar los 3 pasos anteriores.**
 
-## 📊 Perfiles de Output
+## [DATA] Perfiles de Output
 
-| Perfil | Propósito | Contract |
+| Perfil | Proposito | Contract |
 |--------|-----------|----------|
-| `diagnose_micro` | Máximo texto, código ≤3 líneas | `code_max_lines: 3` |
-| `impl_patch` | Patch con verificación | `require: [FilesTouched, CommandsToVerify]` |
+| `diagnose_micro` | Maximo texto, codigo <=3 lineas | `code_max_lines: 3` |
+| `impl_patch` | Patch con verificacion | `require: [FilesTouched, CommandsToVerify]` |
 | `only_code` | Solo archivos + diff + comandos | `forbid: [explanations]` |
-| `plan` | DoD + pasos (sin código) | `forbid: [code_blocks]` |
-| `handoff_log` | Bitácora + handoff | `append_only: true` |
+| `plan` | DoD + pasos (sin codigo) | `forbid: [code_blocks]` |
+| `handoff_log` | Bitacora + handoff | `append_only: true` |
 
-## 🔄 Actualización
+## [SYNC] Actualizacion
 
-- **Prime**: Actualizar cuando se agregue/modifique documentación del segmento
-- **Session**: Actualizar después de cada handoff entre sesiones
-- **Agent**: Revisar cuando cambie el stack técnico o configuración
+- **Prime**: Actualizar cuando se agregue/modifique documentacion del segmento
+- **Session**: Actualizar despues de cada handoff entre sesiones
+- **Agent**: Revisar cuando cambie el stack tecnico o configuracion
 - **Skill**: Actualizar siguiendo **superpowers:writing-skills** (ver abajo)
 
-## ✏️ Cómo Actualizar skill.md
+## [EDIT] Como Actualizar skill.md
 
 > **IMPORTANTE**: Al actualizar `skill.md`, seguir el proceso TDD de `writing-skills`
 
 **Referencia obligatoria**: `~/.claude/skills/superpowers/writing-skills/SKILL.md`
 
 **Proceso RED-GREEN-REFACTOR:**
-1. **RED**: Crear escenario de presión sin skill - documentar violaciones
-2. **GREEN**: Escribir skill que aborde esas violaciones específicas
+1. **RED**: Crear escenario de presion sin skill - documentar violaciones
+2. **GREEN**: Escribir skill que aborde esas violaciones especificas
 3. **REFACTOR**: Cerrar loopholes y re-verificar
 
 **Iron Law**: `NO SKILL WITHOUT A FAILING TEST FIRST`
@@ -428,19 +469,19 @@ description: Use when working on {config.scope}
 # {config.segment.replace('-', ' ').title()}
 
 ## Overview
-<!-- 1-2 sentences describiendo el propósito -->
+<!-- 1-2 sentences describiendo el proposito -->
 
 ## When to Use
-<!-- Bullet list de síntomas y casos de uso -->
+<!-- Bullet list de sintomas y casos de uso -->
 
 ## Core Pattern
-<!-- Patrón principal con ejemplos -->
+<!-- Patron principal con ejemplos -->
 
 ## Common Mistakes
-<!-- Errores comunes + cómo evitarlos -->
+<!-- Errores comunes + como evitarlos -->
 ```
 
-## 📖 Referencias
+## [REF] Referencias
 
 - **Scope**: {config.scope}
 - **Default Profile**: `{config.default_profile}`

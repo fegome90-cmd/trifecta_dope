@@ -165,10 +165,118 @@ class RefreshPrimeUseCase:
 class BuildContextPackUseCase:
     """Build a Context Pack for a segment."""
 
-    def __init__(self, file_system: FileSystemAdapter):
+    def __init__(self, file_system: FileSystemAdapter, telemetry=None):
         self.file_system = file_system
+        self.telemetry = telemetry
+
+    def _extract_references(self, content: str, root: Path, repo_root: Path | None = None) -> dict[str, Path]:
+        """Extract referenced files from Prime content with STRICT SECURITY."""
+        import re
+        refs = {}
+        visited_paths = set()
+        MAX_LINKS = 25
+        
+        # Regex for [link](path) and `path`
+        lines = content.splitlines()
+        for line in lines:
+            line = line.strip()
+            if not (line.startswith("-") or line.startswith("*") or line[0:1].isdigit()):
+                continue
+                
+            path_str = None
+            # Try `code` block
+            code_match = re.search(r"`([^`]+)`", line)
+            if code_match:
+                path_str = code_match.group(1).strip()
+            
+            # Try [link](path)
+            link_match = re.search(r"\[.*?\]\((.*?)\)", line)
+            if link_match:
+                path_str = link_match.group(1).strip()
+
+            if path_str:
+                if len(refs) >= MAX_LINKS:
+                    warning_msg = f"prime_links_truncated_total"
+                    if self.telemetry:
+                        self.telemetry.incr(warning_msg)
+                    print(f"⚠️ Warning: Max links ({MAX_LINKS}) reached in Prime. Skipping remainder.")
+                    break
+                    
+                if self._is_valid_ref(path_str):
+                    resolved = self._resolve_path(path_str, root, repo_root)
+                    
+                    if resolved:
+                        # Cycle/Duplicate Check
+                        abs_path = str(resolved.resolve())
+                        if abs_path in visited_paths:
+                            if self.telemetry:
+                                self.telemetry.incr("prime_links_cycle_total")
+                            print(f"⚠️ Warning: Cycle/Duplicate detected for '{path_str}'. Skipping.")
+                            continue
+                        
+                        # Security Scope Check
+                        if self._is_safe_path(resolved, root):
+                             refs[path_str] = resolved
+                             visited_paths.add(abs_path)
+                             if self.telemetry:
+                                 self.telemetry.incr("prime_links_included_total")
+                        else:
+                             # Policy: FAIL-CLOSED (PCC enforcement)
+                             if self.telemetry:
+                                 self.telemetry.incr("prime_links_skipped_security_total")
+                             error_msg = f"PROHIBITED: Reference '{path_str}' resolves outside segment or in forbidden path."
+                             print(f"❌ {error_msg}")
+                             raise ValueError(error_msg)
+
+        return refs
+
+    def _validate_prohibited_paths(self, files: list[Path]) -> None:
+        """Fail-closed: Reject any file that looks like code or is in prohibited dirs."""
+        import sys
+        for f in files:
+            path_str = str(f).lower()
+            if "/src/" in path_str or "src/" in path_str or f.suffix in [".py", ".ts", ".js", ".go", ".rs"]:
+                print(f"❌ PROHIBITED: Cannot index code files in pack: {f}", file=sys.stderr)
+                print("Trifecta is Programming Context Calling (meta-first), not RAG.", file=sys.stderr)
+                print("Code access MUST be via curated prime links in meta-docs.", file=sys.stderr)
+                # In UseCase, we raise ValueError instead of sys.exit
+                raise ValueError(f"Prohibited file in context pack: {f}")
+
+    def _is_valid_ref(self, path_str: str) -> bool:
+        if "://" in path_str or not path_str or path_str.startswith("#"):
+            return False
+        # Allowlist: MD only for now
+        return path_str.endswith(".md")
+
+    def _is_safe_path(self, path: Path, root: Path) -> bool:
+        """Prevent path traversal. Must be within segment."""
+        # Resolves symlinks to ensure we don't escape
+        try:
+            resolved_path = path.resolve()
+            resolved_root = root.resolve()
+            return resolved_path.is_relative_to(resolved_root)
+        except ValueError:
+            return False
+
+    def _resolve_path(self, path_str: str, root: Path, repo_root: Path | None) -> Path | None:
+        # 1. Try relative to component root
+        p = root / path_str
+        if p.exists() and p.is_file():
+            return p
+            
+        # 2. Try relative to REPO_ROOT (if known) -- BUT ONLY if it resolves inside segment
+        # (This effectively disables repo-root links unless they point back into segment,
+        # complying with "Scope limited to segment")
+        if repo_root:
+            p = repo_root / path_str
+            if p.exists() and p.is_file():
+                return p
+        
+        return None
 
     def execute(self, target_path: Path) -> ContextPack:
+        if self.telemetry:
+            self.telemetry.incr("ctx_build_count")
         """Scan a Trifecta segment and build a context_pack.json."""
         # 1. Detect segment name from path or prime file
         ctx_dir = target_path / "_ctx"
@@ -178,6 +286,17 @@ class BuildContextPackUseCase:
         
         prime_path = prime_files[0]
         segment = prime_path.stem.replace("prime_", "")
+        
+        # Try to parse REPO_ROOT from prime header
+        repo_root = None
+        prime_content = prime_path.read_text()
+        import re
+        rr_match = re.search(r">\s*\*\*REPO_ROOT\*\*:\s*`?([^`\n]+)`?", prime_content)
+        if rr_match:
+             try:
+                 repo_root = Path(rr_match.group(1).strip())
+             except:
+                 pass
 
         # 2. Identify source files
         sources = {
@@ -190,6 +309,14 @@ class BuildContextPackUseCase:
         session_files = list(ctx_dir.glob("session_*.md"))
         if session_files:
             sources["session"] = session_files[0]
+            
+        # 2.5 Extract references from Prime
+        refs = self._extract_references(prime_content, target_path, repo_root)
+        for name, path in refs.items():
+            sources[f"ref:{name}"] = path
+
+        # 2.6 FAIL-CLOSED VALIDATION
+        self._validate_prohibited_paths(list(sources.values()))
 
         chunks: list[ContextChunk] = []
         index: list[ContextIndexEntry] = []
@@ -267,8 +394,9 @@ class BuildContextPackUseCase:
 class MacroLoadUseCase:
     """Macro command 'trifecta load' implementation."""
 
-    def __init__(self, file_system: FileSystemAdapter):
+    def __init__(self, file_system: FileSystemAdapter, telemetry=None):
         self.file_system = file_system
+        self.telemetry = telemetry
 
     def execute(self, target_path: Path, task: str, mode: str = "pcc") -> str:
         """Execute the macro load logic using Plan A (API) or Plan B (Fallback)."""
@@ -374,8 +502,9 @@ class MacroLoadUseCase:
 class ValidateContextPackUseCase:
     """Validator for Context Pack integrity and invariants."""
 
-    def __init__(self, file_system: FileSystemAdapter):
+    def __init__(self, file_system: FileSystemAdapter, telemetry=None):
         self.file_system = file_system
+        self.telemetry = telemetry
 
     def execute(self, target_path: Path) -> ValidationResult:
         """Validate context_pack.json structure and consistency."""
@@ -446,11 +575,24 @@ class ValidateContextPackUseCase:
         except Exception as e:
             errors.append(f"Failed to parse context pack: {str(e)}")
 
-        return ValidationResult(
+        result = ValidationResult(
             passed=len(errors) == 0,
             errors=errors,
             warnings=warnings
         )
+        
+        # Record result and stale detection
+        if self.telemetry:
+            if result.passed:
+                self.telemetry.incr("ctx_validate_pass_count")
+                self.telemetry.stale_detected = False
+            else:
+                self.telemetry.incr("ctx_validate_fail_count")
+                # Check if failure is due to stale/corruption
+                is_stale = any("changed" in e.lower() or "mismatch" in e.lower() for e in errors)
+                self.telemetry.stale_detected = is_stale
+        
+        return result
 
 class AutopilotUseCase:
     """Runner for automated context refresh based on session.md contract."""

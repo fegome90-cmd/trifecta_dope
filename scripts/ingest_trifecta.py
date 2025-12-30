@@ -293,10 +293,8 @@ class ContextPackBuilder:
         self.segment_path = repo_root / segment
 
     def find_markdown_files(self) -> list[Path]:
-        """Find all markdown files in the segment."""
-        files = []
-        for pattern in ["*.md", "_ctx/*.md"]:
-            files.extend(self.segment_path.glob(pattern))
+        """Find all markdown files in the segment recursively."""
+        files = list(self.segment_path.rglob("*.md"))
         return sorted(f for f in files if f.is_file())
 
     def load_document(self, path: Path) -> tuple[str, str]:
@@ -389,6 +387,17 @@ class ContextPackBuilder:
             "source_chunk_ids": [c["id"] for c in selected_chunks],
         }
 
+    def validate_prohibited_paths(self, files: list[Path]) -> None:
+        """Fail-closed: Reject any file that looks like code or is in prohibited dirs."""
+        for f in files:
+            path_str = str(f).lower()
+            # Explicitly reject src/ or any common code extensions if they somehow got in
+            if "/src/" in path_str or path_str.startswith("src/") or f.suffix in [".py", ".ts", ".js", ".go", ".rs"]:
+                print(f"❌ PROHIBITED: Cannot index code files in pack: {f}", file=sys.stderr)
+                print("Trifecta is Programming Context Calling (meta-first), not RAG.", file=sys.stderr)
+                print("Code access MUST be via curated prime links in meta-docs.", file=sys.stderr)
+                sys.exit(1)
+
     def build(self, output_path: Path | None = None) -> dict:
         """
         Build complete Context Pack.
@@ -403,6 +412,9 @@ class ContextPackBuilder:
 
         if not md_files:
             raise ValueError(f"No markdown files found in {self.segment_path}")
+
+        # VALIDATION: Fail-closed check
+        self.validate_prohibited_paths(md_files)
 
         # Load all documents
         docs = []
@@ -424,7 +436,6 @@ class ContextPackBuilder:
         # Build index (digest is separate)
         index = []
         for chunk in all_chunks:
-            title = " → ".join(chunk["title_path"]) if chunk["title_path"] else "Introduction"
             index.append({
                 "id": chunk["id"],
                 "doc": chunk["doc"],
@@ -571,7 +582,6 @@ def main():
         pack = builder.build(args.output if not args.dry_run else None)
 
         chunk_count = len(pack["chunks"])
-        digest_size = sum(d["summary"].count("|") + 1 for d in pack["digest"])
         output_path = args.output or (args.repo_root / args.segment / "_ctx" / "context_pack.json")
 
         if args.dry_run:
@@ -595,12 +605,12 @@ def main():
 
         if args.verbose:
             # Show digest entries
-            print(f"\n[verbose] Digest entries:", file=sys.stderr)
+            print("\n[verbose] Digest entries:", file=sys.stderr)
             for d in pack["digest"]:
                 print(f"  - {d['doc']}: {d['summary']}", file=sys.stderr)
 
             # Show sample chunk IDs
-            print(f"\n[verbose] Sample chunk IDs:", file=sys.stderr)
+            print("\n[verbose] Sample chunk IDs:", file=sys.stderr)
             for c in pack["chunks"][:3]:
                 title = " → ".join(c["title_path"]) if c["title_path"] else "INTRO"
                 print(f"  - {c['id']}: {title} ({c['char_count']} chars)", file=sys.stderr)

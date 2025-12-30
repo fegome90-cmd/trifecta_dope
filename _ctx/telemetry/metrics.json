@@ -1,0 +1,11 @@
+{
+  "ctx_build_count": 8,
+  "ctx_validate_pass_count": 8,
+  "ctx_search_count": 7,
+  "ctx_search_hits_total": 3,
+  "ctx_search_zero_hits_count": 5,
+  "ctx_get_count": 2,
+  "ctx_get_chunks_total": 1,
+  "ctx_get_mode_excerpt_count": 2,
+  "prime_links_included_total": 9
+}

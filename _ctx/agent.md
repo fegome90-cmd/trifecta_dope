@@ -9,121 +9,96 @@ default_profile: impl_patch
 # Agent Context - .
 
 ## Source of Truth
+
 | Sección | Fuente |
 |---------|--------|
-| LLM Roles | [skill.md](../skill.md) |
-| Providers | `hemdov/src/hemdov/infrastructure/config/providers.yaml` |
+| Reglas de Sesión | [skill.md](../skill.md) |
+| Dependencias | `pyproject.toml` |
+| Lógica Core | `src/domain/` y `src/application/` |
+| Entry Points | `src/infrastructure/cli.py` |
+| Estándar de Docs | `README.md` y `knowledge/` |
 
 ## Tech Stack
-<!-- Lenguajes, frameworks, y herramientas principales -->
 
 **Lenguajes:**
-- <!-- Ej: Python 3.11+, TypeScript 5.x -->
+- Python 3.12+ (Backend/CLI)
+- Fish Shell (Completions)
 
 **Frameworks:**
-- <!-- Ej: FastAPI, React, Pydantic -->
+- Typer (CLI Framework)
+- Pydantic (Data Models/Schema)
+- PyYAML (Artifacts parsing)
 
 **Herramientas:**
-- <!-- Ej: pytest, ruff, uv, npm -->
+- uv (Project Management)
+- pytest (Testing)
+- ruff (Linting/Formatting)
+- mypy (Static Types)
 
-## Dependencies
-
-**Runtime:**
-- <!-- Listar dependencias principales de producción -->
-
-**Development:**
-- <!-- Listar dependencias de desarrollo -->
-
-## Configuration
-
-**Archivos de configuración:**
-```
-./
-├── .env                    # Variables de entorno (local)
-├── .env.example            # Template de variables
-├── pyproject.toml          # Config Python (si aplica)
-└── package.json            # Config Node (si aplica)
-```
-
-**Variables de entorno clave:**
+## Workflow
 ```bash
-# Agregar variables específicas del segmento
-# Ejemplo:
-DATABASE_URL=              # URL de base de datos
-API_KEY=                   # Clave de API externa
-LOG_LEVEL=info             # Nivel de logging
+# SEGMENT="." es válido SOLO si tu cwd es el repo target.
+# Si ejecutas trifecta desde otro lugar, usa un path absoluto:
+# SEGMENT="/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope"
+cd /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/
+# Validar entorno → Sync context → Ejecutar cambios → Validar gates
+```
+
+## Setup
+
+**Entorno Python (Recomendado):**
+```bash
+# Usando uv (rápido y determinístico)
+uv sync
+source .venv/bin/activate
+```
+
+**Variables de Entorno (.env):**
+```bash
+# Requerido para telemetría y LiteLLM (si aplica)
+TRIFECTA_TELEMETRY_LEVEL=lite
 ```
 
 ## Gates (Comandos de Verificación)
 
-**Unit Tests:**
-```bash
-# Python
-pytest tests/unit/ -v
+| Gate | Comando | Propósito |
+|------|---------|-----------|
+| **Unit** | `uv run pytest tests/unit/ -v` | Lógica interna |
+| **Integración** | `uv run pytest tests/test_use_cases.py -v` | Flujos CLI/UseCases |
+| **Lint** | `uv run ruff check .` | Calidad de código |
+| **Type** | `uv run mypy src/` | Integridad de tipos |
+| **Context** | `uv run trifecta ctx validate --segment .` | Integridad del pack |
 
-# Node/TypeScript
-npm test
-# o
-jest tests/unit/
-```
+## Troubleshooting
 
-**Integration Tests:**
-```bash
-# Python
-pytest tests/integration/ -v
-
-# Node
-npm run test:integration
-```
-
-**Linting:**
-```bash
-# Python
-ruff check .
-black --check .
-
-# Node
-npm run lint
-```
-
-**Type Checking:**
-```bash
-# Python (mypy)
-mypy src/
-
-# TypeScript
-npm run type-check
-```
-
-**Build:**
-```bash
-# Python
-pip install -e .
-
-# Node
-npm run build
-```
+| Problema | Solución |
+|----------|----------|
+| `ImportError` | `uv pip install -e .` desde el root |
+| `.env` faltante | Copiar desde `.env.example` y configurar |
+| Pack Stale | `uv run trifecta ctx sync --segment .` |
+| Fallos en Tests | Revisar logs en `_ctx/telemetry/` |
 
 ## Integration Points
 
 **Upstream Dependencies:**
-- <!-- ¿Qué módulos/deps necesitas primero? -->
+- `pydantic` - Base de modelos de dominio
+- `typer` - Motor del CLI
+- `pyyaml` - Serialización de estados/config
 
 **Downstream Consumers:**
-- <!-- ¿Quién usa este segmento? -->
+- Agentes de código que necesiten contexto estructurado
+- Autopilot pipelines
 
-**API Contracts:**
-- <!-- Endpoints, funciones, o interfaces expuestas -->
+## Resources (On-Demand)
+- `@_ctx/prime_trifecta_dope.md` - Lista de lectura obligatoria
+- `@_ctx/agent.md` - (Este archivo) Tech stack y gates
+- `@_ctx/session_trifecta_dope.md` - Log de handoffs (runtime)
+- `readme_tf.md` - Guía rápida del sistema
 
-## Architecture Notes
+## LLM Roles
 
-<!-- Patrones de diseño, decisiones arquitectónicas, trade-offs -->
-
-**Design Patterns:**
-- <!-- Ej: Repository Pattern, Factory, Observer -->
-
-**Key Decisions:**
-- <!-- Por qué se eligió cierta tecnología o enfoque -->
-
-**Known Limitations:**
-- <!-- Limitaciones conocidas del segmento -->
+| Rol | Modelo | Uso |
+|-----|--------|-----|
+| **Worker** | `deepseek-reasoner` | Tareas generales y razonamiento |
+| **Senior** | `claude-sonnet-4-5` | Diseño complejo y refactor |
+| **Fallback** | `gemini-1.5-flash-preview` | Recuperación y validación rápida |

@@ -1,22 +1,20 @@
 ---
-name: .
+name: trifecta_dope
 description: Use when working on Verification
 ---
-
-# .
-
 ## Overview
 Verification
 
-**Ubicación**: `/Users/felipe_gonzalez/Developer/agent_h/./`
+**Ubicación**: `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/`
 
 ## ⚠️ ONBOARDING OBLIGATORIO ⚠️
 
 1. **skill.md** (este archivo) - Reglas y roles
-2. **[PRIME](./_ctx/prime_..md)** - Docs obligatorios
+2. **[PRIME](./_ctx/prime_trifecta_dope.md)** - Docs obligatorios
 3. **[AGENT](./_ctx/agent.md)** - Stack técnico y gates
+4. **[SESSION](./_ctx/session_trifecta_dope.md)** - Log de handoffs y estado actual
 
-> NO ejecutes código sin leer los 3 archivos.
+> NO ejecutes código ni hagas cambios sin leer los 4 archivos.
 
 ## Core Rules
 1. **Sync First**: Valida `.env` antes de cambios
@@ -24,74 +22,75 @@ Verification
 3. **Read Before Write**: Lee código antes de modificar
 4. **Document**: Actualiza `session_..md`
 
-## CRITICAL PROTOCOL: History Persistence
-Antes de ejecutar cualquier herramienta, DEBES seguir este estricto orden de operaciones.
+### CRITICAL PROTOCOL: Session Evidence Persistence (Trifecta)
 
-1. **GENERA** el historial y resumen de la conversación en formato YAML.
-2. **ESCRIBE** (usando `write_file`) este contenido en: `/Users/felipe_gonzalez/Developer/agent_h/./_ctx/session_..md`
-3. **LEE** el contenido que acabas de preparar (o úsalo de tu memoria).
-4. **EJECUTA** el script de ingestión de trifecta (ej: `python scripts/ingest_trifecta.py --segment .`) pasando ese contenido como el prompt instruction del agente al iniciar tareas.
+Antes de ejecutar cualquier herramienta (Trifecta CLI o agentes externos), DEBES seguir este orden. NO tomes atajos.
 
-## Workflow
+1) PERSISTE intencion minima (CLI proactivo - NO depende del LLM):
 ```bash
-cd /Users/felipe_gonzalez/Developer/agent_h/.
-# Validar entorno → Ejecutar tests → Hacer cambios → Commitear
+trifecta session append --segment . --summary "<que vas a hacer>" --files "<csv>" --commands "<csv>"
 ```
 
-## Setup
-
-**Python:**
+2) SYNC del segmento
 ```bash
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt  # o: uv pip install -r requirements.txt
+trifecta ctx sync --segment .
 ```
 
-**Node:**
+3) LEE lo que acabas de escribir (confirma Objective/Plan registrado en session.md)
+
+4) EJECUTA el ciclo de contexto (Plan A por defecto)
 ```bash
-npm install  # o: pnpm install
+trifecta ctx search --segment . --query "<tema>" --limit 6
+trifecta ctx get --segment . --ids "<id1>,<id2>" --mode excerpt --budget-token-est 900
 ```
 
-## Commands
-
-**Tests:**
+5) REGISTRA resultado (CLI proactivo):
 ```bash
-pytest tests/unit/ -v              # Unitarios
-pytest tests/unit/test_..py -k "test_name"
-pytest --cov=src tests/             # Con coverage
+trifecta session append --segment . --summary "Completed <task>" --files "<touched>" --commands "<executed>"
 ```
 
-**Lint:**
-```bash
-# Python
-ruff check . --fix && black .
-# Node
-npm run lint && npm run format
-```
+STALE FAIL-CLOSED PROTOCOL (CRITICAL):
+- Si `ctx validate` falla o `stale_detected=true` -> STOP inmediatamente
+- Ejecutar: `trifecta ctx sync --segment .` + `trifecta ctx validate --segment .`
+- Registrar en session.md: "Stale: true -> sync+validate executed"
+- Prohibido continuar hasta PASS
 
-## Troubleshooting
-| Problema | Solución |
-|----------|----------|
-| `ImportError` | `pip install -e .` desde repo root |
-| `.env` faltante | Copiar desde `.env.example` |
-| Lint errors | `ruff check . --fix` o `npm run lint:fix` |
-| TypeError | Check versiones de dependencias |
+Prohibido:
+- YAML de historial largo
+- rutas absolutas fuera del segmento
+- ejecutar scripts legacy de ingestion
+- "fallback silencioso"
+- continuar con pack stale
 
-## Integration Points
-**Upstream:** <!-- listar -->
-**Downstream:** <!-- listar -->
-**API:** <!-- contratos si aplica -->
+## When to Use
+
+- Cuando necesites sincronizar o validar el contexto de un segmento.
+- Al realizar un handoff entre sesiones (registrar en `session.md`).
+- Para buscar información específica en el pack de contexto sin cargar archivos completos.
+
+## Core Pattern
+
+### The Context Cycle (Search -> Get)
+1. **Search**: Encuentra el `chunk_id` relevante.
+2. **Get (Excerpt)**: Lee un resumen/inicio para confirmar relevancia.
+3. **Get (Raw)**: Carga el contenido completo solo si es necesario y cabe en el presupuesto.
+
+### Session Persistence
+
+> [!IMPORTANT]
+> **Todo** cambio significativo o comando ejecutado **DEBE** ser registrado en `session.md` para mantener la continuidad del agente. Sin esto, el sistema Trifecta es solo un CLI; la persistencia es lo que permite la colaboración multi-agente funcional.
+
+## Common Mistakes
+
+- **Indexar código**: El pack es para DOCS (`.md`). El código se accede vía prime links.
+- **Ignorar validaciones**: Continuar si `ctx validate` falla es una violación crítica.
+- **Presupuesto excedido**: Intentar cargar más de 1200 tokens en un solo turno degrada la atención del agente.
+- **Rutas absolutas**: Siempre usa rutas relativas al segmento o al repo root.
 
 ## Resources (On-Demand)
-- `@_ctx/prime_..md` - Docs obligatorios
-- `@_ctx/agent.md` - Stack y configuración
-- `@_ctx/session_..md` - Log de cambios
-
-## LLM Roles
-| Rol | Modelo | Uso |
-|-----|--------|-----|
-| **Worker** | `deepseek-reasoner` | General |
-| **Senior** | `claude-sonnet-4-5` | Complejo |
-| **Fallback** | `gemini-3.0-flash-preview` | Fallos |
+- `@_ctx/prime_trifecta_dope.md` - Lista de lectura obligatoria
+- `@_ctx/agent.md` - Stack técnico y gates
+- `@_ctx/session_trifecta_dope.md` - Log de handoffs (runtime)
 
 ---
 **Profile**: `impl_patch` | **Updated**: 2025-12-29

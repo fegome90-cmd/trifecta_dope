@@ -2,6 +2,46 @@
 
 > **North Star**: Un agente entienda cualquier segmento del repo en <60 segundos leyendo solo 3 archivos + 1 log.
 
+# Trifecta — Programming Context Calling (para agentes de código)
+
+## Qué somos
+Trifecta es un **sistema de “Programming Context Calling”** diseñado para **agentes que trabajan con código**.  
+Tratamos el **contexto como una herramienta**: el runtime entrega al agente **un set pequeño, curado y versionado** de “context-tools” (p. ej. `prime`, `agent`, `session`, `skill`) para que el agente actúe con **disciplina, trazabilidad y bajo costo cognitivo**.
+
+## A qué apuntamos
+- **Reducir fricción**: que el agente no pierda tiempo explorando árboles de carpetas ni “adivinando” arquitectura/estado.
+- **Operación repetible**: decisiones basadas en artefactos (`prime.md`, `agent.md`, `session.md`, `skill.md`), no en improvisación.
+- **Evidencia y auditoría**: cada paso tiene soporte (qué se consultó, por qué y con qué versión).
+- **Control**: presupuesto de contexto, políticas de escalada y límites explícitos.
+
+## Qué solucionamos
+- “Deep dive” innecesario por el repo para entender por dónde empezar.
+- Alucinación de arquitectura/stack/estado por falta de guía explícita.
+- Sesiones donde se repite trabajo porque no existe un **estado de sesión** confiable.
+- Contextos inflados y caóticos que degradan el rendimiento del agente (“todo el repo al prompt”).
+- Falta de procedimiento: el agente no sabe “qué hacer ahora” y deriva.
+
+## NO SOMOS (explícito y no negociable)
+**Trifecta NO ES un RAG genérico.**  
+No es un buscador global del repositorio ni un sistema que “indexa todo el código” para maximizar recall.
+
+**Trifecta NO ES una base vectorial / embeddings-first por defecto.**  
+No depende de vectorizar `src/` ni de “buscar trozos” como estrategia primaria.
+
+**Trifecta NO ES “chat con memoria” ni un notebook de notas.**  
+No pretende almacenar conocimiento libre o conversaciones; opera con artefactos curados y versionables.
+
+**Trifecta NO ES una excusa para explorar carpetas a ciegas.**  
+El agente no debe recorrer 3 niveles de directorios para “entender” el repo: usa `prime` y la sesión.
+
+**Trifecta NO ES un sistema de recuperación indiscriminada de contexto.**  
+El objetivo no es “traer más texto”, es **activar el contexto correcto** como si fuera una tool.
+
+## Principio operativo
+**Meta-first, código on-demand.**  
+El agente inicia con `skill → prime → agent → session`.  
+Solo escala a código cuando es estrictamente necesario y siguiendo rutas/contratos curados.
+
 ## Problema
 
 Los agentes de código (Claude, Gemini, Codex) parsean miles de líneas de código innecesariamente, consumen contexto, y terminan con información obsoleta o incompleta.
@@ -124,24 +164,42 @@ El sistema usa perfiles (nvim-style modeline) para definir contratos de output:
 
 ## Uso
 
-### Generar Trifecta (CLI)
-```bash
-# Desde la raíz del repo
-cd trifecta_dope
+### 1. Alias (Recomendado)
+Para usar `trifecta` desde cualquier carpeta sin instalarlo globalmente:
 
+```fish
+# Agregar a ~/.config/fish/config.fish
+alias trifecta="/Users/felipe_gonzalez/.local/bin/uv --directory /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope run trifecta"
+```
+
+Luego:
+```bash
+cd ~/Developer/AST
+trifecta ctx build .
+```
+
+### 2. Ejecución Directa (Sin Alias)
+```bash
+# Desde cualquier directorio
+uv --directory ~/Developer/agent_h/trifecta_dope run trifecta load --path ~/Developer/AST --segment ast --task "Fix bug"
+```
+
+### 3. Autocompletado (Fish)
+Para tener autocompletado nativo en todos los comandos:
+
+```bash
+mkdir -p ~/.config/fish/completions
+ln -s $(pwd)/completions/trifecta.fish ~/.config/fish/completions/trifecta.fish
+source ~/.config/fish/completions/trifecta.fish
+```
+
+### Generar Trifecta (Ejemplos)
+```bash
 # Crear trifecta para un segmento
-uv run python -m src.infrastructure.cli create \
-    --segment eval-harness \
-    --path eval/eval-harness/ \
-    --scan-docs eval/docs/
+trifecta create --segment eval-harness --path eval/eval-harness/ --scan-docs eval/docs/
 
 # Validar trifecta existente
-uv run python -m src.infrastructure.cli validate --path eval/eval-harness/
-
-# Actualizar prime (re-escanea docs)
-uv run python -m src.infrastructure.cli refresh-prime \
-    --path eval/eval-harness/ \
-    --scan-docs eval/docs/
+trifecta validate --path eval/eval-harness/
 ```
 
 ### Generar Context Pack (Token-Optimized)
@@ -253,4 +311,22 @@ uv run typer src/infrastructure/cli.py run create --help
 - [ ] Prueba con segmentos reales (`debug_terminal`, `hemdov`, `eval`)
 - [ ] MCP Discovery Tool para activación automática
 - [ ] Progressive Disclosure (L0/L1/L2) en hooks
-- [ ] Phase 2: SQLite runtime para context packs grandes
+
+---
+
+## 🛠️ Best Practices & Troubleshooting
+
+### 1. Reglas de Oro para Operación Multi-Workspace
+*   **Target Segment**: Usa siempre `--segment /path/to/target`. El flag `--path` está deprecado para comandos `ctx` y `load`.
+*   **Validar PCC**: Si quieres usar Plan A (búsqueda inteligente), verifica que exista `segment/_ctx/context_pack.json`. Si no existe, corre `trifecta ctx build --segment ...`.
+
+### 2. Depuración de Búsqueda (0 Hits)
+Si `trifecta load` cae a fallback cuando no debería:
+1.  **Diagnóstico**: Ejecuta `trifecta ctx search --segment Path --query "keyword"`.
+2.  **Causa**: Si retorna vacío, tus palabras clave no están en el índice.
+3.  **Solución**:
+    *   Agrega los documentos relevantes a `segment/_ctx/prime_*.md`.
+    *   Regenera el índice: `trifecta ctx build --segment Path`.
+
+### 3. Rutas Hardcoded
+El CLI imprime lo que lee. Si ves rutas extrañas en el output de `load`, provienen de los archivos del segmento (`prime`, `agent`, `skill`), no del CLI. Edita los archivos del segmento para corregirlas.
