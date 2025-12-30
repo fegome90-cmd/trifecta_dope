@@ -101,4 +101,4 @@ TRIFECTA_TELEMETRY_LEVEL=lite
 |-----|--------|-----|
 | **Worker** | `deepseek-reasoner` | Tareas generales y razonamiento |
 | **Senior** | `claude-sonnet-4-5` | Diseño complejo y refactor |
-| **Fallback** | `gemini-1.5-flash-preview` | Recuperación y validación rápida |
+| **Fallback** | `gemini-3.0-flash-preview` | Recuperación y validación rápida |
