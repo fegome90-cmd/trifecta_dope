@@ -1,7 +1,6 @@
 # T9.3.5 Confusion Report
 
 **Generated**: 2025-12-31T14:40:28.246017
-**Mode**: L2 Specificity Ranking + Single-Word Clamp (NO new triggers)
 
 ---
 

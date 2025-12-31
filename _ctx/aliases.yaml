@@ -61,6 +61,8 @@ features:
       - "validate context"
       - "context pack sync"
       - "context pack status"
+      - "build command"
+      - "ctx validate"
     triggers:
       - phrase: "context pack build"
         terms: ["context", "pack", "build"]
@@ -240,6 +242,7 @@ features:
       - "definition lookup"
       - "function implementation"
       - "class initialization"
+      - "telemetry class"
     triggers:
       - phrase: "symbol extraction"
         terms: ["symbol", "extraction"]
