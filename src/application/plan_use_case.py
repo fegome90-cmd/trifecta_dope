@@ -169,47 +169,118 @@ class PlanUseCase:
 
     def _match_l2_nl_triggers(
         self, task: str, features: dict
-    ) -> tuple[str | None, str | None]:
-        """L2: Direct NL trigger match (canonical intent phrases).
+    ) -> tuple[str | None, str | None, str | None, int, str | None]:
+        """L2: Direct NL trigger match with improved scoring and guardrails (T9.3.3).
 
         Args:
             task: User task string
             features: Dict from aliases.yaml (feature_id -> config)
 
         Returns:
-            (feature_id, matched_trigger) or (None, None)
+            (feature_id, matched_trigger, warning, score, match_mode)
+            - feature_id: Matched feature ID or None
+            - matched_trigger: The trigger phrase that matched
+            - warning: Warning string or None (ambiguous_single_word_triggers | match_tie_fallback)
+            - score: Match score (2=exact, 1=subset, 0=no match)
+            - match_mode: "exact" | "subset" | None
 
-        Matching rules (T9.3.2):
-        - Normalize task to unigrams + bigrams
-        - Exact match against nl_triggers[] (case-insensitive)
-        - Priority tie-break: highest priority number wins
-        - Secondary tie-break: stable lexical order by feature_id
+        Matching rules (T9.3.3):
+        - score=2: Exact phrase match in ngrams
+        - score=1: All trigger words present (subset match)
+        - score=0: No match
+        - Single-word guardrail: Only allowed if priority >= 4 AND no conflicts
+        - Tie in (score, priority) → fallback with warning
         """
         # Normalize task to unigrams + bigrams
         nl_ngrams = self._normalize_nl(task)
+        task_tokens = self._tokenize(task)
 
-        best_match = None
-        best_trigger = None
-        best_priority = 0
+        # Track all candidates with their scores
+        candidates = []  # List of (feature_id, trigger, score, priority, match_mode)
+        single_word_hits = []  # Track single-word trigger hits for guardrail
 
         for feature_id in sorted(features.keys()):  # Stable lexical order
             config = features[feature_id]
             nl_triggers = config.get("nl_triggers", [])
             priority = config.get("priority", 1)
 
-            # Check each nl_trigger for exact match
             for trigger in nl_triggers:
                 trigger_lower = trigger.lower().strip()
+                trigger_words = set(trigger_lower.split())
 
-                # Check for exact match in normalized ngrams
+                # Check if single-word trigger
+                is_single_word = len(trigger_words) == 1
+
+                # Scoring logic
+                score = 0
+                match_mode = None
+
+                # Exact match in ngrams (score=2)
                 if trigger_lower in nl_ngrams:
-                    # Higher priority wins
-                    if priority > best_priority:
-                        best_match = feature_id
-                        best_trigger = trigger
-                        best_priority = priority
+                    score = 2
+                    match_mode = "exact"
+                # Subset match: all trigger words present (score=1)
+                elif trigger_words.issubset(task_tokens):
+                    score = 1
+                    match_mode = "subset"
 
-        return best_match, best_trigger
+                if score > 0:
+                    candidates.append((feature_id, trigger, score, priority, match_mode))
+
+                    # Track single-word hits for guardrail
+                    if is_single_word:
+                        single_word_hits.append((feature_id, trigger_lower))
+
+        # Single-word guardrail (T9.3.3)
+        # Single-word triggers only allowed if:
+        # (a) feature.priority >= 4
+        # (b) AND no 2+ single-word triggers from different features present
+        warning = None
+        filtered_candidates = []
+
+        for feature_id, trigger, score, priority, match_mode in candidates:
+            trigger_words = set(trigger.lower().split())
+            is_single_word = len(trigger_words) == 1
+
+            if is_single_word:
+                # Check guardrail: priority >= 4
+                if priority < 4:
+                    # Skip this candidate (fails guardrail)
+                    continue
+
+                # Check for conflicts with other single-word hits
+                other_single_word_hits = [
+                    (fid, tw) for fid, tw in single_word_hits
+                    if fid != feature_id
+                ]
+                if other_single_word_hits:
+                    # Conflict detected → fallback with warning
+                    return None, None, "ambiguous_single_word_triggers", 0, None
+
+            filtered_candidates.append((feature_id, trigger, score, priority, match_mode))
+
+        # Find best candidate by (score, priority)
+        if not filtered_candidates:
+            return None, None, None, 0, None
+
+        # Sort by (score desc, priority desc)
+        filtered_candidates.sort(key=lambda x: (x[2], x[3]), reverse=True)
+
+        best = filtered_candidates[0]
+        best_feature, best_trigger, best_score, best_priority, best_match_mode = best
+
+        # Check for ties in (score, priority)
+        ties = [
+            (fid, trig, score, prio, mode)
+            for fid, trig, score, prio, mode in filtered_candidates
+            if score == best_score and prio == best_priority and fid != best_feature
+        ]
+
+        if ties:
+            # Tie detected → fallback with warning
+            return None, None, "match_tie_fallback", 0, None
+
+        return best_feature, best_trigger, warning, best_score, best_match_mode
 
     def _match_l3_alias(
         self, task: str, features: dict
@@ -392,6 +463,9 @@ class PlanUseCase:
             "selected_by": None,  # "feature" (L1) | "nl_trigger" (L2) | "alias" (L3) | "fallback" (L4)
             "match_terms_count": 0,
             "matched_trigger": None,
+            "l2_warning": None,  # T9.3.3: L2 warnings
+            "l2_score": 0,  # T9.3.3: L2 match score
+            "l2_match_mode": None,  # T9.3.3: "exact" | "subset" | None
             "chunk_ids": [],
             "paths": [],
             "next_steps": [],
@@ -417,15 +491,24 @@ class PlanUseCase:
             result["selected_by"] = "feature"
             result["budget_est"]["why"] = f"L1: Explicit feature:{feature_id}"
         else:
-            # === L2: Direct NL trigger match (T9.3.2) ===
-            feature_id, nl_trigger = self._match_l2_nl_triggers(task, features)
+            # === L2: Direct NL trigger match (T9.3.3) ===
+            (feature_id, nl_trigger, warning, score,
+             match_mode) = self._match_l2_nl_triggers(task, features)
 
             if feature_id:
                 result["selected_feature"] = feature_id
                 result["plan_hit"] = True
                 result["selected_by"] = "nl_trigger"
                 result["matched_trigger"] = nl_trigger
-                result["budget_est"]["why"] = f"L2: NL trigger '{nl_trigger}'"
+                result["l2_warning"] = warning
+                result["l2_score"] = score
+                result["l2_match_mode"] = match_mode
+                result["budget_est"]["why"] = f"L2: NL trigger '{nl_trigger}' (score={score}, mode={match_mode})"
+            elif warning:
+                # L2 matched but guardrail/tie caused fallback
+                result["selected_by"] = "fallback"
+                result["l2_warning"] = warning
+                result["budget_est"]["why"] = f"L4: L2 guardrail/tie ({warning}), using entrypoints"
             else:
                 # === L3: Alias match (using normalized task) ===
                 feature_id, match_score, trigger_phrase = self._match_l3_alias(normalized_task, features)
@@ -518,6 +601,14 @@ class PlanUseCase:
                 if not result["bundle_assert_ok"]:
                     telemetry_attrs["bundle_assert_failed_paths"] = result.get("bundle_assert_failed_paths", [])
                     telemetry_attrs["bundle_assert_failed_anchors"] = result.get("bundle_assert_failed_anchors", [])
+
+            # T9.3.3: Include L2 matching details
+            if result.get("l2_warning"):
+                telemetry_attrs["l2_warning"] = result["l2_warning"]
+            if result.get("l2_score") > 0:
+                telemetry_attrs["l2_score"] = result["l2_score"]
+            if result.get("l2_match_mode"):
+                telemetry_attrs["l2_match_mode"] = result["l2_match_mode"]
 
             self.telemetry.event(
                 "ctx.plan",
