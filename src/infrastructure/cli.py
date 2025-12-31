@@ -477,12 +477,15 @@ def create(
         default_profile="impl_patch",
     )
 
+    # Use config.segment_id (normalized) for all file names
+    segment_id = config.segment_id
+
     files = {
         "skill.md": template_renderer.render_skill(config),
         "readme_tf.md": template_renderer.render_readme(config),
-        "_ctx/prime_" + segment + ".md": template_renderer.render_prime(config, []),
-        "_ctx/agent.md": template_renderer.render_agent(config),
-        "_ctx/session_" + segment + ".md": template_renderer.render_session(config),
+        f"_ctx/prime_{segment_id}.md": template_renderer.render_prime(config, []),
+        f"_ctx/agent_{segment_id}.md": template_renderer.render_agent(config),
+        f"_ctx/session_{segment_id}.md": template_renderer.render_session(config),
     }
 
     try:
@@ -505,7 +508,9 @@ def create(
 
         # Show quick commands from session
         typer.echo(
-            files[f"_ctx/session_{segment}.md"].split("## Quick Commands (CLI)")[1].split("```")[1]
+            files[f"_ctx/session_{segment_id}.md"]
+            .split("## Quick Commands (CLI)")[1]
+            .split("```")[1]
         )
 
     except Exception as e:
