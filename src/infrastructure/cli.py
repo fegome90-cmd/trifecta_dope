@@ -149,14 +149,40 @@ def build(
     telemetry_level: str = typer.Option("lite", "--telemetry", help=HELP_TELEMETRY),
 ) -> None:
     """Build a Context Pack (context_pack.json) for a segment."""
+    from src.domain.result import Err, Ok
+    from src.infrastructure.validators import detect_legacy_context_files, validate_segment_fp
+
+    path = Path(segment).resolve()
     telemetry = _get_telemetry(segment, telemetry_level)
     start_time = time.time()
-    _, file_system, _ = _get_dependencies(segment, telemetry)
 
+    # FP Gate: North Star Strict Validation
+    match validate_segment_fp(path):
+        case Err(errors):
+            typer.echo("❌ Validation Failed (North Star Gate):")
+            for err in errors:
+                typer.echo(f"   - {err}")
+            telemetry.event(
+                "ctx.build",
+                {"segment": segment},
+                {"status": "validation_failed", "errors": len(errors)},
+                int((time.time() - start_time) * 1000),
+            )
+            telemetry.flush()
+            raise typer.Exit(code=1)
+        case Ok(_):
+            # Check for legacy file warnings (non-blocking)
+            legacy = detect_legacy_context_files(path)
+            if legacy:
+                typer.echo("⚠️  Warning: Legacy context files detected:")
+                for lf in legacy:
+                    typer.echo(f"   - _ctx/{lf} (consider renaming)")
+
+    _, file_system, _ = _get_dependencies(segment, telemetry)
     use_case = BuildContextPackUseCase(file_system, telemetry)
 
     try:
-        output = use_case.execute(Path(segment))
+        output = use_case.execute(path)
         typer.echo(output)
         telemetry.event(
             "ctx.build",
