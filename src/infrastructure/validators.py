@@ -160,3 +160,24 @@ def validate_segment_fp(path: Path) -> "Ok[ValidationResult] | Err[List[str]]":
         return Ok(result)
     else:
         return Err(result.errors)
+
+
+def validate_agents_constitution(path: Path) -> "Ok[ValidationResult] | Err[List[str]]":
+    """
+    Validate AGENTS.md existence and non-empty content at the segment root.
+
+    Contract:
+        - AGENTS.md must exist
+        - AGENTS.md must not be empty
+    """
+    from src.domain.result import Err, Ok
+
+    agents_path = path / "AGENTS.md"
+    if not agents_path.exists():
+        return Err(["missing AGENTS.md"])
+
+    content = agents_path.read_text(encoding="utf-8")
+    if not content.strip():
+        return Err(["AGENTS.md is empty"])
+
+    return Ok(ValidationResult(valid=True, errors=[]))
