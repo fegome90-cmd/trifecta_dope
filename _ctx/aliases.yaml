@@ -1,13 +1,22 @@
-# aliases.yaml - Alias to feature_id mapping for ctx.plan L2 matching
+# aliases.yaml - Alias to feature_id mapping for ctx.plan L2/L3 matching
 # Schema: Each alias maps to a feature_id (not free text)
-# Matching rule: requires >=2 term matches OR 1 HIGH_SIGNAL trigger
+# T9.3.1: Added anchors[] for bundle assertions
+# T9.3.2: Added nl_triggers[] for direct L2 matching (canonical intent phrases)
 
-schema_version: 2
+schema_version: 3
 
 features:
-  # === OBSERVABILITY & TELEMETRY ===
   observability_telemetry:
     priority: 4
+    nl_triggers:
+      - "ctx stats"
+      - "telemetry statistics"
+      - "search performance"
+      - "token tracking"
+      - "event tracking"
+      - "telemetry"
+      - "metrics"
+      - "events.jsonl"
     triggers:
       - phrase: "ctx stats"
         terms: ["ctx", "stats"]
@@ -38,12 +47,20 @@ features:
         high_signal: false
         notes: "Performance timing data"
     bundle:
-      chunks: ["skill:*", "agent:*", "ref:RELEASE_NOTES_v1.md"]
-      paths: ["README.md", "RELEASE_NOTES_v1.md", "src/infrastructure/telemetry.py"]
+      chunks:
+        - "telemetry"
+        - "events"
+        - "Telemetry"
+      paths: []
+      anchors: []
 
-  # === CONTEXT PACK ===
   context_pack:
     priority: 3
+    nl_triggers:
+      - "context pack build"
+      - "validate context"
+      - "context pack sync"
+      - "context pack status"
     triggers:
       - phrase: "context pack build"
         terms: ["context", "pack", "build"]
@@ -62,12 +79,23 @@ features:
         high_signal: false
         notes: "Status check for context packs"
     bundle:
-      chunks: ["skill:*", "prime:*", "agent:*"]
-      paths: ["src/application/use_cases.py", "src/domain/context_models.py"]
+      chunks:
+        - "BuildContextPackUseCase"
+        - "ValidateContextPackUseCase"
+        - "ContextPack"
+      paths: []
+      anchors: []
 
-  # === CLI COMMANDS ===
   cli_commands:
     priority: 3
+    nl_triggers:
+      - "ctx search"
+      - "ctx get"
+      - "ctx sync"
+      - "ctx stats"
+      - "list commands"
+      - "typer commands"
+      - "available commands"
     triggers:
       - phrase: "ctx.search command"
         terms: ["ctx", "search", "command"]
@@ -89,13 +117,29 @@ features:
         terms: ["cli", "commands", "defined"]
         high_signal: false
         notes: "Query about CLI command definitions"
+      - phrase: "typer commands"
+        terms: ["typer", "commands"]
+        high_signal: false
+        notes: "Typer CLI commands"
+      - phrase: "list commands"
+        terms: ["list", "commands"]
+        high_signal: false
+        notes: "List available commands"
     bundle:
-      chunks: ["skill:*"]
-      paths: ["src/infrastructure/cli.py"]
+      chunks:
+        - "@ctx_app.command"
+        - "typer"
+        - "def "
+      paths: []
+      anchors: []
 
-  # === SEARCH ===
   search:
     priority: 3
+    nl_triggers:
+      - "search use case"
+      - "search query"
+      - "search functionality"
+      - "SearchUseCase class"
     triggers:
       - phrase: "SearchUseCase class"
         terms: ["searchusecase", "class"]
@@ -110,12 +154,20 @@ features:
         high_signal: false
         notes: "Query-based search"
     bundle:
-      chunks: ["skill:*", "agent:*"]
-      paths: ["src/application/search_get_usecases.py"]
+      chunks:
+        - "SearchUseCase"
+        - "execute"
+        - "search"
+      paths: []
+      anchors: []
 
-  # === STATS ===
   stats:
     priority: 3
+    nl_triggers:
+      - "statistics command"
+      - "zero-hits analysis"
+      - "search performance stats"
+      - "StatsUseCase class"
     triggers:
       - phrase: "StatsUseCase class"
         terms: ["statsusecase", "class"]
@@ -130,12 +182,23 @@ features:
         high_signal: false
         notes: "Failed search analysis"
     bundle:
-      chunks: ["skill:*", "agent:*"]
-      paths: ["src/application/use_cases.py"]
+      chunks:
+        - "StatsUseCase"
+        - "execute"
+        - "stats"
+      paths: []
+      anchors: []
 
-  # === ARCHITECTURE OVERVIEW (NEW) ===
   arch_overview:
     priority: 2
+    nl_triggers:
+      - "repo architecture"
+      - "project structure"
+      - "design overview"
+      - "architecture layers"
+      - "clean architecture"
+      - "architecture"
+      - "design"
     triggers:
       - phrase: "repo architecture"
         terms: ["repo", "architecture"]
@@ -162,12 +225,21 @@ features:
         high_signal: true
         notes: "PRIME file structure"
     bundle:
-      chunks: ["prime:*", "agent:*"]
-      paths: ["README.md", "_ctx/generated/repo_map.md"]
+      chunks:
+        - "Architecture"
+        - "Layers"
+        - "prime"
+      paths: []
+      anchors: []
 
-  # === SYMBOL SURFACE (NEW) ===
   symbol_surface:
     priority: 2
+    nl_triggers:
+      - "symbol extraction"
+      - "symbol references"
+      - "definition lookup"
+      - "function implementation"
+      - "class initialization"
     triggers:
       - phrase: "symbol extraction"
         terms: ["symbol", "extraction"]
@@ -194,21 +266,33 @@ features:
         high_signal: false
         notes: "Class constructor code"
     bundle:
-      chunks: ["prime:*"]
-      paths: ["_ctx/generated/symbols_stub.md"]
+      chunks:
+        - "Symbol"
+        - "class"
+        - "function"
+      paths: []
+      anchors: []
 
-  # === CODE NAVIGATION (NEW) ===
   code_navigation:
     priority: 2
+    nl_triggers:
+      - "entrypoints modules"
+      - "implement use case"
+      - "code navigation"
+      - "module entry points"
     triggers:
-      - phrase: "where to start"
-        terms: ["start", "where"]
-        high_signal: false
-        notes: "Entry point for navigation"
       - phrase: "entrypoints modules"
         terms: ["entrypoints", "modules"]
         high_signal: false
         notes: "Module entry points"
+      - phrase: "implement use case"
+        terms: ["implement", "use", "case"]
+        high_signal: false
+        notes: "Implementation guidance for use cases"
+      - phrase: "where to start"
+        terms: ["start", "where"]
+        high_signal: false
+        notes: "Entry point for navigation"
       - phrase: "how modules interact"
         terms: ["modules", "interact"]
         high_signal: false
@@ -217,14 +301,205 @@ features:
         terms: ["files", "directory"]
         high_signal: false
         notes: "Directory listing query"
-      - phrase: "implement use case"
-        terms: ["implement", "use", "case"]
-        high_signal: false
-        notes: "Implementation guidance for use cases"
       - phrase: "code pattern"
         terms: ["code", "pattern"]
         high_signal: false
         notes: "Implementation patterns"
     bundle:
-      chunks: ["prime:*", "skill:*"]
-      paths: ["_ctx/generated/repo_map.md", "src/infrastructure/cli.py"]
+      chunks:
+        - "Files"
+        - "Path"
+        - "Module"
+      paths: []
+      anchors: []
+
+  token_estimation:
+    priority: 4
+    nl_triggers:
+      - "token counting"
+      - "token formula"
+      - "estimate tokens"
+      - "_estimate_tokens"
+    triggers:
+      - phrase: "token counting"
+        terms: ["token", "counting"]
+        high_signal: false
+        notes: "Token counting logic"
+      - phrase: "token formula"
+        terms: ["token", "formula"]
+        high_signal: false
+        notes: "Token calculation formula"
+      - phrase: "_estimate_tokens"
+        terms: ["_estimate_tokens"]
+        high_signal: true
+        notes: "Specific function name"
+    bundle:
+      chunks:
+        - "token"
+        - "estimate"
+      paths: []
+      anchors: []
+
+  prime_indexing:
+    priority: 3
+    nl_triggers:
+      - "prime reading list"
+      - "prime index"
+      - "prime file format"
+      - "reading order"
+    triggers:
+      - phrase: "prime reading list"
+        terms: ["prime", "reading", "list"]
+        high_signal: false
+        notes: "PRIME reading order"
+    bundle:
+      chunks:
+        - "Index"
+        - "lectura"
+        - "entrada"
+      paths: []
+      anchors: []
+
+  chunk_retrieval_flow:
+    priority: 3
+    nl_triggers:
+      - "chunk retrieval"
+      - "get chunks"
+      - "chunk fetching"
+      - "retrieval process"
+    triggers:
+      - phrase: "chunk retrieval"
+        terms: ["chunk", "retrieval"]
+        high_signal: false
+        notes: "Chunk retrieval process"
+      - phrase: "get chunks"
+        terms: ["get", "chunks"]
+        high_signal: false
+        notes: "Chunk fetching"
+    bundle:
+      chunks:
+        - "UseCase"
+        - "class"
+        - "execute"
+      paths: []
+      anchors: []
+
+  get_chunk_use_case:
+    priority: 3
+    nl_triggers:
+      - "GetChunkUseCase"
+      - "get chunk use case"
+      - "locate GetChunkUseCase"
+    triggers:
+      - phrase: "GetChunkUseCase"
+        terms: ["getchunkusecase"]
+        high_signal: true
+        notes: "Specific class name"
+      - phrase: "get chunk use case"
+        terms: ["get", "chunk", "use", "case"]
+        high_signal: false
+        notes: "GetChunk functionality"
+      - phrase: "locate GetChunkUseCase"
+        terms: ["locate", "getchunkusecase"]
+        high_signal: true
+        notes: "Finding GetChunkUseCase class"
+    bundle:
+      chunks:
+        - "GetChunkUseCase"
+        - "class GetChunkUseCase"
+      paths: []
+      anchors: []
+
+  telemetry_flush:
+    priority: 4
+    nl_triggers:
+      - "flush mechanism"
+      - "event flush"
+      - "telemetry flush"
+      - "flush events"
+    triggers:
+      - phrase: "flush mechanism"
+        terms: ["flush", "mechanism"]
+        high_signal: false
+        notes: "Flush implementation"
+      - phrase: "event flush"
+        terms: ["event", "flush"]
+        high_signal: false
+        notes: "Event flushing"
+      - phrase: "telemetry flush"
+        terms: ["telemetry", "flush"]
+        high_signal: false
+        notes: "Telemetry flush operation"
+    bundle:
+      chunks:
+        - "flush"
+        - "def flush"
+      paths: []
+      anchors: []
+
+  import_statements:
+    priority: 3
+    nl_triggers:
+      - "import statements"
+      - "imports needed"
+      - "what imports"
+      - "required imports"
+    triggers:
+      - phrase: "import statements"
+        terms: ["import", "statements"]
+        high_signal: false
+        notes: "Import queries"
+      - phrase: "imports needed"
+        terms: ["imports", "needed"]
+        high_signal: false
+        notes: "Required imports"
+      - phrase: "what imports"
+        terms: ["imports"]
+        high_signal: false
+        notes: "Import dependencies"
+      - phrase: "what imports are needed"
+        terms: ["imports", "needed"]
+        high_signal: false
+        notes: "Required imports query"
+    bundle:
+      chunks:
+        - "Module"
+        - "Path"
+      paths: []
+      anchors: []
+
+  directory_listing:
+    priority: 2
+    nl_triggers:
+      - "files under src"
+      - "files in directory"
+      - "list files"
+      - "what files exist"
+      - "directory listing"
+    triggers:
+      - phrase: "files under src"
+        terms: ["files", "src"]
+        high_signal: false
+        notes: "Directory listing"
+      - phrase: "files in directory"
+        terms: ["files", "directory"]
+        high_signal: false
+        notes: "Directory contents"
+      - phrase: "list files"
+        terms: ["list", "files"]
+        high_signal: false
+        notes: "File listing"
+      - phrase: "what files exist"
+        terms: ["files", "exist"]
+        high_signal: false
+        notes: "File listing query"
+      - phrase: "files exist under"
+        terms: ["files", "exist", "under"]
+        high_signal: false
+        notes: "Directory listing query"
+    bundle:
+      chunks:
+        - "File"
+        - "Path"
+      paths: []
+      anchors: []
