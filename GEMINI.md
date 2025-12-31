@@ -10,3 +10,9 @@
       capa_modificada: "Application | Infrastructure | Verification | Documentation"
       impacto_contrato: "None. Hardening existing gates and fixing tests."
       siguiente_paso_tecnico: "Proceed to Legacy Burn-Down Sprint (Phase 2)."
+- history:
+    - user_prompt_summary: "Endurecer legacy scan (POSIX determinism) y completar coverage de manifest."
+      agent_response_summary: "Enforced POSIX paths in ScanLegacyUseCase for cross-platform glob matching. Expanded legacy_manifest.json to explicitly cover root-level legacy files (_ctx/{agent,prime,session}.md). Verified legacy scan passes."
+      capa_modificada: "Infrastructure | Configuration"
+      impacto_contrato: "None"
+      siguiente_paso_tecnico: "Proceed to Legacy Burn-Down Sprint (Phase 2)."
