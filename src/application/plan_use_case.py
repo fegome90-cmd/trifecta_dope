@@ -169,8 +169,8 @@ class PlanUseCase:
 
     def _match_l2_nl_triggers(
         self, task: str, features: dict
-    ) -> tuple[str | None, str | None, str | None, int, str | None, dict | None]:
-        """L2: Direct NL trigger match with specificity ranking and FP clamp (T9.3.5).
+    ) -> tuple[str | None, str | None, str | None, int, str | None, dict]:
+        """L2: Direct NL trigger match with scoring and guardrails (T9.3.5).
 
         Args:
             task: User task string
@@ -180,32 +180,43 @@ class PlanUseCase:
             (feature_id, matched_trigger, warning, score, match_mode, debug_info)
             - feature_id: Matched feature ID or None
             - matched_trigger: The trigger phrase that matched
-            - warning: Warning string or None
+            - warning: Warning string or None (ambiguous_single_word_triggers | match_tie_fallback |
+              weak_single_word_trigger)
             - score: Match score (2=exact, 1=subset, 0=no match)
             - match_mode: "exact" | "subset" | None
-            - debug_info: Dict with (score, specificity, priority, top_k candidates)
+            - debug_info: L2 selection diagnostics
 
         Matching rules (T9.3.5):
         - score=2: Exact phrase match in ngrams
         - score=1: All trigger words present (subset match)
         - score=0: No match
-        - specificity = word_count(trigger) - longer triggers preferred
-        - Ranking: (score DESC, specificity DESC, priority DESC)
-        - Single-word clamp (priority >= 4): Requires support terms
+        - Single-word guardrail: Only allowed if priority >= 4 AND no conflicts
+        - Single-word clamp: If top candidate lacks support terms, fallback with warning
+        - Ranking: (score, specificity, priority)
         - Tie in (score, specificity, priority) → fallback with warning
         """
         # Normalize task to unigrams + bigrams
         nl_ngrams = self._normalize_nl(task)
         task_tokens = self._tokenize(task)
 
-        # T9.3.5: Support terms for weak single-word triggers
         support_terms = {
-            "stats", "metrics", "events", "event", "latency", "p95", "p99",
-            "throughput", "perf", "performance", "jsonl", "events.jsonl", "telemetry"
+            "stats",
+            "metrics",
+            "events",
+            "event",
+            "latency",
+            "p95",
+            "p99",
+            "throughput",
+            "perf",
+            "performance",
+            "jsonl",
+            "events.jsonl",
+            "telemetry",
         }
 
         # Track all candidates with their scores
-        candidates = []  # List of (feature_id, trigger, score, priority, match_mode, specificity)
+        candidates = []  # List of (feature_id, trigger, score, priority, match_mode, specificity, support_terms_present)
         single_word_hits = []  # Track single-word trigger hits for guardrail
 
         for feature_id in sorted(features.keys()):  # Stable lexical order
@@ -216,10 +227,17 @@ class PlanUseCase:
             for trigger in nl_triggers:
                 trigger_lower = trigger.lower().strip()
                 trigger_words = set(trigger_lower.split())
-                specificity = len(trigger_words)  # T9.3.5: Word count for ranking
+                specificity = len(trigger_words)
 
                 # Check if single-word trigger
                 is_single_word = specificity == 1
+                support_terms_present = []
+                if is_single_word:
+                    support_terms_present = sorted(
+                        term
+                        for term in support_terms
+                        if term in task_tokens and term != trigger_lower
+                    )
 
                 # Scoring logic
                 score = 0
@@ -235,110 +253,197 @@ class PlanUseCase:
                     match_mode = "subset"
 
                 if score > 0:
-                    candidates.append((feature_id, trigger, score, priority, match_mode, specificity))
+                    candidates.append(
+                        (
+                            feature_id,
+                            trigger,
+                            score,
+                            priority,
+                            match_mode,
+                            specificity,
+                            support_terms_present,
+                            is_single_word,
+                        )
+                    )
 
                     # Track single-word hits for guardrail
-                    if is_single_word:
-                        single_word_hits.append((feature_id, trigger_lower))
+                    if is_single_word and priority >= 4:
+                        single_word_hits.append(feature_id)
 
-        # Single-word guardrail (T9.3.3) + FP clamp (T9.3.5)
+        # Single-word guardrail (T9.3.3)
         # Single-word triggers only allowed if:
         # (a) feature.priority >= 4
         # (b) AND no 2+ single-word triggers from different features present
-        # (c) T9.3.5: AND support term present in query (weak single-word clamp)
         warning = None
         filtered_candidates = []
-        top_k_debug = []  # T9.3.5: Track top candidates for telemetry
 
-        for feature_id, trigger, score, priority, match_mode, specificity in candidates:
-            trigger_words = set(trigger.lower().split())
-            is_single_word = specificity == 1
+        for (
+            feature_id,
+            trigger,
+            score,
+            priority,
+            match_mode,
+            specificity,
+            support_terms_present,
+            is_single_word,
+        ) in candidates:
+            if is_single_word and priority < 4:
+                # Skip this candidate (fails guardrail)
+                continue
 
-            if is_single_word:
-                # Check guardrail: priority >= 4
-                if priority < 4:
-                    # Skip this candidate (fails guardrail)
-                    continue
+            filtered_candidates.append(
+                (
+                    feature_id,
+                    trigger,
+                    score,
+                    priority,
+                    match_mode,
+                    specificity,
+                    support_terms_present,
+                    is_single_word,
+                )
+            )
 
-                # T9.3.5: FP Clamp - weak single-word triggers require support terms
-                trigger_lower = trigger.lower()
-                support_terms_present = [
-                    term for term in support_terms
-                    if term in task_tokens and term != trigger_lower
-                ]
-
-                if not support_terms_present:
-                    # No support term → invalidate this candidate
-                    # Don't add to filtered_candidates
-                    continue
-
-                # Check for conflicts with other single-word hits
-                other_single_word_hits = [
-                    (fid, tw) for fid, tw in single_word_hits
-                    if fid != feature_id
-                ]
-                if other_single_word_hits:
-                    # Conflict detected → fallback with warning
-                    debug_info = {
-                        "blocked": True,
-                        "block_reason": "ambiguous_single_word_triggers",
-                        "top_k": top_k_debug
-                    }
-                    return None, None, "ambiguous_single_word_triggers", 0, None, debug_info
-
-            filtered_candidates.append((feature_id, trigger, score, priority, match_mode, specificity))
-
-            # T9.3.5: Track top candidates for debug output
-            if len(top_k_debug) < 5:
-                top_k_debug.append({
-                    "feature_id": feature_id,
-                    "trigger": trigger,
-                    "score": score,
-                    "specificity": specificity,
-                    "priority": priority
-                })
-
-        # Find best candidate by (score, specificity, priority) - T9.3.5
+        # Find best candidate by (score, priority)
         if not filtered_candidates:
-            debug_info = {
-                "blocked": False,
-                "block_reason": "no_candidates",
-                "top_k": top_k_debug
-            }
-            return None, None, None, 0, None, debug_info
+            return (
+                None,
+                None,
+                None,
+                0,
+                None,
+                {"blocked": False, "block_reason": "no_candidates", "top_k": []},
+            )
 
-        # T9.3.5: Sort by (score desc, specificity desc, priority desc)
+        # Sort by (score desc, specificity desc, priority desc)
         filtered_candidates.sort(key=lambda x: (x[2], x[5], x[3]), reverse=True)
 
-        best = filtered_candidates[0]
-        best_feature, best_trigger, best_score, best_priority, best_match_mode, best_specificity = best
+        single_word_feature_ids = {
+            candidate[0] for candidate in filtered_candidates if candidate[7]
+        }
+        if len(single_word_feature_ids) > 1:
+            non_single_word = [candidate for candidate in filtered_candidates if not candidate[7]]
+            if non_single_word:
+                filtered_candidates = non_single_word
+            else:
+                filtered_candidates.sort(key=lambda x: (x[2], x[5], x[3]), reverse=True)
+                top_k = [
+                    {
+                        "feature_id": candidate[0],
+                        "trigger": candidate[1],
+                        "score": candidate[2],
+                        "specificity": candidate[5],
+                        "priority": candidate[3],
+                    }
+                    for candidate in filtered_candidates[:5]
+                ]
+                return (
+                    None,
+                    None,
+                    "ambiguous_single_word_triggers",
+                    0,
+                    None,
+                    {
+                        "blocked": True,
+                        "block_reason": "ambiguous_single_word_triggers",
+                        "top_k": top_k,
+                    },
+                )
 
-        # T9.3.5: Check for ties in (score, specificity, priority)
+        best = filtered_candidates[0]
+        (
+            best_feature,
+            best_trigger,
+            best_score,
+            best_priority,
+            best_match_mode,
+            best_specificity,
+            best_support_terms_present,
+            best_is_single_word,
+        ) = best
+
+        # Check for ties in (score, specificity, priority)
         ties = [
             (fid, trig, score, spec, prio, mode)
-            for fid, trig, score, prio, mode, spec in filtered_candidates
-            if score == best_score and spec == best_specificity and prio == best_priority and fid != best_feature
+            for fid, trig, score, prio, mode, spec, _, _ in filtered_candidates
+            if score == best_score
+            and spec == best_specificity
+            and prio == best_priority
+            and fid != best_feature
         ]
 
         if ties:
             # Tie detected → fallback with warning
-            debug_info = {
-                "blocked": True,
-                "block_reason": "match_tie_fallback",
-                "top_k": top_k_debug
-            }
-            return None, None, "match_tie_fallback", 0, None, debug_info
+            return (
+                None,
+                None,
+                "match_tie_fallback",
+                0,
+                None,
+                {
+                    "blocked": True,
+                    "block_reason": "match_tie_fallback",
+                    "top_k": [
+                        {
+                            "feature_id": candidate[0],
+                            "trigger": candidate[1],
+                            "score": candidate[2],
+                            "specificity": candidate[5],
+                            "priority": candidate[3],
+                        }
+                        for candidate in filtered_candidates[:5]
+                    ],
+                },
+            )
 
-        # T9.3.5: Build debug info with chosen candidate metrics
-        debug_info = {
-            "blocked": False,
-            "score": best_score,
-            "specificity": best_specificity,
-            "priority": best_priority,
-            "top_k": top_k_debug
-        }
+        if best_is_single_word and not best_support_terms_present:
+            return (
+                None,
+                None,
+                "weak_single_word_trigger",
+                0,
+                None,
+                {
+                    "blocked": True,
+                    "block_reason": "missing_support_term",
+                    "support_terms_present": best_support_terms_present,
+                    "top_k": [
+                        {
+                            "feature_id": candidate[0],
+                            "trigger": candidate[1],
+                            "score": candidate[2],
+                            "specificity": candidate[5],
+                            "priority": candidate[3],
+                        }
+                        for candidate in filtered_candidates[:5]
+                    ],
+                },
+            )
 
-        return best_feature, best_trigger, warning, best_score, best_match_mode, debug_info
+        return (
+            best_feature,
+            best_trigger,
+            warning,
+            best_score,
+            best_match_mode,
+            {
+                "blocked": False,
+                "score": best_score,
+                "specificity": best_specificity,
+                "priority": best_priority,
+                "support_terms_present": best_support_terms_present,
+                "top_k": [
+                    {
+                        "feature_id": candidate[0],
+                        "trigger": candidate[1],
+                        "score": candidate[2],
+                        "specificity": candidate[5],
+                        "priority": candidate[3],
+                    }
+                    for candidate in filtered_candidates[:5]
+                ],
+            },
+        )
 
     def _match_l3_alias(
         self, task: str, features: dict
@@ -549,9 +654,15 @@ class PlanUseCase:
             result["selected_by"] = "feature"
             result["budget_est"]["why"] = f"L1: Explicit feature:{feature_id}"
         else:
-            # === L2: Direct NL trigger match (T9.3.5) ===
-            (feature_id, nl_trigger, warning, score,
-             match_mode, debug_info) = self._match_l2_nl_triggers(task, features)
+            # === L2: Direct NL trigger match (T9.3.3) ===
+            (
+                feature_id,
+                nl_trigger,
+                warning,
+                score,
+                match_mode,
+                debug_info,
+            ) = self._match_l2_nl_triggers(task, features)
 
             if feature_id:
                 result["selected_feature"] = feature_id
@@ -561,16 +672,15 @@ class PlanUseCase:
                 result["l2_warning"] = warning
                 result["l2_score"] = score
                 result["l2_match_mode"] = match_mode
+                result["l2_blocked"] = debug_info.get("blocked")
+                result["l2_block_reason"] = debug_info.get("block_reason")
                 result["budget_est"]["why"] = f"L2: NL trigger '{nl_trigger}' (score={score}, mode={match_mode})"
-                # T9.3.5: Include debug info (specificity, priority, top_k)
-                if debug_info:
-                    result["l2_specificity"] = debug_info.get("specificity")
-                    result["l2_priority"] = debug_info.get("priority")
-                    result["l2_top_k"] = debug_info.get("top_k", [])
             elif warning:
                 # L2 matched but guardrail/tie caused fallback
                 result["selected_by"] = "fallback"
                 result["l2_warning"] = warning
+                result["l2_blocked"] = debug_info.get("blocked")
+                result["l2_block_reason"] = debug_info.get("block_reason")
                 result["budget_est"]["why"] = f"L4: L2 guardrail/tie ({warning}), using entrypoints"
             else:
                 # === L3: Alias match (using normalized task) ===
@@ -587,6 +697,12 @@ class PlanUseCase:
                     # === L4: Fallback to entrypoints ===
                     result["selected_by"] = "fallback"
                     result["budget_est"]["why"] = "L4: No feature match, using entrypoints"
+
+            if "l2_blocked" not in result:
+                result["l2_blocked"] = debug_info.get("blocked")
+            if "l2_block_reason" not in result:
+                result["l2_block_reason"] = debug_info.get("block_reason")
+
 
         # Generate bundle and next_steps
         if result["plan_hit"]:
@@ -672,14 +788,7 @@ class PlanUseCase:
                 telemetry_attrs["l2_score"] = result["l2_score"]
             if result.get("l2_match_mode"):
                 telemetry_attrs["l2_match_mode"] = result["l2_match_mode"]
-            # T9.3.5: Include L2 specificity and debug info
-            if result.get("l2_specificity"):
-                telemetry_attrs["l2_specificity"] = result["l2_specificity"]
-            if result.get("l2_priority"):
-                telemetry_attrs["l2_priority"] = result["l2_priority"]
-            if result.get("l2_top_k"):
-                telemetry_attrs["l2_top_k"] = result["l2_top_k"]
-            if result.get("l2_blocked"):
+            if "l2_blocked" in result:
                 telemetry_attrs["l2_blocked"] = result["l2_blocked"]
             if result.get("l2_block_reason"):
                 telemetry_attrs["l2_block_reason"] = result["l2_block_reason"]
