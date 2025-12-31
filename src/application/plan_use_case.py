@@ -1,4 +1,4 @@
-"""Plan Use Case - PRIME-only planning with 3-level matching."""
+"""Plan Use Case - PRIME-only planning with 4-level matching."""
 
 import hashlib
 import json
@@ -10,10 +10,11 @@ from typing import Any
 class PlanUseCase:
     """Generate execution plan using PRIME index only (no RAG).
 
-    Matching Levels:
-    - L1: Explicit feature id (feature:<id>)
-    - L2: Alias match (structured triggers from aliases.yaml)
-    - L3: Fallback to entrypoints
+    Matching Levels (T9.3.2):
+    - L1: Explicit feature id (feature:<id>) - highest priority
+    - L2: Direct NL trigger match (canonical intent phrases from nl_triggers[])
+    - L3: Alias match (structured triggers from aliases.yaml with term counting)
+    - L4: Fallback to entrypoints
     """
 
     def __init__(self, file_system: Any, telemetry: Any = None) -> None:
@@ -74,12 +75,45 @@ class PlanUseCase:
 
         return normalized
 
+    def _normalize_nl(self, task: str) -> list[str]:
+        """Normalize NL query for L2 direct trigger matching.
+
+        Rules (T9.3.2):
+        - Lowercase
+        - Strip punctuation
+        - Collapse whitespace
+        - Generate bigrams (2-token sequences)
+
+        Args:
+            task: Raw user task string
+
+        Returns:
+            List of normalized unigrams and bigrams
+        """
+        import string
+
+        # Lowercase
+        normalized = task.lower()
+
+        # Strip punctuation
+        normalized = normalized.translate(str.maketrans("", "", string.punctuation))
+
+        # Collapse whitespace
+        normalized = " ".join(normalized.split())
+
+        # Generate unigrams and bigrams
+        tokens = normalized.split()
+        unigrams = tokens
+        bigrams = [f"{tokens[i]} {tokens[i+1]}" for i in range(len(tokens) - 1)]
+
+        return unigrams + bigrams
+
     def _tokenize(self, text: str) -> set[str]:
         """Simple tokenization: lowercase, split on non-letters."""
         return set(re.findall(r"\w+", text.lower()))
 
     def _load_aliases(self, ctx_dir: Path) -> dict:
-        """Load aliases.yaml for L2 matching."""
+        """Load aliases.yaml for L2/L3 matching."""
         aliases_path = ctx_dir / "aliases.yaml"
 
         if not aliases_path.exists():
@@ -89,8 +123,9 @@ class PlanUseCase:
             content = aliases_path.read_text()
             data = json.loads(content) if content.startswith("{") else self._parse_yaml(content)
 
-            # Check schema version
-            if data.get("schema_version") == 2:
+            # Check schema version (T9.3.2: support v3 with nl_triggers)
+            schema_version = data.get("schema_version", 1)
+            if schema_version >= 2:
                 return data.get("features", {})
         except Exception:
             pass
@@ -132,10 +167,54 @@ class PlanUseCase:
 
         return feature_id
 
-    def _match_l2_alias(
+    def _match_l2_nl_triggers(
+        self, task: str, features: dict
+    ) -> tuple[str | None, str | None]:
+        """L2: Direct NL trigger match (canonical intent phrases).
+
+        Args:
+            task: User task string
+            features: Dict from aliases.yaml (feature_id -> config)
+
+        Returns:
+            (feature_id, matched_trigger) or (None, None)
+
+        Matching rules (T9.3.2):
+        - Normalize task to unigrams + bigrams
+        - Exact match against nl_triggers[] (case-insensitive)
+        - Priority tie-break: highest priority number wins
+        - Secondary tie-break: stable lexical order by feature_id
+        """
+        # Normalize task to unigrams + bigrams
+        nl_ngrams = self._normalize_nl(task)
+
+        best_match = None
+        best_trigger = None
+        best_priority = 0
+
+        for feature_id in sorted(features.keys()):  # Stable lexical order
+            config = features[feature_id]
+            nl_triggers = config.get("nl_triggers", [])
+            priority = config.get("priority", 1)
+
+            # Check each nl_trigger for exact match
+            for trigger in nl_triggers:
+                trigger_lower = trigger.lower().strip()
+
+                # Check for exact match in normalized ngrams
+                if trigger_lower in nl_ngrams:
+                    # Higher priority wins
+                    if priority > best_priority:
+                        best_match = feature_id
+                        best_trigger = trigger
+                        best_priority = priority
+
+        return best_match, best_trigger
+
+    def _match_l3_alias(
         self, task: str, features: dict
     ) -> tuple[str | None, int, str | None]:
-        """L2: Alias match with structured triggers.
+        """L3: Alias match with structured triggers.
 
         Args:
             task: User task string
@@ -310,7 +389,7 @@ class PlanUseCase:
         result = {
             "selected_feature": None,
             "plan_hit": False,
-            "selected_by": None,  # "feature" (L1) | "alias" (L2) | "fallback" (L3)
+            "selected_by": None,  # "feature" (L1) | "nl_trigger" (L2) | "alias" (L3) | "fallback" (L4)
             "match_terms_count": 0,
             "matched_trigger": None,
             "chunk_ids": [],
@@ -326,7 +405,7 @@ class PlanUseCase:
             result["latency_ms"] = int((time.time() - start_time) * 1000)
             return result
 
-        # Normalize task for L2 matching (T9.3)
+        # Normalize task for L2/L3 matching (T9.3.2)
         normalized_task = self._normalize_task(task)
 
         # === L1: Explicit feature id ===
@@ -338,20 +417,30 @@ class PlanUseCase:
             result["selected_by"] = "feature"
             result["budget_est"]["why"] = f"L1: Explicit feature:{feature_id}"
         else:
-            # === L2: Alias match (using normalized task) ===
-            feature_id, match_score, trigger_phrase = self._match_l2_alias(normalized_task, features)
+            # === L2: Direct NL trigger match (T9.3.2) ===
+            feature_id, nl_trigger = self._match_l2_nl_triggers(task, features)
 
             if feature_id:
                 result["selected_feature"] = feature_id
                 result["plan_hit"] = True
-                result["selected_by"] = "alias"
-                result["match_terms_count"] = match_score
-                result["matched_trigger"] = trigger_phrase
-                result["budget_est"]["why"] = f"L2: Alias match via '{trigger_phrase}' ({match_score} terms)"
+                result["selected_by"] = "nl_trigger"
+                result["matched_trigger"] = nl_trigger
+                result["budget_est"]["why"] = f"L2: NL trigger '{nl_trigger}'"
             else:
-                # === L3: Fallback to entrypoints ===
-                result["selected_by"] = "fallback"
-                result["budget_est"]["why"] = "L3: No feature match, using entrypoints"
+                # === L3: Alias match (using normalized task) ===
+                feature_id, match_score, trigger_phrase = self._match_l3_alias(normalized_task, features)
+
+                if feature_id:
+                    result["selected_feature"] = feature_id
+                    result["plan_hit"] = True
+                    result["selected_by"] = "alias"
+                    result["match_terms_count"] = match_score
+                    result["matched_trigger"] = trigger_phrase
+                    result["budget_est"]["why"] = f"L3: Alias match via '{trigger_phrase}' ({match_score} terms)"
+                else:
+                    # === L4: Fallback to entrypoints ===
+                    result["selected_by"] = "fallback"
+                    result["budget_est"]["why"] = "L4: No feature match, using entrypoints"
 
         # Generate bundle and next_steps
         if result["plan_hit"]:

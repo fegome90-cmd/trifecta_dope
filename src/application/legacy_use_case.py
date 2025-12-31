@@ -38,7 +38,7 @@ def scan_legacy(repo_root: Path, manifest_path: Path) -> "Ok[list[str]] | Err[li
         name = p.name
         # Removed job.md and product.md from scope as per "Clean Scope" rule
         if name in ["agent.md", "prime.md", "session.md"]:
-            rel_path = str(p.relative_to(repo_root))
+            rel_path = p.relative_to(repo_root).as_posix()
             found_legacy.append(rel_path)
 
             # Check against declared patterns (glob support)
