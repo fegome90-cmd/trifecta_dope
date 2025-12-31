@@ -1,9 +1,11 @@
-import pytest
 from pathlib import Path
 from typing import Any
+
+import pytest
 from typer.testing import CliRunner
-from src.infrastructure.cli import app
+
 from src.application.use_cases import BuildContextPackUseCase
+from src.infrastructure.cli import app
 from src.infrastructure.file_system import FileSystemAdapter
 
 runner = CliRunner()
@@ -14,6 +16,7 @@ def temp_segment(tmp_path: Path) -> Path:
     seg = tmp_path / "segment"
     seg.mkdir()
     (seg / "skill.md").write_text("Skill")
+    (seg / "AGENTS.md").write_text("# Constitution\n\nRule 1: Be strict.")
     (seg / "_ctx").mkdir()
     # Strict naming adherence
     (seg / "_ctx" / f"agent_{seg.name}.md").write_text("Agent")
@@ -42,7 +45,9 @@ def test_prime_expansion_happy_path(temp_segment: Path) -> None:
     prime.write_text("- [Link](doc.md)")
 
     uc = BuildContextPackUseCase(FileSystemAdapter())
-    pack = uc.execute(temp_segment)
+    result = uc.execute(temp_segment)
+    assert result.is_ok(), f"Build failed: {result}"
+    pack = result.unwrap()
 
     # Check if doc.md content is indexed
     indexed_texts = [c.text for c in pack.chunks]
@@ -79,7 +84,8 @@ def test_prime_cycles_warning(temp_segment: Path, capsys: Any) -> None:
     prime.write_text(links)
 
     uc = BuildContextPackUseCase(FileSystemAdapter())
-    uc.execute(temp_segment)
+    result = uc.execute(temp_segment)
+    assert result.is_ok(), f"Build failed: {result}"
 
     captured = capsys.readouterr()
     assert "Warning: Cycle/Duplicate detected" in captured.out
@@ -100,6 +106,7 @@ def test_installer_does_not_write_ctx_in_cli_root(tmp_path: Path) -> None:
     (segment / "_ctx" / f"agent_{segment_name}.md").write_text("Agent")
     (segment / "_ctx" / f"prime_{segment_name}.md").write_text("Prime")
     (segment / "_ctx" / f"session_{segment_name}.md").write_text("Session")
+    (segment / "AGENTS.md").write_text("# Constitution\n\nRule 1: Be strict.")
 
     # We can't easily run the installer script here as it invokes subprocess,
     # but we can verify the CLI behavior which the installer uses.

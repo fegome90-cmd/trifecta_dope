@@ -8,9 +8,11 @@ Verifies end-to-end flows:
 """
 
 from pathlib import Path
+
 from typer.testing import CliRunner
-from src.infrastructure.cli import app
+
 from src.domain.naming import normalize_segment_id
+from src.infrastructure.cli import app
 
 runner = CliRunner()
 
@@ -40,6 +42,9 @@ class TestNamingContractIntegration:
         ctx_dir = project_dir / "_ctx"
         assert (ctx_dir / f"agent_{segment_id}.md").exists()
 
+        # Constitution gate requires AGENTS.md
+        (project_dir / "AGENTS.md").write_text("# Constitution\n\nRule 1: Be strict.")
+
         # 2. Build (must pass path to project dir)
         build_result = runner.invoke(app, ["ctx", "build", "--segment", str(project_dir)])
         assert build_result.exit_code == 0, f"Build failed: {build_result.stdout}"
@@ -57,6 +62,7 @@ class TestNamingContractIntegration:
         (ctx_dir / f"agent_{segment_name}.md").write_text("# Agent")
         (ctx_dir / f"prime_{segment_name}.md").write_text("# Prime\n> **REPO_ROOT**: `/tmp`")
         (ctx_dir / f"session_{segment_name}.md").write_text("# Session")
+        (seg_path / "AGENTS.md").write_text("# Constitution\n\nRule 1: Be strict.")
 
         # Pass initial build
         assert runner.invoke(app, ["ctx", "build", "--segment", str(seg_path)]).exit_code == 0
@@ -92,6 +98,7 @@ class TestNamingContractIntegration:
         (ctx_dir / f"agent_{segment_name}.md").write_text("# Agent")
         (ctx_dir / f"prime_{segment_name}.md").write_text("# Prime\n> **REPO_ROOT**: `/tmp`")
         (ctx_dir / f"session_{segment_name}.md").write_text("# Session")
+        (seg_path / "AGENTS.md").write_text("# Constitution\n\nRule 1: Be strict.")
 
         # Legacy filename (Contamination that triggers the specific Legacy Error)
         (ctx_dir / "agent.md").write_text("# Agent Legacy")

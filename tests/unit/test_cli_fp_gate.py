@@ -37,6 +37,7 @@ class TestCLIFPGate:
         segment = tmp_path / segment_name
         segment.mkdir()
         (segment / "skill.md").write_text("# Valid Skill")
+        (segment / "AGENTS.md").write_text("# Constitution\n\nRule 1: Be strict.")
         ctx = segment / "_ctx"
         ctx.mkdir()
         (ctx / f"agent_{segment_name}.md").write_text("# Agent")
@@ -53,6 +54,7 @@ class TestCLIFPGate:
         """ctx build should list which files are missing."""
         segment = tmp_path / "missing_skill"
         segment.mkdir()
+        (segment / "AGENTS.md").write_text("# Constitution\n\nRule 1: Be strict.")
         ctx = segment / "_ctx"
         ctx.mkdir()
         (ctx / "agent_missing_skill.md").write_text("# Agent")

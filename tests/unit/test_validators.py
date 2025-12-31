@@ -342,10 +342,13 @@ class TestDeduplicationContract:
             "- [Ref](skill.md)"
         )  # Reference strict self
         (seg / "_ctx" / "agent_skill_seg.md").write_text("Agent")
+        (seg / "_ctx" / "session_skill_seg.md").write_text("Session")
 
         # Build
         uc = BuildContextPackUseCase(FileSystemAdapter())
-        pack = uc.execute(seg)
+        result = uc.execute(seg)
+        assert result.is_ok(), f"Build failed: {result}"
+        pack = result.unwrap()
 
         # Count how many times root skill.md appears
         skill_chunks = [
@@ -391,12 +394,14 @@ class TestDeduplicationContract:
         # Create required files
         (segment / "readme_tf.md").write_text("# Test")
         (ctx_dir / f"prime_{segment.name}.md").write_text("- `library/python/skill.md`")
-        (ctx_dir / "agent.md").write_text("# Agent")
+        (ctx_dir / f"agent_{segment.name}.md").write_text("# Agent")
         (ctx_dir / f"session_{segment.name}.md").write_text("# Session")
 
         # Build context pack
         use_case = BuildContextPackUseCase(FileSystemAdapter())
-        pack = use_case.execute(segment)
+        result = use_case.execute(segment)
+        assert result.is_ok(), f"Build failed: {result}"
+        pack = result.unwrap()
 
         # Verify root skill.md is indexed as primary (doc="skill")
         primary_skill_chunks = [c for c in pack.chunks if c.doc == "skill"]

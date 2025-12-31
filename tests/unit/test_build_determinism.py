@@ -29,7 +29,9 @@ class TestBuildDeterminism:
         (ctx / f"session_{segment_name}.md").write_text("# Session")
 
         use_case = BuildContextPackUseCase(FileSystemAdapter())
-        pack = use_case.execute(seg)
+        result = use_case.execute(seg)
+        assert result.is_ok(), f"Build failed: {result}"
+        pack = result.unwrap()
 
         assert pack.segment == segment_name
 
@@ -82,6 +84,8 @@ class TestBuildDeterminism:
         (ctx / "session_my-project.md").write_text("# Session")
 
         use_case = BuildContextPackUseCase(FileSystemAdapter())
-        pack = use_case.execute(seg)
+        result = use_case.execute(seg)
+        assert result.is_ok(), f"Build failed: {result}"
+        pack = result.unwrap()
 
         assert pack.segment == "my-project"
