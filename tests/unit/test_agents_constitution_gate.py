@@ -8,8 +8,6 @@ Contract:
 """
 
 from pathlib import Path
-import pytest
-from src.domain.result import Ok, Err
 from src.infrastructure.validators import validate_agents_constitution
 
 
@@ -66,3 +64,31 @@ class TestAgentsConstitutionGate:
 
         # Assert
         assert result.is_ok(), f"Should pass with valid AGENTS.md, got {result}"
+
+    def test_read_error_returns_err(self, tmp_path: Path, monkeypatch) -> None:
+        """Read failure (permission/etc) should return deterministic Err."""
+        # Use a real path so validate_agents_constitution works until read_text
+        seg = tmp_path / "test_seg_read_err"
+        seg.mkdir()
+
+        # AGENTS.md exists (check 1 passes)
+        agents_path = seg / "AGENTS.md"
+        agents_path.write_text("ok")
+
+        # Mock read_text to raise OSError, requiring compatible signature (*args, **kwargs)
+        # We target Path.read_text directly or the instance method if possible.
+        # Patching Path.read_text is safest to catch the call.
+        def mock_read_text(self, *args, **kwargs):
+            if str(self).endswith("AGENTS.md"):
+                raise OSError("Simulated Permission Denied")
+            return "ok"  # fallback if needed, though mostly unused here
+
+        monkeypatch.setattr(Path, "read_text", mock_read_text)
+
+        # Act
+        result = validate_agents_constitution(seg)
+
+        # Assert
+        assert result.is_err()
+        # Should be deterministic message, NOT containing the exception details
+        assert result.unwrap_err() == ["Failed Constitution: AGENTS.md cannot be read"]

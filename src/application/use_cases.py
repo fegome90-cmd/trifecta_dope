@@ -16,6 +16,7 @@ from src.domain.context_models import (
     SourceFile,
 )
 from src.domain.models import TrifectaConfig, TrifectaPack, ValidationResult
+from src.domain.result import Err, Ok
 from src.infrastructure.file_system import FileSystemAdapter
 from src.infrastructure.file_system_utils import AtomicWriter, file_lock
 from src.infrastructure.templates import TemplateRenderer
@@ -285,14 +286,27 @@ class BuildContextPackUseCase:
 
         return None
 
-    def execute(self, target_path: Path) -> ContextPack:
+    def execute(self, target_path: Path) -> "Ok[ContextPack] | Err[list[str]]":
         if self.telemetry:
             self.telemetry.incr("ctx_build_count")
         """Scan a Trifecta segment and build a context_pack.json."""
         from src.domain.naming import normalize_segment_id
+        from src.domain.result import Err, Ok
 
-        # 1. Derive segment_id deterministically from directory name
-        segment_id = normalize_segment_id(target_path.name)
+        # 1. Derive segment_id deterministically
+        # Priority: trifecta_config.json (source of truth) > directory name (fallback)
+        try:
+            config = self.file_system.load_trifecta_config(target_path)
+            if config:
+                # Source of Truth: Config
+                segment_id = config.segment_id
+            else:
+                # Fallback: Directory Name
+                segment_id = normalize_segment_id(target_path.name)
+        except ValueError:
+            # Deterministic Fail-Closed
+            return Err(["Failed Constitution: trifecta_config.json is invalid"])
+
         ctx_dir = target_path / "_ctx"
 
         # 2. FAIL-CLOSED: Validate exactly one prime file with correct suffix
@@ -467,7 +481,7 @@ class BuildContextPackUseCase:
         with file_lock(lock_path):
             AtomicWriter.write(pack_path, pack.model_dump_json(indent=2))
 
-        return pack
+        return Ok(pack)
 
 
 class MacroLoadUseCase:

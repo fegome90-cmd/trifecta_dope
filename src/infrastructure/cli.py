@@ -12,6 +12,7 @@ from src.application.search_get_usecases import GetChunkUseCase, SearchUseCase
 from src.application.telemetry_charts import generate_chart
 from src.application.telemetry_reports import export_data, generate_report
 from src.application.plan_use_case import PlanUseCase
+from src.application.stub_regen_use_case import StubRegenUseCase
 from src.application.use_cases import (
     BuildContextPackUseCase,
     MacroLoadUseCase,
@@ -21,6 +22,7 @@ from src.application.use_cases import (
     ValidateTrifectaUseCase,
 )
 from src.domain.models import TrifectaConfig
+from src.domain.result import Err, Ok
 from src.infrastructure.file_system import FileSystemAdapter
 from src.infrastructure.telemetry import Telemetry
 from src.infrastructure.templates import TemplateRenderer
@@ -33,6 +35,10 @@ telemetry_app = typer.Typer(help="Telemetry analysis commands")
 app.add_typer(ctx_app, name="ctx")
 app.add_typer(session_app, name="session")
 app.add_typer(telemetry_app, name="telemetry")
+
+# Legacy Burn-Down
+legacy_app = typer.Typer(help="Legacy Burn-Down commands")
+app.add_typer(legacy_app, name="legacy")
 
 HELP_SEGMENT = "Target segment path (e.g., 'debug_terminal' or '.')"
 HELP_TELEMETRY = "Telemetry level: off, lite (default), full"
@@ -156,14 +162,18 @@ def build(
 ) -> None:
     """Build a Context Pack (context_pack.json) for a segment."""
     from src.domain.result import Err, Ok
-    from src.infrastructure.validators import detect_legacy_context_files, validate_segment_fp
+    from src.infrastructure.validators import (
+        detect_legacy_context_files,
+        validate_agents_constitution,
+        validate_segment_fp,
+    )
 
-    path = Path(segment).resolve()
+    segment_root = Path(segment)
     telemetry = _get_telemetry(segment, telemetry_level)
     start_time = time.time()
 
     # FP Gate: North Star Strict Validation
-    match validate_segment_fp(path):
+    match validate_segment_fp(segment_root):
         case Err(errors):
             typer.echo("❌ Validation Failed (North Star Gate):")
             for err in errors:
@@ -177,8 +187,25 @@ def build(
             telemetry.flush()
             raise typer.Exit(code=1)
         case Ok(_):
-            # Check for legacy file errors (Blocking)
-            legacy = detect_legacy_context_files(path)
+            # 1. Fail-Closed: AGENTS.md Constitution
+            match validate_agents_constitution(segment_root):
+                case Err(errors):
+                    typer.echo("❌ Constitution Failed (AGENTS.md):")
+                    for err in errors:
+                        typer.echo(f"   - {err}")
+                    telemetry.event(
+                        "ctx.build",
+                        {"segment": segment},
+                        {"status": "constitution_failed", "errors": len(errors)},
+                        int((time.time() - start_time) * 1000),
+                    )
+                    telemetry.flush()
+                    raise typer.Exit(code=1)
+                case Ok(_):
+                    pass
+
+            # 2. Check for legacy file errors (Blocking)
+            legacy = detect_legacy_context_files(segment_root)
             if legacy:
                 typer.echo("❌ Legacy context files detected (Fail-Closed):")
                 for lf in legacy:
@@ -194,16 +221,30 @@ def build(
 
     _, file_system, _ = _get_dependencies(segment, telemetry)
     use_case = BuildContextPackUseCase(file_system, telemetry)
+    segment_fs = segment_root.resolve()
 
     try:
-        output = use_case.execute(path)
-        typer.echo(output)
-        telemetry.event(
-            "ctx.build",
-            {"segment": segment},
-            {"status": "ok"},
-            int((time.time() - start_time) * 1000),
-        )
+        match use_case.execute(segment_fs):
+            case Ok(pack):
+                typer.echo(pack)
+                telemetry.event(
+                    "ctx.build",
+                    {"segment": segment},
+                    {"status": "ok"},
+                    int((time.time() - start_time) * 1000),
+                )
+            case Err(errors):
+                typer.echo("❌ Build Failed:")
+                for err in errors:
+                    typer.echo(f"   - {err}")
+                telemetry.event(
+                    "ctx.build",
+                    {"segment": segment},
+                    {"status": "build_error", "errors": len(errors)},
+                    int((time.time() - start_time) * 1000),
+                )
+                telemetry.flush()
+                raise typer.Exit(code=1)
     except Exception as e:
         telemetry.event(
             "ctx.build",
@@ -344,7 +385,11 @@ def stats(
         lines = []
         lines.append("╭" + "─" * 50 + "╮")
         lines.append("│" + " " * 15 + "Trifecta Stats" + " " * 23 + "│")
-        lines.append(f"│           Last {window} days" if window > 0 else "│                  All time" + " " * 22 + "│")
+        lines.append(
+            f"│           Last {window} days"
+            if window > 0
+            else "│                  All time" + " " * 22 + "│"
+        )
         lines.append("╰" + "─" * 50 + "╯")
         lines.append("")
 
@@ -479,6 +524,7 @@ def eval_plan(
         help="Path to evaluation dataset markdown file",
     ),
     telemetry_level: str = typer.Option("lite", "--telemetry", help=HELP_TELEMETRY),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Show per-task breakdown"),
 ) -> None:
     """Evaluate ctx.plan against a dataset of tasks."""
     import re
@@ -505,74 +551,155 @@ def eval_plan(
     use_case = PlanUseCase(file_system, telemetry)
 
     results = []
-    plan_hits = 0
-    plan_misses = 0
+    feature_count = 0
+    alias_count = 0
+    fallback_count = 0
+    true_zero_count = 0
 
-    selected_by_counts = {"feature": 0, "alias": 0, "fallback": 0}
-
-    for task in tasks:
+    for i, task in enumerate(tasks, 1):
         result = use_case.execute(Path(segment), task)
-        results.append({"task": task, "result": result})
+        results.append({"task_id": i, "task": task, "result": result})
 
-        if result["plan_hit"]:
-            plan_hits += 1
-            selected_by_counts[result.get("selected_by", "fallback")] += 1
-        else:
-            plan_misses += 1
+        # Classify outcome
+        selected_by = result.get("selected_by", "fallback")
+
+        if selected_by == "feature":
+            feature_count += 1
+        elif selected_by == "alias":
+            alias_count += 1
+        else:  # fallback
+            fallback_count += 1
+
+        # Check for true_zero_guidance (bug condition)
+        chunks_count = len(result.get("chunk_ids", []))
+        paths_count = len(result.get("paths", []))
+        entrypoints_count = len(
+            [
+                p
+                for p in result.get("paths", [])
+                if p in ["README.md", "skill.md", "RELEASE_NOTES_v1.md"]
+            ]
+        )
+        next_steps_count = len(result.get("next_steps", []))
+
+        if chunks_count == 0 and paths_count == 0 and next_steps_count == 0:
+            true_zero_count += 1
 
     total = len(tasks)
-    plan_miss_rate = (plan_misses / total * 100) if total > 0 else 0
+
+    # Compute rates
+    feature_hit_rate = (feature_count / total * 100) if total > 0 else 0
+    alias_hit_rate = (alias_count / total * 100) if total > 0 else 0
+    fallback_rate = (fallback_count / total * 100) if total > 0 else 0
+    true_zero_guidance_rate = (true_zero_count / total * 100) if total > 0 else 0
 
     # Output report
-    typer.echo("=" * 60)
+    typer.echo("=" * 80)
     typer.echo("EVALUATION REPORT: ctx.plan")
-    typer.echo("=" * 60)
+    typer.echo("=" * 80)
     typer.echo("")
     typer.echo(f"Dataset: {dataset_path}")
     typer.echo(f"Segment: {segment}")
     typer.echo(f"Total tasks: {total}")
     typer.echo("")
-    typer.echo("Results:")
-    typer.echo(f"  Plan hits:   {plan_hits} ({plan_hits/total*100:.1f}%)")
-    typer.echo(f"  Plan misses: {plan_misses} ({plan_miss_rate:.1f}%)")
-    typer.echo("")
-    typer.echo("Selection Method Distribution:")
-    for method, count in selected_by_counts.items():
-        pct = count / total * 100 if total > 0 else 0
-        typer.echo(f"  {method}: {count} ({pct:.1f}%)")
+
+    typer.echo("Distribution (MUST SUM TO 40):")
+    typer.echo(f"  feature:  {feature_count} ({feature_hit_rate:.1f}%)")
+    typer.echo(f"  alias:    {alias_count} ({alias_hit_rate:.1f}%)")
+    typer.echo(f"  fallback: {fallback_count} ({fallback_rate:.1f}%)")
+    typer.echo(f"  ─────────────────────────────")
+    typer.echo(f"  total:    {total} (100.0%)")
     typer.echo("")
 
-    # Top missed tasks
-    missed = [r for r in results if not r["result"]["plan_hit"]]
-    if missed:
-        typer.echo("Top Missed Tasks:")
-        for i, item in enumerate(missed[:5], 1):
-            task_preview = item["task"][:60] + "..." if len(item["task"]) > 60 else item["task"]
-            typer.echo(f"  {i}. {task_preview}")
+    typer.echo("Computed Rates:")
+    typer.echo(f"  feature_hit_rate:       {feature_hit_rate:.1f}%")
+    typer.echo(f"  alias_hit_rate:         {alias_hit_rate:.1f}%")
+    typer.echo(f"  fallback_rate:          {fallback_rate:.1f}%")
+    typer.echo(f"  true_zero_guidance_rate: {true_zero_guidance_rate:.1f}%")
+    typer.echo("")
+
+    # Verbose per-task table
+    if verbose:
+        typer.echo("Per-Task Breakdown:")
+        typer.echo("─" * 80)
+        for item in results:
+            tid = item["task_id"]
+            task_short = item["task"][:40] + "..." if len(item["task"]) > 40 else item["task"]
+            result = item["result"]
+            outcome = result.get("selected_by", "fallback")
+            feature = result.get("selected_feature", "N/A")
+            match_terms = result.get("match_terms_count", 0)
+            chunks = len(result.get("chunk_ids", []))
+            paths = len(result.get("paths", []))
+
+            typer.echo(f"{tid:2d}. [{outcome:8s}] {task_short}")
+            typer.echo(f"    → feature:{feature} terms:{match_terms} chunks:{chunks} paths:{paths}")
         typer.echo("")
 
-    # Examples of improvement (before/after comparison)
-    typer.echo("Examples (task → selected_feature → returned):")
-    example_count = 0
-    for item in results:
-        if item["result"]["plan_hit"] and item["result"].get("selected_by") in ["alias", "feature"]:
+    # Top missed tasks (fallback)
+    missed = [r for r in results if r["result"].get("selected_by") == "fallback"]
+    if missed:
+        typer.echo(f"Top Missed Tasks (fallback): {len(missed)} total")
+        for i, item in enumerate(missed[:10], 1):
+            task_short = item["task"][:60] + "..." if len(item["task"]) > 60 else item["task"]
+            typer.echo(f"  {i}. {task_short}")
+        typer.echo("")
+
+    # Examples of hits
+    hits = [r for r in results if r["result"].get("plan_hit")]
+    if hits:
+        typer.echo("Examples (hits with selected_feature):")
+        for i, item in enumerate(hits[:5], 1):
             task_short = item["task"][:50] + "..." if len(item["task"]) > 50 else item["task"]
-            feature = item["result"]["selected_feature"]
-            chunks = len(item["result"]["chunk_ids"])
-            paths = len(item["result"]["paths"])
-            typer.echo(f"  • '{task_short}'")
-            typer.echo(f"    → {feature} ({chunks} chunks, {paths} paths)")
-            example_count += 1
-            if example_count >= 3:
+            result = item["result"]
+            outcome = result.get("selected_by", "unknown")
+            feature = result.get("selected_feature", "N/A")
+            chunks = len(result.get("chunk_ids", []))
+            paths = len(result.get("paths", []))
+            typer.echo(f"  {i}. [{outcome}] '{task_short}'")
+            typer.echo(f"     → {feature} ({chunks} chunks, {paths} paths)")
+            if i >= 3:
                 break
 
     typer.echo("")
 
-    # Gate decision
-    if plan_miss_rate < 20:
-        typer.echo("✅ GO: plan_miss_rate < 20%")
+    # Gate decision (T9.3 criteria)
+    go_criteria = []
+    no_go_reasons = []
+
+    if fallback_rate < 20:
+        go_criteria.append(f"fallback_rate {fallback_rate:.1f}% < 20%")
     else:
-        typer.echo(f"❌ NO-GO: plan_miss_rate {plan_miss_rate:.1f}% >= 20%")
+        no_go_reasons.append(f"fallback_rate {fallback_rate:.1f}% >= 20%")
+
+    if true_zero_guidance_rate == 0:
+        go_criteria.append(f"true_zero_guidance_rate {true_zero_guidance_rate:.1f}% = 0%")
+    else:
+        no_go_reasons.append(f"true_zero_guidance_rate {true_zero_guidance_rate:.1f}% > 0%")
+
+    if alias_hit_rate <= 70:
+        go_criteria.append(f"alias_hit_rate {alias_hit_rate:.1f}% <= 70%")
+    else:
+        no_go_reasons.append(f"alias_hit_rate {alias_hit_rate:.1f}% > 70%")
+
+    if feature_hit_rate >= 10:
+        go_criteria.append(f"feature_hit_rate {feature_hit_rate:.1f}% >= 10%")
+    else:
+        no_go_reasons.append(f"feature_hit_rate {feature_hit_rate:.1f}% < 10%")
+
+    if go_criteria and not no_go_reasons:
+        typer.echo("✅ GO: All criteria passed")
+        for c in go_criteria:
+            typer.echo(f"   ✓ {c}")
+    else:
+        typer.echo("❌ NO-GO: Some criteria failed")
+        for r in no_go_reasons:
+            typer.echo(f"   ✗ {r}")
+        if go_criteria:
+            typer.echo("")
+            typer.echo("Passed criteria:")
+            for c in go_criteria:
+                typer.echo(f"   ✓ {c}")
 
     telemetry.flush()
 
@@ -605,6 +732,25 @@ def sync(
             output = "❌ Validation Failed\n\n" + "\n".join(f"   - {e}" for e in result.errors)
 
         typer.echo(output)
+
+        if result.passed:
+            # Regenerate stubs
+            typer.echo("🔄 Regenerating stubs...")
+            stub_regen_uc = StubRegenUseCase(telemetry)
+            stub_result = stub_regen_uc.execute(Path(segment).resolve())
+
+            if stub_result["stubs"]:
+                typer.echo(f"   ✅ Regenerated: {', '.join(stub_result['stubs'])}")
+
+            if stub_result["warnings"]:
+                typer.echo("   ⚠️  Warnings:")
+                for w in stub_result["warnings"]:
+                    typer.echo(f"      - {w}")
+
+            if not stub_result["regen_ok"]:
+                typer.echo("   ⚠️  Stub regeneration had errors:")
+                for e in stub_result["errors"]:
+                    typer.echo(f"      - {e}")
 
         telemetry.event(
             "ctx.sync",
@@ -1002,5 +1148,29 @@ def telemetry_chart(
     typer.echo(chart)
 
 
-if __name__ == "__main__":
-    app()
+@legacy_app.command("scan")
+def legacy_scan(
+    path: str = typer.Option(".", "--path", "-p", help="Root path to scan"),
+) -> None:
+    """Scan for undeclared legacy code. Fails if new legacy appears."""
+    from src.application.legacy_use_case import scan_legacy
+    from src.domain.result import Err, Ok
+
+    repo_root = Path(path).resolve()
+    manifest_path = repo_root / "docs/legacy_manifest.json"
+
+    typer.echo(f"🔍 Scanning for legacy debt in {repo_root}...")
+    typer.echo(f"   Manifest: {manifest_path}")
+
+    match scan_legacy(repo_root, manifest_path):
+        case Ok(legacy_items):
+            typer.echo("✅ Legacy Check Passed.")
+            if legacy_items:
+                typer.echo(f"   Found {len(legacy_items)} declared legacy items (Technical Debt).")
+            else:
+                typer.echo("   Zero legacy debt found!")
+        case Err(errors):
+            typer.echo("❌ Legacy Check Failed (Undeclared Debt):")
+            for err in errors:
+                typer.echo(f"   - {err}")
+            raise typer.Exit(code=1)

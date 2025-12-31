@@ -1,0 +1,12 @@
+[
+  {
+    "path": "_ctx/agent.md",
+    "reason": "Legacy naming convention (no segment specific suffix)",
+    "replacement": "Rename to _ctx/agent_{segment_id}.md"
+  },
+  {
+    "path": "scripts/ingest_trifecta.py",
+    "reason": "Deprecated ingestion script",
+    "replacement": "Use 'trifecta ctx build' CLI command"
+  }
+]

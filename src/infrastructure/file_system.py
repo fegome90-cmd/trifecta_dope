@@ -1,7 +1,13 @@
 """File System Adapter for Trifecta operations."""
+
 from pathlib import Path
 
+from typing import TYPE_CHECKING
+
 from src.domain.models import TrifectaPack
+
+if TYPE_CHECKING:
+    from src.domain.models import TrifectaConfig
 
 
 class FileSystemAdapter:
@@ -34,8 +40,27 @@ class FileSystemAdapter:
         if not scan_path.exists():
             return []
 
-        docs = [
-            str(p.relative_to(repo_root))
-            for p in scan_path.glob("**/*.md")
-        ]
+        docs = [str(p.relative_to(repo_root)) for p in scan_path.glob("**/*.md")]
         return sorted(docs)[:limit]
+
+    def load_trifecta_config(self, segment_path: Path) -> "TrifectaConfig | None":
+        """
+        Load TrifectaConfig from _ctx/trifecta_config.json.
+        Returns None if file is missing.
+        Raises ValueError if file exists but is invalid (Fail-Closed).
+        """
+        import json
+        from src.domain.models import TrifectaConfig
+
+        config_path = segment_path / "_ctx" / "trifecta_config.json"
+
+        if not config_path.exists():
+            return None
+
+        try:
+            content = config_path.read_text()
+            data = json.loads(content)
+            return TrifectaConfig(**data)
+        except Exception:
+            # Deterministic strict error (fail-closed)
+            raise ValueError("Failed Constitution: trifecta_config.json is invalid")
