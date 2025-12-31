@@ -15,7 +15,8 @@ def temp_segment(tmp_path: Path) -> Path:
     seg.mkdir()
     (seg / "skill.md").write_text("Skill")
     (seg / "_ctx").mkdir()
-    (seg / "_ctx" / "agent.md").write_text("Agent")
+    # Strict naming adherence
+    (seg / "_ctx" / f"agent_{seg.name}.md").write_text("Agent")
     return seg
 
 
@@ -36,7 +37,8 @@ def test_prime_expansion_happy_path(temp_segment: Path) -> None:
     doc_file = temp_segment / "doc.md"
     doc_file.write_text("Content of linked doc")
 
-    prime = temp_segment / "_ctx" / "prime_test.md"
+    # STRICT: filename must match directory name ("segment")
+    prime = temp_segment / "_ctx" / f"prime_{temp_segment.name}.md"
     prime.write_text("- [Link](doc.md)")
 
     uc = BuildContextPackUseCase(FileSystemAdapter())
@@ -53,7 +55,8 @@ def test_prime_security_path_traversal(temp_segment: Path) -> None:
     secret = temp_segment.parent / "secret.md"
     secret.write_text("SECRET DATA")
 
-    prime = temp_segment / "_ctx" / "prime_test.md"
+    # STRICT: filename must match directory name
+    prime = temp_segment / "_ctx" / f"prime_{temp_segment.name}.md"
     prime.write_text("- [Attack](../secret.md)")
 
     uc = BuildContextPackUseCase(FileSystemAdapter())
@@ -71,7 +74,8 @@ def test_prime_cycles_warning(temp_segment: Path, capsys: Any) -> None:
 
     # Same file referenced twice
     links = "- [Link1](doc.md)\n- [Link2](doc.md)"
-    prime = temp_segment / "_ctx" / "prime_test.md"
+    # STRICT: filename must match directory name
+    prime = temp_segment / "_ctx" / f"prime_{temp_segment.name}.md"
     prime.write_text(links)
 
     uc = BuildContextPackUseCase(FileSystemAdapter())

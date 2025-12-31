@@ -325,36 +325,37 @@ class TestDeduplicationContract:
         # Test that the logic exists to check path-aware exclusion
         assert hasattr(use_case, "_extract_references")
 
-    def test_skill_md_indexed_only_once_in_context_pack(self) -> None:
+    def test_skill_md_indexed_only_once_in_context_pack(self, tmp_path: Path) -> None:
         """
         Integration test: Verify ROOT skill.md appears exactly once in context pack.
-
-        Expected state:
-            - skill:773705da1d (doc='skill') only
-            - NO ref:skill.md entry
-
-        Fails with: AssertionError (if pack still has duplicates)
+        Uses a fresh temporary segment to enforce strict naming and reproducible state.
         """
-        import json
-        from pathlib import Path
+        from src.application.use_cases import BuildContextPackUseCase
+        from src.infrastructure.file_system import FileSystemAdapter
 
-        pack_path = Path("_ctx/context_pack.json")
-        if not pack_path.exists():
-            pytest.skip("context_pack.json not found - run 'trifecta ctx build' first")
+        # Setup strict segment structure
+        seg = tmp_path / "skill_seg"
+        seg.mkdir()
+        (seg / "skill.md").write_text("Skill Content")
+        (seg / "_ctx").mkdir()
+        (seg / "_ctx" / "prime_skill_seg.md").write_text(
+            "- [Ref](skill.md)"
+        )  # Reference strict self
+        (seg / "_ctx" / "agent_skill_seg.md").write_text("Agent")
 
-        with open(pack_path) as f:
-            pack = json.load(f)
+        # Build
+        uc = BuildContextPackUseCase(FileSystemAdapter())
+        pack = uc.execute(seg)
 
         # Count how many times root skill.md appears
         skill_chunks = [
             chunk
-            for chunk in pack.get("chunks", [])
-            if chunk.get("doc", "").startswith("skill")
-            or chunk.get("doc", "").startswith("ref:skill")
+            for chunk in pack.chunks
+            if chunk.doc.startswith("skill") or chunk.doc.startswith("ref:skill")
         ]
 
         assert len(skill_chunks) == 1, f"Expected 1 skill chunk, found {len(skill_chunks)}"
-        assert skill_chunks[0]["doc"] == "skill", (
+        assert skill_chunks[0].doc == "skill", (
             "skill.md must be indexed as 'skill', not 'ref:skill'"
         )
 

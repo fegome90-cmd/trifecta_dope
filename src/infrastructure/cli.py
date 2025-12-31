@@ -9,6 +9,8 @@ from typing import Literal, Optional, Tuple
 import typer
 
 from src.application.search_get_usecases import GetChunkUseCase, SearchUseCase
+from src.application.telemetry_charts import generate_chart
+from src.application.telemetry_reports import export_data, generate_report
 from src.application.use_cases import (
     BuildContextPackUseCase,
     MacroLoadUseCase,
@@ -24,9 +26,11 @@ from src.infrastructure.templates import TemplateRenderer
 app = typer.Typer(help="Trifecta Context Loading CLI")
 ctx_app = typer.Typer(help="Context Pack management commands")
 session_app = typer.Typer(help="Session logging commands")
+telemetry_app = typer.Typer(help="Telemetry analysis commands")
 
 app.add_typer(ctx_app, name="ctx")
 app.add_typer(session_app, name="session")
+app.add_typer(telemetry_app, name="telemetry")
 
 HELP_SEGMENT = "Target segment path (e.g., 'debug_terminal' or '.')"
 HELP_TELEMETRY = "Telemetry level: off, lite (default), full"
@@ -171,12 +175,20 @@ def build(
             telemetry.flush()
             raise typer.Exit(code=1)
         case Ok(_):
-            # Check for legacy file warnings (non-blocking)
+            # Check for legacy file errors (Blocking)
             legacy = detect_legacy_context_files(path)
             if legacy:
-                typer.echo("⚠️  Warning: Legacy context files detected:")
+                typer.echo("❌ Legacy context files detected (Fail-Closed):")
                 for lf in legacy:
-                    typer.echo(f"   - _ctx/{lf} (consider renaming)")
+                    typer.echo(f"   - _ctx/{lf} (rename to suffix format: rule 3+1)")
+                telemetry.event(
+                    "ctx.build",
+                    {"segment": segment},
+                    {"status": "legacy_files_error", "count": len(legacy)},
+                    int((time.time() - start_time) * 1000),
+                )
+                telemetry.flush()
+                raise typer.Exit(code=1)
 
     _, file_system, _ = _get_dependencies(segment, telemetry)
     use_case = BuildContextPackUseCase(file_system, telemetry)
@@ -323,11 +335,11 @@ def sync(
     try:
         typer.echo("🔄 Running build...")
         build_uc = BuildContextPackUseCase(file_system, telemetry)
-        build_uc.execute(Path(segment))
+        build_uc.execute(Path(segment).resolve())
 
         typer.echo("✅ Build complete. Validating...")
         validate_uc = ValidateContextPackUseCase(file_system, telemetry)
-        result = validate_uc.execute(Path(segment))
+        result = validate_uc.execute(Path(segment).resolve())
 
         # Format ValidationResult for display
         if result.passed:
@@ -684,6 +696,55 @@ def session_append(
         typer.echo(f"✅ Appended to {session_file.relative_to(segment_path)}")
 
     typer.echo(f"   Summary: {summary}")
+
+
+# =============================================================================
+# Telemetry Commands
+# =============================================================================
+
+
+@telemetry_app.command("report")
+def telemetry_report(
+    segment: str = typer.Option(..., "--segment", "-s", help=HELP_SEGMENT),
+    last: int = typer.Option(7, "--last", help="Last N days (0 = all)"),
+    format_type: str = typer.Option("table", "--format", help="Output format: table, json"),
+) -> None:
+    """Generate telemetry report."""
+    segment_path = Path(segment).resolve()
+
+    report = generate_report(segment_path, last, format_type)
+    typer.echo(report)
+
+
+@telemetry_app.command("export")
+def telemetry_export(
+    segment: str = typer.Option(..., "--segment", "-s", help=HELP_SEGMENT),
+    format_type: str = typer.Option("json", "--format", help="Export format: json, csv"),
+    output: str = typer.Option(None, "--output", "-o", help="Output file path"),
+) -> None:
+    """Export telemetry data."""
+    segment_path = Path(segment).resolve()
+    output_path = Path(output) if output else None
+
+    data = export_data(segment_path, format_type, output_path)
+
+    if output_path:
+        typer.echo(f"✅ Exported to {output_path}")
+    else:
+        typer.echo(data)
+
+
+@telemetry_app.command("chart")
+def telemetry_chart(
+    segment: str = typer.Option(..., "--segment", "-s", help=HELP_SEGMENT),
+    chart_type: str = typer.Option("hits", "--type", help="Chart type: hits, latency, commands"),
+    days: int = typer.Option(7, "--days", help="Last N days"),
+) -> None:
+    """Generate ASCII chart."""
+    segment_path = Path(segment).resolve()
+
+    chart = generate_chart(segment_path, chart_type, days)
+    typer.echo(chart)
 
 
 if __name__ == "__main__":

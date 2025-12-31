@@ -1,4 +1,5 @@
 """Tests for Domain Models."""
+
 import pytest
 from src.domain.models import TrifectaConfig, TrifectaPack, ValidationResult
 from src.domain.constants import validate_profile, VALID_PROFILES
@@ -19,15 +20,18 @@ class TestTrifectaConfig:
             scope="Test",
             repo_root="/path",
         )
-        assert config.segment == "my-segment"
+        assert config.segment == "My_Segment"
+        # The segment_id property handles normalization (lowercases, keeps underscores)
+        assert config.segment_id == "my_segment"
 
-    def test_invalid_segment_with_spaces(self) -> None:
-        with pytest.raises(ValueError, match="no spaces"):
-            TrifectaConfig(
-                segment="my segment",
-                scope="Test",
-                repo_root="/path",
-            )
+    def test_valid_segment_with_spaces_normalized(self) -> None:
+        """Spaces are now allowed and normalized via segment_id."""
+        config = TrifectaConfig(
+            segment="my segment",
+            scope="Test",
+            repo_root="/path",
+        )
+        assert config.segment_id == "my-segment"
 
     def test_empty_segment(self) -> None:
         with pytest.raises(ValueError, match="non-empty"):

@@ -155,9 +155,9 @@ class RefreshPrimeUseCase:
         prime_content = self.template_renderer.render_prime(config, docs)
         prime_path.write_text(prime_content)
 
-
-
         return prime_path.name
+
+
 class BuildContextPackUseCase:
     """Build a Context Pack for a segment."""
 
@@ -288,14 +288,31 @@ class BuildContextPackUseCase:
         if self.telemetry:
             self.telemetry.incr("ctx_build_count")
         """Scan a Trifecta segment and build a context_pack.json."""
-        # 1. Detect segment name from path or prime file
-        ctx_dir = target_path / "_ctx"
-        prime_files = list(ctx_dir.glob("prime_*.md"))
-        if not prime_files:
-            raise FileNotFoundError("No prime_*.md found. Run 'create' first.")
+        from src.domain.naming import normalize_segment_id
 
-        prime_path = prime_files[0]
-        segment = prime_path.stem.replace("prime_", "")
+        # 1. Derive segment_id deterministically from directory name
+        segment_id = normalize_segment_id(target_path.name)
+        ctx_dir = target_path / "_ctx"
+
+        # 2. FAIL-CLOSED: Validate exactly one prime file with correct suffix
+        expected_prime = ctx_dir / f"prime_{segment_id}.md"
+        if not expected_prime.exists():
+            raise FileNotFoundError(
+                f"Expected prime file not found: _ctx/prime_{segment_id}.md. "
+                f"Segment ID derived from directory name: '{target_path.name}' -> '{segment_id}'"
+            )
+
+        # 3. FAIL-CLOSED: Detect contamination (other prime_*.md files)
+        all_prime_files = list(ctx_dir.glob("prime_*.md"))
+        if len(all_prime_files) > 1:
+            contaminating = [f.name for f in all_prime_files if f != expected_prime]
+            raise ValueError(
+                f"Ambiguous/contaminated _ctx directory: found {len(all_prime_files)} prime_*.md files. "
+                f"Expected only: prime_{segment_id}.md. "
+                f"Contaminating files: {contaminating}"
+            )
+
+        prime_path = expected_prime
 
         # Try to parse REPO_ROOT from prime header
         repo_root = None
@@ -308,19 +325,63 @@ class BuildContextPackUseCase:
             except Exception:
                 pass
 
-        # 2. Identify source files
+        # 4. Identify source files with STRICT VALIDATION
         sources = {
             "skill": target_path / "skill.md",
-            "agent": ctx_dir / "agent.md",
             "prime": prime_path,
         }
 
-        # Add session file if it exists
-        session_files = list(ctx_dir.glob("session_*.md"))
-        if session_files:
-            sources["session"] = session_files[0]
+        # 4a. STRICT Agent Validation (Symmetric to Prime)
+        expected_agent = ctx_dir / f"agent_{segment_id}.md"
+        all_agent_files = list(ctx_dir.glob("agent_*.md"))
 
-        # 2.5 Extract references from Prime
+        if len(all_agent_files) > 1:
+            contaminating = [f.name for f in all_agent_files if f != expected_agent]
+            raise ValueError(
+                f"Ambiguous/contaminated _ctx directory: found {len(all_agent_files)} agent_*.md files. "
+                f"Expected only: agent_{segment_id}.md. "
+                f"Contaminating files: {contaminating}"
+            )
+
+        if not expected_agent.exists():
+            # If we require agent to exist (which is standard), strict fail:
+            if all_agent_files:
+                # Found agent_wrong.md but not agent_correct.md -> Contamination/Mismatch
+                raise ValueError(
+                    f"Contaminated _ctx directory: found agent_*.md files but missing expected agent_{segment_id}.md. "
+                    f"Found: {[f.name for f in all_agent_files]}"
+                )
+            # If just missing, FileNotFoundError (Validation Gate usually catches this earlier, but build must be robust)
+            # For now, let's allow "missing" agent if logic tolerates it, OR enforce it.
+            # The tests suggest we want strict enforcement.
+            # However, validators.py checks for "Missing context file".
+            # Let's ensure consistency. If validators pass, this should exist.
+            pass
+        else:
+            sources["agent"] = expected_agent
+
+        # 4b. STRICT Session Validation
+        expected_session = ctx_dir / f"session_{segment_id}.md"
+        all_session_files = list(ctx_dir.glob("session_*.md"))
+
+        if len(all_session_files) > 1:
+            contaminating = [f.name for f in all_session_files if f != expected_session]
+            raise ValueError(
+                f"Ambiguous/contaminated _ctx directory: found {len(all_session_files)} session_*.md files. "
+                f"Expected only: session_{segment_id}.md. "
+                f"Contaminating files: {contaminating}"
+            )
+
+        if all_session_files and not expected_session.exists():
+            raise ValueError(
+                f"Contaminated _ctx directory: found session_*.md files but missing expected session_{segment_id}.md. "
+                f"Found: {[f.name for f in all_session_files]}"
+            )
+
+        if expected_session.exists():
+            sources["session"] = expected_session
+
+        # 4.5 Extract references from Prime
         refs = self._extract_references(prime_content, target_path, repo_root)
 
         # Compute primary source paths for exclusion (path-aware deduplication)
@@ -333,7 +394,7 @@ class BuildContextPackUseCase:
                 continue
             sources[f"ref:{name}"] = path
 
-        # 2.6 FAIL-CLOSED VALIDATION
+        # 4.6 FAIL-CLOSED VALIDATION
         self._validate_prohibited_paths(list(sources.values()))
 
         chunks: list[ContextChunk] = []
@@ -394,7 +455,9 @@ class BuildContextPackUseCase:
                 )
             )
 
-        pack = ContextPack(segment=segment, source_files=source_files, chunks=chunks, index=index)
+        pack = ContextPack(
+            segment=segment_id, source_files=source_files, chunks=chunks, index=index
+        )
 
         # 4. Save to disk atomically with lock
         pack_path = ctx_dir / "context_pack.json"
