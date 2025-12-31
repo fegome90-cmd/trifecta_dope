@@ -48,3 +48,11 @@ def evaluate_pcc(
         "false_fallback": false_fallback,
         "safe_fallback": safe_fallback,
     }
+
+
+def summarize_pcc(rows: list[dict[str, bool]]) -> dict[str, int]:
+    return {
+        "path_correct_count": sum(1 for r in rows if r.get("path_correct")),
+        "false_fallback_count": sum(1 for r in rows if r.get("false_fallback")),
+        "safe_fallback_count": sum(1 for r in rows if r.get("safe_fallback")),
+    }

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from src.application.pcc_metrics import parse_feature_map, evaluate_pcc
+from src.application.pcc_metrics import parse_feature_map, evaluate_pcc, summarize_pcc
 
 
 def test_parse_feature_map_paths(tmp_path: Path) -> None:
@@ -35,3 +35,14 @@ def test_evaluate_pcc_path_correctness() -> None:
     assert result["path_correct"] is True
     assert result["false_fallback"] is False
     assert result["safe_fallback"] is False
+
+
+def test_summarize_pcc_counts() -> None:
+    rows = [
+        {"path_correct": True, "false_fallback": False, "safe_fallback": False},
+        {"path_correct": False, "false_fallback": True, "safe_fallback": False},
+    ]
+
+    summary = summarize_pcc(rows)
+    assert summary["path_correct_count"] == 1
+    assert summary["false_fallback_count"] == 1

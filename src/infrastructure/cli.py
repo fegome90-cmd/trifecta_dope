@@ -13,6 +13,7 @@ from src.application.telemetry_charts import generate_chart
 from src.application.telemetry_reports import export_data, generate_report
 from src.application.plan_use_case import PlanUseCase
 from src.application.stub_regen_use_case import StubRegenUseCase
+from src.application.pcc_metrics import parse_feature_map, evaluate_pcc, summarize_pcc
 from src.application.use_cases import (
     BuildContextPackUseCase,
     MacroLoadUseCase,
@@ -534,6 +535,17 @@ def eval_plan(
     telemetry = _get_telemetry(segment, telemetry_level)
     _, file_system, _ = _get_dependencies(segment, telemetry)
 
+    # Load PRIME for PCC metrics
+    segment_path = Path(segment).resolve()
+    prime_files = list(segment_path.glob("_ctx/prime_*.md"))
+    prime_path = prime_files[0] if prime_files else None
+    feature_map = {}
+    if prime_path:
+        try:
+            feature_map = parse_feature_map(prime_path)
+        except Exception:
+            pass  # Feature map not available, PCC metrics will be empty
+
     # Load dataset from markdown
     dataset_path = Path(dataset).resolve()
     if not dataset_path.exists():
@@ -552,7 +564,7 @@ def eval_plan(
     # Parse expected_feature_id from dataset (T9.3.2)
     # Format: number. "task" | expected_feature_id | notes
     expected_features = {}
-    for line in content.split('\n'):
+    for line in content.split("\n"):
         match = re.match(r'^\d+\.\s+"([^"]+)"\s*\|\s*(\w+)', line)
         if match:
             task_str = match.group(1)
@@ -573,6 +585,7 @@ def eval_plan(
     fallback_count = 0
     true_zero_count = 0
     correct_predictions = 0  # T9.3.2: plan_accuracy_top1
+    pcc_metrics_rows = []  # PCC metrics per task
 
     for i, task in enumerate(tasks, 1):
         result = use_case.execute(Path(segment), task)
@@ -618,6 +631,17 @@ def eval_plan(
         if chunks_count == 0 and paths_count == 0 and next_steps_count == 0:
             true_zero_count += 1
 
+        # Compute PCC metrics if feature_map is available
+        if feature_map and expected_id:
+            pcc_row = evaluate_pcc(
+                expected_feature=expected_id,
+                predicted_feature=selected_id,
+                predicted_paths=result.get("paths", []),
+                feature_map=feature_map,
+                selected_by=selected_by,
+            )
+            pcc_metrics_rows.append(pcc_row)
+
     total = len(tasks)
     expected_count = len(expected_features)  # T9.3.2: Number of labeled tasks
 
@@ -629,12 +653,23 @@ def eval_plan(
     true_zero_guidance_rate = (true_zero_count / total * 100) if total > 0 else 0
 
     # T9.3.2: Compute accuracy if expected labels exist
-    plan_accuracy_top1 = (correct_predictions / expected_count * 100) if expected_count > 0 else None
+    plan_accuracy_top1 = (
+        (correct_predictions / expected_count * 100) if expected_count > 0 else None
+    )
+
+    # Compute PCC summary
+    pcc_summary = summarize_pcc(pcc_metrics_rows) if pcc_metrics_rows else {}
 
     # Output report
     typer.echo("=" * 80)
     typer.echo("EVALUATION REPORT: ctx.plan")
     typer.echo("=" * 80)
+    typer.echo("")
+    typer.echo(f"Dataset: {dataset_path}")
+    typer.echo(f"Dataset SHA256: {dataset_sha256}")
+    typer.echo(f"Dataset mtime: {dataset_mtime}")
+    typer.echo(f"Segment: {segment}")
+    typer.echo(f"Total tasks: {total}")
     typer.echo("")
     typer.echo(f"Dataset: {dataset_path}")
     typer.echo(f"Dataset SHA256: {dataset_sha256}")
@@ -661,8 +696,18 @@ def eval_plan(
 
     # T9.3.2: Show accuracy if expected labels exist
     if plan_accuracy_top1 is not None:
-        typer.echo(f"  plan_accuracy_top1:     {plan_accuracy_top1:.1f}% ({correct_predictions}/{expected_count} correct)")
+        typer.echo(
+            f"  plan_accuracy_top1:     {plan_accuracy_top1:.1f}% ({correct_predictions}/{expected_count} correct)"
+        )
     typer.echo("")
+
+    # PCC Metrics (if feature_map is available)
+    if pcc_summary:
+        typer.echo("PCC Metrics:")
+        typer.echo(f"  path_correct_count:    {pcc_summary['path_correct_count']}")
+        typer.echo(f"  false_fallback_count:  {pcc_summary['false_fallback_count']}")
+        typer.echo(f"  safe_fallback_count:   {pcc_summary['safe_fallback_count']}")
+        typer.echo("")
 
     # Verbose per-task table
     if verbose:
