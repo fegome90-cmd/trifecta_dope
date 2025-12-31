@@ -549,6 +549,16 @@ def eval_plan(
     # Extract tasks from markdown (quoted strings after numbers)
     tasks = re.findall(r'^\d+\.\s+"([^"]+)"', content, re.MULTILINE)
 
+    # Parse expected_feature_id from dataset (T9.3.2)
+    # Format: number. "task" | expected_feature_id | notes
+    expected_features = {}
+    for line in content.split('\n'):
+        match = re.match(r'^\d+\.\s+"([^"]+)"\s*\|\s*(\w+)', line)
+        if match:
+            task_str = match.group(1)
+            expected_id = match.group(2)
+            expected_features[task_str] = expected_id
+
     if not tasks:
         typer.echo(f"❌ No tasks found in dataset file")
         raise typer.Exit(1)
@@ -558,23 +568,40 @@ def eval_plan(
 
     results = []
     feature_count = 0
+    nl_trigger_count = 0
     alias_count = 0
     fallback_count = 0
     true_zero_count = 0
+    correct_predictions = 0  # T9.3.2: plan_accuracy_top1
 
     for i, task in enumerate(tasks, 1):
         result = use_case.execute(Path(segment), task)
         results.append({"task_id": i, "task": task, "result": result})
 
-        # Classify outcome
+        # Classify outcome (T9.3.2: 4-level hierarchy)
         selected_by = result.get("selected_by", "fallback")
 
         if selected_by == "feature":
             feature_count += 1
+        elif selected_by == "nl_trigger":
+            nl_trigger_count += 1
         elif selected_by == "alias":
             alias_count += 1
         else:  # fallback
             fallback_count += 1
+
+        # T9.3.2: Track accuracy if expected_feature_id is available
+        expected_id = expected_features.get(task)
+        selected_id = result.get("selected_feature")
+
+        if expected_id:
+            if expected_id == "fallback":
+                # Correct if selected_feature is None
+                if selected_id is None:
+                    correct_predictions += 1
+            elif selected_id == expected_id:
+                # Correct if selected_feature matches expected
+                correct_predictions += 1
 
         # Check for true_zero_guidance (bug condition)
         chunks_count = len(result.get("chunk_ids", []))
@@ -592,12 +619,17 @@ def eval_plan(
             true_zero_count += 1
 
     total = len(tasks)
+    expected_count = len(expected_features)  # T9.3.2: Number of labeled tasks
 
-    # Compute rates
+    # Compute rates (T9.3.2: 4-level hierarchy)
     feature_hit_rate = (feature_count / total * 100) if total > 0 else 0
+    nl_trigger_hit_rate = (nl_trigger_count / total * 100) if total > 0 else 0
     alias_hit_rate = (alias_count / total * 100) if total > 0 else 0
     fallback_rate = (fallback_count / total * 100) if total > 0 else 0
     true_zero_guidance_rate = (true_zero_count / total * 100) if total > 0 else 0
+
+    # T9.3.2: Compute accuracy if expected labels exist
+    plan_accuracy_top1 = (correct_predictions / expected_count * 100) if expected_count > 0 else None
 
     # Output report
     typer.echo("=" * 80)
@@ -612,18 +644,24 @@ def eval_plan(
     typer.echo("")
 
     typer.echo(f"Distribution (MUST SUM TO {total}):")
-    typer.echo(f"  feature:  {feature_count} ({feature_hit_rate:.1f}%)")
-    typer.echo(f"  alias:    {alias_count} ({alias_hit_rate:.1f}%)")
-    typer.echo(f"  fallback: {fallback_count} ({fallback_rate:.1f}%)")
+    typer.echo(f"  feature (L1):   {feature_count} ({feature_hit_rate:.1f}%)")
+    typer.echo(f"  nl_trigger (L2): {nl_trigger_count} ({nl_trigger_hit_rate:.1f}%)")
+    typer.echo(f"  alias (L3):      {alias_count} ({alias_hit_rate:.1f}%)")
+    typer.echo(f"  fallback (L4):   {fallback_count} ({fallback_rate:.1f}%)")
     typer.echo(f"  ─────────────────────────────")
-    typer.echo(f"  total:    {total} (100.0%)")
+    typer.echo(f"  total:          {total} (100.0%)")
     typer.echo("")
 
     typer.echo("Computed Rates:")
     typer.echo(f"  feature_hit_rate:       {feature_hit_rate:.1f}%")
+    typer.echo(f"  nl_trigger_hit_rate:    {nl_trigger_hit_rate:.1f}%")
     typer.echo(f"  alias_hit_rate:         {alias_hit_rate:.1f}%")
     typer.echo(f"  fallback_rate:          {fallback_rate:.1f}%")
     typer.echo(f"  true_zero_guidance_rate: {true_zero_guidance_rate:.1f}%")
+
+    # T9.3.2: Show accuracy if expected labels exist
+    if plan_accuracy_top1 is not None:
+        typer.echo(f"  plan_accuracy_top1:     {plan_accuracy_top1:.1f}% ({correct_predictions}/{expected_count} correct)")
     typer.echo("")
 
     # Verbose per-task table
