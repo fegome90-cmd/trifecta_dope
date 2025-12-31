@@ -49,12 +49,16 @@ def validate_segment_structure(path: Path) -> ValidationResult:
     """
     Validates that a segment directory follows the Trifecta structure.
 
-    Dynamic Naming Convention:
-        If segment folder is named 'marketing', expects:
+    Strict 3+1 Contract:
         - skill.md (fixed filename)
-        - _ctx/agent_marketing.md (dynamic: agent_{segment_name}.md)
-        - _ctx/prime_marketing.md (dynamic: prime_{segment_name}.md)
-        - _ctx/session_marketing.md (dynamic: session_{segment_name}.md)
+        - _ctx/agent_<segment_id>.md
+        - _ctx/prime_<segment_id>.md
+        - _ctx/session_<segment_id>.md
+
+    Where segment_id = normalize_segment_id(path.name)
+
+    Legacy files (agent.md, prime.md, session.md) are ERRORS, not warnings.
+    Ambiguity (0 or >1 matches) is an ERROR.
 
     Args:
         path: Path to the segment directory to validate
@@ -67,24 +71,14 @@ def validate_segment_structure(path: Path) -> ValidationResult:
         - No side effects (no prints, no logging, no state mutations)
         - Deterministic (same input → same output)
         - Thread-safe
-
-    Examples:
-        >>> from pathlib import Path
-        >>> result = validate_segment_structure(Path("/path/to/segment"))
-        >>> if result.valid:
-        ...     print("Valid segment")
-        ... else:
-        ...     print(f"Errors: {result.errors}")
     """
+    from src.domain.naming import normalize_segment_id
+
     errors: List[str] = []
 
     # Check 1: Path exists
     if not path.exists():
         return ValidationResult(False, [f"Path not found: {path}"])
-
-    # Extract segment name from directory name
-    # This is used for dynamic naming validation
-    context_name = path.name
 
     # Check 2: skill.md (fixed filename, always required)
     if not (path / "skill.md").exists():
@@ -97,17 +91,29 @@ def validate_segment_structure(path: Path) -> ValidationResult:
         # Early return: can't validate files inside non-existent directory
         return ValidationResult(False, errors)
 
-    # Check 4: Dynamic named files (interpolate segment name)
+    # Check 4: Normalize segment ID
+    segment_id = normalize_segment_id(path.name)
+
+    # Check 5: Exact 3+1 contract with normalized ID
     expected_files = [
-        f"agent_{context_name}.md",
-        f"prime_{context_name}.md",
-        f"session_{context_name}.md",
+        f"agent_{segment_id}.md",
+        f"prime_{segment_id}.md",
+        f"session_{segment_id}.md",
     ]
 
     for filename in expected_files:
         expected_path = ctx_dir / filename
         if not expected_path.exists():
             errors.append(f"Missing context file: _ctx/{filename}")
+
+    # Check 6: Detect ambiguity (multiple agent_*.md, prime_*.md, session_*.md)
+    for prefix in ["agent", "prime", "session"]:
+        matches = list(ctx_dir.glob(f"{prefix}_*.md"))
+        if len(matches) > 1:
+            errors.append(
+                f"Ambiguous: found {len(matches)} {prefix}_*.md files in _ctx/ "
+                f"(expected exactly 1: {prefix}_{segment_id}.md)"
+            )
 
     # Validation complete
     return ValidationResult(valid=len(errors) == 0, errors=errors)
