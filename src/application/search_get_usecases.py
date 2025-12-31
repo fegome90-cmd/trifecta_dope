@@ -1,7 +1,7 @@
 """Use case wrappers for Search and Get with telemetry."""
 
 from pathlib import Path
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 from src.application.context_service import ContextService
 from src.infrastructure.file_system import FileSystemAdapter

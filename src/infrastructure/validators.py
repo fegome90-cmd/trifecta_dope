@@ -23,20 +23,21 @@ from typing import List
 class ValidationResult:
     """
     Immutable result of segment structure validation.
-    
+
     Attributes:
         valid: True if segment structure is valid, False otherwise
         errors: List of error messages (empty if valid=True)
-    
+
     Examples:
         >>> result = ValidationResult(valid=True, errors=[])
         >>> result.valid
         True
-        
+
         >>> result = ValidationResult(valid=False, errors=["Missing skill.md"])
         >>> result.errors
         ['Missing skill.md']
     """
+
     valid: bool
     errors: List[str]
 
@@ -44,26 +45,26 @@ class ValidationResult:
 def validate_segment_structure(path: Path) -> ValidationResult:
     """
     Validates that a segment directory follows the Trifecta structure.
-    
+
     Dynamic Naming Convention:
         If segment folder is named 'marketing', expects:
         - skill.md (fixed filename)
         - _ctx/agent_marketing.md (dynamic: agent_{segment_name}.md)
         - _ctx/prime_marketing.md (dynamic: prime_{segment_name}.md)
         - _ctx/session_marketing.md (dynamic: session_{segment_name}.md)
-    
+
     Args:
         path: Path to the segment directory to validate
-    
+
     Returns:
         ValidationResult with valid=True if structure is correct,
         or valid=False with list of errors
-    
+
     Pure Function:
         - No side effects (no prints, no logging, no state mutations)
         - Deterministic (same input → same output)
         - Thread-safe
-    
+
     Examples:
         >>> from pathlib import Path
         >>> result = validate_segment_structure(Path("/path/to/segment"))
@@ -73,7 +74,7 @@ def validate_segment_structure(path: Path) -> ValidationResult:
         ...     print(f"Errors: {result.errors}")
     """
     errors: List[str] = []
-    
+
     # Check 1: Path exists
     if not path.exists():
         return ValidationResult(False, [f"Path not found: {path}"])
@@ -81,11 +82,11 @@ def validate_segment_structure(path: Path) -> ValidationResult:
     # Extract segment name from directory name
     # This is used for dynamic naming validation
     context_name = path.name
-    
+
     # Check 2: skill.md (fixed filename, always required)
     if not (path / "skill.md").exists():
         errors.append("Missing generic entry point: skill.md")
-    
+
     # Check 3: _ctx directory exists
     ctx_dir = path / "_ctx"
     if not ctx_dir.exists():
@@ -97,7 +98,7 @@ def validate_segment_structure(path: Path) -> ValidationResult:
     expected_files = [
         f"agent_{context_name}.md",
         f"prime_{context_name}.md",
-        f"session_{context_name}.md"
+        f"session_{context_name}.md",
     ]
 
     for filename in expected_files:
@@ -107,3 +108,15 @@ def validate_segment_structure(path: Path) -> ValidationResult:
 
     # Validation complete
     return ValidationResult(valid=len(errors) == 0, errors=errors)
+
+
+def detect_legacy_context_files(path: Path) -> List[str]:
+    """
+    Detect legacy (non-dynamic) context filenames inside _ctx.
+    Returns a list of legacy filenames that exist, in stable order.
+    """
+    legacy_names = ["agent.md", "prime.md", "session.md"]
+    ctx_dir = path / "_ctx"
+    if not ctx_dir.exists():
+        return []
+    return [name for name in legacy_names if (ctx_dir / name).exists()]

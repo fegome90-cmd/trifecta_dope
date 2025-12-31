@@ -1,7 +1,7 @@
 """Tests for Domain Models."""
 import pytest
 from src.domain.models import TrifectaConfig, TrifectaPack, ValidationResult
-from src.domain.constants import MAX_SKILL_LINES, validate_profile, VALID_PROFILES
+from src.domain.constants import validate_profile, VALID_PROFILES
 
 
 class TestTrifectaConfig:

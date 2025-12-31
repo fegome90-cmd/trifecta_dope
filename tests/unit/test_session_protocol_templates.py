@@ -1,6 +1,5 @@
 """Test suite for Session Evidence Persistence protocol in templates."""
 
-import pytest
 from src.domain.models import TrifectaConfig
 from src.infrastructure.templates import TemplateRenderer
 

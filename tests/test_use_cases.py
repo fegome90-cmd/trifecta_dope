@@ -2,7 +2,6 @@
 import tempfile
 from pathlib import Path
 
-import pytest
 
 from src.domain.models import TrifectaConfig
 from src.application.use_cases import (

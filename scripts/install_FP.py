@@ -4,7 +4,11 @@ import sys
 from pathlib import Path
 
 # Import domain logic from Clean Architecture layer
-from src.infrastructure.validators import ValidationResult, validate_segment_structure
+from src.infrastructure.validators import (
+    ValidationResult,
+    detect_legacy_context_files,
+    validate_segment_structure,
+)
 
 
 def _legacy_validate_wrapper(path: Path) -> ValidationResult:
@@ -21,18 +25,18 @@ def _old_validate_logic(path: Path) -> ValidationResult:
     Kept here for reference only.
     """
     errors = []
-    
+
     if not path.exists():
         return ValidationResult(False, [f"Path not found: {path}"])
 
     # Obtenemos el "Context Name" del nombre de la carpeta
-    context_name = path.name 
-    
+    context_name = path.name
+
     # 1. skill.md suele ser el punto de entrada genérico (asumimos que este se mantiene fijo)
     # Si este también debe cambiar, avísame.
     if not (path / "skill.md").exists():
         errors.append("Missing generic entry point: skill.md")
-    
+
     ctx_dir = path / "_ctx"
     if not ctx_dir.exists():
         errors.append("Missing directory: _ctx/")
@@ -44,7 +48,7 @@ def _old_validate_logic(path: Path) -> ValidationResult:
     expected_files = [
         f"agent_{context_name}.md",
         f"prime_{context_name}.md",
-        f"session_{context_name}.md"
+        f"session_{context_name}.md",
     ]
 
     for filename in expected_files:
@@ -54,26 +58,42 @@ def _old_validate_logic(path: Path) -> ValidationResult:
 
     return ValidationResult(valid=len(errors) == 0, errors=errors)
 
+
 # --- INFRAESTRUCTURA (IMPERATIVE SHELL) ---
 # Aquí nos ensuciamos las manos con I/O, Subprocesos y Salida.
+
+
+def _format_legacy_warning(segment_path: Path, legacy_files: list[str]) -> str:
+    legacy_list = ", ".join(legacy_files)
+    return (
+        "⚠️ Legacy context filenames detected in "
+        f"{segment_path} -> {legacy_list}. "
+        f"Please rename to agent_{segment_path.name}.md, "
+        f"prime_{segment_path.name}.md, "
+        f"session_{segment_path.name}.md."
+    )
+
 
 def run_sync_command(cli_root: Path, segment_path: Path) -> None:
     """Ejecuta el comando. Lanza excepción si falla (no sys.exit)."""
     cmd = ["uv", "run", "trifecta", "ctx", "sync", "--segment", str(segment_path)]
-    
+
     # Usamos check=True para que lance CalledProcessError automáticamente si falla
     try:
-        subprocess.run(
-            cmd, 
-            cwd=cli_root, 
-            check=True, 
-            capture_output=True, 
-            text=True
+        result = subprocess.run(
+            cmd,
+            cwd=cli_root,
+            check=True,
+            capture_output=True,
+            text=True,
         )
+        if result.stdout:
+            print(result.stdout.rstrip())
         print(f"✅ Synced: {segment_path.name}")
     except subprocess.CalledProcessError as e:
         # Enriquecemos el error antes de lanzarlo arriba
         raise RuntimeError(f"❌ Sync failed for {segment_path.name}:\n{e.stderr}") from e
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Trifecta Context Installer")
@@ -84,14 +104,22 @@ def main() -> int:
     cli_root = Path(args.cli_root).resolve()
     segments = [Path(s).resolve() for s in args.segment]
 
+    if not (cli_root / "pyproject.toml").exists():
+        print(f"❌ Invalid CLI root (no pyproject.toml): {cli_root}")
+        return 1
+
     print(f"🔧 CLI Root: {cli_root}")
-    
+
     # FASE 1: Validación (Fail Fast en bloque)
     # Recolectamos TODOS los errores de TODOS los segmentos antes de ejecutar nada.
     all_errors = []
     valid_segments = []
 
     for seg in segments:
+        legacy_files = detect_legacy_context_files(seg)
+        if legacy_files:
+            print(_format_legacy_warning(seg, legacy_files))
+
         result = validate_segment_structure(seg)
         if result.valid:
             valid_segments.append(seg)
@@ -102,8 +130,8 @@ def main() -> int:
     if all_errors:
         print("\n🚫 Validation Errors Found:")
         print("\n".join(all_errors))
-        return 1 # <--- Salimos con error
-    
+        return 1  # <--- Salimos con error
+
     # FASE 2: Ejecución
     print(f"\n🚀 Processing {len(valid_segments)} segments...")
     failed = False
@@ -113,12 +141,13 @@ def main() -> int:
         except RuntimeError as e:
             print(e)
             failed = True
-    
+
     if failed:
-        return 1 # <--- Salimos con error
-    
+        return 1  # <--- Salimos con error
+
     print("\n✨ All done.")
-    return 0 # <--- Éxito explícito
+    return 0  # <--- Éxito explícito
+
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -2,7 +2,6 @@
 
 import json
 from pathlib import Path
-import pytest
 import yaml  # type: ignore[import-untyped]
 
 from src.infrastructure.alias_loader import AliasLoader

@@ -12,6 +12,7 @@ Usage:
     python ingest_trifecta.py --segment eval --output custom/pack.json
     python ingest_trifecta.py --segment hemdov --repo-root /path/to/projects
 """
+
 from __future__ import annotations
 
 import argparse
@@ -21,7 +22,6 @@ import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Literal
 
 VERSION = "0.1.0"
 SCHEMA_VERSION = 1
@@ -35,6 +35,7 @@ YAML_FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---\s*$", re.DOTALL)
 # =============================================================================
 # Normalization Utilities
 # =============================================================================
+
 
 def normalize_markdown(md: str) -> str:
     """Normalize markdown for consistent processing."""
@@ -66,6 +67,7 @@ def normalize_title_path(path: list[str]) -> str:
 # Hash Utilities
 # =============================================================================
 
+
 def sha256_text(s: str) -> str:
     """Compute SHA-256 hash of text."""
     return hashlib.sha256(s.encode("utf-8")).hexdigest()
@@ -92,6 +94,7 @@ def generate_chunk_id(doc: str, title_path: list[str], text: str) -> str:
 # Preview & Token Estimation
 # =============================================================================
 
+
 def preview(text: str, max_chars: int = 180) -> str:
     """Generate one-line preview of chunk content."""
     # Collapse all whitespace to single space
@@ -108,6 +111,7 @@ def estimate_tokens(text: str) -> int:
 # Chunk Scoring for Digest
 # =============================================================================
 
+
 def score_chunk(title: str, level: int, text: str) -> int:
     """
     Score a chunk for digest inclusion.
@@ -120,9 +124,17 @@ def score_chunk(title: str, level: int, text: str) -> int:
 
     # Keywords that indicate relevance
     relevant_keywords = [
-        "core", "rules", "workflow", "commands",
-        "usage", "setup", "api", "architecture",
-        "critical", "mandatory", "protocol"
+        "core",
+        "rules",
+        "workflow",
+        "commands",
+        "usage",
+        "setup",
+        "api",
+        "architecture",
+        "critical",
+        "mandatory",
+        "protocol",
     ]
     if any(kw in title_lower for kw in relevant_keywords):
         score += 3
@@ -143,11 +155,8 @@ def score_chunk(title: str, level: int, text: str) -> int:
 # Fence-Aware Chunking
 # =============================================================================
 
-def chunk_by_headings_fence_aware(
-    doc_id: str,
-    md: str,
-    max_chars: int = 6000
-) -> list[dict]:
+
+def chunk_by_headings_fence_aware(doc_id: str, md: str, max_chars: int = 6000) -> list[dict]:
     """
     Split markdown into chunks using headings, respecting code fences.
 
@@ -178,14 +187,16 @@ def chunk_by_headings_fence_aware(
         if buf:
             text = "\n".join(buf).strip()
             if text:
-                chunks.append({
-                    "title": title,
-                    "title_path": title_path.copy(),
-                    "heading_level": level,  # FIX: use heading_level consistently
-                    "text": text,
-                    "start_line": start_line + 1,  # 1-indexed
-                    "end_line": end_line,
-                })
+                chunks.append(
+                    {
+                        "title": title,
+                        "title_path": title_path.copy(),
+                        "heading_level": level,  # FIX: use heading_level consistently
+                        "text": text,
+                        "start_line": start_line + 1,  # 1-indexed
+                        "end_line": end_line,
+                    }
+                )
             buf = []
             start_line = end_line + 1
 
@@ -206,7 +217,7 @@ def chunk_by_headings_fence_aware(
             # Start new chunk
             level = len(heading_match.group(1))
             title = heading_match.group(2).strip()
-            title_path = title_path[:level - 1] + [title]  # Maintain hierarchy
+            title_path = title_path[: level - 1] + [title]  # Maintain hierarchy
             start_line = i
             buf = [line]
         else:
@@ -229,7 +240,7 @@ def chunk_by_headings_fence_aware(
         paragraphs = []
         current_para = []
         in_fence_para = False
-        
+
         for line in lines:
             if FENCE_RE.match(line):
                 in_fence_para = not in_fence_para
@@ -241,10 +252,10 @@ def chunk_by_headings_fence_aware(
                     current_para = []
             else:
                 current_para.append(line)
-        
+
         if current_para:
             paragraphs.append("\n".join(current_para))
-        
+
         # Now split oversized chunk by paragraphs
         acc: list[str] = []
         acc_len = 0
@@ -257,11 +268,13 @@ def chunk_by_headings_fence_aware(
 
             if acc and acc_len + len(para) + 2 > max_chars:
                 # Flush accumulated paragraphs
-                final_chunks.append({
-                    **chunk,
-                    "title": f"{chunk['title']} (part {part_num})",
-                    "text": "\n\n".join(acc),
-                })
+                final_chunks.append(
+                    {
+                        **chunk,
+                        "title": f"{chunk['title']} (part {part_num})",
+                        "text": "\n\n".join(acc),
+                    }
+                )
                 acc = []
                 acc_len = 0
                 part_num += 1
@@ -271,11 +284,13 @@ def chunk_by_headings_fence_aware(
 
         # Flush remaining
         if acc:
-            final_chunks.append({
-                **chunk,
-                "title": f"{chunk['title']} (part {part_num})",
-                "text": "\n\n".join(acc),
-            })
+            final_chunks.append(
+                {
+                    **chunk,
+                    "title": f"{chunk['title']} (part {part_num})",
+                    "text": "\n\n".join(acc),
+                }
+            )
 
     return final_chunks
 
@@ -283,6 +298,7 @@ def chunk_by_headings_fence_aware(
 # =============================================================================
 # Context Pack Builder
 # =============================================================================
+
 
 class ContextPackBuilder:
     """Builds token-optimized Context Pack from markdown files."""
@@ -314,7 +330,7 @@ class ContextPackBuilder:
         # Remove YAML frontmatter
         match = YAML_FRONTMATTER_RE.match(raw)
         if match:
-            raw = raw[match.end():]
+            raw = raw[match.end() :]
 
         return doc_id, normalize_markdown(raw)
 
@@ -325,18 +341,20 @@ class ContextPackBuilder:
         chunks = []
         for chunk in raw_chunks:
             chunk_id = generate_chunk_id(doc_id, chunk["title_path"], chunk["text"])
-            chunks.append({
-                "id": chunk_id,
-                "doc": doc_id,
-                "title_path": chunk["title_path"],
-                "text": chunk["text"],
-                "source_path": str(source_path.relative_to(self.repo_root)),
-                "heading_level": chunk["heading_level"],
-                "char_count": len(chunk["text"]),
-                "line_count": chunk["text"].count("\n") + 1,
-                "start_line": chunk["start_line"],
-                "end_line": chunk["end_line"],
-            })
+            chunks.append(
+                {
+                    "id": chunk_id,
+                    "doc": doc_id,
+                    "title_path": chunk["title_path"],
+                    "text": chunk["text"],
+                    "source_path": str(source_path.relative_to(self.repo_root)),
+                    "heading_level": chunk["heading_level"],
+                    "char_count": len(chunk["text"]),
+                    "line_count": chunk["text"].count("\n") + 1,
+                    "start_line": chunk["start_line"],
+                    "end_line": chunk["end_line"],
+                }
+            )
 
         return chunks
 
@@ -351,11 +369,7 @@ class ContextPackBuilder:
         scored = []
         for chunk in chunks:
             title = chunk["title_path"][-1] if chunk["title_path"] else "Introduction"
-            score = score_chunk(
-                title,
-                chunk["heading_level"],
-                chunk["text"]
-            )
+            score = score_chunk(title, chunk["heading_level"], chunk["text"])
             scored.append((score, chunk))
 
         # Sort by score (descending)
@@ -376,9 +390,9 @@ class ContextPackBuilder:
         digest_lines = []
         for c in selected_chunks:
             # Extract first 10 non-empty lines from chunk
-            lines = [l.strip() for l in c["text"].split("\n") if l.strip()]
+            lines = [line.strip() for line in c["text"].split("\n") if line.strip()]
             digest_lines.extend(lines[:10])
-        
+
         digest_text = "\n".join(digest_lines[:30])  # Max 30 lines total
 
         return {
@@ -392,9 +406,16 @@ class ContextPackBuilder:
         for f in files:
             path_str = str(f).lower()
             # Explicitly reject src/ or any common code extensions if they somehow got in
-            if "/src/" in path_str or path_str.startswith("src/") or f.suffix in [".py", ".ts", ".js", ".go", ".rs"]:
+            if (
+                "/src/" in path_str
+                or path_str.startswith("src/")
+                or f.suffix in [".py", ".ts", ".js", ".go", ".rs"]
+            ):
                 print(f"❌ PROHIBITED: Cannot index code files in pack: {f}", file=sys.stderr)
-                print("Trifecta is Programming Context Calling (meta-first), not RAG.", file=sys.stderr)
+                print(
+                    "Trifecta is Programming Context Calling (meta-first), not RAG.",
+                    file=sys.stderr,
+                )
                 print("Code access MUST be via curated prime links in meta-docs.", file=sys.stderr)
                 sys.exit(1)
 
@@ -424,31 +445,35 @@ class ContextPackBuilder:
             doc_id, content = self.load_document(path)
             chunks = self.build_chunks(doc_id, content, path)
 
-            docs.append({
-                "doc": doc_id,
-                "file": path.name,
-                "sha256": sha256_text(content),
-                "chunk_count": len(chunks),
-                "total_chars": len(content),
-            })
+            docs.append(
+                {
+                    "doc": doc_id,
+                    "file": path.name,
+                    "sha256": sha256_text(content),
+                    "chunk_count": len(chunks),
+                    "total_chars": len(content),
+                }
+            )
             all_chunks.extend(chunks)
 
         # Build index (digest is separate)
         index = []
         for chunk in all_chunks:
-            index.append({
-                "id": chunk["id"],
-                "doc": chunk["doc"],
-                "title_path": chunk["title_path"],
-                "preview": preview(chunk["text"]),
-                "token_est": estimate_tokens(chunk["text"]),
-                "source_path": chunk["source_path"],
-                "heading_level": chunk["heading_level"],
-                "char_count": chunk["char_count"],
-                "line_count": chunk["line_count"],
-                "start_line": chunk["start_line"],
-                "end_line": chunk["end_line"],
-            })
+            index.append(
+                {
+                    "id": chunk["id"],
+                    "doc": chunk["doc"],
+                    "title_path": chunk["title_path"],
+                    "preview": preview(chunk["text"]),
+                    "token_est": estimate_tokens(chunk["text"]),
+                    "source_path": chunk["source_path"],
+                    "heading_level": chunk["heading_level"],
+                    "char_count": chunk["char_count"],
+                    "line_count": chunk["line_count"],
+                    "start_line": chunk["start_line"],
+                    "end_line": chunk["end_line"],
+                }
+            )
 
         # Build digest (top chunks per doc)
         digest = []
@@ -488,10 +513,7 @@ class ContextPackBuilder:
             output_path = self.segment_path / "_ctx" / "context_pack.json"
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(
-            json.dumps(pack, ensure_ascii=False, indent=2),
-            encoding="utf-8"
-        )
+        output_path.write_text(json.dumps(pack, ensure_ascii=False, indent=2), encoding="utf-8")
 
         return pack
 
@@ -499,6 +521,7 @@ class ContextPackBuilder:
 # =============================================================================
 # CLI
 # =============================================================================
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -551,18 +574,18 @@ def main():
 
     try:
         # FIX #5: Validate segment name (prevent path traversal)
-        if not re.match(r'^[a-zA-Z0-9_-]+$', args.segment):
+        if not re.match(r"^[a-zA-Z0-9_-]+$", args.segment):
             raise ValueError(
                 f"Invalid segment name: '{args.segment}'\n"
                 f"Segment must contain only alphanumeric characters, underscores, and hyphens."
             )
-        
+
         builder = ContextPackBuilder(args.segment, args.repo_root)
 
         # Validate segment exists
         if not builder.segment_path.exists():
             raise ValueError(f"Segment path does not exist: {builder.segment_path}")
-        
+
         # Validate segment path is within repo_root (prevent traversal)
         try:
             builder.segment_path.resolve().relative_to(args.repo_root.resolve())
@@ -591,7 +614,7 @@ def main():
                 f"    • {len(pack['digest'])} digest entries\n"
                 f"    • {len(pack['index'])} index entries\n"
                 f"    → {output_path} (not written)",
-                file=sys.stderr
+                file=sys.stderr,
             )
         else:
             print(
@@ -600,7 +623,7 @@ def main():
                 f"    • {len(pack['digest'])} digest entries\n"
                 f"    • {len(pack['index'])} index entries\n"
                 f"    → {output_path}",
-                file=sys.stderr
+                file=sys.stderr,
             )
 
         if args.verbose:
@@ -625,6 +648,7 @@ def main():
         print(f"[error] Unexpected error: {e}", file=sys.stderr)
         if args.verbose:
             import traceback
+
             traceback.print_exc()
         sys.exit(1)
 

@@ -114,7 +114,7 @@ def test_ctx_search_emits_event_and_counts(tmp_path: Path) -> None:
     telemetry = Telemetry(tmp_path, level="lite")
     use_case = SearchUseCase(None, telemetry)  # type: ignore[arg-type]  # fs not used
 
-    output = use_case.execute(tmp_path, "test", limit=5)
+    use_case.execute(tmp_path, "test", limit=5)
     telemetry.flush()
 
     metrics = json.loads((tmp_path / "_ctx" / "telemetry" / "metrics.json").read_text())
@@ -155,7 +155,7 @@ def test_ctx_get_records_budget_trim(tmp_path: Path) -> None:
     use_case = GetChunkUseCase(None, telemetry)  # type: ignore[arg-type]  # fs not used
 
     # Request with low budget to trigger trim
-    output = use_case.execute(tmp_path, ["skill:abc"], mode="raw", budget_token_est=500)
+    use_case.execute(tmp_path, ["skill:abc"], mode="raw", budget_token_est=500)
     telemetry.flush()
 
     metrics = json.loads((tmp_path / "_ctx" / "telemetry" / "metrics.json").read_text())

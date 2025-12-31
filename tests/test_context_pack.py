@@ -8,9 +8,9 @@ Tests cover:
 - Fence-aware chunking (no splits inside code blocks)
 - Digest scoring (top-2 relevant chunks selected)
 """
+
 from __future__ import annotations
 
-import hashlib
 import json
 import sys
 from pathlib import Path
@@ -19,15 +19,14 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
 from ingest_trifecta import (  # type: ignore[import-not-found]
+    ContextPackBuilder,
     chunk_by_headings_fence_aware,
     generate_chunk_id,
     normalize_markdown,
     normalize_title_path,
     preview,
     score_chunk,
-    ContextPackBuilder,
 )
-
 
 # =============================================================================
 # Fixtures
@@ -460,7 +459,7 @@ def test_output_file_written(tmp_path: Path) -> None:
     (segment / "skill.md").write_text("# Test\n\nContent.")
 
     builder = ContextPackBuilder("output_test", tmp_path)
-    pack = builder.build()
+    builder.build()
 
     expected_output = tmp_path / "output_test" / "_ctx" / "context_pack.json"
     assert expected_output.exists()
