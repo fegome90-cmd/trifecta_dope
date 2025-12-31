@@ -1,6 +1,6 @@
 {
-  "run_id": "run_1767204736",
-  "ts": "2025-12-31T18:12:16.970367+00:00",
+  "run_id": "run_1767213863",
+  "ts": "2025-12-31T20:44:24.097989+00:00",
   "metrics_delta": {
     "ctx_build_count": 1,
     "prime_links_included_total": 3,
@@ -9,9 +9,9 @@
   "latencies": {
     "ctx.sync": {
       "count": 1,
-      "p50_ms": 333.0,
-      "p95_ms": 333.0,
-      "max_ms": 333.0
+      "p50_ms": 343.0,
+      "p95_ms": 343.0,
+      "max_ms": 343.0
     }
   },
   "tokens": {
@@ -34,8 +34,8 @@
   },
   "top_warnings": [],
   "pack_state": {
-    "pack_sha": "8b94080df77ba075",
-    "pack_mtime": 1767200727.0134966,
+    "pack_sha": "d93a06d7d4030cfb",
+    "pack_mtime": 1767213790.2125041,
     "stale_detected": false
   }
 }

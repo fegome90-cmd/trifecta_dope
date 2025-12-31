@@ -49,6 +49,7 @@ class ValidationResult(BaseModel):
 
     passed: bool
     errors: list[str] = []
+    warnings: list[str] = []
 
 
 # =============================================================================
