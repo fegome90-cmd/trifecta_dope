@@ -1,7 +1,7 @@
 """Use Case for scanning legacy tech debt."""
 
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from src.domain.result import Ok, Err
 
 
@@ -19,13 +19,11 @@ def scan_legacy(repo_root: Path, manifest_path: Path) -> "Ok[list[str]] | Err[li
        Err(undeclared_paths) if found items are NOT in manifest.
     """
     if not manifest_path.exists():
-        # Fail-closed if manifest missing? Or empty?
-        # Contract says "source unique", so should exist.
         return Err([f"Legacy manifest missing at {manifest_path}"])
 
     try:
         manifest_data = json.loads(manifest_path.read_text())
-        declared_paths = {item["path"] for item in manifest_data}
+        declared_patterns = {item["path"] for item in manifest_data}
     except Exception:
         return Err(["Legacy manifest is invalid JSON"])
 
@@ -33,16 +31,23 @@ def scan_legacy(repo_root: Path, manifest_path: Path) -> "Ok[list[str]] | Err[li
     undeclared = []
 
     # 1. Scan for Context Legacy files globally
-    # Naive scan: walk repo.
-    # Better: glob
-
+    # SORTED GLOB for Input Determinism
     # Pattern A: _ctx/agent.md, prime.md, session.md
-    for p in repo_root.glob("**/_ctx/*.md"):
+    # We use sorted() to ensure deterministic processing order
+    for p in sorted(repo_root.glob("**/_ctx/*.md")):
         name = p.name
-        if name in ["agent.md", "prime.md", "session.md", "job.md", "product.md"]:
+        # Removed job.md and product.md from scope as per "Clean Scope" rule
+        if name in ["agent.md", "prime.md", "session.md"]:
             rel_path = str(p.relative_to(repo_root))
             found_legacy.append(rel_path)
-            if rel_path not in declared_paths:
+
+            # Check against declared patterns (glob support)
+            # Use PurePosixPath for consistent glob matching across OS
+            is_declared = any(
+                PurePosixPath(rel_path).match(pattern) for pattern in declared_patterns
+            )
+
+            if not is_declared:
                 undeclared.append(rel_path)
 
     # Pattern B: explicit scripts
@@ -50,10 +55,13 @@ def scan_legacy(repo_root: Path, manifest_path: Path) -> "Ok[list[str]] | Err[li
     if script.exists():
         rel = "scripts/ingest_trifecta.py"
         found_legacy.append(rel)
-        if rel not in declared_paths:
+        is_declared_script = any(PurePosixPath(rel).match(pattern) for pattern in declared_patterns)
+        if not is_declared_script:
             undeclared.append(rel)
 
     if undeclared:
-        return Err([f"Undeclared legacy found: {p}" for p in undeclared])
+        # Sort errors for Output Determinism
+        sorted_errors = sorted([f"Undeclared legacy found: {p}" for p in undeclared])
+        return Err(sorted_errors)
 
-    return Ok(found_legacy)
+    return Ok(sorted(found_legacy))

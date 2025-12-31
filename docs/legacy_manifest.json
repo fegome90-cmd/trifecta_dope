@@ -1,6 +1,6 @@
 [
   {
-    "path": "_ctx/agent.md",
+    "path": "**/_ctx/agent.md",
     "reason": "Legacy naming convention (no segment specific suffix)",
     "replacement": "Rename to _ctx/agent_{segment_id}.md"
   },

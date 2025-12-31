@@ -2,15 +2,9 @@
 
 import json
 from pathlib import Path
-from src.domain.result import Ok, Err
-# We will create this UseCase/function soon
-# scan_legacy(repo_root: Path, manifest_path: Path) -> Result[...]
 
 
-from typing import Any
-
-
-def test_scan_legacy_clean(tmp_path: Path, monkeypatch: Any) -> None:
+def test_scan_legacy_clean(tmp_path: Path) -> None:
     """Test passes when no legacy files exist."""
     manifest = tmp_path / "legacy_manifest.json"
     manifest.write_text("[]")
@@ -45,6 +39,28 @@ def test_scan_legacy_declared_passes(tmp_path: Path) -> None:
     assert result.is_ok()
 
 
+def test_scan_legacy_glob_pattern_passes(tmp_path: Path) -> None:
+    """Test declared glob patterns match correctly."""
+    manifest = tmp_path / "legacy_manifest.json"
+    manifest.write_text(
+        json.dumps([{"path": "**/_ctx/agent.md", "reason": "glob test", "replacement": "fix"}])
+    )
+
+    repo = tmp_path / "repo"
+    repo.mkdir()
+
+    # Create structure: sub/segment/_ctx/agent.md
+    seg = repo / "sub" / "segment" / "_ctx"
+    seg.mkdir(parents=True)
+    (seg / "agent.md").touch()
+
+    from src.application.legacy_use_case import scan_legacy
+
+    result = scan_legacy(repo, manifest)
+    assert result.is_ok()
+    assert result.unwrap() == ["sub/segment/_ctx/agent.md"]
+
+
 def test_scan_legacy_undeclared_fails(tmp_path: Path) -> None:
     """Test fails when found legacy is NOT in manifest."""
     manifest = tmp_path / "legacy_manifest.json"
@@ -60,4 +76,5 @@ def test_scan_legacy_undeclared_fails(tmp_path: Path) -> None:
 
     result = scan_legacy(repo, manifest)
     assert result.is_err()
-    assert "Undeclared legacy found: _ctx/agent.md" in str(result.unwrap_err())
+    # Check exact sorted output format
+    assert result.unwrap_err() == ["Undeclared legacy found: _ctx/agent.md"]

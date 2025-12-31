@@ -527,18 +527,24 @@ def eval_plan(
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show per-task breakdown"),
 ) -> None:
     """Evaluate ctx.plan against a dataset of tasks."""
+    import hashlib
     import re
+    from datetime import datetime
 
     telemetry = _get_telemetry(segment, telemetry_level)
     _, file_system, _ = _get_dependencies(segment, telemetry)
 
     # Load dataset from markdown
-    dataset_path = Path(dataset)
+    dataset_path = Path(dataset).resolve()
     if not dataset_path.exists():
         typer.echo(f"❌ Dataset file not found: {dataset_path}")
         raise typer.Exit(1)
 
     content = dataset_path.read_text()
+
+    # Dataset identity for anti-gaming (T9.3.1)
+    dataset_sha256 = hashlib.sha256(content.encode()).hexdigest()[:16]
+    dataset_mtime = datetime.fromtimestamp(dataset_path.stat().st_mtime).isoformat()
 
     # Extract tasks from markdown (quoted strings after numbers)
     tasks = re.findall(r'^\d+\.\s+"([^"]+)"', content, re.MULTILINE)
@@ -599,11 +605,13 @@ def eval_plan(
     typer.echo("=" * 80)
     typer.echo("")
     typer.echo(f"Dataset: {dataset_path}")
+    typer.echo(f"Dataset SHA256: {dataset_sha256}")
+    typer.echo(f"Dataset mtime: {dataset_mtime}")
     typer.echo(f"Segment: {segment}")
     typer.echo(f"Total tasks: {total}")
     typer.echo("")
 
-    typer.echo("Distribution (MUST SUM TO 40):")
+    typer.echo(f"Distribution (MUST SUM TO {total}):")
     typer.echo(f"  feature:  {feature_count} ({feature_hit_rate:.1f}%)")
     typer.echo(f"  alias:    {alias_count} ({alias_hit_rate:.1f}%)")
     typer.echo(f"  fallback: {fallback_count} ({fallback_rate:.1f}%)")
@@ -663,36 +671,59 @@ def eval_plan(
 
     typer.echo("")
 
-    # Gate decision (T9.3 criteria)
+    # Determine gate type based on dataset name (T9.3.1)
+    is_l1_dataset = "_l1" in dataset_path.name.lower()
+    gate_name = "Gate-L1" if is_l1_dataset else "Gate-NL"
+
+    # Gate decision (T9.3.1: separate gates for NL and L1)
     go_criteria = []
     no_go_reasons = []
 
-    if fallback_rate < 20:
-        go_criteria.append(f"fallback_rate {fallback_rate:.1f}% < 20%")
-    else:
-        no_go_reasons.append(f"fallback_rate {fallback_rate:.1f}% >= 20%")
+    if is_l1_dataset:
+        # Gate-L1 criteria (explicit feature:<id> tests)
+        if feature_hit_rate >= 95:
+            go_criteria.append(f"feature_hit_rate {feature_hit_rate:.1f}% >= 95%")
+        else:
+            no_go_reasons.append(f"feature_hit_rate {feature_hit_rate:.1f}% < 95%")
 
-    if true_zero_guidance_rate == 0:
-        go_criteria.append(f"true_zero_guidance_rate {true_zero_guidance_rate:.1f}% = 0%")
-    else:
-        no_go_reasons.append(f"true_zero_guidance_rate {true_zero_guidance_rate:.1f}% > 0%")
+        if fallback_rate <= 5:
+            go_criteria.append(f"fallback_rate {fallback_rate:.1f}% <= 5%")
+        else:
+            no_go_reasons.append(f"fallback_rate {fallback_rate:.1f}% > 5%")
 
-    if alias_hit_rate <= 70:
-        go_criteria.append(f"alias_hit_rate {alias_hit_rate:.1f}% <= 70%")
+        if true_zero_guidance_rate == 0:
+            go_criteria.append(f"true_zero_guidance_rate {true_zero_guidance_rate:.1f}% = 0%")
+        else:
+            no_go_reasons.append(f"true_zero_guidance_rate {true_zero_guidance_rate:.1f}% > 0%")
     else:
-        no_go_reasons.append(f"alias_hit_rate {alias_hit_rate:.1f}% > 70%")
+        # Gate-NL criteria (natural language generalization)
+        if fallback_rate < 20:
+            go_criteria.append(f"fallback_rate {fallback_rate:.1f}% < 20%")
+        else:
+            no_go_reasons.append(f"fallback_rate {fallback_rate:.1f}% >= 20%")
 
-    if feature_hit_rate >= 10:
-        go_criteria.append(f"feature_hit_rate {feature_hit_rate:.1f}% >= 10%")
-    else:
-        no_go_reasons.append(f"feature_hit_rate {feature_hit_rate:.1f}% < 10%")
+        if true_zero_guidance_rate == 0:
+            go_criteria.append(f"true_zero_guidance_rate {true_zero_guidance_rate:.1f}% = 0%")
+        else:
+            no_go_reasons.append(f"true_zero_guidance_rate {true_zero_guidance_rate:.1f}% > 0%")
+
+        if alias_hit_rate <= 70:
+            go_criteria.append(f"alias_hit_rate {alias_hit_rate:.1f}% <= 70%")
+        else:
+            no_go_reasons.append(f"alias_hit_rate {alias_hit_rate:.1f}% > 70%")
+
+        # Informative for NL (not required)
+        if feature_hit_rate >= 10:
+            go_criteria.append(f"feature_hit_rate {feature_hit_rate:.1f}% >= 10% (informative)")
+        else:
+            no_go_reasons.append(f"feature_hit_rate {feature_hit_rate:.1f}% < 10% (informative)")
 
     if go_criteria and not no_go_reasons:
-        typer.echo("✅ GO: All criteria passed")
+        typer.echo(f"✅ GO ({gate_name}): All criteria passed")
         for c in go_criteria:
             typer.echo(f"   ✓ {c}")
     else:
-        typer.echo("❌ NO-GO: Some criteria failed")
+        typer.echo(f"❌ NO-GO ({gate_name}): Some criteria failed")
         for r in no_go_reasons:
             typer.echo(f"   ✗ {r}")
         if go_criteria:
