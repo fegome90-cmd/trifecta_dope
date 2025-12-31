@@ -1,0 +1,4 @@
+### 5. La Ilusión del "Pensamiento" (Chain of Thought Fallacy)
+**La Falla:** Confiar en que el bloque `[PLAN]` o `[REASONING]` que genera el agente refleja realmente su lógica de implementación.
+**El Problema Real:** Se ha demostrado que "antropomorfizar" los tokens intermedios como "pensamiento" es un error; a menudo son una confabulación que no coincide con el código generado posteriormente. El agente puede escribir un plan perfecto en el paso 1 y generar código contradictorio en el paso 2, y si tu validador solo mira el código (y no la coherencia Plan-Código), el error pasa.
+**Solución (Filosofía Trifecta):** **Validación de Coherencia Plan-Implementación**. Un paso de validación donde un modelo "Juez" (o un algoritmo de comparación) verifique explícitamente si la implementación `AgentOutput.code` cumple semánticamente con `AgentOutput.plan` antes de pasar al linter.

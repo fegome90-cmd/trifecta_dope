@@ -1,0 +1,4 @@
+### 4. Vulnerabilidad del "Flujo Tóxico" (Toxic Flow)
+**La Falla:** Asumir que el aislamiento (sandboxing) y la arquitectura limpia previenen riesgos de seguridad.
+**El Problema Real:** Un agente puede respetar la arquitectura limpia (no importar DB en dominio) y aun así ser inseguro. Existe el riesgo de la "Trifecta Letal": acceso a datos privados, entrada no confiable y comunicación externa. Un linter estático no ve el *flujo de datos* en tiempo de ejecución. El agente podría exfiltrar datos si se le instruye astutamente mediante prompt injection indirecto.
+**Solución (Filosofía Trifecta):** Implementar **Análisis de Flujo de Información (Taint Analysis)** como un paso del pipeline. Verificar matemáticamente si una variable "sucia" (input de usuario) toca una función "sensible" (ej. `fetch` o `exec`) sin pasar por una función de sanitización, satisfaciendo la "Regla de Dos" de seguridad para agentes.

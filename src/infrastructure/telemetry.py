@@ -33,6 +33,7 @@ class Telemetry:
         # In-memory aggregation for this run
         self.metrics: Dict[str, int] = {}
         self.latencies: Dict[str, List[int]] = {}
+        self.token_usage: Dict[str, Dict[str, int]] = {}
         self.warnings: List[str] = []
 
         # Pack state tracking
@@ -62,6 +63,53 @@ class Telemetry:
             except Exception:
                 pass  # Non-critical
 
+    def _estimate_tokens(self, text: str) -> int:
+        """
+        Rough token estimation: 1 token ≈ 4 characters.
+        This is a heuristic approximation, not an exact count.
+        """
+        if not text:
+            return 0
+        # Remove extra whitespace for better estimation
+        cleaned = " ".join(str(text).split())
+        return max(1, len(cleaned) // 4)
+
+    def _estimate_token_usage(
+        self, cmd: str, args: Dict[str, Any], result: Dict[str, Any]
+    ) -> Dict[str, int]:
+        """
+        Estimate token usage for this CLI command.
+        Returns dict with input_tokens, output_tokens, total_tokens, retrieved_tokens.
+        """
+        # Estimate input tokens from args
+        input_parts = []
+        if "query" in args:
+            input_parts.append(str(args["query"]))
+        if "task" in args:
+            input_parts.append(str(args["task"]))
+        if "ids" in args:
+            input_parts.append(str(args["ids"]))
+        input_text = " ".join(input_parts)
+        input_tokens = self._estimate_tokens(input_text)
+
+        # Estimate output tokens from result
+        output_text = json.dumps(result, default=str)
+        output_tokens = self._estimate_tokens(output_text)
+
+        # Retrieved tokens (actual context tokens retrieved, if available)
+        retrieved_tokens = result.get("total_tokens", 0)
+        if not isinstance(retrieved_tokens, int):
+            retrieved_tokens = 0
+
+        total_tokens = input_tokens + output_tokens
+
+        return {
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "total_tokens": total_tokens,
+            "retrieved_tokens": retrieved_tokens,
+        }
+
     def event(
         self,
         cmd: str,
@@ -80,6 +128,9 @@ class Telemetry:
         # Sanitize args for privacy/size
         safe_args = self._sanitize_args(args)
 
+        # Estimate token usage (Opción A: automatic estimation)
+        tokens = self._estimate_token_usage(cmd, args, result)
+
         payload = {
             "ts": datetime.now(timezone.utc).isoformat(),
             "run_id": self.run_id,
@@ -88,6 +139,7 @@ class Telemetry:
             "args": safe_args,
             "result": result,
             "timing_ms": timing_ms,
+            "tokens": tokens,
             "warnings": warnings or [],
         }
 
@@ -96,6 +148,18 @@ class Telemetry:
             # T8.2: Ensure discrete events also record latency for stats
             if timing_ms > 0:
                 self.observe(cmd, timing_ms)
+            # Track token usage per command
+            if cmd not in self.token_usage:
+                self.token_usage[cmd] = {
+                    "input_tokens": 0,
+                    "output_tokens": 0,
+                    "total_tokens": 0,
+                    "retrieved_tokens": 0,
+                    "count": 0,
+                }
+            for key in ["input_tokens", "output_tokens", "total_tokens", "retrieved_tokens"]:
+                self.token_usage[cmd][key] += tokens.get(key, 0)
+            self.token_usage[cmd]["count"] += 1
         except Exception:
             pass  # Never break the app
 
@@ -149,11 +213,27 @@ class Telemetry:
                 for cmd, times in self.latencies.items()
             }
 
+            # Token usage summary per command
+            tokens_summary = {
+                cmd: {
+                    "count": stats["count"],
+                    "total_input_tokens": stats["input_tokens"],
+                    "total_output_tokens": stats["output_tokens"],
+                    "total_tokens": stats["total_tokens"],
+                    "total_retrieved_tokens": stats["retrieved_tokens"],
+                    "avg_tokens_per_call": round(stats["total_tokens"] / stats["count"], 1)
+                    if stats["count"] > 0
+                    else 0,
+                }
+                for cmd, stats in self.token_usage.items()
+            }
+
             run_summary = {
                 "run_id": self.run_id,
                 "ts": datetime.now(timezone.utc).isoformat(),
                 "metrics_delta": self.metrics,
                 "latencies": latency_summary,
+                "tokens": tokens_summary,
                 "top_warnings": self.warnings[:5],  # Top 5 warnings
                 "pack_state": {
                     "pack_sha": self.pack_sha,

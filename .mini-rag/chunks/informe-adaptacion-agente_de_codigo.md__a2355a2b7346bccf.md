@@ -1,0 +1,1 @@
+## Candidatos conceptuales (TypeScript -> Python)

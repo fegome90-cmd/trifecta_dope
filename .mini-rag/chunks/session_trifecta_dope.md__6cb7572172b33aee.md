@@ -1,0 +1,15 @@
+## 2025-12-31 - Token Tracking (Opción A) IMPLEMENTADO
+- **Summary**: Estimación automática de tokens en eventos de telemetry
+- **Método**: Estimación desde output (1 token ≈ 4 chars)
+- **Archivos modificados**:
+  - `src/infrastructure/telemetry.py` - Agregado `_estimate_tokens()`, `_estimate_token_usage()`, tracking en `event()`, stats en `flush()`
+  - `src/application/telemetry_reports.py` - Agregada sección "Token Efficiency"
+- **Eventos JSONL ahora incluyen**:
+  - `tokens.input_tokens` - Estimado desde args
+  - `tokens.output_tokens` - Estimado desde result
+  - `tokens.total_tokens` - Suma
+  - `tokens.retrieved_tokens` - De result.total_tokens si existe
+- **last_run.json ahora incluye**:
+  - `tokens.{cmd}.{total_input_tokens,total_output_tokens,total_tokens,total_retrieved_tokens,avg_tokens_per_call}`
+- **Pack SHA**: `5e6ad2eb365aea98`
+- **Status**: COMPLETADO - Funcionando (≈3-8 tokens/call promedio)

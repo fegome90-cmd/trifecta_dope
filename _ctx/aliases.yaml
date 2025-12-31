@@ -1,21 +1,230 @@
-schema_version: 1
-aliases:
-  # === CORE DOMAIN ===
-  context: [pack, segment, ctx, index, digest]
-  chunking: [split, headings, fence, tokens]
-  normalization: [query, tokens, lowercase, lowercase_normalize]
+# aliases.yaml - Alias to feature_id mapping for ctx.plan L2 matching
+# Schema: Each alias maps to a feature_id (not free text)
+# Matching rule: requires >=2 term matches OR 1 HIGH_SIGNAL trigger
 
-  # === USE CASES ===
-  build: [ingest, generate, sync]
-  search: [find, query, expand, alias]
-  get: [retrieve, fetch, excerpt, raw]
-  validate: [verify, check, health, stale]
+schema_version: 2
 
-  # === INFRASTRUCTURE ===
-  cli: [typer, app, command, shell]
-  telemetry: [events, metrics, stats, stats_summary]
+features:
+  # === OBSERVABILITY & TELEMETRY ===
+  observability_telemetry:
+    priority: 4
+    triggers:
+      - phrase: "ctx stats"
+        terms: ["ctx", "stats"]
+        high_signal: true
+        notes: "CLI command for telemetry statistics"
+      - phrase: "hit rate"
+        terms: ["hit", "rate"]
+        high_signal: false
+        notes: "Search success metric"
+      - phrase: "zero hits"
+        terms: ["zero", "hits"]
+        high_signal: false
+        notes: "Failed searches metric"
+      - phrase: "events.jsonl"
+        terms: ["events", "jsonl"]
+        high_signal: true
+        notes: "Telemetry event log file"
+      - phrase: "telemetry event"
+        terms: ["telemetry", "event"]
+        high_signal: false
+        notes: "Individual telemetry record"
+      - phrase: "token tracking"
+        terms: ["token", "tracking"]
+        high_signal: false
+        notes: "Token usage monitoring"
+      - phrase: "latency metrics"
+        terms: ["latency", "metrics"]
+        high_signal: false
+        notes: "Performance timing data"
+    bundle:
+      chunks: ["skill:*", "agent:*", "ref:RELEASE_NOTES_v1.md"]
+      paths: ["README.md", "RELEASE_NOTES_v1.md", "src/infrastructure/telemetry.py"]
 
-  # === DOCUMENTATION ===
-  rules: [skill, protocol, guidelines]
-  foundations: [prime, reading_order, basics]
-  session: [history, log, handoff, append]
+  # === CONTEXT PACK ===
+  context_pack:
+    priority: 3
+    triggers:
+      - phrase: "context pack build"
+        terms: ["context", "pack", "build"]
+        high_signal: false
+        notes: "Build process for context packs"
+      - phrase: "validate context"
+        terms: ["validate", "context"]
+        high_signal: false
+        notes: "Validation of context pack integrity"
+      - phrase: "context pack sync"
+        terms: ["context", "pack", "sync"]
+        high_signal: false
+        notes: "Sync operation for context packs"
+      - phrase: "context pack status"
+        terms: ["context", "pack", "status"]
+        high_signal: false
+        notes: "Status check for context packs"
+    bundle:
+      chunks: ["skill:*", "prime:*", "agent:*"]
+      paths: ["src/application/use_cases.py", "src/domain/context_models.py"]
+
+  # === CLI COMMANDS ===
+  cli_commands:
+    priority: 3
+    triggers:
+      - phrase: "ctx.search command"
+        terms: ["ctx", "search", "command"]
+        high_signal: true
+        notes: "CLI search command"
+      - phrase: "ctx.get command"
+        terms: ["ctx", "get", "command"]
+        high_signal: true
+        notes: "CLI get command"
+      - phrase: "ctx.sync command"
+        terms: ["ctx", "sync", "command"]
+        high_signal: true
+        notes: "CLI sync command"
+      - phrase: "load command"
+        terms: ["load", "command"]
+        high_signal: false
+        notes: "Macro load command"
+      - phrase: "cli commands defined"
+        terms: ["cli", "commands", "defined"]
+        high_signal: false
+        notes: "Query about CLI command definitions"
+    bundle:
+      chunks: ["skill:*"]
+      paths: ["src/infrastructure/cli.py"]
+
+  # === SEARCH ===
+  search:
+    priority: 3
+    triggers:
+      - phrase: "SearchUseCase class"
+        terms: ["searchusecase", "class"]
+        high_signal: true
+        notes: "Specific class name"
+      - phrase: "search use case"
+        terms: ["search", "use", "case"]
+        high_signal: false
+        notes: "Search functionality pattern"
+      - phrase: "search query"
+        terms: ["search", "query"]
+        high_signal: false
+        notes: "Query-based search"
+    bundle:
+      chunks: ["skill:*", "agent:*"]
+      paths: ["src/application/search_get_usecases.py"]
+
+  # === STATS ===
+  stats:
+    priority: 3
+    triggers:
+      - phrase: "StatsUseCase class"
+        terms: ["statsusecase", "class"]
+        high_signal: true
+        notes: "Specific class name"
+      - phrase: "statistics command"
+        terms: ["statistics", "command"]
+        high_signal: false
+        notes: "Stats functionality"
+      - phrase: "zero-hits analysis"
+        terms: ["zero", "hits", "analysis"]
+        high_signal: false
+        notes: "Failed search analysis"
+    bundle:
+      chunks: ["skill:*", "agent:*"]
+      paths: ["src/application/use_cases.py"]
+
+  # === ARCHITECTURE OVERVIEW (NEW) ===
+  arch_overview:
+    priority: 2
+    triggers:
+      - phrase: "repo architecture"
+        terms: ["repo", "architecture"]
+        high_signal: false
+        notes: "Repository structure overview"
+      - phrase: "project structure"
+        terms: ["project", "structure"]
+        high_signal: false
+        notes: "Project organization"
+      - phrase: "design overview"
+        terms: ["design", "overview"]
+        high_signal: false
+        notes: "High-level design view"
+      - phrase: "architecture layers"
+        terms: ["architecture", "layers"]
+        high_signal: false
+        notes: "Clean architecture layers"
+      - phrase: "clean architecture"
+        terms: ["clean", "architecture"]
+        high_signal: false
+        notes: "Architecture pattern used"
+      - phrase: "description of prime structure"
+        terms: ["prime", "structure"]
+        high_signal: true
+        notes: "PRIME file structure"
+    bundle:
+      chunks: ["prime:*", "agent:*"]
+      paths: ["README.md", "_ctx/generated/repo_map.md"]
+
+  # === SYMBOL SURFACE (NEW) ===
+  symbol_surface:
+    priority: 2
+    triggers:
+      - phrase: "symbol extraction"
+        terms: ["symbol", "extraction"]
+        high_signal: false
+        notes: "Extracting code symbols"
+      - phrase: "symbol references"
+        terms: ["symbol", "references"]
+        high_signal: false
+        notes: "Finding symbol usage"
+      - phrase: "definition lookup"
+        terms: ["definition", "lookup"]
+        high_signal: false
+        notes: "Looking up definitions"
+      - phrase: "symbols in cli.py"
+        terms: ["symbols", "cli.py"]
+        high_signal: true
+        notes: "Specific file symbol query"
+      - phrase: "function implementation"
+        terms: ["function", "implementation"]
+        high_signal: false
+        notes: "Function implementation details"
+      - phrase: "class initialization"
+        terms: ["class", "initialization"]
+        high_signal: false
+        notes: "Class constructor code"
+    bundle:
+      chunks: ["prime:*"]
+      paths: ["_ctx/generated/symbols_stub.md"]
+
+  # === CODE NAVIGATION (NEW) ===
+  code_navigation:
+    priority: 2
+    triggers:
+      - phrase: "where to start"
+        terms: ["start", "where"]
+        high_signal: false
+        notes: "Entry point for navigation"
+      - phrase: "entrypoints modules"
+        terms: ["entrypoints", "modules"]
+        high_signal: false
+        notes: "Module entry points"
+      - phrase: "how modules interact"
+        terms: ["modules", "interact"]
+        high_signal: false
+        notes: "Module interaction patterns"
+      - phrase: "files in directory"
+        terms: ["files", "directory"]
+        high_signal: false
+        notes: "Directory listing query"
+      - phrase: "implement use case"
+        terms: ["implement", "use", "case"]
+        high_signal: false
+        notes: "Implementation guidance for use cases"
+      - phrase: "code pattern"
+        terms: ["code", "pattern"]
+        high_signal: false
+        notes: "Implementation patterns"
+    bundle:
+      chunks: ["prime:*", "skill:*"]
+      paths: ["_ctx/generated/repo_map.md", "src/infrastructure/cli.py"]

@@ -1,0 +1,1 @@
+{"ts": "2025-12-31T13:23:58.067458+00:00", "run_id": "run_1767187438", "segment": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/debug-terminal", "cmd": "load", "args": {"segment": "debug-terminal", "mode": "pcc"}, "result": {"status": "ok"}, "timing_ms": 0, "warnings": []}

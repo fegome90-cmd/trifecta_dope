@@ -1,0 +1,4 @@
+### 2. La Paradoja de la Estructura Rígida (`AGENTS.md`)
+**La Falla:** Usar `AGENTS.md` como una constitución estricta para reducir la ambigüedad.
+**El Problema Real:** Existe una paradoja documentada: "Cuanto más predecible es el entorno del agente (reglas estrictas), más fácil es para el agente sobreajustarse a él". Si `AGENTS.md` es estático, el agente pierde capacidad de generalización ante problemas novedosos que no calzan exactamente en las reglas predefinidas, volviéndose frágil ante cambios menores ("context rot" o deriva). Además, reglas excesivamente detalladas pueden no escalar y ser difíciles de mantener.
+**Solución (Filosofía Trifecta):** Implementar **"Dynamic Scenario Generation"**. En lugar de un `AGENTS.md` monolítico, el pipeline debe inyectar variaciones de las reglas o "pruebas de concepto" aleatorias durante el entrenamiento/ejecución para forzar al agente a razonar en lugar de memorizar patrones.

@@ -1,0 +1,5 @@
+trifecta usa embeddings
+trifecta es un rag
+mini-rag es parte de trifecta
+trifecta usa busqueda lexical
+trifecta indexa todo el repo

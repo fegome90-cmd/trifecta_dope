@@ -1,0 +1,5 @@
+trifecta ctx build receta pasta
+context pack ingestion futbol resultados
+telemetry analysis guitarra
+roadmap v2 meteorologia
+lsp diagnostics pizza

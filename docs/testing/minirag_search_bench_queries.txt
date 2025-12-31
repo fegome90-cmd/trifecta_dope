@@ -1,0 +1,21 @@
+implementacion de ast
+ast parser referencia
+implementacion de lsp
+go to definition hover lsp
+context pack ingestion schema v1 digest index chunks
+trifecta ctx validate command
+progressive disclosure L0 L1 L2
+chunking fences headings
+skeletonizer tree-sitter ast parser
+lsp diagnostics hot files
+workspace symbols lsp search
+progressive disclosure hooks L0 L1 L2
+context pack json schema_version
+ctx search get excerpt budget
+ollama keep_alive retry_delay config
+index embeddings.npy metadata.json
+politica de vacaciones del equipo
+receta de pasta carbonara
+resultados de las elecciones 2024 en Francia
+guia de cultivo de tomates en casa
+manual de usuario de iphone 15

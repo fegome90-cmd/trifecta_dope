@@ -4,7 +4,8 @@
 SHELL := /bin/bash
 
 .PHONY: trifecta-create trifecta-validate trifecta-refresh trifecta-help \
-	minirag-help minirag-setup minirag-init minirag-index minirag-query minirag-doctor
+	minirag-help minirag-setup minirag-chunk minirag-init minirag-index minirag-query \
+	minirag-doctor
 
 # Default values
 SEGMENT ?= my-segment
@@ -61,6 +62,7 @@ trifecta-refresh:
 minirag-help:
 	@echo "Mini-RAG quick usage:"
 	@echo "  make minirag-setup MINIRAG_SOURCE=<path>"
+	@echo "  make minirag-chunk"
 	@echo "  make minirag-index"
 	@echo "  make minirag-query MINIRAG_QUERY='your question'"
 
@@ -72,8 +74,13 @@ minirag-init:
 	@echo "Initializing Mini-RAG..."
 	. .venv/bin/activate && mini-rag init
 
+minirag-chunk:
+	@echo "Chunking docs for Mini-RAG..."
+	. .venv/bin/activate && python scripts/minirag_chunker.py --config .mini-rag/config.yaml
+
 minirag-index:
 	@echo "Indexing Mini-RAG documents..."
+	@$(MAKE) minirag-chunk
 	. .venv/bin/activate && mini-rag index
 
 minirag-query:

@@ -1,0 +1,5 @@
+roadmap_v2 y action_plan_v1.1 diferencias
+context-pack-ingestion vs context-pack-implementation diferencias
+trifecta-context-loading vs implementation_workflow
+telemetry_data_science_plan vs telemetry_analysis
+roadmap_v2 priorities vs research_roi_matrix

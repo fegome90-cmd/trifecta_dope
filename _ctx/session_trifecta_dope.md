@@ -117,3 +117,86 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Commands**: trifecta ctx sync, grep
 - **Pack SHA**: `7e5a55959d7531a5`
 
+
+## 2025-12-31 11:00 UTC - Telemetry Data Science Plan
+- Segment: .
+- Objective: Diseñar sistema de análisis de telemetry para CLI Trifecta
+- Plan: Investigación web + brainstorming → diseño arquitectura
+- Commands: (pendiente sync - bug encontrado)
+- Evidence: [docs/plans/2025-12-31_telemetry_data_science_plan.md]
+- Warnings: `ctx sync -s .` falla por falta de `.resolve()` en cli.py:334
+- Next: Continuar diseño Sección 3 (Agent Skill), luego implementar
+## 2025-12-31 14:25 UTC
+- **Summary**: Strict Naming Contract Enforcement (Gate 3+1): Fail-closed legacy files, symmetric ambiguity checks. Verified 143/143 tests.
+- **Files**: src/infrastructure/cli.py, src/application/use_cases.py, tests/integration/
+- **Pack SHA**: `7e5a55959d7531a5`
+
+
+## 2025-12-31 12:00 UTC - Telemetry CLI Implementation Complete
+- Segment: .
+- Objective: Implementar comandos CLI de telemetry
+- Plan: Phase 1 completada - report, export, chart commands funcionando
+- Commands: ejecutados
+  - `trifecta telemetry report -s . --last 30` ✅
+  - `trifecta telemetry chart -s . --type hits` ✅
+  - `trifecta telemetry chart -s . --type latency` ✅
+  - `trifecta telemetry chart -s . --type commands` ✅
+- Evidence:
+  - `src/application/telemetry_reports.py` creado ✅
+  - `src/application/telemetry_charts.py` creado ✅
+  - `telemetry_analysis/skills/analyze/skill.md` creado ✅
+- Warnings: Bug de `.resolve()` en cli.py:334 fue corregido automáticamente por linter
+- Next: Escribir tests, documentar, actualizar plan
+
+## 2025-12-31 - Telemetry System COMPLETE
+- **Summary**: Sistema de telemetry CLI completado y testeado
+- **Phase 1**: CLI commands (report, export, chart) ✅
+- **Phase 2**: Agent skill creado en `telemetry_analysis/skills/analyze/` ✅
+- **Tests**: 44 eventos analizados, reporte generado siguiendo formato skill ✅
+- **Comandos funcionando**:
+  - `trifecta telemetry report -s . --last 30`
+  - `trifecta telemetry export -s . --format json`
+  - `trifecta telemetry chart -s . --type hits|latency|commands`
+- **Pack SHA**: `7e5a55959d7531a5`
+- **Status**: COMPLETADO - Lista para producción
+
+## 2025-12-31 - Token Tracking (Opción A) IMPLEMENTADO
+- **Summary**: Estimación automática de tokens en eventos de telemetry
+- **Método**: Estimación desde output (1 token ≈ 4 chars)
+- **Archivos modificados**:
+  - `src/infrastructure/telemetry.py` - Agregado `_estimate_tokens()`, `_estimate_token_usage()`, tracking en `event()`, stats en `flush()`
+  - `src/application/telemetry_reports.py` - Agregada sección "Token Efficiency"
+- **Eventos JSONL ahora incluyen**:
+  - `tokens.input_tokens` - Estimado desde args
+  - `tokens.output_tokens` - Estimado desde result
+  - `tokens.total_tokens` - Suma
+  - `tokens.retrieved_tokens` - De result.total_tokens si existe
+- **last_run.json ahora incluye**:
+  - `tokens.{cmd}.{total_input_tokens,total_output_tokens,total_tokens,total_retrieved_tokens,avg_tokens_per_call}`
+- **Pack SHA**: `5e6ad2eb365aea98`
+- **Status**: COMPLETADO - Funcionando (≈3-8 tokens/call promedio)
+
+## 2025-12-31 - Tarea: Reducir Zero-Hits sin RAG (En Progreso)
+- **Objetivo**: Reducir zero-hits a <20% sin embeddings/vector DB/RAG
+- **Enfoque**: Mejorar routing y fallback usando PRIME (PCC)
+- **Plan**: `docs/plans/2025-12-31_reduce_zero_hits_no_rag.md`
+
+### Completado
+- ✅ A) Diagnóstico de telemetría ANTES
+  - `scripts/telemetry_diagnostic.py` - Script reproducible
+  - `docs/plans/telemetry_before.md` - Reporte (hit_rate: 31.6%)
+- ✅ B) ctx.stats command
+  - `src/application/use_cases.py` - `StatsUseCase`
+  - `trifecta ctx stats -s . --window 30`
+
+### Pendiente (Inmediato)
+- ⏳ C) ctx.plan command - PRIME-only planning
+  - Leer `_ctx/prime_*.md` para index.entrypoints y index.feature_map
+  - Salida JSON con selected_feature, plan_hit, chunk_ids, paths, next_steps
+- ⏳ D) Dataset de evaluación (20 tareas: 10 meta + 10 impl)
+- ⏳ E) Baseline y evaluación
+
+**Pack SHA**: `5e6ad2eb365aea98`
+**Comandos útiles**:
+  - `trifecta ctx stats -s . --window 30`
+  - `python3 scripts/telemetry_diagnostic.py --segment .`

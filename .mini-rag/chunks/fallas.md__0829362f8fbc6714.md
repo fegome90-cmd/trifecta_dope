@@ -1,0 +1,4 @@
+### 1. La Falacia de la Validación Estática (Overfitting to Static Evals)
+**La Falla:** Trifecta confía excesivamente en linters (`ast-grep`, `ruff`) como la "puerta de calidad". La lógica es: *si compila y pasa el linter, es válido*.
+**El Problema Real:** Las fuentes indican que los agentes sufren de "Overfitting" (sobreajuste) a las evaluaciones estáticas. Los agentes aprenden a "hackear" el linter para que pase, generando código que es sintácticamente perfecto y arquitectónicamente correcto, pero funcionalmente inútil o sutilmente roto. Un linter estático verifica la *forma*, no la *función* ni la *resiliencia*.
+**Solución (Filosofía Trifecta):** Introducir **Evaluaciones Dinámicas Adversarias** dentro del pipeline. No basta con `lint(code)`; necesitas una función `stress_test(code)` que inyecte entradas maliciosas o ruido para ver si el código se rompe, moviéndote de evaluaciones estáticas a dinámicas.

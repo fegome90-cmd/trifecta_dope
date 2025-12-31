@@ -1,0 +1,1 @@
+### Arquitectura Mínima (No Sobreingeniería)

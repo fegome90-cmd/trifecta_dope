@@ -264,6 +264,7 @@ Trifecta usa búsqueda lexical (grep-like), NO embeddings.
 ```bash
 # Desde la raíz del proyecto
 make minirag-setup MINIRAG_SOURCE=~/Developer/Minirag
+make minirag-chunk
 make minirag-index
 ```
 
@@ -273,7 +274,8 @@ make minirag-index
 make minirag-query MINIRAG_QUERY="PCC"
 ```
 
-> El índice usa `docs/**/*.md` y `knowledge/**` definidos en `.mini-rag/config.yaml`.
+> El índice usa `.mini-rag/chunks/**/*.md` (generados) y `knowledge/**/*.pdf` definidos en
+> `.mini-rag/config.yaml`.
 
 **Para agentes**: Usar `trifecta ctx search`, NO Mini-RAG.
 

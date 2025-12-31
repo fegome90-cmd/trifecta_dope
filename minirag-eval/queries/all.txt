@@ -1,0 +1,41 @@
+implementacion de ast
+ast parser referencia
+implementacion de lsp
+go to definition hover lsp
+context pack ingestion schema v1 digest index chunks
+trifecta ctx validate command
+progressive disclosure L0 L1 L2
+chunking fences headings
+skeletonizer tree-sitter ast parser
+lsp diagnostics hot files
+workspace symbols lsp search
+progressive disclosure hooks L0 L1 L2
+context pack json schema_version
+ctx search get excerpt budget
+ollama keep_alive retry_delay config
+index embeddings.npy metadata.json
+politica de vacaciones del equipo
+receta de pasta carbonara
+resultados de las elecciones 2024 en francia
+guia de cultivo de tomates en casa
+manual de usuario de iphone 15
+como se relaciona el roadmap v2 con el action plan v1.1
+diferencias entre context-pack-ingestion y context-pack-implementation
+context loading plan y implementation workflow
+telemetry data science plan vs telemetry analysis
+roadmap priorities vs research roi matrix
+latest telemetry plan
+latest roadmap update
+most recent context pack plan
+latest implementation workflow
+latest context loading plan
+trifecta usa embeddings
+trifecta es un rag
+mini-rag es parte de trifecta
+trifecta usa busqueda lexical
+trifecta indexa todo el repo
+trifecta ctx build receta pasta
+context pack ingestion futbol resultados
+telemetry analysis guitarra
+roadmap v2 meteorologia
+lsp diagnostics pizza
