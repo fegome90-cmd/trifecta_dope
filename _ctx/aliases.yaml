@@ -8,6 +8,15 @@ schema_version: 3
 features:
   observability_telemetry:
     priority: 4
+    support_terms:
+      - stats
+      - metrics
+      - events
+      - jsonl
+      - latency
+      - p95
+      - p50
+      - flush
     nl_triggers:
       - "ctx stats"
       - "telemetry statistics"

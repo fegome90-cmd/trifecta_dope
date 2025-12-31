@@ -259,6 +259,74 @@ def test_plan_high_signal_trigger_matches_single_term(mock_filesystem, mock_tele
     assert result["selected_by"] == "alias"
 
 
+def test_l2_single_word_requires_support_terms(mock_filesystem, mock_telemetry, tmp_path):
+    """Single-word L2 requires support terms when configured."""
+    ctx_dir = tmp_path / "_ctx"
+    ctx_dir.mkdir()
+    aliases = {
+        "schema_version": 3,
+        "features": {
+            "observability_telemetry": {
+                "priority": 4,
+                "nl_triggers": ["telemetry"],
+                "support_terms": ["flush"],
+                "bundle": {"chunks": ["c1"], "paths": ["p1.py"]},
+            }
+        },
+    }
+    (ctx_dir / "aliases.yaml").write_text(json.dumps(aliases))
+    (tmp_path / "p1.py").write_text("# p1")
+    (ctx_dir / "prime_test.md").write_text(
+        "# Test\n## [INDEX]\n### index.entrypoints\n| Path | Razon |\n|------|-------|\n| `README.md` | Entry |"
+    )
+
+    use_case = PlanUseCase(mock_filesystem, mock_telemetry)
+    blocked = use_case.execute(tmp_path, "telemetry")
+    allowed = use_case.execute(tmp_path, "telemetry flush")
+
+    assert blocked["selected_by"] == "fallback"
+    assert blocked["l2_warning"] == "weak_single_word_trigger"
+    assert allowed["selected_by"] == "nl_trigger"
+
+
+def test_l2_support_terms_telemetry_fields(mock_filesystem, mock_telemetry, tmp_path):
+    """Telemetry fields reflect single-word clamp decisions."""
+    ctx_dir = tmp_path / "_ctx"
+    ctx_dir.mkdir()
+    aliases = {
+        "schema_version": 3,
+        "features": {
+            "observability_telemetry": {
+                "priority": 4,
+                "nl_triggers": ["telemetry"],
+                "support_terms": ["flush"],
+                "bundle": {"chunks": ["c1"], "paths": ["p1.py"]},
+            }
+        },
+    }
+    (ctx_dir / "aliases.yaml").write_text(json.dumps(aliases))
+    (tmp_path / "p1.py").write_text("# p1")
+    (ctx_dir / "prime_test.md").write_text(
+        "# Test\n## [INDEX]\n### index.entrypoints\n| Path | Razon |\n|------|-------|\n| `README.md` | Entry |"
+    )
+
+    use_case = PlanUseCase(mock_filesystem, mock_telemetry)
+    blocked = use_case.execute(tmp_path, "telemetry stats")
+    allowed = use_case.execute(tmp_path, "telemetry flush")
+
+    assert blocked["selected_by"] == "fallback"
+    assert blocked["l2_support_terms_required"] is True
+    assert blocked["l2_support_terms_present"] == []
+    assert blocked["l2_weak_single_word_trigger"] is True
+    assert blocked["l2_clamp_decision"] == "block"
+
+    assert allowed["selected_by"] == "nl_trigger"
+    assert allowed["l2_support_terms_required"] is True
+    assert allowed["l2_support_terms_present"] == ["flush"]
+    assert allowed["l2_weak_single_word_trigger"] is False
+    assert allowed["l2_clamp_decision"] == "allow"
+
+
 def test_l2_specificity_beats_priority_for_multiword_trigger(
     mock_filesystem, mock_telemetry, tmp_path
 ):

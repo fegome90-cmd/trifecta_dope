@@ -199,30 +199,15 @@ class PlanUseCase:
         nl_ngrams = self._normalize_nl(task)
         task_tokens = self._tokenize(task)
 
-        support_terms = {
-            "stats",
-            "metrics",
-            "events",
-            "event",
-            "latency",
-            "p95",
-            "p99",
-            "throughput",
-            "perf",
-            "performance",
-            "jsonl",
-            "events.jsonl",
-            "telemetry",
-        }
-
         # Track all candidates with their scores
-        candidates = []  # List of (feature_id, trigger, score, priority, match_mode, specificity, support_terms_present)
+        candidates = []  # List of (feature_id, trigger, score, priority, match_mode, specificity, support_terms_present, support_terms_required, is_single_word)
         single_word_hits = []  # Track single-word trigger hits for guardrail
 
         for feature_id in sorted(features.keys()):  # Stable lexical order
             config = features[feature_id]
             nl_triggers = config.get("nl_triggers", [])
             priority = config.get("priority", 1)
+            support_terms = [term.lower() for term in config.get("support_terms", [])]
 
             for trigger in nl_triggers:
                 trigger_lower = trigger.lower().strip()
@@ -231,8 +216,9 @@ class PlanUseCase:
 
                 # Check if single-word trigger
                 is_single_word = specificity == 1
+                support_terms_required = is_single_word and priority >= 4
                 support_terms_present = []
-                if is_single_word:
+                if support_terms_required:
                     support_terms_present = sorted(
                         term
                         for term in support_terms
@@ -262,6 +248,7 @@ class PlanUseCase:
                             match_mode,
                             specificity,
                             support_terms_present,
+                            support_terms_required,
                             is_single_word,
                         )
                     )
@@ -285,6 +272,7 @@ class PlanUseCase:
             match_mode,
             specificity,
             support_terms_present,
+            support_terms_required,
             is_single_word,
         ) in candidates:
             if is_single_word and priority < 4:
@@ -300,6 +288,7 @@ class PlanUseCase:
                     match_mode,
                     specificity,
                     support_terms_present,
+                    support_terms_required,
                     is_single_word,
                 )
             )
@@ -319,10 +308,10 @@ class PlanUseCase:
         filtered_candidates.sort(key=lambda x: (x[2], x[5], x[3]), reverse=True)
 
         single_word_feature_ids = {
-            candidate[0] for candidate in filtered_candidates if candidate[7]
+            candidate[0] for candidate in filtered_candidates if candidate[8]
         }
         if len(single_word_feature_ids) > 1:
-            non_single_word = [candidate for candidate in filtered_candidates if not candidate[7]]
+            non_single_word = [candidate for candidate in filtered_candidates if not candidate[8]]
             if non_single_word:
                 filtered_candidates = non_single_word
             else:
@@ -359,13 +348,14 @@ class PlanUseCase:
             best_match_mode,
             best_specificity,
             best_support_terms_present,
+            best_support_terms_required,
             best_is_single_word,
         ) = best
 
         # Check for ties in (score, specificity, priority)
         ties = [
             (fid, trig, score, spec, prio, mode)
-            for fid, trig, score, prio, mode, spec, _, _ in filtered_candidates
+            for fid, trig, score, prio, mode, spec, _, _, _ in filtered_candidates
             if score == best_score
             and spec == best_specificity
             and prio == best_priority
@@ -396,7 +386,7 @@ class PlanUseCase:
                 },
             )
 
-        if best_is_single_word and not best_support_terms_present:
+        if best_support_terms_required and not best_support_terms_present:
             return (
                 None,
                 None,
@@ -407,6 +397,9 @@ class PlanUseCase:
                     "blocked": True,
                     "block_reason": "missing_support_term",
                     "support_terms_present": best_support_terms_present,
+                    "support_terms_required": best_support_terms_required,
+                    "weak_single_word_trigger": True,
+                    "clamp_decision": "block",
                     "top_k": [
                         {
                             "feature_id": candidate[0],
@@ -432,6 +425,9 @@ class PlanUseCase:
                 "specificity": best_specificity,
                 "priority": best_priority,
                 "support_terms_present": best_support_terms_present,
+                "support_terms_required": best_support_terms_required,
+                "weak_single_word_trigger": False,
+                "clamp_decision": "allow",
                 "top_k": [
                     {
                         "feature_id": candidate[0],
@@ -674,6 +670,10 @@ class PlanUseCase:
                 result["l2_match_mode"] = match_mode
                 result["l2_blocked"] = debug_info.get("blocked")
                 result["l2_block_reason"] = debug_info.get("block_reason")
+                result["l2_support_terms_required"] = debug_info.get("support_terms_required", False)
+                result["l2_support_terms_present"] = debug_info.get("support_terms_present", [])
+                result["l2_weak_single_word_trigger"] = debug_info.get("weak_single_word_trigger", False)
+                result["l2_clamp_decision"] = debug_info.get("clamp_decision", "allow")
                 result["budget_est"]["why"] = f"L2: NL trigger '{nl_trigger}' (score={score}, mode={match_mode})"
             elif warning:
                 # L2 matched but guardrail/tie caused fallback
@@ -681,6 +681,12 @@ class PlanUseCase:
                 result["l2_warning"] = warning
                 result["l2_blocked"] = debug_info.get("blocked")
                 result["l2_block_reason"] = debug_info.get("block_reason")
+                result["l2_support_terms_required"] = debug_info.get("support_terms_required", False)
+                result["l2_support_terms_present"] = debug_info.get("support_terms_present", [])
+                result["l2_weak_single_word_trigger"] = debug_info.get(
+                    "weak_single_word_trigger", warning == "weak_single_word_trigger"
+                )
+                result["l2_clamp_decision"] = debug_info.get("clamp_decision", "block")
                 result["budget_est"]["why"] = f"L4: L2 guardrail/tie ({warning}), using entrypoints"
             else:
                 # === L3: Alias match (using normalized task) ===
@@ -702,6 +708,16 @@ class PlanUseCase:
                 result["l2_blocked"] = debug_info.get("blocked")
             if "l2_block_reason" not in result:
                 result["l2_block_reason"] = debug_info.get("block_reason")
+            if "l2_support_terms_required" not in result:
+                result["l2_support_terms_required"] = debug_info.get("support_terms_required", False)
+            if "l2_support_terms_present" not in result:
+                result["l2_support_terms_present"] = debug_info.get("support_terms_present", [])
+            if "l2_weak_single_word_trigger" not in result:
+                result["l2_weak_single_word_trigger"] = debug_info.get("weak_single_word_trigger", False)
+            if "l2_clamp_decision" not in result:
+                result["l2_clamp_decision"] = debug_info.get(
+                    "clamp_decision", "block" if warning else "allow"
+                )
 
 
         # Generate bundle and next_steps
@@ -792,6 +808,18 @@ class PlanUseCase:
                 telemetry_attrs["l2_blocked"] = result["l2_blocked"]
             if result.get("l2_block_reason"):
                 telemetry_attrs["l2_block_reason"] = result["l2_block_reason"]
+            if "l2_support_terms_required" in result:
+                telemetry_attrs["l2_support_terms_required"] = result["l2_support_terms_required"]
+                telemetry_attrs["support_terms_required"] = result["l2_support_terms_required"]
+            if "l2_support_terms_present" in result:
+                telemetry_attrs["l2_support_terms_present"] = result["l2_support_terms_present"]
+                telemetry_attrs["support_terms_present"] = result["l2_support_terms_present"]
+            if "l2_weak_single_word_trigger" in result:
+                telemetry_attrs["l2_weak_single_word_trigger"] = result["l2_weak_single_word_trigger"]
+                telemetry_attrs["weak_single_word_trigger"] = result["l2_weak_single_word_trigger"]
+            if "l2_clamp_decision" in result:
+                telemetry_attrs["l2_clamp_decision"] = result["l2_clamp_decision"]
+                telemetry_attrs["clamp_decision"] = result["l2_clamp_decision"]
 
             self.telemetry.event(
                 "ctx.plan",
