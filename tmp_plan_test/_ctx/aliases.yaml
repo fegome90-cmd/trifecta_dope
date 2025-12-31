@@ -1,0 +1,1 @@
+{"schema_version": 2, "features": {"test_feature": {"priority": 3, "triggers": [{"phrase": "test trigger phrase", "terms": ["test", "trigger", "phrase"], "high_signal": false}], "bundle": {"chunks": ["c1"], "paths": ["p1"]}}}}
