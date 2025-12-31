@@ -22,3 +22,10 @@
       capa_modificada: "Refactor | Verification | Documentation"
       impacto_contrato: "None. Legacy debt reduced."
       siguiente_paso_tecnico: "Proceed to next item in Legacy Burn-Down or Phase 2 tasks."
+
+- history:
+    - user_prompt_summary: "Execute Legacy Burn-Down Sprint (delete all declared legacy)."
+      agent_response_summary: "Executed 3-task sprint: (1) Deleted deprecated ingest script, (2) Cleared legacy manifest to [], (3) Removed dependent test file. Verified 140 tests pass and legacy scan returns 'Zero legacy debt found!'"
+      capa_modificada: "Infrastructure | Verification | Documentation"
+      impacto_contrato: "None. Debt eliminated."
+      siguiente_paso_tecnico: "Proceed to next roadmap item (MemTech or Linter-Driven Loop)."
