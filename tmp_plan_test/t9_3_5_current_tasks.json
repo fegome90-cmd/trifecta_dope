@@ -1,0 +1,282 @@
+[
+  {
+    "task_id": 1,
+    "task": "can you show me the token counting logic",
+    "expected": "token_estimation",
+    "predicted": "token_estimation",
+    "selected_by": "nl_trigger"
+  },
+  {
+    "task_id": 2,
+    "task": "where would i find stats about search performance",
+    "expected": "observability_telemetry",
+    "predicted": "observability_telemetry",
+    "selected_by": "nl_trigger"
+  },
+  {
+    "task_id": 3,
+    "task": "explain how primes organize the reading list",
+    "expected": "prime_indexing",
+    "predicted": "prime_indexing",
+    "selected_by": "alias"
+  },
+  {
+    "task_id": 4,
+    "task": "i need to design a ctx export feature",
+    "expected": "fallback",
+    "predicted": "observability_telemetry",
+    "selected_by": "alias"
+  },
+  {
+    "task_id": 5,
+    "task": "walk through the chunk retrieval flow",
+    "expected": "chunk_retrieval_flow",
+    "predicted": "chunk_retrieval_flow",
+    "selected_by": "nl_trigger"
+  },
+  {
+    "task_id": 6,
+    "task": "what does the clean architecture look like here",
+    "expected": "arch_overview",
+    "predicted": "arch_overview",
+    "selected_by": "nl_trigger"
+  },
+  {
+    "task_id": 7,
+    "task": "describe how telemetry events get recorded",
+    "expected": "observability_telemetry",
+    "predicted": "observability_telemetry",
+    "selected_by": "nl_trigger"
+  },
+  {
+    "task_id": 8,
+    "task": "help me create a ctx trends command",
+    "expected": "fallback",
+    "predicted": "observability_telemetry",
+    "selected_by": "alias"
+  },
+  {
+    "task_id": 9,
+    "task": "is the context pack validation passing",
+    "expected": "context_pack",
+    "predicted": "context_pack",
+    "selected_by": "alias"
+  },
+  {
+    "task_id": 10,
+    "task": "what is the prime file format",
+    "expected": "prime_indexing",
+    "predicted": "prime_indexing",
+    "selected_by": "nl_trigger"
+  },
+  {
+    "task_id": 11,
+    "task": "show how to implement a summary use case",
+    "expected": "code_navigation",
+    "predicted": "code_navigation",
+    "selected_by": "nl_trigger"
+  },
+  {
+    "task_id": 12,
+    "task": "locate the GetChunkUseCase implementation",
+    "expected": "get_chunk_use_case",
+    "predicted": "get_chunk_use_case",
+    "selected_by": "nl_trigger"
+  },
+  {
+    "task_id": 13,
+    "task": "where is the event flush mechanism defined",
+    "expected": "telemetry_flush",
+    "predicted": "telemetry_flush",
+    "selected_by": "nl_trigger"
+  },
+  {
+    "task_id": 14,
+    "task": "list all typer commands available",
+    "expected": "cli_commands",
+    "predicted": "cli_commands",
+    "selected_by": "nl_trigger"
+  },
+  {
+    "task_id": 15,
+    "task": "what files exist under src/domain",
+    "expected": "directory_listing",
+    "predicted": "directory_listing",
+    "selected_by": "nl_trigger"
+  },
+  {
+    "task_id": 16,
+    "task": "show me the token estimation formula",
+    "expected": "token_estimation",
+    "predicted": "token_estimation",
+    "selected_by": "nl_trigger"
+  },
+  {
+    "task_id": 17,
+    "task": "how is the Telemetry class constructed",
+    "expected": "symbol_surface",
+    "predicted": "symbol_surface",
+    "selected_by": "nl_trigger"
+  },
+  {
+    "task_id": 18,
+    "task": "what imports are needed for the report generator",
+    "expected": "import_statements",
+    "predicted": "import_statements",
+    "selected_by": "nl_trigger"
+  },
+  {
+    "task_id": 19,
+    "task": "find where budgets get calculated for searches",
+    "expected": "observability_telemetry",
+    "predicted": "cli_commands",
+    "selected_by": "alias"
+  },
+  {
+    "task_id": 20,
+    "task": "design a ctx validate workflow",
+    "expected": "context_pack",
+    "predicted": "context_pack",
+    "selected_by": "nl_trigger"
+  },
+  {
+    "task_id": 21,
+    "task": "the thing for loading context",
+    "expected": "fallback",
+    "predicted": "fallback",
+    "selected_by": "fallback"
+  },
+  {
+    "task_id": 22,
+    "task": "stats stuff",
+    "expected": "observability_telemetry",
+    "predicted": "observability_telemetry",
+    "selected_by": "alias"
+  },
+  {
+    "task_id": 23,
+    "task": "how does it work",
+    "expected": "fallback",
+    "predicted": "fallback",
+    "selected_by": "fallback"
+  },
+  {
+    "task_id": 24,
+    "task": "build command not working",
+    "expected": "context_pack",
+    "predicted": "context_pack",
+    "selected_by": "nl_trigger"
+  },
+  {
+    "task_id": 25,
+    "task": "telemetry",
+    "expected": "observability_telemetry",
+    "predicted": "fallback",
+    "selected_by": "fallback"
+  },
+  {
+    "task_id": 26,
+    "task": "where to find code",
+    "expected": "fallback",
+    "predicted": "fallback",
+    "selected_by": "fallback"
+  },
+  {
+    "task_id": 27,
+    "task": "architecture",
+    "expected": "fallback",
+    "predicted": "fallback",
+    "selected_by": "fallback"
+  },
+  {
+    "task_id": 28,
+    "task": "the prime thing",
+    "expected": "prime_indexing",
+    "predicted": "arch_overview",
+    "selected_by": "alias"
+  },
+  {
+    "task_id": 29,
+    "task": "implement something",
+    "expected": "fallback",
+    "predicted": "fallback",
+    "selected_by": "fallback"
+  },
+  {
+    "task_id": 30,
+    "task": "search files",
+    "expected": "fallback",
+    "predicted": "cli_commands",
+    "selected_by": "alias"
+  },
+  {
+    "task_id": 31,
+    "task": "telemetry architecture overview",
+    "expected": "fallback",
+    "predicted": "fallback",
+    "selected_by": "fallback"
+  },
+  {
+    "task_id": 32,
+    "task": "context pack validation status and budget estimation",
+    "expected": "context_pack",
+    "predicted": "context_pack",
+    "selected_by": "nl_trigger"
+  },
+  {
+    "task_id": 33,
+    "task": "cli command for searching with token limits",
+    "expected": "cli_commands",
+    "predicted": "cli_commands",
+    "selected_by": "alias"
+  },
+  {
+    "task_id": 34,
+    "task": "plan the implementation of a stats aggregation feature",
+    "expected": "code_navigation",
+    "predicted": "observability_telemetry",
+    "selected_by": "alias"
+  },
+  {
+    "task_id": 35,
+    "task": "symbols in the telemetry module and their relationships",
+    "expected": "symbol_surface",
+    "predicted": "fallback",
+    "selected_by": "fallback"
+  },
+  {
+    "task_id": 36,
+    "task": "how does search interact with the context pack build process",
+    "expected": "context_pack",
+    "predicted": "context_pack",
+    "selected_by": "nl_trigger"
+  },
+  {
+    "task_id": 37,
+    "task": "design a new ctx benchmark command that measures latency",
+    "expected": "observability_telemetry",
+    "predicted": "observability_telemetry",
+    "selected_by": "alias"
+  },
+  {
+    "task_id": 38,
+    "task": "explain the event flow from cli to telemetry to reports",
+    "expected": "observability_telemetry",
+    "predicted": "observability_telemetry",
+    "selected_by": "nl_trigger"
+  },
+  {
+    "task_id": 39,
+    "task": "where do i start reading about clean architecture and primes",
+    "expected": "arch_overview",
+    "predicted": "arch_overview",
+    "selected_by": "nl_trigger"
+  },
+  {
+    "task_id": 40,
+    "task": "implement a function that estimates tokens and flushes events",
+    "expected": "token_estimation",
+    "predicted": "observability_telemetry",
+    "selected_by": "alias"
+  }
+]

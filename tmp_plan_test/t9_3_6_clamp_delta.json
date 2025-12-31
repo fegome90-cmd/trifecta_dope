@@ -1,0 +1,66 @@
+{
+  "rows": [
+    {
+      "task_id": 17,
+      "task": "how is the Telemetry class constructed",
+      "expected": "symbol_surface",
+      "baseline_predicted": "observability_telemetry",
+      "current_predicted": "symbol_surface",
+      "transition": "nl_trigger->nl_trigger",
+      "was_fp_before": true,
+      "is_false_fallback_now": false
+    },
+    {
+      "task_id": 20,
+      "task": "design a ctx validate workflow",
+      "expected": "context_pack",
+      "baseline_predicted": "observability_telemetry",
+      "current_predicted": "context_pack",
+      "transition": "alias->nl_trigger",
+      "was_fp_before": true,
+      "is_false_fallback_now": false
+    },
+    {
+      "task_id": 24,
+      "task": "build command not working",
+      "expected": "context_pack",
+      "baseline_predicted": "cli_commands",
+      "current_predicted": "context_pack",
+      "transition": "alias->nl_trigger",
+      "was_fp_before": true,
+      "is_false_fallback_now": false
+    },
+    {
+      "task_id": 25,
+      "task": "telemetry",
+      "expected": "observability_telemetry",
+      "baseline_predicted": "observability_telemetry",
+      "current_predicted": "fallback",
+      "transition": "nl_trigger->fallback",
+      "was_fp_before": false,
+      "is_false_fallback_now": true
+    },
+    {
+      "task_id": 35,
+      "task": "symbols in the telemetry module and their relationships",
+      "expected": "symbol_surface",
+      "baseline_predicted": "observability_telemetry",
+      "current_predicted": "fallback",
+      "transition": "nl_trigger->fallback",
+      "was_fp_before": true,
+      "is_false_fallback_now": true
+    }
+  ],
+  "summary": {
+    "fp_baseline": 8,
+    "fp_current": 6,
+    "fp_reduction": 2,
+    "fallback_baseline": 6,
+    "fallback_current": 8,
+    "fallback_increase": 2,
+    "false_fallback_current": 2,
+    "net_impact": 0,
+    "observability_fp_baseline": 7,
+    "observability_fp_current": 4
+  }
+}
