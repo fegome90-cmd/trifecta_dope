@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from src.application.pcc_metrics import parse_feature_map, evaluate_pcc, summarize_pcc
+from src.application.pcc_metrics import evaluate_pcc, parse_feature_map, summarize_pcc
 
 
 def test_parse_feature_map_paths(tmp_path: Path) -> None:
@@ -24,7 +24,6 @@ def test_parse_feature_map_paths(tmp_path: Path) -> None:
 
 
 def test_parse_feature_map_feature_in_name(tmp_path: Path) -> None:
-    """Feature names can contain 'Feature' string without being filtered out."""
     prime = tmp_path / "prime_test.md"
     prime.write_text(
         """
@@ -38,13 +37,11 @@ def test_parse_feature_map_feature_in_name(tmp_path: Path) -> None:
 
     feature_map = parse_feature_map(prime)
 
-    assert "FeatureFlag" in feature_map
     assert feature_map["FeatureFlag"] == ["src/feature_flag.py"]
     assert feature_map["telemetry"] == ["src/telemetry.py"]
 
 
 def test_parse_feature_map_malformed_no_header(tmp_path: Path) -> None:
-    """Raises ValueError when table header is missing."""
     prime = tmp_path / "prime_test.md"
     prime.write_text(
         """
@@ -74,13 +71,12 @@ def test_evaluate_pcc_path_correctness() -> None:
 
 
 def test_evaluate_pcc_path_incorrect() -> None:
-    """Path incorrect when predicted path not in expected paths."""
     feature_map = {"telemetry": ["src/infrastructure/telemetry.py"]}
 
     result = evaluate_pcc(
         expected_feature="telemetry",
         predicted_feature="telemetry",
-        predicted_paths=["src/other.py"],  # Wrong path
+        predicted_paths=["src/other.py"],
         feature_map=feature_map,
         selected_by="nl_trigger",
     )
@@ -91,7 +87,6 @@ def test_evaluate_pcc_path_incorrect() -> None:
 
 
 def test_evaluate_pcc_false_fallback() -> None:
-    """False fallback when expected feature != fallback but selected_by == fallback."""
     result = evaluate_pcc(
         expected_feature="telemetry",
         predicted_feature=None,
@@ -106,7 +101,6 @@ def test_evaluate_pcc_false_fallback() -> None:
 
 
 def test_evaluate_pcc_safe_fallback() -> None:
-    """Safe fallback when expected feature == fallback and selected_by == fallback."""
     result = evaluate_pcc(
         expected_feature="fallback",
         predicted_feature=None,
@@ -133,8 +127,8 @@ def test_summarize_pcc_counts() -> None:
 
 
 def test_summarize_pcc_empty_rows() -> None:
-    """Handles empty input gracefully."""
     summary = summarize_pcc([])
+
     assert summary["path_correct_count"] == 0
     assert summary["false_fallback_count"] == 0
     assert summary["safe_fallback_count"] == 0
