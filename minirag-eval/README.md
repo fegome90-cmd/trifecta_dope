@@ -15,12 +15,14 @@ Structure:
 - temporal_recency
 - contradictions
 - noise_injection
+- lsp_ast_positive
 
 ## Run
 
 ```bash
 ./minirag-eval/run_bench.sh negative_rejection
 ./minirag-eval/run_bench.sh ambiguous_multihop
+./minirag-eval/run_bench.sh lsp_ast_positive
 ```
 
 Results are written to `minirag-eval/results/<module>.md`.
