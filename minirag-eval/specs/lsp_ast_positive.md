@@ -9,4 +9,4 @@ Expected sources (top-5):
 - `minirag-eval/bridges/all_bridges.md` (acceptable shortcut)
 
 Pass criteria:
-- 8/10 queries have at least one expected source in top-5.
+- 10/12 queries have at least one expected source in top-5.

@@ -99,6 +99,8 @@ def main() -> None:
             "lsp diagnostics hot files",
             "fase 3 ast lsp ide grade fluidity",
             "ast lsp hot files roadmap roi",
+            "fase 3 ast lsp vs ast lsp hot files roi",
+            "ast lsp symbols hover diagnostics integration",
         ],
     }
 
