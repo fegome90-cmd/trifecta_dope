@@ -26,3 +26,6 @@ example-segment/
 
 # Logs
 *.log
+
+# Worktrees
+.worktrees/
