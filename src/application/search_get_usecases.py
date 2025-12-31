@@ -1,7 +1,7 @@
 """Use case wrappers for Search and Get with telemetry."""
 
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Any, Literal
 
 from src.application.context_service import ContextService
 from src.infrastructure.file_system import FileSystemAdapter
@@ -10,7 +10,7 @@ from src.infrastructure.file_system import FileSystemAdapter
 class SearchUseCase:
     """Wrapper for ctx.search with telemetry."""
 
-    def __init__(self, file_system: FileSystemAdapter, telemetry=None):
+    def __init__(self, file_system: FileSystemAdapter, telemetry: Any = None) -> None:
         self.file_system = file_system
         self.telemetry = telemetry
 
@@ -34,7 +34,7 @@ class SearchUseCase:
         
         # Execute search for each term and combine results
         service = ContextService(target_path)
-        combined_results = {}  # chunk_id -> (hit, max_score)
+        combined_results: dict[str, tuple[Any, float]] = {}  # chunk_id -> (hit, max_score)
         
         for term, weight in expanded_terms:
             result = service.search(term, k=limit * 2)  # Get more to allow for de-dupe
@@ -90,7 +90,7 @@ class SearchUseCase:
 class GetChunkUseCase:
     """Wrapper for ctx.get with telemetry."""
 
-    def __init__(self, file_system: FileSystemAdapter, telemetry=None):
+    def __init__(self, file_system: FileSystemAdapter, telemetry: Any = None) -> None:
         self.file_system = file_system
         self.telemetry = telemetry
 
@@ -149,7 +149,7 @@ class GetChunkUseCase:
 class SyncContextUseCase:
     """Wrapper for ctx.sync (build + validate)."""
     
-    def __init__(self, file_system: FileSystemAdapter, telemetry=None):
+    def __init__(self, file_system: FileSystemAdapter, telemetry: Any = None) -> None:
         self.file_system = file_system
         self.telemetry = telemetry
     

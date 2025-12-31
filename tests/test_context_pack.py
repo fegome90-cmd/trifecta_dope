@@ -8,9 +8,9 @@ Tests cover:
 - Fence-aware chunking (no splits inside code blocks)
 - Digest scoring (top-2 relevant chunks selected)
 """
+
 from __future__ import annotations
 
-import hashlib
 import json
 import sys
 from pathlib import Path
@@ -18,16 +18,15 @@ from pathlib import Path
 # Add scripts to path for testing
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
-from ingest_trifecta import (
+from ingest_trifecta import (  # type: ignore[import-not-found]
+    ContextPackBuilder,
     chunk_by_headings_fence_aware,
     generate_chunk_id,
     normalize_markdown,
     normalize_title_path,
     preview,
     score_chunk,
-    ContextPackBuilder,
 )
-
 
 # =============================================================================
 # Fixtures
@@ -87,7 +86,7 @@ Final section.
 # =============================================================================
 
 
-def test_normalize_markdown_crlf_to_lf():
+def test_normalize_markdown_crlf_to_lf() -> None:
     """CRLF should be normalized to LF."""
     input_md = "Line 1\r\nLine 2\r\n\r\nLine 3"
     result = normalize_markdown(input_md)
@@ -95,14 +94,14 @@ def test_normalize_markdown_crlf_to_lf():
     assert result == "Line 1\nLine 2\n\nLine 3\n"
 
 
-def test_normalize_markdown_collapses_blank_lines():
+def test_normalize_markdown_collapses_blank_lines() -> None:
     """Multiple blank lines should be collapsed to double newline."""
     input_md = "Line 1\n\n\n\n\nLine 2"
     result = normalize_markdown(input_md)
     assert result == "Line 1\n\nLine 2\n"
 
 
-def test_normalize_title_path():
+def test_normalize_title_path() -> None:
     """Title path normalization should be stable."""
     assert normalize_title_path(["Core Rules", "  Sync  First"]) == "core rules\x1fsync first"
     assert normalize_title_path(["  Test  ", "TEST"]) == "test\x1ftest"
@@ -113,28 +112,28 @@ def test_normalize_title_path():
 # =============================================================================
 
 
-def test_chunk_id_deterministic():
+def test_chunk_id_deterministic() -> None:
     """Same inputs should produce same ID."""
     id1 = generate_chunk_id("skill", ["Core Rules"], "Same content")
     id2 = generate_chunk_id("skill", ["Core Rules"], "Same content")
     assert id1 == id2
 
 
-def test_chunk_id_different_doc():
+def test_chunk_id_different_doc() -> None:
     """Different doc should produce different ID."""
     id1 = generate_chunk_id("skill", ["Core Rules"], "Content")
     id2 = generate_chunk_id("agent", ["Core Rules"], "Content")
     assert id1 != id2
 
 
-def test_chunk_id_whitespace_insensitive():
+def test_chunk_id_whitespace_insensitive() -> None:
     """Whitespace in title should not affect ID."""
     id1 = generate_chunk_id("skill", ["Core Rules"], "Content")
     id2 = generate_chunk_id("skill", ["Core   Rules"], "Content")
     assert id1 == id2
 
 
-def test_chunk_id_case_insensitive():
+def test_chunk_id_case_insensitive() -> None:
     """Case in title should not affect ID (due to lower())."""
     id1 = generate_chunk_id("skill", ["Core Rules"], "Content")
     id2 = generate_chunk_id("skill", ["CORE RULES"], "Content")
@@ -146,7 +145,7 @@ def test_chunk_id_case_insensitive():
 # =============================================================================
 
 
-def test_fence_aware_respects_code_blocks():
+def test_fence_aware_respects_code_blocks() -> None:
     """Headings inside code fences should not create chunks."""
     chunks = chunk_by_headings_fence_aware("test", CODE_FENCE_SAMPLE)
 
@@ -165,7 +164,7 @@ def test_fence_aware_respects_code_blocks():
         assert chunk["title"] != "Another heading inside fence"
 
 
-def test_fence_aware_state_machine_toggle():
+def test_fence_aware_state_machine_toggle() -> None:
     """The in_fence state should toggle correctly."""
     # Sample with two separate code blocks
     sample = """# Intro
@@ -196,7 +195,7 @@ x = 1
     assert "Inside fence should not split" not in chunk_titles
 
 
-def test_fence_aware_with_simple_markdown():
+def test_fence_aware_with_simple_markdown() -> None:
     """Simple markdown without fences should work."""
     chunks = chunk_by_headings_fence_aware("test", SAMPLE_MARKDOWN)
 
@@ -208,7 +207,7 @@ def test_fence_aware_with_simple_markdown():
     assert "Commands" in chunk_titles
 
 
-def test_fence_aware_tracks_title_hierarchy():
+def test_fence_aware_tracks_title_hierarchy() -> None:
     """Title path should maintain hierarchy."""
     chunks = chunk_by_headings_fence_aware("test", SAMPLE_MARKDOWN)
 
@@ -226,7 +225,7 @@ def test_fence_aware_tracks_title_hierarchy():
 # =============================================================================
 
 
-def test_score_chunk_prefers_relevant_keywords():
+def test_score_chunk_prefers_relevant_keywords() -> None:
     """Chunks with relevant keywords should score higher."""
     score_core = score_chunk("Core Rules", 2, "Some content")
     score_random = score_chunk("Random Section", 2, "Some content")
@@ -234,7 +233,7 @@ def test_score_chunk_prefers_relevant_keywords():
     assert score_core > score_random
 
 
-def test_score_chunk_prefers_higher_headings():
+def test_score_chunk_prefers_higher_headings() -> None:
     """Higher level headings (1-2) should score higher."""
     score_h1 = score_chunk("Important", 1, "Content")
     score_h3 = score_chunk("Important", 3, "Content")
@@ -242,7 +241,7 @@ def test_score_chunk_prefers_higher_headings():
     assert score_h1 > score_h3
 
 
-def test_score_chunk_penalizes_empty_overview():
+def test_score_chunk_penalizes_empty_overview() -> None:
     """Empty overview sections should be penalized."""
     score_short = score_chunk("Overview", 2, "Brief text")
     score_substantial = score_chunk("Overview", 2, "A" * 500)
@@ -250,14 +249,14 @@ def test_score_chunk_penalizes_empty_overview():
     assert score_short < score_substantial
 
 
-def test_score_chunk_negative_allowed():
+def test_score_chunk_negative_allowed() -> None:
     """Scores can be negative for fluff content."""
     score = score_chunk("Overview", 2, "Short")
     # Short overview with penalty can be negative
     assert score < 2  # Base level penalty
 
 
-def test_digest_quality_selects_relevant(tmp_path):
+def test_digest_quality_selects_relevant(tmp_path: Path) -> None:
     """Digest should select chunks with highest scores (most relevant)."""
     # Create test segment with varied sections
     segment = tmp_path / "digest_test"
@@ -294,7 +293,7 @@ Brief intro here.
 # =============================================================================
 
 
-def test_preview_collapses_whitespace():
+def test_preview_collapses_whitespace() -> None:
     """Preview should collapse all whitespace to single space."""
     text = "Line 1\n\n\nLine   2\t\t  Line3"
     result = preview(text, max_chars=100)
@@ -303,7 +302,7 @@ def test_preview_collapses_whitespace():
     assert "  " not in result
 
 
-def test_preview_truncates_with_ellipsis():
+def test_preview_truncates_with_ellipsis() -> None:
     """Long preview should be truncated with ellipsis."""
     text = "A" * 200
     result = preview(text, max_chars=100)
@@ -311,7 +310,7 @@ def test_preview_truncates_with_ellipsis():
     assert result.endswith("…")
 
 
-def test_preview_no_ellipsis_for_short():
+def test_preview_no_ellipsis_for_short() -> None:
     """Short preview should not have ellipsis."""
     text = "Short text"
     result = preview(text, max_chars=100)
@@ -323,7 +322,7 @@ def test_preview_no_ellipsis_for_short():
 # =============================================================================
 
 
-def test_integration_with_real_segment(tmp_path):
+def test_integration_with_real_segment(tmp_path: Path) -> None:
     """Test full pack generation with a real segment structure."""
     # Create test segment structure
     segment = tmp_path / "test_segment"
@@ -435,7 +434,7 @@ This is test documentation.
         assert "end_line" in chunk
 
 
-def test_stability_ids_across_runs(tmp_path):
+def test_stability_ids_across_runs(tmp_path: Path) -> None:
     """IDs should be stable across multiple runs."""
     # Create test segment
     segment = tmp_path / "stable_test"
@@ -453,14 +452,14 @@ def test_stability_ids_across_runs(tmp_path):
     assert ids1 == ids2, "IDs should be identical across runs"
 
 
-def test_output_file_written(tmp_path):
+def test_output_file_written(tmp_path: Path) -> None:
     """Output file should be written to correct location."""
     segment = tmp_path / "output_test"
     segment.mkdir()
     (segment / "skill.md").write_text("# Test\n\nContent.")
 
     builder = ContextPackBuilder("output_test", tmp_path)
-    pack = builder.build()
+    builder.build()
 
     expected_output = tmp_path / "output_test" / "_ctx" / "context_pack.json"
     assert expected_output.exists()

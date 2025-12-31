@@ -1,11 +1,10 @@
 """Test suite for Session Evidence Persistence protocol in templates."""
 
-import pytest
 from src.domain.models import TrifectaConfig
 from src.infrastructure.templates import TemplateRenderer
 
 
-def test_render_session_contains_session_log():
+def test_render_session_contains_session_log() -> None:
     """Verify that render_session() contains 'Session Log (append-only)'."""
     renderer = TemplateRenderer()
     config = TrifectaConfig(
@@ -24,7 +23,7 @@ def test_render_session_contains_session_log():
     assert "append-only" in output
 
 
-def test_render_skill_contains_session_evidence_persistence():
+def test_render_skill_contains_session_evidence_persistence() -> None:
     """Verify that render_skill() contains 'Session Evidence Persistence'."""
     renderer = TemplateRenderer()
     config = TrifectaConfig(
@@ -46,7 +45,7 @@ def test_render_skill_contains_session_evidence_persistence():
     assert "Stale Fail-Closed Protocol" in output
 
 
-def test_no_forbidden_strings_in_templates():
+def test_no_forbidden_strings_in_templates() -> None:
     """Verify that no forbidden strings appear in templates."""
     renderer = TemplateRenderer()
     config = TrifectaConfig(
@@ -75,7 +74,7 @@ def test_no_forbidden_strings_in_templates():
         assert forbidden not in readme_output, f"Found forbidden string '{forbidden}' in readme.md"
 
 
-def test_session_template_has_correct_structure():
+def test_session_template_has_correct_structure() -> None:
     """Verify that the session entry template has the correct structure."""
     renderer = TemplateRenderer()
     config = TrifectaConfig(
@@ -103,7 +102,7 @@ def test_session_template_has_correct_structure():
         assert field in output, f"Missing required field '{field}' in session template"
 
 
-def test_skill_protocol_has_5_steps():
+def test_skill_protocol_has_5_steps() -> None:
     """Verify that the Session Evidence Persistence protocol has 5 numbered steps."""
     renderer = TemplateRenderer()
     config = TrifectaConfig(

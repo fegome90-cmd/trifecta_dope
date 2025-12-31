@@ -3,13 +3,14 @@ import fcntl
 import tempfile
 from pathlib import Path
 from contextlib import contextmanager
+from typing import Generator
 
 
 class AtomicWriter:
     """Handles atomic writes to ensure file integrity."""
     
     @staticmethod
-    def write(target: Path, content: str):
+    def write(target: Path, content: str) -> None:
         """Write content to a temporary file then rename it atomically."""
         target_dir = target.parent
         if not target_dir.exists():
@@ -32,7 +33,7 @@ class AtomicWriter:
 
 
 @contextmanager
-def file_lock(lock_path: Path):
+def file_lock(lock_path: Path) -> Generator[None, None, None]:
     """Simple file-based advisory lock."""
     lock_file = open(lock_path, "w")
     try:

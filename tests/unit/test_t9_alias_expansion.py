@@ -2,15 +2,14 @@
 
 import json
 from pathlib import Path
-import pytest
-import yaml
+import yaml  # type: ignore[import-untyped]
 
 from src.infrastructure.alias_loader import AliasLoader
 from src.application.query_normalizer import QueryNormalizer
 from src.application.query_expander import QueryExpander
 
 
-def test_alias_expansion_increases_hits(tmp_path):
+def test_alias_expansion_increases_hits(tmp_path: Path) -> None:
     """Verify that alias expansion increases search hits."""
     # Setup: Create a segment with context pack
     segment = tmp_path / "test_segment"
@@ -63,7 +62,7 @@ def test_alias_expansion_increases_hits(tmp_path):
     assert any(term == "tree_sitter" and weight == 0.7 for term, weight in expanded)
 
 
-def test_alias_expansion_caps_terms(tmp_path):
+def test_alias_expansion_caps_terms(tmp_path: Path) -> None:
     """Verify that alias expansion caps at MAX_EXTRA_TERMS (8)."""
     segment = tmp_path / "test_segment"
     ctx_dir = segment / "_ctx"
@@ -88,7 +87,7 @@ def test_alias_expansion_caps_terms(tmp_path):
     assert len(expanded) <= 9
 
 
-def test_alias_expansion_dedupes_ids(tmp_path):
+def test_alias_expansion_dedupes_ids(tmp_path: Path) -> None:
     """Verify that alias expansion de-duplicates by chunk_id."""
     segment = tmp_path / "test_segment"
     ctx_dir = segment / "_ctx"
@@ -129,7 +128,7 @@ def test_alias_expansion_dedupes_ids(tmp_path):
     assert len(expanded) == 4  # auth + 3 synonyms
 
 
-def test_telemetry_records_alias_fields(tmp_path):
+def test_telemetry_records_alias_fields(tmp_path: Path) -> None:
     """Verify that telemetry records alias expansion fields."""
     segment = tmp_path / "test_segment"
     ctx_dir = segment / "_ctx"
@@ -157,7 +156,7 @@ def test_telemetry_records_alias_fields(tmp_path):
     assert "parser" in metadata["alias_keys_used"]
 
 
-def test_no_aliases_file_works_normally(tmp_path):
+def test_no_aliases_file_works_normally(tmp_path: Path) -> None:
     """Verify that search works normally without aliases.yaml."""
     segment = tmp_path / "test_segment"
     ctx_dir = segment / "_ctx"
@@ -177,7 +176,7 @@ def test_no_aliases_file_works_normally(tmp_path):
     assert expanded[0] == ("test", 1.0)
 
 
-def test_alias_file_validation(tmp_path):
+def test_alias_file_validation(tmp_path: Path) -> None:
     """Verify that alias file validation enforces limits."""
     segment = tmp_path / "test_segment"
     ctx_dir = segment / "_ctx"

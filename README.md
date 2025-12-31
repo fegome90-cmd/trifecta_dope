@@ -276,12 +276,26 @@ make minirag-query MINIRAG_QUERY="PCC"
 > El índice usa `docs/**/*.md` y `knowledge/**` definidos en `.mini-rag/config.yaml`.
 
 **Para agentes**: Usar `trifecta ctx search`, NO Mini-RAG.
+
 ## Instalación
 
 ```bash
 cd trifecta_dope
 uv sync
 ```
+
+### Multi-Segment Installation
+
+Para instalar contexto en múltiples segmentos del repositorio, usa el script estable:
+
+```bash
+# Script recomendado (Clean Architecture compliant)
+uv run python scripts/install_FP.py --segment /path/to/segment1 --segment /path/to/segment2
+
+# DEPRECATED: scripts/install_trifecta_context.py (backward compatibility only)
+```
+
+El script `install_FP.py` utiliza validadores desde `src/infrastructure/validators.py` y sigue principios de Clean Architecture.
 
 ## Tests
 

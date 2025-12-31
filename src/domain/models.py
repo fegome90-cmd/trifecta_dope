@@ -1,4 +1,5 @@
 """Domain Models for Trifecta."""
+
 from pydantic import BaseModel, field_validator
 
 
@@ -14,9 +15,17 @@ class TrifectaConfig(BaseModel):
     @field_validator("segment")
     @classmethod
     def validate_segment(cls, v: str) -> str:
-        if not v or " " in v:
-            raise ValueError("Segment must be non-empty and contain no spaces")
-        return v.lower().replace("_", "-")
+        """Validate segment is non-empty (preserve original value)."""
+        if not v or not v.strip():
+            raise ValueError("Segment must be non-empty")
+        return v  # Preserve original
+
+    @property
+    def segment_id(self) -> str:
+        """Derive normalized segment ID from segment name."""
+        from src.domain.naming import normalize_segment_id
+
+        return normalize_segment_id(self.segment)
 
 
 class TrifectaPack(BaseModel):

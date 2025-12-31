@@ -1,6 +1,6 @@
 """Query expansion with alias support and weighting."""
 
-from typing import Dict, List, Tuple, Set
+from typing import Any, Dict, List, Tuple, Set
 
 
 class QueryExpander:
@@ -39,7 +39,7 @@ class QueryExpander:
         added_terms: Set[str] = {query}
 
         # Helper to avoid duplicates and cap terms
-        def add_term(term: str, weight: float):
+        def add_term(term: str, weight: float) -> None:
             if term not in added_terms and len(added_terms) - 1 < self.MAX_EXTRA_TERMS:
                 terms.append((term, weight))
                 added_terms.add(term)
@@ -72,7 +72,7 @@ class QueryExpander:
 
         return terms
 
-    def get_expansion_metadata(self, terms: List[Tuple[str, float]]) -> Dict:
+    def get_expansion_metadata(self, terms: List[Tuple[str, float]]) -> Dict[str, Any]:
         """Get metadata about the expansion for telemetry.
 
         Args:

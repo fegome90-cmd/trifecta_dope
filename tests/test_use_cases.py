@@ -2,7 +2,6 @@
 import tempfile
 from pathlib import Path
 
-import pytest
 
 from src.domain.models import TrifectaConfig
 from src.application.use_cases import (
@@ -14,7 +13,7 @@ from src.infrastructure.file_system import FileSystemAdapter
 
 
 class TestCreateTrifectaUseCase:
-    def test_create_trifecta_success(self):
+    def test_create_trifecta_success(self) -> None:
         template_renderer = TemplateRenderer()
         file_system = FileSystemAdapter()
         use_case = CreateTrifectaUseCase(template_renderer, file_system)
@@ -37,7 +36,7 @@ class TestCreateTrifectaUseCase:
 
 
 class TestValidateTrifectaUseCase:
-    def test_validate_complete_trifecta(self):
+    def test_validate_complete_trifecta(self) -> None:
         template_renderer = TemplateRenderer()
         file_system = FileSystemAdapter()
         create_use_case = CreateTrifectaUseCase(template_renderer, file_system)
@@ -57,7 +56,7 @@ class TestValidateTrifectaUseCase:
             assert result.passed
             assert result.errors == []
 
-    def test_validate_missing_skill(self):
+    def test_validate_missing_skill(self) -> None:
         file_system = FileSystemAdapter()
         use_case = ValidateTrifectaUseCase(file_system)
 
@@ -69,7 +68,7 @@ class TestValidateTrifectaUseCase:
             assert not result.passed
             assert "Missing: skill.md" in result.errors
 
-    def test_validate_missing_ctx_dir(self):
+    def test_validate_missing_ctx_dir(self) -> None:
         file_system = FileSystemAdapter()
         use_case = ValidateTrifectaUseCase(file_system)
 

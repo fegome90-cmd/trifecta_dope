@@ -1,25 +1,23 @@
-import json
-import subprocess
-import yaml
 import re
+import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Any
 
-from src.domain.models import TrifectaConfig, TrifectaPack, ValidationResult
+import yaml  # type: ignore[import-untyped]
+
+from src.application.context_service import ContextService
+from src.domain.constants import MAX_SKILL_LINES
 from src.domain.context_models import (
-    ContextPack,
     ContextChunk,
     ContextIndexEntry,
+    ContextPack,
     SourceFile,
-    SearchResult,
-    GetResult,
 )
-from src.domain.constants import MAX_SKILL_LINES
-from src.infrastructure.templates import TemplateRenderer
+from src.domain.models import TrifectaConfig, TrifectaPack, ValidationResult
 from src.infrastructure.file_system import FileSystemAdapter
 from src.infrastructure.file_system_utils import AtomicWriter, file_lock
-from src.application.context_service import ContextService
+from src.infrastructure.templates import TemplateRenderer
 
 
 class CreateTrifectaUseCase:
@@ -157,13 +155,13 @@ class RefreshPrimeUseCase:
         prime_content = self.template_renderer.render_prime(config, docs)
         prime_path.write_text(prime_content)
 
+
+
         return prime_path.name
-
-
 class BuildContextPackUseCase:
     """Build a Context Pack for a segment."""
 
-    def __init__(self, file_system: FileSystemAdapter, telemetry=None):
+    def __init__(self, file_system: FileSystemAdapter, telemetry: Any = None) -> None:
         self.file_system = file_system
         self.telemetry = telemetry
 
@@ -171,9 +169,8 @@ class BuildContextPackUseCase:
         self, content: str, root: Path, repo_root: Path | None = None
     ) -> dict[str, Path]:
         """Extract referenced files from Prime content with STRICT SECURITY."""
-        import re
 
-        refs = {}
+        refs: dict[str, Path] = {}
         visited_paths = set()
         MAX_LINKS = 25
 
@@ -197,7 +194,7 @@ class BuildContextPackUseCase:
 
             if path_str:
                 if len(refs) >= MAX_LINKS:
-                    warning_msg = f"prime_links_truncated_total"
+                    warning_msg = "prime_links_truncated_total"
                     if self.telemetry:
                         self.telemetry.incr(warning_msg)
                     print(
@@ -303,13 +300,12 @@ class BuildContextPackUseCase:
         # Try to parse REPO_ROOT from prime header
         repo_root = None
         prime_content = prime_path.read_text()
-        import re
 
         rr_match = re.search(r">\s*\*\*REPO_ROOT\*\*:\s*`?([^`\n]+)`?", prime_content)
         if rr_match:
             try:
                 repo_root = Path(rr_match.group(1).strip())
-            except:
+            except Exception:
                 pass
 
         # 2. Identify source files
@@ -326,7 +322,15 @@ class BuildContextPackUseCase:
 
         # 2.5 Extract references from Prime
         refs = self._extract_references(prime_content, target_path, repo_root)
+
+        # Compute primary source paths for exclusion (path-aware deduplication)
+        primary_skill_path = target_path / "skill.md"
+        excluded_paths = {primary_skill_path.resolve()}
+
         for name, path in refs.items():
+            # Skip if this exact path is already indexed as a primary source
+            if path.resolve() in excluded_paths:
+                continue
             sources[f"ref:{name}"] = path
 
         # 2.6 FAIL-CLOSED VALIDATION
@@ -405,7 +409,7 @@ class BuildContextPackUseCase:
 class MacroLoadUseCase:
     """Macro command 'trifecta load' implementation."""
 
-    def __init__(self, file_system: FileSystemAdapter, telemetry=None):
+    def __init__(self, file_system: FileSystemAdapter, telemetry: Any = None) -> None:
         self.file_system = file_system
         self.telemetry = telemetry
 
@@ -420,9 +424,9 @@ class MacroLoadUseCase:
             return self._fallback_load(target_path, task)
 
         # 1. Expand task with aliases for discovery
-        from src.infrastructure.alias_loader import AliasLoader
-        from src.application.query_normalizer import QueryNormalizer
         from src.application.query_expander import QueryExpander
+        from src.application.query_normalizer import QueryNormalizer
+        from src.infrastructure.alias_loader import AliasLoader
 
         alias_loader = AliasLoader(target_path)
         aliases = alias_loader.load()
@@ -434,7 +438,7 @@ class MacroLoadUseCase:
 
         # Execute search for each expanded piece
         service = ContextService(target_path)
-        combined_hits = {}  # chunk_id -> (hit, max_weighted_score)
+        combined_hits: dict[str, tuple[Any, float]] = {}  # chunk_id -> (hit, max_weighted_score)
 
         for term, weight in expanded_terms:
             search_res = service.search(term, k=10)
@@ -534,7 +538,7 @@ class MacroLoadUseCase:
 class ValidateContextPackUseCase:
     """Validator for Context Pack integrity and invariants."""
 
-    def __init__(self, file_system: FileSystemAdapter, telemetry=None):
+    def __init__(self, file_system: FileSystemAdapter, telemetry: Any = None) -> None:
         self.file_system = file_system
         self.telemetry = telemetry
 
@@ -556,8 +560,8 @@ class ValidateContextPackUseCase:
             return ValidationResult(passed=False, errors=["Missing context_pack.json"], warnings=[])
 
         try:
-            import json
             import hashlib
+            import json
 
             with open(pack_path, "r") as f:
                 data = json.load(f)
@@ -634,7 +638,7 @@ class AutopilotUseCase:
     def __init__(self, file_system: FileSystemAdapter):
         self.file_system = file_system
 
-    def execute(self, target_path: Path) -> dict:
+    def execute(self, target_path: Path) -> dict[str, Any]:
         """Read autopilot config and run steps."""
         ctx_dir = target_path / "_ctx"
         session_files = list(ctx_dir.glob("session_*.md"))

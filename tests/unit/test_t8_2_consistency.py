@@ -2,11 +2,10 @@
 
 import json
 from pathlib import Path
-import pytest
 from src.infrastructure.telemetry import Telemetry
 
 
-def test_stats_reads_ms_fields(tmp_path):
+def test_stats_reads_ms_fields(tmp_path: Path) -> None:
     """Verify that ctx stats reads p50_ms/p95_ms correctly."""
     telemetry_dir = tmp_path / "_ctx" / "telemetry"
     telemetry_dir.mkdir(parents=True)
@@ -34,7 +33,7 @@ def test_stats_reads_ms_fields(tmp_path):
     assert data["latencies"]["ctx.search"]["max_ms"] == 3.789
 
 
-def test_stale_detected_only_on_validate(tmp_path):
+def test_stale_detected_only_on_validate(tmp_path: Path) -> None:
     """Verify that stale_detected only appears when validate runs."""
     # Test 1: Search (no validate) - stale_detected should NOT appear
     telemetry_search = Telemetry(tmp_path, level="lite", run_id="search_run")

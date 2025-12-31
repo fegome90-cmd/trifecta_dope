@@ -4,8 +4,8 @@ Loads and validates aliases.yaml files from segment directories.
 """
 
 from pathlib import Path
-from typing import Dict, List, Optional
-import yaml
+from typing import Dict, List
+import yaml  # type: ignore[import-untyped]
 
 
 class AliasLoader:
