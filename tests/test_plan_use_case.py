@@ -160,12 +160,12 @@ def test_plan_returns_why_selected_by(mock_filesystem, mock_telemetry, temp_ctx_
     assert result["selected_by"] == "alias"
     assert result["match_terms_count"] >= 2
     assert result["matched_trigger"] is not None
-    assert "L2: Alias match" in result["budget_est"]["why"]
+    assert "L3: Alias match" in result["budget_est"]["why"]
 
     # Test L3 (fallback)
     result = use_case.execute(tmp_path, "no match here")
     assert result["selected_by"] == "fallback"
-    assert "L3: No feature match" in result["budget_est"]["why"]
+    assert "L4: No feature match" in result["budget_est"]["why"]
 
 
 def test_repo_map_generation_is_capped_and_deterministic():
