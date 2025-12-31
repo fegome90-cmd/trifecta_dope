@@ -120,3 +120,34 @@ def detect_legacy_context_files(path: Path) -> List[str]:
     if not ctx_dir.exists():
         return []
     return [name for name in legacy_names if (ctx_dir / name).exists()]
+
+
+def validate_segment_fp(path: Path) -> "Ok[ValidationResult] | Err[List[str]]":
+    """
+    FP wrapper for validate_segment_structure.
+
+    Returns Result monad instead of ValidationResult directly.
+    This enables Railway Oriented Programming in the CLI.
+
+    Args:
+        path: Path to the segment directory to validate
+
+    Returns:
+        Ok(ValidationResult) if segment is valid
+        Err(list[str]) with error messages if invalid
+
+    Example:
+        match validate_segment_fp(segment_path):
+            case Ok(result):
+                # proceed with valid segment
+            case Err(errors):
+                # handle validation errors
+    """
+    from src.domain.result import Err, Ok
+
+    result = validate_segment_structure(path)
+
+    if result.valid:
+        return Ok(result)
+    else:
+        return Err(result.errors)
