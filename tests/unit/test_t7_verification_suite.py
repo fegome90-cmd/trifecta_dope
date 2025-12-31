@@ -87,19 +87,22 @@ def test_installer_does_not_write_ctx_in_cli_root(tmp_path: Path) -> None:
     cli_root = tmp_path / "cli_root"
     cli_root.mkdir()
 
-    segment = tmp_path / "segment"
+    segment_name = "segment"
+    segment = tmp_path / segment_name
     segment.mkdir()
     (segment / "skill.md").write_text("Skill")
     (segment / "_ctx").mkdir()
-    (segment / "_ctx" / "agent.md").write_text("Agent")
-    (segment / "_ctx" / "prime_seg.md").write_text("Prime")
+    # Use dynamic naming convention (North Star)
+    (segment / "_ctx" / f"agent_{segment_name}.md").write_text("Agent")
+    (segment / "_ctx" / f"prime_{segment_name}.md").write_text("Prime")
+    (segment / "_ctx" / f"session_{segment_name}.md").write_text("Session")
 
     # We can't easily run the installer script here as it invokes subprocess,
     # but we can verify the CLI behavior which the installer uses.
     # Run ctx build targeting segment
     result = runner.invoke(app, ["ctx", "build", "--segment", str(segment)])
 
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Build failed: {result.stdout}"
 
     # Check NO _ctx in cli_root
     assert not (cli_root / "_ctx").exists()

@@ -16,7 +16,10 @@ Phase: GREEN (Implementation for TDD Red-Green-Refactor)
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List
+from typing import TYPE_CHECKING, List
+
+if TYPE_CHECKING:
+    from src.domain.result import Err, Ok
 
 
 @dataclass(frozen=True)
