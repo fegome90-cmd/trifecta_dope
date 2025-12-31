@@ -1,5 +1,6 @@
 """Domain Models for Trifecta."""
 
+from dataclasses import dataclass
 from pydantic import BaseModel, field_validator
 
 
@@ -48,4 +49,60 @@ class ValidationResult(BaseModel):
 
     passed: bool
     errors: list[str] = []
-    warnings: list[str] = []
+
+
+# =============================================================================
+# Context Pack Models (MVP - Progressive Disclosure)
+# =============================================================================
+
+
+@dataclass(frozen=True)
+class SourceFile:
+    """Metadata for a source file in the context pack."""
+
+    path: str
+    sha256: str
+    chars: int
+
+
+@dataclass(frozen=True)
+class DigestEntry:
+    """Entry in the digest (top-N most relevant chunks)."""
+
+    doc: str
+    chunk_id: str
+    summary: str
+
+
+@dataclass(frozen=True)
+class ChunkMetadata:
+    """Metadata for a chunk (index entry)."""
+
+    id: str
+    doc: str
+    title: str
+    token_est: int
+
+
+@dataclass(frozen=True)
+class Chunk:
+    """Full chunk with content."""
+
+    id: str
+    doc: str
+    title: str
+    text: str
+    token_est: int
+
+
+@dataclass(frozen=True)
+class ContextPack:
+    """Complete context pack (schema v1)."""
+
+    schema_version: int
+    segment_id: str
+    created_at: str
+    source_files: list[SourceFile]
+    digest: list[DigestEntry]
+    index: list[ChunkMetadata]
+    chunks: list[Chunk]
