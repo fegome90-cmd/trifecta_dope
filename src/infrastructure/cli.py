@@ -11,10 +11,12 @@ import typer
 from src.application.search_get_usecases import GetChunkUseCase, SearchUseCase
 from src.application.telemetry_charts import generate_chart
 from src.application.telemetry_reports import export_data, generate_report
+from src.application.plan_use_case import PlanUseCase
 from src.application.use_cases import (
     BuildContextPackUseCase,
     MacroLoadUseCase,
     RefreshPrimeUseCase,
+    StatsUseCase,
     ValidateContextPackUseCase,
     ValidateTrifectaUseCase,
 )
@@ -320,6 +322,259 @@ def validate(
         raise e
     finally:
         telemetry.flush()
+
+
+@ctx_app.command("stats")
+def stats(
+    segment: str = typer.Option(..., "--segment", "-s", help=HELP_SEGMENT),
+    window: int = typer.Option(0, "--window", "-w", help="Days to look back (0 = all)"),
+    telemetry_level: str = typer.Option("lite", "--telemetry", help=HELP_TELEMETRY),
+) -> None:
+    """Show telemetry statistics for the segment."""
+    telemetry = _get_telemetry(segment, telemetry_level)
+    start_time = time.time()
+    _, file_system, _ = _get_dependencies(segment, telemetry)
+
+    use_case = StatsUseCase(file_system, telemetry)
+
+    try:
+        result = use_case.execute(Path(segment), window=window)
+
+        # Format output
+        lines = []
+        lines.append("╭" + "─" * 50 + "╮")
+        lines.append("│" + " " * 15 + "Trifecta Stats" + " " * 23 + "│")
+        lines.append(f"│           Last {window} days" if window > 0 else "│                  All time" + " " * 22 + "│")
+        lines.append("╰" + "─" * 50 + "╯")
+        lines.append("")
+
+        # Summary
+        summary = result["summary"]
+        lines.append("Summary")
+        lines.append("─" * 50)
+        lines.append(f"  Total searches:      {summary['total_searches']}")
+        lines.append(f"  Hits:                {summary['hits']}")
+        lines.append(f"  Zero hits:           {summary['zero_hits']}")
+        lines.append(f"  Hit rate:            {summary['hit_rate']}%")
+        lines.append(f"  Avg latency:         {summary['avg_latency_ms']:.1f}ms")
+        lines.append("")
+
+        # Top zero-hit queries
+        lines.append("Top Zero-Hit Queries")
+        lines.append("─" * 50)
+        for item in result["top_zero_hit_queries"][:10]:
+            lines.append(f"  [{item['count']:2d}] {item['query'][:50]}")
+        lines.append("")
+
+        # Query type breakdown
+        lines.append("Query Type Breakdown")
+        lines.append("─" * 50)
+        total = sum(result["query_type_breakdown"].values())
+        for qtype in ["meta", "impl", "unknown"]:
+            count = result["query_type_breakdown"].get(qtype, 0)
+            pct = count / total * 100 if total > 0 else 0
+            lines.append(f"  {qtype:<10} {count:>3}  ({pct:>5.1f}%)")
+        lines.append("")
+
+        # Hit target breakdown
+        if result["hit_target_breakdown"]:
+            lines.append("Hit Target Breakdown")
+            lines.append("─" * 50)
+            total_hits = sum(result["hit_target_breakdown"].values())
+            for target, count in sorted(
+                result["hit_target_breakdown"].items(), key=lambda x: -x[1]
+            ):
+                pct = count / total_hits * 100 if total_hits > 0 else 0
+                lines.append(f"  {target:<10} {count:>3}  ({pct:>5.1f}%)")
+            lines.append("")
+
+        typer.echo("\n".join(lines))
+        telemetry.observe("ctx.stats", int((time.time() - start_time) * 1000))
+
+    except Exception as e:
+        telemetry.event(
+            "ctx.stats", {}, {"status": "error"}, int((time.time() - start_time) * 1000)
+        )
+        typer.echo(_format_error(e, "Stats Error"), err=True)
+        raise typer.Exit(1)
+    finally:
+        telemetry.flush()
+
+
+@ctx_app.command("plan")
+def plan(
+    segment: str = typer.Option(..., "--segment", "-s", help=HELP_SEGMENT),
+    task: str = typer.Option(..., "--task", "-t", help="Task description to plan"),
+    telemetry_level: str = typer.Option("lite", "--telemetry", help=HELP_TELEMETRY),
+    json_output: bool = typer.Option(False, "--json", "-j", help="Output as JSON"),
+) -> None:
+    """Generate execution plan using PRIME index (no RAG)."""
+    telemetry = _get_telemetry(segment, telemetry_level)
+    _, file_system, _ = _get_dependencies(segment, telemetry)
+
+    use_case = PlanUseCase(file_system, telemetry)
+
+    try:
+        result = use_case.execute(Path(segment), task)
+
+        if json_output:
+            typer.echo(json.dumps(result, indent=2))
+        else:
+            # Human-readable output
+            lines = []
+            lines.append("╭" + "─" * 50 + "╮")
+            lines.append("│" + " " * 12 + "Execution Plan" + " " * 24 + "│")
+            lines.append("╰" + "─" * 50 + "╯")
+            lines.append("")
+
+            status = "✅ HIT" if result["plan_hit"] else "⚠️ NO HIT"
+            lines.append(f"Status: {status}")
+            lines.append("")
+
+            if result["selected_feature"]:
+                lines.append(f"Selected Feature: {result['selected_feature']}")
+            else:
+                lines.append("Selected Feature: (none - using entrypoints)")
+            lines.append("")
+
+            if result["chunk_ids"]:
+                lines.append(f"Chunk IDs: {', '.join(result['chunk_ids'][:3])}")
+                lines.append(f"            ... ({len(result['chunk_ids'])} total)")
+            else:
+                lines.append("Chunk IDs: (none)")
+            lines.append("")
+
+            if result["paths"]:
+                lines.append(f"Paths: {', '.join(result['paths'][:3])}")
+                if len(result["paths"]) > 3:
+                    lines.append(f"       ... ({len(result['paths'])} total)")
+            else:
+                lines.append("Paths: (entrypoints)")
+            lines.append("")
+
+            lines.append("Next Steps:")
+            for i, step in enumerate(result["next_steps"], 1):
+                lines.append(f"  {i}. {step['action'].capitalize()}: {step['target']}")
+            lines.append("")
+
+            budget = result["budget_est"]
+            lines.append(f"Budget Estimate: ~{budget['tokens']} tokens")
+            lines.append(f"  ({budget['why']})")
+            lines.append("")
+
+            typer.echo("\n".join(lines))
+
+    except Exception as e:
+        typer.echo(_format_error(e, "Plan Error"), err=True)
+        raise typer.Exit(1)
+
+
+@ctx_app.command("eval-plan")
+def eval_plan(
+    segment: str = typer.Option(..., "--segment", "-s", help=HELP_SEGMENT),
+    dataset: str = typer.Option(
+        "docs/plans/t9_plan_eval_tasks.md",
+        "--dataset",
+        "-d",
+        help="Path to evaluation dataset markdown file",
+    ),
+    telemetry_level: str = typer.Option("lite", "--telemetry", help=HELP_TELEMETRY),
+) -> None:
+    """Evaluate ctx.plan against a dataset of tasks."""
+    import re
+
+    telemetry = _get_telemetry(segment, telemetry_level)
+    _, file_system, _ = _get_dependencies(segment, telemetry)
+
+    # Load dataset from markdown
+    dataset_path = Path(dataset)
+    if not dataset_path.exists():
+        typer.echo(f"❌ Dataset file not found: {dataset_path}")
+        raise typer.Exit(1)
+
+    content = dataset_path.read_text()
+
+    # Extract tasks from markdown (quoted strings after numbers)
+    tasks = re.findall(r'^\d+\.\s+"([^"]+)"', content, re.MULTILINE)
+
+    if not tasks:
+        typer.echo(f"❌ No tasks found in dataset file")
+        raise typer.Exit(1)
+
+    # Run evaluation
+    use_case = PlanUseCase(file_system, telemetry)
+
+    results = []
+    plan_hits = 0
+    plan_misses = 0
+
+    selected_by_counts = {"feature": 0, "alias": 0, "fallback": 0}
+
+    for task in tasks:
+        result = use_case.execute(Path(segment), task)
+        results.append({"task": task, "result": result})
+
+        if result["plan_hit"]:
+            plan_hits += 1
+            selected_by_counts[result.get("selected_by", "fallback")] += 1
+        else:
+            plan_misses += 1
+
+    total = len(tasks)
+    plan_miss_rate = (plan_misses / total * 100) if total > 0 else 0
+
+    # Output report
+    typer.echo("=" * 60)
+    typer.echo("EVALUATION REPORT: ctx.plan")
+    typer.echo("=" * 60)
+    typer.echo("")
+    typer.echo(f"Dataset: {dataset_path}")
+    typer.echo(f"Segment: {segment}")
+    typer.echo(f"Total tasks: {total}")
+    typer.echo("")
+    typer.echo("Results:")
+    typer.echo(f"  Plan hits:   {plan_hits} ({plan_hits/total*100:.1f}%)")
+    typer.echo(f"  Plan misses: {plan_misses} ({plan_miss_rate:.1f}%)")
+    typer.echo("")
+    typer.echo("Selection Method Distribution:")
+    for method, count in selected_by_counts.items():
+        pct = count / total * 100 if total > 0 else 0
+        typer.echo(f"  {method}: {count} ({pct:.1f}%)")
+    typer.echo("")
+
+    # Top missed tasks
+    missed = [r for r in results if not r["result"]["plan_hit"]]
+    if missed:
+        typer.echo("Top Missed Tasks:")
+        for i, item in enumerate(missed[:5], 1):
+            task_preview = item["task"][:60] + "..." if len(item["task"]) > 60 else item["task"]
+            typer.echo(f"  {i}. {task_preview}")
+        typer.echo("")
+
+    # Examples of improvement (before/after comparison)
+    typer.echo("Examples (task → selected_feature → returned):")
+    example_count = 0
+    for item in results:
+        if item["result"]["plan_hit"] and item["result"].get("selected_by") in ["alias", "feature"]:
+            task_short = item["task"][:50] + "..." if len(item["task"]) > 50 else item["task"]
+            feature = item["result"]["selected_feature"]
+            chunks = len(item["result"]["chunk_ids"])
+            paths = len(item["result"]["paths"])
+            typer.echo(f"  • '{task_short}'")
+            typer.echo(f"    → {feature} ({chunks} chunks, {paths} paths)")
+            example_count += 1
+            if example_count >= 3:
+                break
+
+    typer.echo("")
+
+    # Gate decision
+    if plan_miss_rate < 20:
+        typer.echo("✅ GO: plan_miss_rate < 20%")
+    else:
+        typer.echo(f"❌ NO-GO: plan_miss_rate {plan_miss_rate:.1f}% >= 20%")
+
+    telemetry.flush()
 
 
 @ctx_app.command("sync")

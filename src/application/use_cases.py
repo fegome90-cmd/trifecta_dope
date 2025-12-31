@@ -1,3 +1,4 @@
+import json
 import re
 import subprocess
 from datetime import datetime
@@ -777,3 +778,159 @@ class AutopilotUseCase:
 
         except Exception as e:
             return {"status": "error", "reason": f"Failed to execute autopilot: {str(e)}"}
+
+
+class StatsUseCase:
+    """Generate telemetry statistics for a segment."""
+
+    def __init__(self, file_system: FileSystemAdapter, telemetry: Any = None) -> None:
+        self.file_system = file_system
+        self.telemetry = telemetry
+
+    def _classify_query_type(self, query: str) -> str:
+        """Heurística de clasificación de query."""
+        if not query:
+            return "unknown"
+        q_lower = query.lower()
+
+        # Meta: qué hacer / estado / guía / arquitectura / procedimiento
+        meta_keywords = [
+            "how",
+            "what",
+            "where",
+            "plan",
+            "guide",
+            "architecture",
+            "design",
+            "status",
+            "overview",
+            "explain",
+            "description",
+        ]
+
+        # Impl: código específico / símbolos / funciones / archivos
+        impl_keywords = [
+            "function",
+            "class",
+            "method",
+            "file",
+            "implement",
+            "code",
+            "symbol",
+            "def ",
+            "class ",
+            "import",
+        ]
+
+        if any(kw in q_lower for kw in impl_keywords):
+            return "impl"
+        elif any(kw in q_lower for kw in meta_keywords):
+            return "meta"
+        else:
+            return "unknown"
+
+    def _classify_hit_target(self, chunk_id: str) -> str:
+        """Clasificar target por chunk_id prefix."""
+        if not chunk_id:
+            return "other"
+        if chunk_id.startswith("skill:"):
+            return "skill"
+        elif chunk_id.startswith("prime:"):
+            return "prime"
+        elif chunk_id.startswith("session:"):
+            return "session"
+        elif chunk_id.startswith("agent:"):
+            return "agent"
+        elif chunk_id.startswith("ref:"):
+            return "ref"
+        else:
+            return "other"
+
+    def execute(self, target_path: Path, window: int = 0) -> dict[str, Any]:
+        """Generate statistics from telemetry events.
+
+        Args:
+            target_path: Path to segment directory
+            window: Number of days to look back (0 = all)
+
+        Returns:
+            Dictionary with statistics
+        """
+        from collections import Counter
+        from datetime import datetime, timezone, timedelta
+
+        if self.telemetry:
+            self.telemetry.incr("ctx_stats_count")
+
+        events_path = target_path / "_ctx" / "telemetry" / "events.jsonl"
+
+        # Load events
+        events = []
+        if events_path.exists():
+            with open(events_path) as f:
+                for line in f:
+                    if line.strip():
+                        try:
+                            events.append(json.loads(line))
+                        except json.JSONDecodeError:
+                            pass
+
+        # Filter by window
+        if window > 0:
+            cutoff = datetime.now(timezone.utc) - timedelta(days=window)
+            events = [
+                e
+                for e in events
+                if datetime.fromisoformat(e["ts"].replace("Z", "+00:00")) >= cutoff
+            ]
+
+        # Filter searches only
+        searches = [e for e in events if e["cmd"] == "ctx.search"]
+        total_searches = len(searches)
+        hits = sum(1 for e in searches if e.get("result", {}).get("hits", 0) > 0)
+        zero_hits = total_searches - hits
+        hit_rate = hits / total_searches * 100 if total_searches > 0 else 0
+
+        latencies = [e.get("timing_ms", 0) for e in searches if e.get("timing_ms", 0) > 0]
+        avg_latency = sum(latencies) / len(latencies) if latencies else 0
+
+        # Top zero-hit queries
+        zero_hit_queries = [
+            (e.get("args", {}).get("query", ""), e.get("args", {}).get("query", ""))
+            for e in searches
+            if e.get("result", {}).get("hits", 0) == 0
+        ]
+        query_counts = Counter(q for q, _ in zero_hit_queries)
+
+        # Breakdown por query_type
+        query_type_counts: Counter[str] = Counter()
+        for e in searches:
+            query = e.get("args", {}).get("query", "")
+            qtype = self._classify_query_type(query)
+            query_type_counts[qtype] += 1
+
+        # Breakdown por hit_target
+        hit_target_counts: Counter[str] = Counter()
+        for e in searches:
+            returned_ids = e.get("result", {}).get("returned_ids", [])
+            if returned_ids:
+                for cid in returned_ids:
+                    target = self._classify_hit_target(cid)
+                    hit_target_counts[target] += 1
+
+        return {
+            "summary": {
+                "total_searches": total_searches,
+                "hits": hits,
+                "zero_hits": zero_hits,
+                "hit_rate": round(hit_rate, 1),
+                "avg_latency_ms": round(avg_latency, 1),
+            },
+            "top_zero_hit_queries": [
+                {"query": q, "count": c} for q, c in query_counts.most_common(10)
+            ],
+            "query_type_breakdown": {
+                qt: query_type_counts[qt] for qt in ["meta", "impl", "unknown"]
+            },
+            "hit_target_breakdown": dict(hit_target_counts),
+        }
