@@ -21,7 +21,6 @@ def parse_feature_map(prime_path: Path) -> dict[str, list[str]]:
 
     in_table = False
     found_header = False
-
     for line in lines:
         if line.strip().startswith("### index.feature_map"):
             in_table = True
