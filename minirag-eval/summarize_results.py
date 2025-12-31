@@ -31,6 +31,7 @@ def main() -> None:
         "temporal_recency": parse_results(base / "temporal_recency.md"),
         "contradictions": parse_results(base / "contradictions.md"),
         "noise_injection": parse_results(base / "noise_injection.md"),
+        "lsp_ast_positive": parse_results(base / "lsp_ast_positive.md"),
     }
 
     query_sets = {
@@ -86,6 +87,18 @@ def main() -> None:
             "telemetry analysis guitarra",
             "roadmap v2 meteorologia",
             "lsp diagnostics pizza",
+        ],
+        "lsp_ast_positive": [
+            "implementacion de ast tree-sitter",
+            "ast parser tree-sitter skeletonizer",
+            "que extraer del AST",
+            "implementacion de lsp symbols hover diagnostics",
+            "workspace symbols lsp search",
+            "lsp document symbols structure",
+            "lsp go to definition hover",
+            "lsp diagnostics hot files",
+            "fase 3 ast lsp ide grade fluidity",
+            "ast lsp hot files roadmap roi",
         ],
     }
 
@@ -174,6 +187,17 @@ def main() -> None:
         payload = results["noise_injection"].get(query, {})
         return any("all_bridges.md" in s for s in top_sources(payload))
 
+    def lsp_ast_pass(query: str) -> bool:
+        payload = results["lsp_ast_positive"].get(query, {})
+        sources = top_sources(payload)
+        return any(
+            "trifecta-context-loading" in s
+            or "research_roi_matrix" in s
+            or "agent_factory" in s
+            or "all_bridges.md" in s
+            for s in sources
+        )
+
     matchers = {
         "core": core_pass,
         "negative_rejection": negative_pass,
@@ -181,6 +205,7 @@ def main() -> None:
         "temporal_recency": temporal_pass,
         "contradictions": contradictions_pass,
         "noise_injection": noise_pass,
+        "lsp_ast_positive": lsp_ast_pass,
     }
 
     for module, qs in query_sets.items():
