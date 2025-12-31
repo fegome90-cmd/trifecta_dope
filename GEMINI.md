@@ -16,3 +16,9 @@
       capa_modificada: "Infrastructure | Configuration"
       impacto_contrato: "None"
       siguiente_paso_tecnico: "Proceed to Legacy Burn-Down Sprint (Phase 2)."
+- history:
+    - user_prompt_summary: "Eliminar legacy root _ctx/* y arreglar regresión en tests."
+      agent_response_summary: "Validated migration of root `_ctx` files to segment-specific names. Fixed regression in `test_plan_use_case.py` by aligning assertions with L3/L4 PlanMatch logic. Verified all 162 tests pass and Legacy Scan is green."
+      capa_modificada: "Refactor | Verification | Documentation"
+      impacto_contrato: "None. Legacy debt reduced."
+      siguiente_paso_tecnico: "Proceed to next item in Legacy Burn-Down or Phase 2 tasks."
