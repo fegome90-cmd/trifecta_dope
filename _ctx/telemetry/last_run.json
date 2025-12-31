@@ -1,30 +1,30 @@
 {
-  "run_id": "run_1767198504",
-  "ts": "2025-12-31T16:28:24.804906+00:00",
+  "run_id": "run_1767201030",
+  "ts": "2025-12-31T17:10:30.982837+00:00",
   "metrics_delta": {
     "ctx_plan_count": 40
   },
   "latencies": {
     "ctx.plan": {
       "count": 40,
-      "p50_ms": 10.0,
-      "p95_ms": 11.0,
-      "max_ms": 11.0
+      "p50_ms": 11.0,
+      "p95_ms": 12.0,
+      "max_ms": 13.0
     }
   },
   "tokens": {
     "ctx.plan": {
       "count": 40,
       "total_input_tokens": 0,
-      "total_output_tokens": 1957,
-      "total_tokens": 1957,
+      "total_output_tokens": 2200,
+      "total_tokens": 2200,
       "total_retrieved_tokens": 0,
-      "avg_tokens_per_call": 48.9
+      "avg_tokens_per_call": 55.0
     }
   },
   "top_warnings": [],
   "pack_state": {
     "pack_sha": "8b94080df77ba075",
-    "pack_mtime": 1767195769.268743
+    "pack_mtime": 1767200727.0134966
   }
 }
