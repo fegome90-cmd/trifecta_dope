@@ -4,24 +4,54 @@ from pathlib import Path
 
 
 def parse_feature_map(prime_path: Path) -> dict[str, list[str]]:
+    """Parse PRIME index.feature_map table into feature -> paths mapping.
+
+    Args:
+        prime_path: Path to PRIME markdown file
+
+    Returns:
+        Dictionary mapping feature names to lists of file paths
+
+    Raises:
+        ValueError: If feature_map table is malformed
+    """
     content = prime_path.read_text()
     lines = content.splitlines()
     feature_map: dict[str, list[str]] = {}
 
     in_table = False
+    found_header = False
+
     for line in lines:
         if line.strip().startswith("### index.feature_map"):
             in_table = True
             continue
         if in_table and line.strip().startswith("### "):
             break
-        if in_table and line.strip().startswith("|") and "Feature" not in line:
-            cols = [c.strip() for c in line.strip("|").split("|")]
-            if len(cols) >= 3:
-                feature = cols[0]
-                paths_raw = cols[2]
-                paths = [p.strip().strip("`") for p in paths_raw.split(",") if p.strip()]
-                feature_map[feature] = paths
+
+        if not in_table or not line.strip().startswith("|"):
+            continue
+
+        cols = [c.strip() for c in line.strip("|").split("|")]
+
+        # Skip separator row (contains only dashes and pipes)
+        if len(cols) >= 1 and all(c == "" or all(ch == "-" for ch in c) for c in cols):
+            continue
+
+        # Header row starts with "Feature"
+        if len(cols) >= 1 and cols[0] == "Feature":
+            found_header = True
+            continue
+
+        # Data row: must have at least 3 columns (feature, chunk_ids, paths)
+        if found_header and len(cols) >= 3 and cols[0]:
+            feature = cols[0]
+            paths_raw = cols[2]
+            paths = [p.strip().strip("`") for p in paths_raw.split(",") if p.strip()]
+            feature_map[feature] = paths
+
+    if in_table and not found_header:
+        raise ValueError("Malformed feature_map table: header row not found")
 
     return feature_map
 

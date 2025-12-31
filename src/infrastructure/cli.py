@@ -543,8 +543,11 @@ def eval_plan(
     if prime_path:
         try:
             feature_map = parse_feature_map(prime_path)
-        except Exception:
-            pass  # Feature map not available, PCC metrics will be empty
+        except Exception as e:
+            typer.echo(f"⚠️  PCC Metrics: Failed to parse feature_map from {prime_path.name}")
+            typer.echo(f"   Error: {e}")
+            typer.echo("   PCC metrics will be disabled for this run.")
+            typer.echo("")
 
     # Load dataset from markdown
     dataset_path = Path(dataset).resolve()
