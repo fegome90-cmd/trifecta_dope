@@ -14,8 +14,13 @@
   "ctx_validate_fail_count": 2,
   "ctx_stats_count": 4,
   "ctx_plan_count": 955,
-  "telemetry_events_attempted": 7,
-  "telemetry_events_written": 7,
-  "ast_parse_count": 1,
-  "ast_cache_miss_count": 1
+  "telemetry_events_attempted": 215,
+  "telemetry_events_written": 215,
+  "ast_parse_count": 40,
+  "ast_cache_miss_count": 23,
+  "ast_symbols_success_count": 41,
+  "file_read_raw_bytes_total": 637382,
+  "file_read_excerpt_bytes_total": 252933,
+  "ast_snippet_success_count": 16,
+  "lsp_spawn_count": 13
 }

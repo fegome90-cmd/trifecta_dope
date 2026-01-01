@@ -28,14 +28,28 @@ from src.infrastructure.file_system import FileSystemAdapter
 from src.infrastructure.telemetry import Telemetry
 from src.infrastructure.templates import TemplateRenderer
 
-app = typer.Typer(help="Trifecta Context Loading CLI")
-ctx_app = typer.Typer(help="Context Pack management commands")
+app = typer.Typer(
+    name="trifecta",
+    help="Generate and manage Trifecta documentation packs for code segments.",
+)
+
+# AST/LSP Integration (Phase 2a/2b)
+from src.infrastructure.cli_ast import ast_app
+
+app.add_typer(ast_app, name="ast")
+
+ctx_app = typer.Typer(help="Manage Trifecta Context Packs (ctx.search, ctx.get).")
 session_app = typer.Typer(help="Session logging commands")
 telemetry_app = typer.Typer(help="Telemetry analysis commands")
 
 app.add_typer(ctx_app, name="ctx")
 app.add_typer(session_app, name="session")
 app.add_typer(telemetry_app, name="telemetry")
+
+# AST/LSP Integration (Phase 2a)
+from src.infrastructure.cli_ast import ast_app
+
+app.add_typer(ast_app, name="ast")
 
 # Legacy Burn-Down
 legacy_app = typer.Typer(help="Legacy Burn-Down commands")
@@ -1291,5 +1305,7 @@ def legacy_scan(
             for err in errors:
                 typer.echo(f"   - {err}")
             raise typer.Exit(code=1)
+
+
 if __name__ == "__main__":
     app()
