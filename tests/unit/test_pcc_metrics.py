@@ -42,6 +42,22 @@ def test_parse_feature_map_feature_in_name(tmp_path: Path) -> None:
     assert feature_map["telemetry"] == ["src/telemetry.py"]
 
 
+def test_parse_feature_map_separator_with_alignment(tmp_path: Path) -> None:
+    """Verify that separator rows with alignment markers (:) are correctly skipped."""
+    prime = tmp_path / "prime_test.md"
+    prime.write_text(
+        """
+### index.feature_map
+| Feature | Chunk IDs | Paths | Keywords |
+|:--------|----------:|:-----:|----------|
+| telemetry | `skill:*` | `src/telemetry.py` | telemetry |
+"""
+    )
+
+    feature_map = parse_feature_map(prime)
+    assert feature_map["telemetry"] == ["src/telemetry.py"]
+
+
 def test_parse_feature_map_malformed_no_header(tmp_path: Path) -> None:
     """Verify error handling when the feature_map table lacks the required header row."""
     prime = tmp_path / "prime_test.md"

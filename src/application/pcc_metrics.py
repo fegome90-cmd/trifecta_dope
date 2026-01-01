@@ -34,8 +34,9 @@ def parse_feature_map(prime_path: Path) -> dict[str, list[str]]:
 
         cols = [c.strip() for c in line.strip("|").split("|")]
 
-        # Skip separator row (contains only dashes and pipes)
-        if len(cols) >= 1 and all(c == "" or all(ch == "-" for ch in c) for c in cols):
+        # Skip separator row: each non-empty column must contain only dashes and/or colons
+        # (colons indicate alignment in markdown tables, e.g., ":---" for left-align)
+        if len(cols) >= 1 and all(not c or all(ch in ":-" for ch in c) for c in cols):
             continue
 
         # Header row starts with "Feature"
