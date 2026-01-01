@@ -1,0 +1,66 @@
+{
+  "note": "PR#2 Telemetry Events Evidence - Sample sanitized output",
+  "generated_at": "2026-01-01T07:02:49Z",
+  "events_jsonl_samples": [
+    {
+      "ts": "2026-01-01T07:02:49Z",
+      "run_id": "run_1767250969",
+      "segment_id": "b64328bb",
+      "cmd": "ast.parse",
+      "args": {},
+      "result": {"status": "ok", "symbols_count": 0},
+      "timing_ms": 0,
+      "x": {
+        "file": "/workspaces/trifecta_dope/demo_pr2_sample.py",
+        "content_sha8": "2dfc080c",
+        "skeleton_bytes": 2,
+        "cache_hit": false
+      }
+    },
+    {
+      "ts": "2026-01-01T07:02:49Z",
+      "run_id": "run_1767250969",
+      "segment_id": "b64328bb",
+      "cmd": "selector.resolve",
+      "args": {"query": "sym://python/Demo"},
+      "result": {"status": "not_resolved", "resolved": false},
+      "timing_ms": 0,
+      "x": {
+        "symbol_query": "Demo",
+        "resolved": false,
+        "matches": 0,
+        "ambiguous": false
+      }
+    }
+  ],
+  "last_run_json_sample": {
+    "run_id": "run_1767250969",
+    "ts": "2026-01-01T07:02:49Z",
+    "ast": {
+      "ast_parse_count": 1,
+      "ast_cache_hit_count": 0,
+      "ast_cache_miss_count": 1,
+      "ast_cache_hit_rate": 0.0
+    },
+    "lsp": {
+      "lsp_spawn_count": 0,
+      "lsp_ready_count": 0,
+      "lsp_failed_count": 0,
+      "lsp_fallback_count": 0,
+      "lsp_ready_rate": 0.0,
+      "lsp_fallback_rate": 0.0
+    },
+    "file_read": {
+      "skeleton_bytes": 0,
+      "excerpt_bytes": 0,
+      "raw_bytes": 0,
+      "total_bytes": 0
+    },
+    "telemetry_drops": {
+      "lock_skipped": 0,
+      "attempted": 2,
+      "written": 2,
+      "drop_rate": 0.0
+    }
+  }
+}

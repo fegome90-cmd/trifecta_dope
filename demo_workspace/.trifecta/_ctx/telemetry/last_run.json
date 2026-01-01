@@ -1,6 +1,6 @@
 {
-  "run_id": "run_1767250969",
-  "ts": "2026-01-01T07:02:49.569077+00:00",
+  "run_id": "run_1767250953",
+  "ts": "2026-01-01T07:02:33.541641+00:00",
   "metrics_delta": {
     "telemetry_events_attempted": 2,
     "telemetry_events_written": 2,
@@ -26,11 +26,11 @@
     },
     "selector.resolve": {
       "count": 1,
-      "total_input_tokens": 4,
+      "total_input_tokens": 3,
       "total_output_tokens": 11,
-      "total_tokens": 15,
+      "total_tokens": 14,
       "total_retrieved_tokens": 0,
-      "avg_tokens_per_call": 15.0
+      "avg_tokens_per_call": 14.0
     }
   },
   "ast": {
@@ -62,7 +62,7 @@
   },
   "top_warnings": [],
   "pack_state": {
-    "pack_sha": "365c67055285ad84",
-    "pack_mtime": 1767230435.5603714
+    "pack_sha": null,
+    "pack_mtime": null
   }
 }
