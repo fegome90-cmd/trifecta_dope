@@ -2,18 +2,30 @@
 title: "Auditoría de Arquitectura: Background Tasks & Context Bundles"
 date: 2026-01-01
 scope: Integration Opportunities Analysis
-status: Architecture Review
+status: Architecture Review (Updated Post-Merge)
 auditor: GitHub Copilot (Agent Auditor)
-version: 1.0
+version: 1.1
+last_updated: 2026-01-01 (Post-PR #1 Integration)
+baseline_commit: 8e57022
 ---
 
 # Auditoría de Arquitectura: Background Tasks & Context Bundles para Trifecta
 
+> **ACTUALIZACIÓN v1.1**: Integrados 54+ commits de origin/main (incluyendo PR #1: PCC Metrics, Result Monad, FP Gate, Router v1 calibration, T1/T2 features). Pipeline actualizado con nuevas capacidades.
+
 ## EXECUTIVE SUMMARY (8–12 líneas)
 
-Trifecta es un sistema CLI de "Programming Context Calling" (PCC) operacional en MVP, con arquitectura Clean Architecture establecida (domain/application/infrastructure), telemetría local-first, y Context Packs generativos. El presente análisis identifica **12 puntos de integración concretos** para incorporar dos conceptos: (1) **Background Tasks** (ejecución asíncrona de agentes/tareas largas con state tracking y report streaming) y (2) **Context Bundles** (cajas negras auditables que empaquetan: prompt inicial, tool calls ejecutados, contexto leído, eventos LSP/AST, policies de filtrado, y manifest versionado).
+Trifecta es un sistema CLI de "Programming Context Calling" (PCC) operacional en **v1.0+**, con arquitectura Clean Architecture establecida (domain/application/infrastructure), telemetría local-first, Context Packs generativos, y **PCC Metrics** (feature_map evaluation). El sistema ahora incluye: (1) **Result Monad** (Railway Oriented Programming para error handling), (2) **FP Gate** (validación fail-closed de segmentos), (3) **Router v1** (calibrado y frozen), y (4) **Whole-file chunking con IDs estables** (T2). El presente análisis identifica **12 puntos de integración concretos** para incorporar dos conceptos: (1) **Background Tasks** (ejecución asíncrona de agentes/tareas largas con state tracking y report streaming) y (2) **Context Bundles** (cajas negras auditables que empaquetan: prompt inicial, tool calls ejecutados, contexto leído, eventos LSP/AST, policies de filtrado, y manifest versionado).
 
-**Hallazgo crítico**: El pipeline actual tiene **3 riesgos split-brain** (telemetry.py flock, context_pack.json sin lock, session.md append sin coordinator), **2 bloat vectors** (node_modules y .git pueden ser capturados por bundles si no hay denylist estricta), y **cero instrumentación para tool-call recording** (no hay hooks entre CLI → UseCase → FileSystem).
+**Hallazgo crítico**: El pipeline actual tiene **3 riesgos split-brain** (telemetry.py flock, context_pack.json sin lock, session.md append sin coordinator), **2 bloat vectors** (node_modules y .git pueden ser capturados por bundles si no hay denylist estricta), y **cero instrumentación para tool-call recording** (no hay hooks entre CLI → UseCase → FileSystem). **NUEVO**: PCC Metrics (feature_map evaluation) ya implementados proveen base para medir bundle effectiveness.
+
+**Cambios Clave Integrados (PR #1 + 54 commits)**:
+- **PCC Metrics**: `parse_feature_map()`, `evaluate_pcc()`, `summarize_pcc()` para medir path_correct, false_fallback, safe_fallback
+- **Result Monad**: `Ok[T] | Err[E]` para Railway Oriented Programming (domain layer)
+- **FP Gate**: `validate_segment_fp()` wrapper con fail-closed validation
+- **Router v1**: Calibrado y frozen (guardrails hardened)
+- **Whole-file Chunking (T2)**: IDs estables, chunking_method tracking
+- **Context Pack v1 Schema (T1)**: Manifest con digest, index, chunks
 
 **Recomendaciones priorizadas**:
 1. **MVP-1 (Bundle Recorder)**: Agregar `ContextBundleRecorder` a CLI como wrapper de telemetry, capturando stdin/stdout + tool_calls + file_reads (week 1, low-risk).
@@ -62,6 +74,8 @@ CLI Args                    ┌────────────────�
                     │ • TemplateRenderer       │  ─────> Generación MD templates
                     │ • ContextService         │  ─────> JSON load context_pack
                     │ • AliasLoader             │  ─────> YAML parse aliases
+                    │ • PCCMetrics (NEW v1.1)  │  ─────> feature_map parsing + eval
+                    │ • Validators (FP Gate)   │  ─────> Result[ValidationResult, Err]
                     └──────────────────────────┘
 
                     I/O per Stage:
@@ -86,19 +100,24 @@ CLI Args                    ┌────────────────�
                     trifecta load            use_cases.py             MacroLoadUseCase (Plan A/B)
                     trifecta session append  use_cases.py             SessionAppendUseCase
                     trifecta ctx stats       cli.py (direct)          Telemetry JSON read
+                    trifecta eval plan (v1.1) pcc_metrics.py          parse_feature_map + evaluate_pcc
 ```
 
 ### 1.2 Ownership Matrix (Quién Escribe Qué)
 
-| Artefacto | Writer(s) | Lock Strategy | Risk |
+| Artefacto | Writer(s) | Lock Strategy | Risk | **v1.1 Update** |
+|-----------|-----------|---------------|------|-----------------|
 |-----------|-----------|---------------|------|
-| `_ctx/context_pack.json` | BuildContextPackUseCase (solo) | **NONE** ⚠️ | Split-brain si 2 builds concurrentes |
-| `_ctx/session_*.md` | SessionAppendUseCase (append) | AtomicWriter (temp+rename) | Race condition en append sin coordinator |
-| `_ctx/telemetry/events.jsonl` | Telemetry.event (multi-caller) | fcntl.LOCK_EX + LOCK_NB (skip if busy) | Log loss acceptable (design choice) |
-| `_ctx/telemetry/metrics.json` | Telemetry.flush (once per run) | Single-writer (no concurrent runs expected) | Safe for MVP |
-| `_ctx/telemetry/last_run.json` | Telemetry.flush | Overwrite-safe (single writer) | Safe |
-| `skill.md`, `prime_*.md`, `agent.md` | Human/Agent edits (infrequent) | **NONE** | Assumed low contention |
-| `_ctx/aliases.yaml` | AliasLoader (read-only in code) | N/A | Safe (read-only) |
+| Artefacto | Writer(s) | Lock Strategy | Risk | **v1.1 Update** |
+|-----------|-----------|---------------|------|-----------------|
+| `_ctx/context_pack.json` | BuildContextPackUseCase (solo) | **NONE** ⚠️ | Split-brain si 2 builds concurrentes | **Schema v1 con digest/index/chunks** |
+| `_ctx/session_*.md` | SessionAppendUseCase (append) | AtomicWriter (temp+rename) | Race condition en append sin coordinator | Mismo riesgo |
+| `_ctx/telemetry/events.jsonl` | Telemetry.event (multi-caller) | fcntl.LOCK_EX + LOCK_NB (skip if busy) | Log loss acceptable (design choice) | Mismo comportamiento |
+| `_ctx/telemetry/metrics.json` | Telemetry.flush (once per run) | Single-writer (no concurrent runs expected) | Safe for MVP | **PCC metrics agregados** |
+| `_ctx/telemetry/last_run.json` | Telemetry.flush | Overwrite-safe (single writer) | Safe | Mismo |
+| `skill.md`, `prime_*.md`, `agent.md` | Human/Agent edits (infrequent) | **NONE** | Assumed low contention | **FP Gate valida estructura** |
+| `_ctx/aliases.yaml` | AliasLoader (read-only in code) | N/A | Safe (read-only) | Mismo |
+| `_ctx/prime_*.md` → feature_map (NEW) | Human edits (PRIME index) | **NONE** | Safe (read-only by PCC metrics) | **Usado por evaluate_pcc()** |
 
 **RIESGO CRÍTICO DETECTADO**:  
 `context_pack.json` puede ser corrompido por `trifecta ctx build` concurrente (ej: 2 agentes corriendo `build` en paralelo). NO hay lock ni versioning.
@@ -121,10 +140,14 @@ CLI Args                    ┌────────────────�
 | **O10** | `trifecta bundle replay <bundle>` | **Bundle** | Replay de comandos desde un bundle (dry-run de tool calls para debug) | Replay puede tener side-effects si no se mockean writes | HIGH: Mockear FileSystemAdapter en replay mode, dry-run only | Replay engine con mocked I/O | `replay_fidelity_score` (% tool calls replayables) |
 | **O11** | `FileSystemAdapter.scan_files()` | **Bundle** | Grabar lista de archivos escaneados (paths) como metadata del bundle | Scan puede capturar node_modules, .git (bloat) | MIN: Agregar exclusion patterns (GLOB) en bundle config | Denylist YAML | `scanned_paths_count`, `excluded_paths_count` |
 | **O12** | `Telemetry.flush()` post-run | **Bundle** | Empaquetar telemetry completa como bundle footer (summary + SHA of all events) | Flush puede fallar silently (design actual: "never break app") | MID: Agregar bundle finalization step con retry + warning if flush fails | Bundle finalization hook | `bundle_finalization_success_rate` |
+| **O13 (NEW v1.1)** | `pcc_metrics.py` → feature_map eval | **Bundle** | Grabar PCC metrics (path_correct, false_fallback, safe_fallback) por task en bundle manifest | Metrics ya calculados, solo falta logging | MIN: Extend bundle manifest con `pcc_metrics` field | Existing PCC metrics | `pcc_bundle_capture_rate` |
+| **O14 (NEW v1.1)** | `validate_segment_fp()` → FP Gate | **Bundle** | Grabar validation result (Ok/Err) en bundle para audit trail | Result monad ya existe, solo wrap | MIN: Log FP Gate result en bundle pre-flight checks | Result monad from domain | `fp_gate_failure_in_bundle_count` |
 
 ---
 
 ## 3. PROPUESTA MVP (3 Iteraciones)
+
+> **v1.1 NOTE**: Con PCC Metrics y Result Monad ya implementados, las iteraciones pueden acelerar integrando estas primitivas.
 
 ### 3.1 Iteración 1: Bundle Recorder Mínimo (Week 1)
 
@@ -136,6 +159,8 @@ CLI Args                    ┌────────────────�
   - `BundleRecorder.start_session(run_id, command, args)`
   - `BundleRecorder.log_tool_call(name, args, result, timing_ms)`
   - `BundleRecorder.log_file_read(path, lines_read, char_count)`
+  - `BundleRecorder.log_pcc_metrics(metrics: dict)` **(NEW v1.1)** - integrar con `evaluate_pcc()`
+  - `BundleRecorder.log_fp_gate_result(result: Result[ValidationResult, Err])` **(NEW v1.1)**
   - `BundleRecorder.finalize() -> Path` (genera manifest.json)
 - [ ] Schema `bundle_manifest_v1.json` definido con campos mínimos:
   ```json
@@ -145,6 +170,10 @@ CLI Args                    ┌────────────────�
     "created_at": "2026-01-01T12:00:00Z",
     "command": "trifecta ctx search",
     "args": {"query": "validate", "segment": ".", "limit": 5},
+    "fp_gate_result": {
+      "status": "ok",
+      "validation": {"passed": true, "errors": [], "warnings": []}
+    },
     "tool_calls": [
       {
         "id": "tc_001",
@@ -155,6 +184,12 @@ CLI Args                    ┌────────────────�
         "timestamp": "2026-01-01T12:00:01Z"
       }
     ],
+    "pcc_metrics": {
+      "path_correct": true,
+      "false_fallback": false,
+      "safe_fallback": false,
+      "feature_map_source": "_ctx/prime_trifecta_dope.md"
+    },
     "file_reads": [
       {"path": "_ctx/context_pack.json", "lines": [1, 156], "char_count": 28989}
     ],
@@ -202,6 +237,8 @@ CLI Args                    ┌────────────────�
 | `test_file_read_outside_segment_blocked` | Read de `/etc/passwd` es prohibido | Security scope |
 | `test_bundle_finalization_retry` | Retry 3 veces si write fail, luego warning | Resilience |
 | `test_bundle_show_command_output` | CLI muestra manifest en formato legible | UX |
+| `test_log_pcc_metrics_integration` **(NEW v1.1)** | PCC metrics grabados en manifest con estructura correcta | PCC integration |
+| `test_log_fp_gate_result_ok_and_err` **(NEW v1.1)** | FP Gate Ok/Err se serializa correctamente en manifest | Result monad integration |
 
 #### 3.1.3 Comandos CLI Nuevos
 
@@ -703,8 +740,10 @@ Usa este checklist para auditar la implementación post-MVP:
 | **V13** | Session append usa AtomicWriter (no half-writes) | ☐ | ☐ | `SessionAppendUseCase` usa `AtomicWriter.write()` |
 | **V14** | Fail-closed: Bundle pack abort si policy violation | ☐ | ☐ | `fail_policy: fail_loudly` fuerza abort |
 | **V15** | Bundle manifest SHA256 es verificable | ☐ | ☐ | `sha256 manifest.json` matches `metadata.sha256_digest` |
+| **V16 (NEW v1.1)** | PCC metrics capturados en bundle manifest | ☐ | ☐ | `pcc_metrics` field con path_correct/false_fallback/safe_fallback |
+| **V17 (NEW v1.1)** | FP Gate result serializado en manifest | ☐ | ☐ | `fp_gate_result` con status ok/err y validation details |
 
-**Criterio de Aprobación**: Mínimo **13/15 PASS** para MVP acceptance.
+**Criterio de Aprobación**: Mínimo **15/17 PASS** (88% success rate) para v1.1 MVP acceptance.
 
 ---
 
@@ -826,16 +865,20 @@ class BackgroundTaskManager:
 | `subprocess` (stdlib) | Python 3.12+ | Background task spawn | LOW (shell injection risk) | Sanitize args con shlex.quote |
 | `pyright` (LSP, opcional) | 1.1.350+ | AST events para bundles | HIGH (external binary) | Graceful degradation si no disponible |
 | `pyyaml` (existente) | 6.0+ | Policy YAML parsing | NONE (ya usado) | N/A |
+| `dataclasses` (stdlib) **(v1.1)** | Python 3.12+ | Result monad (Ok/Err) | NONE | N/A (ya implementado) |
+| `typing` (stdlib) **(v1.1)** | Python 3.12+ | TypeAlias para Result | NONE | N/A |
 
-**Nota**: NO agregar dependencias nuevas pesadas (ej: tree-sitter, numpy) para MVP. Usar stdlib siempre que sea posible.
+**Nota**: NO agregar dependencias nuevas pesadas (ej: tree-sitter, numpy) para MVP. Usar stdlib siempre que sea posible. **PCC Metrics y Result Monad ya están en codebase (v1.1).**
 
 ---
 
 ## CONCLUSIONES
 
-Este análisis identificó **12 puntos de integración** viables para Background Tasks y Context Bundles en Trifecta, con **3 iteraciones MVP** de implementación incremental (bundle recorder → background runner → LSP events). Los **5 riesgos críticos** (secrets, bloat, multi-writer, stale locks, env drift) tienen mitigaciones concretas y metricas de validación.
+Este análisis identificó **14 puntos de integración** (12 originales + 2 nuevos en v1.1) viables para Background Tasks y Context Bundles en Trifecta, con **3 iteraciones MVP** de implementación incremental (bundle recorder → background runner → LSP events). Los **5 riesgos críticos** (secrets, bloat, multi-writer, stale locks, env drift) tienen mitigaciones concretas y metricas de validación.
 
-**Recomendación ejecutiva**: Implementar **Iteración 1 (Bundle Recorder)** primero (week 1, bajo riesgo, alto valor para debug), validar con checklist V1-V8, luego evaluar ROI antes de proceder con Iteración 2-3.
+**Ventaja v1.1**: Con PCC Metrics, Result Monad, y FP Gate ya implementados, la Iteración 1 (Bundle Recorder) puede acelerar al re-usar estas primitivas existentes. **Esfuerzo estimado reducido de 1 week a 3-4 días** por integración nativa.
+
+**Recomendación ejecutiva**: Implementar **Iteración 1 (Bundle Recorder con PCC/FP integration)** primero (week 1, bajo riesgo, alto valor para debug + auditoría), validar con checklist V1-V10 + V16-V17 (nuevos), luego evaluar ROI antes de proceder con Iteración 2-3.
 
 **Próximos pasos**:
 1. Socializar este análisis con stakeholders (team review).
