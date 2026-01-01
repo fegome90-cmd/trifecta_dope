@@ -5,14 +5,25 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 
 
+import hashlib
+from src.infrastructure.segment_utils import resolve_segment_root, compute_segment_id
+
+
 class Telemetry:
     def __init__(self, root: Path, level: str = "lite"):
-        self.root = root
+        # Enforce unified resolution for Source of Truth
+        self.root = resolve_segment_root(root)
         self.level = level
         self.metrics: Dict[str, Any] = {}
-        self._ctx_dir = root / "_ctx" / "telemetry"
+        self._ctx_dir = self.root / "_ctx" / "telemetry"
         self._ctx_dir.mkdir(parents=True, exist_ok=True)
         self.run_id = f"run_{int(time.time())}"
+
+        # Phase 3 Audit: segment_id hash 8 chars (Unified)
+        self.segment_id = compute_segment_id(self.root)
+        self.segment_label = (
+            root.name
+        )  # Keep original name logic for label if needed contextually, or self.root.name
 
         # Load prev metrics if needed?
         # For restoration simple start.
@@ -27,10 +38,22 @@ class Telemetry:
         # PR#1 compliant event
         # kwargs are put into "x"
 
+        def _summarize_timings(vals: list[int]):
+            if not vals:
+                return {}
+            sorted_vals = sorted(vals)
+            n = len(sorted_vals)
+            return {
+                "count": n,
+                "p50_ms": sorted_vals[int(n * 0.5)],
+                "p95_ms": sorted_vals[int(n * 0.95)],
+                "max_ms": sorted_vals[-1],
+            }
+
         payload = {
             "ts": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
             "run_id": self.run_id,
-            "segment_id": "restored_seg",
+            "segment_id": self.segment_id,
             "cmd": cmd,
             "args": args,
             "result": result,
@@ -48,6 +71,7 @@ class Telemetry:
         # Aggregate logic
         summary = {
             "run_id": self.run_id,
+            "segment_id": self.segment_id,
             "ts": time.strftime("%Y-%m-%d %H:%M:%S"),
             "ast": {
                 "ast_parse_count": self.metrics.get("ast_parse_count", 0),

@@ -66,9 +66,18 @@ class LSPClient:
 
                 if self.telemetry:
                     self.telemetry.incr("lsp_spawn_count")
+
+                # Robust Sanitize
+                exe_log = "unknown"
+                try:
+                    if executable:
+                        exe_log = Path(executable).name
+                except Exception:
+                    pass
+
                 self._log_event(
                     "lsp.spawn",
-                    {"executable": executable},
+                    {"executable": exe_log},
                     {"status": "ok", "pid": self.process.pid},
                     1,
                 )
@@ -80,8 +89,23 @@ class LSPClient:
                 self._transition(LSPState.FAILED)
                 if self.telemetry:
                     self.telemetry.incr("lsp_failed_count")
+
+                # Capture stderr for debug
+                err_out = "Unknown"
+                if self.process:
+                    try:
+                        _, stderr_data = self.process.communicate(timeout=0.2)
+                        if stderr_data:
+                            err_out = stderr_data.decode("utf-8")
+                    except:
+                        pass
+                print(f"DEBUG: LSP Start Failed: {e}. Stderr: {err_out}")
+
                 # Sanitize executable path for telemetry
-                exe_name = Path(executable).name
+                exe_name = "unknown"
+                if executable:
+                    exe_name = Path(executable).name
+
                 self._log_event(
                     "lsp.spawn", {"executable": exe_name}, {"status": "error", "error": str(e)}, 0
                 )
@@ -169,6 +193,20 @@ class LSPClient:
             self._capabilities = resp["result"].get("capabilities", {})
             self._send_rpc({"jsonrpc": "2.0", "method": "initialized", "params": {}})
 
+            # relaxed READY: Transition immediately to allow requests
+            with self.lock:
+                self._transition(LSPState.READY)
+
+            if self.telemetry:
+                self.telemetry.incr("lsp_ready_count")
+                self._log_event(
+                    "lsp.state_change",
+                    {},
+                    {"status": "ready"},
+                    1,
+                    reason="initialized",
+                )
+
             # 3. Read Loop (Waiting for publishDiagnostics & Responses)
             while self.state != LSPState.CLOSED:
                 msg = self._read_rpc()
@@ -186,23 +224,19 @@ class LSPClient:
                 # Handle Notification
                 method = msg.get("method", "")
                 if method == "textDocument/publishDiagnostics":
-                    # Check if it matches our warm-up file (if set)
-                    # User asked: "publishDiagnostics recibido para el URI warm-up"
-                    uri = msg.get("params", {}).get("uri", "")
-                    if self._warmup_file and self._warmup_file.as_uri() == uri:
-                        with self.lock:
-                            if self.state != LSPState.READY:
-                                self._transition(LSPState.READY)
-                                if self.telemetry:
-                                    self.telemetry.incr("lsp_ready_count")
-                                    self._log_event(
-                                        "lsp.state_change",
-                                        {},
-                                        {"status": "ready"},
-                                        1,
-                                        reason="publishDiagnostics",
-                                    )
-        except Exception:
+                    # Log diagnostics but do not control state (already READY)
+                    pass
+        except Exception as e:
+            # Capture stderr
+            err_out = "Unknown"
+            if self.process:
+                try:
+                    _, stderr_data = self.process.communicate(timeout=0.2)
+                    if stderr_data:
+                        err_out = stderr_data.decode("utf-8")
+                except:
+                    pass
+            print(f"DEBUG: LSP Loop Exception: {e}. Stderr: {err_out}")
             self._transition(LSPState.FAILED)
 
     def request(
@@ -248,15 +282,38 @@ class LSPClient:
         if not self.process or not self.process.stdout:
             return None
         try:
-            line = self.process.stdout.readline()
-            if not line:
+            # Read Headers
+            length = None
+            while True:
+                line = self.process.stdout.readline()
+                if not line:
+                    if length is None:
+                        # EOF before any headers
+                        return None
+                    # EOF inside headers? Break and try reading content?
+                    break
+
+                line = line.strip()
+                if not line:
+                    # End of headers
+                    break
+
+                if line.startswith(b"Content-Length: "):
+                    length = int(line.split(b": ")[1])
+
+            if length is None:
                 return None
 
-            if line.startswith(b"Content-Length: "):
-                length = int(line.strip().split(b": ")[1])
-                self.process.stdout.readline()  # \r\n
-                content = self.process.stdout.read(length)
-                return json.loads(content)
-        except Exception:
+            # Read Content
+            content = b""
+            while len(content) < length:
+                chunk = self.process.stdout.read(length - len(content))
+                if not chunk:
+                    break
+                content += chunk
+
+            return json.loads(content)
+        except Exception as e:
+            # print(f"DEBUG: Read RPC Exception: {e}")
             pass
         return None

@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Optional, Dict, Any
 from src.infrastructure.lsp_client import LSPClient, LSPState
 from src.infrastructure.telemetry import Telemetry
+from src.infrastructure.segment_utils import resolve_segment_root, compute_segment_id
 
 # --- Constants ---
 SOCKET_NAME = "daemon.sock"
@@ -21,18 +22,14 @@ DEFAULT_TTL = 180
 
 class LSPDaemonServer:
     def __init__(self, segment_root: Path, ttl_sec: int = DEFAULT_TTL):
-        self.root = segment_root
+        self.root = resolve_segment_root(segment_root)
         self.ttl = ttl_sec
         self.last_activity = time.time()
         self.running = False
 
-        self.lsp_dir = (
-            self.root / "_ctx" / "lsp" / "restored_seg"
-        )  # Assuming fixed seg for now or need to pass it
-        # Actually, for Phase 3 user said: "_ctx/lsp/<segment_id>/"
-        # I'll rely on cli passing the right root path which already points to segment?
-        # Or cli_ast passes root=. and we construct path.
-        # Let's standardize: root is the CWD (project root). segment_id is fixed "restored_seg" for audit context.
+        # Unified Segment ID / Dir
+        self.segment_id = compute_segment_id(self.root)
+        self.lsp_dir = self.root / "_ctx" / "lsp" / self.segment_id
         self.lsp_dir.mkdir(parents=True, exist_ok=True)
 
         self.lock_file = self.lsp_dir / LOCK_NAME
@@ -140,7 +137,28 @@ class LSPDaemonServer:
         elif method == "request":
             lsp_method = params.get("method")
             lsp_params = params.get("params")
+            start_ns = time.perf_counter_ns()
             result = self.lsp_client.request(lsp_method, lsp_params)
+            duration_ms = (time.perf_counter_ns() - start_ns) // 1_000_000
+
+            # Telemetry for requests
+            if self.telemetry:
+                x_fields = {
+                    "method": lsp_method,
+                    "resolved": bool(result),
+                }
+                # Extract target logic if hover/def
+                if result and "contents" in result:
+                    x_fields["target_file"] = "resolved_content"  # simplified
+
+                self.telemetry.event(
+                    "lsp.request",
+                    {"method": lsp_method},
+                    {"status": "ok" if result else "empty"},
+                    max(1, duration_ms),
+                    **x_fields,
+                )
+
             if result:
                 return {"status": "ok", "data": result}
             else:
@@ -166,8 +184,9 @@ class LSPDaemonServer:
 
 class LSPDaemonClient:
     def __init__(self, root: Path):
-        self.root = root
-        self.lsp_dir = self.root / "_ctx" / "lsp" / "restored_seg"
+        self.root = resolve_segment_root(root)
+        self.segment_id = compute_segment_id(self.root)
+        self.lsp_dir = self.root / "_ctx" / "lsp" / self.segment_id
         self.socket_path = self.lsp_dir / SOCKET_NAME
 
     def connect_or_spawn(self) -> bool:
@@ -238,15 +257,22 @@ class LSPDaemonClient:
         return None
 
 
+# Define DEFAULT_TTL before its usage in the argument parser
+DEFAULT_TTL = 300  # Default TTL in seconds
+
 # Entrypoint
 if __name__ == "__main__":
     import argparse
+    import os
 
     parser = argparse.ArgumentParser()
     parser.add_argument("command", choices=["start"])
     parser.add_argument("--root", required=True)
+    parser.add_argument(
+        "--ttl", type=int, default=int(os.environ.get("LSP_DAEMON_TTL_SEC", DEFAULT_TTL))
+    )
     args = parser.parse_args()
 
     if args.command == "start":
-        server = LSPDaemonServer(Path(args.root))
+        server = LSPDaemonServer(Path(args.root), ttl_sec=args.ttl)
         server.start()

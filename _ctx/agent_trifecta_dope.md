@@ -2,7 +2,7 @@
 segment: .
 scope: Verification
 repo_root: /Users/felipe_gonzalez/Developer/agent_h
-last_verified: 2025-12-29
+last_verified: 2026-01-01
 default_profile: impl_patch
 ---
 
@@ -17,6 +17,7 @@ default_profile: impl_patch
 | Lógica Core | `src/domain/` y `src/application/` |
 | Entry Points | `src/infrastructure/cli.py` |
 | Estándar de Docs | `README.md` y `knowledge/` |
+| Arquitectura LSP | `src/infrastructure/lsp_daemon.py` |
 
 ## Tech Stack
 
@@ -28,6 +29,11 @@ default_profile: impl_patch
 - Typer (CLI Framework)
 - Pydantic (Data Models/Schema)
 - PyYAML (Artifacts parsing)
+
+**LSP Infrastructure (Phase 3):**
+- Daemon: UNIX Socket IPC, Single Instance (Lock), 180s TTL.
+- Fallback: AST-only if daemon warming/failed.
+- Audit: No PII, No VFS, Sanitized Paths.
 
 **Herramientas:**
 - uv (Project Management)
@@ -57,6 +63,7 @@ source .venv/bin/activate
 ```bash
 # Requerido para telemetría y LiteLLM (si aplica)
 TRIFECTA_TELEMETRY_LEVEL=lite
+LSP_DAEMON_TTL_SEC=180 # Default
 ```
 
 ## Gates (Comandos de Verificación)
@@ -65,6 +72,7 @@ TRIFECTA_TELEMETRY_LEVEL=lite
 |------|---------|-----------|
 | **Unit** | `uv run pytest tests/unit/ -v` | Lógica interna |
 | **Integración** | `uv run pytest tests/test_use_cases.py -v` | Flujos CLI/UseCases |
+| **Daemon Tripwires** | `uv run pytest tests/integration/test_lsp_daemon.py` | Validar Lifecycle/TTL |
 | **Lint** | `uv run ruff check .` | Calidad de código |
 | **Type** | `uv run mypy src/` | Integridad de tipos |
 | **Context** | `uv run trifecta ctx validate --segment .` | Integridad del pack |

@@ -1,7 +1,7 @@
 {
-  "run_id": "run_1767297047",
+  "run_id": "run_1767297044",
   "segment_id": "6f25e381",
-  "ts": "2026-01-01 16:50:47",
+  "ts": "2026-01-01 16:50:44",
   "ast": {
     "ast_parse_count": 0,
     "ast_cache_hit_count": 0,
@@ -10,7 +10,7 @@
   "lsp": {
     "lsp_spawn_count": 0,
     "lsp_ready_count": 0,
-    "lsp_fallback_count": 0
+    "lsp_fallback_count": 1
   },
   "telemetry_drops": {
     "drop_rate": 0.0

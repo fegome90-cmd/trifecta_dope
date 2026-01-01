@@ -1,37 +1,43 @@
 {
   "schema_version": 1,
   "segment": "trifecta_dope",
-  "created_at": "2026-01-01T10:46:04.716301",
+  "created_at": "2026-01-01T15:21:46.638209",
   "digest": "",
   "source_files": [
     {
       "path": "trifecta_dope/skill.md",
       "sha256": "5055bae97e8a61acc0e335435cd90241767fdb26dc7d141333647246a554718d",
-      "mtime": 1767207127.2723505,
+      "mtime": 1767289770.4298074,
       "chars": 3541
     },
     {
       "path": "trifecta_dope/_ctx/prime_trifecta_dope.md",
-      "sha256": "3dd749f4cfc5caba67e59b60190d6a6969c6b4609ab22c53762804ca53559f75",
-      "mtime": 1767193378.1114116,
-      "chars": 2688
+      "sha256": "49d36d07533210bc2a164fc2f185bf090e098dcd5276acaaa9a891a77731cd28",
+      "mtime": 1767291428.9532561,
+      "chars": 1775
     },
     {
       "path": "trifecta_dope/_ctx/agent_trifecta_dope.md",
-      "sha256": "327bb2a8d558b5748d5fd5a77297af24cdb92d9872d1e8c07f0757ccad5ffa73",
-      "mtime": 1767188887.1263237,
-      "chars": 2905
+      "sha256": "2c5973748cd9eb0ea8d1ab1832a666ce7c75773b74f826fe4e51464b848c794a",
+      "mtime": 1767290739.055037,
+      "chars": 3285
     },
     {
       "path": "trifecta_dope/_ctx/session_trifecta_dope.md",
       "sha256": "12f1e27cf9b0db3e424d5db2adfc68c3fb9a4586f2cf50e602996116e9088630",
-      "mtime": 1767275164.5882611,
+      "mtime": 1767289770.4504867,
       "chars": 9363
+    },
+    {
+      "path": "trifecta_dope/.github/copilot-instructions.md",
+      "sha256": "3150aa4d90046e1ee01d38a4e364b6ea0dbaf9cdc3aa011e7525755932d8624a",
+      "mtime": 1767289770.4490476,
+      "chars": 2574
     },
     {
       "path": "trifecta_dope/README.md",
       "sha256": "c4d3c8efc29db2e5ece18dd47ef9973bce55f2ad244736b970a6f886b2c93a25",
-      "mtime": 1767207127.2715409,
+      "mtime": 1767289770.4285963,
       "chars": 12758
     }
   ],
@@ -49,26 +55,26 @@
       "chunking_method": "whole_file"
     },
     {
-      "id": "prime:9851467005",
+      "id": "prime:e2e24073a2",
       "doc": "prime",
       "title_path": [
         "prime_trifecta_dope.md"
       ],
-      "text": "---\nsegment: trifecta-dope\nprofile: load_only\n---\n\n# Prime Trifecta Dope - Lista de Lectura\n\n> **REPO_ROOT**: `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope`\n> Todas las rutas son relativas a esta raiz.\n>\n> **Orden de lectura**: Fundamentos -> Implementacion -> Referencias\n\n## [HIGH] Prioridad ALTA - Fundamentos\n\n**Leer primero para entender el contexto del segmento.**\n\n1. `README.md` - Visión general del proyecto y CLI\n2. `skill.md` - Reglas de oro y protocolos de sesión\n3. `RELEASE_NOTES_v1.md` - Estado actual y cambios recientes (T7/T8 Hardening)\n\n## [MED] Prioridad MEDIA - Implementacion\n\n<!-- Documentacion de implementacion especifica -->\n<!-- Ejemplos: guias de uso, patrones de disenio -->\n\n## [LOW] Prioridad BAJA - Referencias\n\n<!-- Documentacion de referencia, archivada -->\n<!-- Ejemplos: API docs, especificaciones -->\n\n## [MAP] Mapa Mental\n\n```mermaid\nmindmap\n  root(trifecta-dope)\n    <!-- Agregar conceptos clave del segmento -->\n    <!-- Ejemplo:\n    Fundamentos\n    Arquitectura\n    Componentes\n    Interfaces\n    -->\n```\n\n## [DICT] Glosario\n\n| Termino | Definicion |\n|---------|------------|\n| <!-- Agregar terminos clave del segmento --> | <!-- Definiciones breves --> |\n\n## [NOTE] Notas\n\n- **Fecha ultima actualizacion**: 2025-12-31\n- **Mantenedor**: <!-- Agregar si aplica -->\n- **Ver tambien**: [skill.md](../skill.md) | [agent.md](./agent.md)\n\n---\n\n## [INDEX] Index para ctx.plan\n\n### index.entrypoints\n\nPuntos de entrada principales del segmento:\n\n| Path | Razón |\n|------|-------|\n| `README.md` | Visión general del proyecto |\n| `skill.md` | Reglas de oro y protocolos |\n| `RELEASE_NOTES_v1.md` | Estado actual y cambios recientes |\n| `src/infrastructure/cli.py` | CLI commands (ctx, telemetry) |\n| `src/application/use_cases.py` | Use cases (Build, Stats, Load, Validate) |\n| `src/infrastructure/telemetry.py` | Telemetry system |\n\n### index.feature_map\n\nMapa de características → chunks relacionados:\n\n| Feature | Chunk IDs | Paths | Keywords |\n|---------|-----------|-------|-----------|\n| telemetry | `skill:*`, `agent:*`, `ref:RELEASE_NOTES_v1.md` | `README.md`, `RELEASE_NOTES_v1.md`, `src/infrastructure/telemetry.py` | telemetry, events, metrics, token tracking |\n| context_pack | `skill:*`, `prime:*`, `agent:*` | `src/application/use_cases.py`, `src/domain/context_models.py` | context pack, build, sync, validate |\n| cli_commands | `skill:*` | `src/infrastructure/cli.py` | ctx.search, ctx.get, ctx.sync, ctx.stats, load |\n| search | `skill:*`, `agent:*` | `src/application/search_get_usecases.py` | SearchUseCase, search, query |\n| stats | `skill:*`, `agent:*` | `src/application/use_cases.py` | StatsUseCase, statistics, zero-hits |\n",
-      "char_count": 2688,
-      "token_est": 672,
+      "text": "---\nsegment: trifecta_dope\nprofile: load_only\n---\n\n# Prime Trifecta_Dope - Lista de Lectura\n\n> **REPO_ROOT**: `/Users/felipe_gonzalez/Developer/agent_h`\n> Todas las rutas son relativas a esta raiz.\n>\n> **PRIME CONTRACT**:\n> Prime contiene SOLO paths (1 línea por path) ordenados por prioridad.\n> Prohibido incluir chunks, texto largo o comentarios inline.\n> 1 línea = 1 Path Autoritativo.\n\n## [HIGH] Prioridad ALTA - Fundamentos\n\n**Leer primero para entender el contexto del segmento.**\n\n1. `trifecta_dope/src/infrastructure/lsp_daemon.py`\n2. `trifecta_dope/src/infrastructure/cli.py`\n3. `trifecta_dope/src/infrastructure/lsp_client.py`\n4. `trifecta_dope/src/infrastructure/telemetry.py`\n5. `trifecta_dope/tests/integration/test_lsp_daemon.py`\n6. `trifecta_dope/src/application/use_cases.py`\n7. `trifecta_dope/src/domain/ast_models.py`\n8. `trifecta_dope/.github/copilot-instructions.md`\n9. `trifecta_dope/src/infrastructure/cli_ast.py`\n10. `trifecta_dope/README.md`\n\n\n## [MED] Prioridad MEDIA - Implementacion\n\n<!-- Documentacion de implementacion especifica -->\n<!-- Ejemplos: guias de uso, patrones de disenio -->\n\n## [LOW] Prioridad BAJA - Referencias\n\n<!-- Documentacion de referencia, archivada -->\n<!-- Ejemplos: API docs, especificaciones -->\n\n## [MAP] Mapa Mental\n\n```mermaid\nmindmap\n  root(trifecta_dope)\n    <!-- Agregar conceptos clave del segmento -->\n    <!-- Ejemplo:\n    Fundamentos\n    Arquitectura\n    Componentes\n    Interfaces\n    -->\n```\n\n## [DICT] Glosario\n\n| Termino | Definicion |\n|---------|------------|\n| <!-- Agregar terminos clave del segmento --> | <!-- Definiciones breves --> |\n\n## [NOTE] Notas\n\n- **Fecha ultima actualizacion**: \n- **Mantenedor**: <!-- Agregar si aplica -->\n- **Ver tambien**: [skill.md](../skill.md) | [agent.md](./agent.md)\n",
+      "char_count": 1775,
+      "token_est": 443,
       "source_path": "prime_trifecta_dope.md",
       "chunking_method": "whole_file"
     },
     {
-      "id": "agent:7f30dfe5a7",
+      "id": "agent:0b3712e805",
       "doc": "agent",
       "title_path": [
         "agent_trifecta_dope.md"
       ],
-      "text": "---\nsegment: .\nscope: Verification\nrepo_root: /Users/felipe_gonzalez/Developer/agent_h\nlast_verified: 2025-12-29\ndefault_profile: impl_patch\n---\n\n# Agent Context - .\n\n## Source of Truth\n\n| Sección | Fuente |\n|---------|--------|\n| Reglas de Sesión | [skill.md](../skill.md) |\n| Dependencias | `pyproject.toml` |\n| Lógica Core | `src/domain/` y `src/application/` |\n| Entry Points | `src/infrastructure/cli.py` |\n| Estándar de Docs | `README.md` y `knowledge/` |\n\n## Tech Stack\n\n**Lenguajes:**\n- Python 3.12+ (Backend/CLI)\n- Fish Shell (Completions)\n\n**Frameworks:**\n- Typer (CLI Framework)\n- Pydantic (Data Models/Schema)\n- PyYAML (Artifacts parsing)\n\n**Herramientas:**\n- uv (Project Management)\n- pytest (Testing)\n- ruff (Linting/Formatting)\n- mypy (Static Types)\n\n## Workflow\n```bash\n# SEGMENT=\".\" es válido SOLO si tu cwd es el repo target.\n# Si ejecutas trifecta desde otro lugar, usa un path absoluto:\n# SEGMENT=\"/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope\"\ncd /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/\n# Validar entorno → Sync context → Ejecutar cambios → Validar gates\n```\n\n## Setup\n\n**Entorno Python (Recomendado):**\n```bash\n# Usando uv (rápido y determinístico)\nuv sync\nsource .venv/bin/activate\n```\n\n**Variables de Entorno (.env):**\n```bash\n# Requerido para telemetría y LiteLLM (si aplica)\nTRIFECTA_TELEMETRY_LEVEL=lite\n```\n\n## Gates (Comandos de Verificación)\n\n| Gate | Comando | Propósito |\n|------|---------|-----------|\n| **Unit** | `uv run pytest tests/unit/ -v` | Lógica interna |\n| **Integración** | `uv run pytest tests/test_use_cases.py -v` | Flujos CLI/UseCases |\n| **Lint** | `uv run ruff check .` | Calidad de código |\n| **Type** | `uv run mypy src/` | Integridad de tipos |\n| **Context** | `uv run trifecta ctx validate --segment .` | Integridad del pack |\n\n## Troubleshooting\n\n| Problema | Solución |\n|----------|----------|\n| `ImportError` | `uv pip install -e .` desde el root |\n| `.env` faltante | Copiar desde `.env.example` y configurar |\n| Pack Stale | `uv run trifecta ctx sync --segment .` |\n| Fallos en Tests | Revisar logs en `_ctx/telemetry/` |\n\n## Integration Points\n\n**Upstream Dependencies:**\n- `pydantic` - Base de modelos de dominio\n- `typer` - Motor del CLI\n- `pyyaml` - Serialización de estados/config\n\n**Downstream Consumers:**\n- Agentes de código que necesiten contexto estructurado\n- Autopilot pipelines\n\n## Resources (On-Demand)\n- `@_ctx/prime_trifecta_dope.md` - Lista de lectura obligatoria\n- `@_ctx/agent.md` - (Este archivo) Tech stack y gates\n- `@_ctx/session_trifecta_dope.md` - Log de handoffs (runtime)\n- `readme_tf.md` - Guía rápida del sistema\n\n## LLM Roles\n\n| Rol | Modelo | Uso |\n|-----|--------|-----|\n| **Worker** | `deepseek-reasoner` | Tareas generales y razonamiento |\n| **Senior** | `claude-sonnet-4-5` | Diseño complejo y refactor |\n| **Fallback** | `gemini-3.0-flash-preview` | Recuperación y validación rápida |\n",
-      "char_count": 2905,
-      "token_est": 726,
+      "text": "---\nsegment: .\nscope: Verification\nrepo_root: /Users/felipe_gonzalez/Developer/agent_h\nlast_verified: 2026-01-01\ndefault_profile: impl_patch\n---\n\n# Agent Context - .\n\n## Source of Truth\n\n| Sección | Fuente |\n|---------|--------|\n| Reglas de Sesión | [skill.md](../skill.md) |\n| Dependencias | `pyproject.toml` |\n| Lógica Core | `src/domain/` y `src/application/` |\n| Entry Points | `src/infrastructure/cli.py` |\n| Estándar de Docs | `README.md` y `knowledge/` |\n| Arquitectura LSP | `src/infrastructure/lsp_daemon.py` |\n\n## Tech Stack\n\n**Lenguajes:**\n- Python 3.12+ (Backend/CLI)\n- Fish Shell (Completions)\n\n**Frameworks:**\n- Typer (CLI Framework)\n- Pydantic (Data Models/Schema)\n- PyYAML (Artifacts parsing)\n\n**LSP Infrastructure (Phase 3):**\n- Daemon: UNIX Socket IPC, Single Instance (Lock), 180s TTL.\n- Fallback: AST-only if daemon warming/failed.\n- Audit: No PII, No VFS, Sanitized Paths.\n\n**Herramientas:**\n- uv (Project Management)\n- pytest (Testing)\n- ruff (Linting/Formatting)\n- mypy (Static Types)\n\n## Workflow\n```bash\n# SEGMENT=\".\" es válido SOLO si tu cwd es el repo target.\n# Si ejecutas trifecta desde otro lugar, usa un path absoluto:\n# SEGMENT=\"/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope\"\ncd /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/\n# Validar entorno → Sync context → Ejecutar cambios → Validar gates\n```\n\n## Setup\n\n**Entorno Python (Recomendado):**\n```bash\n# Usando uv (rápido y determinístico)\nuv sync\nsource .venv/bin/activate\n```\n\n**Variables de Entorno (.env):**\n```bash\n# Requerido para telemetría y LiteLLM (si aplica)\nTRIFECTA_TELEMETRY_LEVEL=lite\nLSP_DAEMON_TTL_SEC=180 # Default\n```\n\n## Gates (Comandos de Verificación)\n\n| Gate | Comando | Propósito |\n|------|---------|-----------|\n| **Unit** | `uv run pytest tests/unit/ -v` | Lógica interna |\n| **Integración** | `uv run pytest tests/test_use_cases.py -v` | Flujos CLI/UseCases |\n| **Daemon Tripwires** | `uv run pytest tests/integration/test_lsp_daemon.py` | Validar Lifecycle/TTL |\n| **Lint** | `uv run ruff check .` | Calidad de código |\n| **Type** | `uv run mypy src/` | Integridad de tipos |\n| **Context** | `uv run trifecta ctx validate --segment .` | Integridad del pack |\n\n## Troubleshooting\n\n| Problema | Solución |\n|----------|----------|\n| `ImportError` | `uv pip install -e .` desde el root |\n| `.env` faltante | Copiar desde `.env.example` y configurar |\n| Pack Stale | `uv run trifecta ctx sync --segment .` |\n| Fallos en Tests | Revisar logs en `_ctx/telemetry/` |\n\n## Integration Points\n\n**Upstream Dependencies:**\n- `pydantic` - Base de modelos de dominio\n- `typer` - Motor del CLI\n- `pyyaml` - Serialización de estados/config\n\n**Downstream Consumers:**\n- Agentes de código que necesiten contexto estructurado\n- Autopilot pipelines\n\n## Resources (On-Demand)\n- `@_ctx/prime_trifecta_dope.md` - Lista de lectura obligatoria\n- `@_ctx/agent.md` - (Este archivo) Tech stack y gates\n- `@_ctx/session_trifecta_dope.md` - Log de handoffs (runtime)\n- `readme_tf.md` - Guía rápida del sistema\n\n## LLM Roles\n\n| Rol | Modelo | Uso |\n|-----|--------|-----|\n| **Worker** | `deepseek-reasoner` | Tareas generales y razonamiento |\n| **Senior** | `claude-sonnet-4-5` | Diseño complejo y refactor |\n| **Fallback** | `gemini-3.0-flash-preview` | Recuperación y validación rápida |\n",
+      "char_count": 3285,
+      "token_est": 821,
       "source_path": "agent_trifecta_dope.md",
       "chunking_method": "whole_file"
     },
@@ -85,8 +91,20 @@
       "chunking_method": "whole_file"
     },
     {
-      "id": "ref:README.md:fde90d226b",
-      "doc": "ref:README.md",
+      "id": "ref:trifecta_dope/.github/copilot-instructions.md:d3ec7feecc",
+      "doc": "ref:trifecta_dope/.github/copilot-instructions.md",
+      "title_path": [
+        "copilot-instructions.md"
+      ],
+      "text": "# GitHub Copilot Instructions - Superpowers Skills\n\n<EXTREMELY_IMPORTANT> You have superpowers.\n\n## Qué son Superpowers\n\nSuperpowers es un sistema de skills (workflows estructurados) que te permite resolver tareas complejas de forma sistemática. Están instalados en este workspace en:\n\n```\n/workspaces/trifecta_dope/skills/third_party/superpowers/\n```\n\n## Bootstrap\n\n**DEBES leer primero:** `/workspaces/trifecta_dope/skills/third_party/superpowers/bootstrap.md`\n\nEl bootstrap contiene:\n- Lista completa de 14 skills disponibles\n- Paths exactos para cada skill\n- Reglas de uso obligatorias\n- Mapeo de herramientas (TodoWrite → manage_todo_list, etc.)\n\n## Cómo Usar Skills\n\n**1. Usuario te dice que tienes superpowers, uses una skill especifica o uses superpowers.**\n```\n\n**2. Tú DEBES:**\n- Cargar el skill: `read_file /workspaces/trifecta_dope/skills/third_party/superpowers/skills/<skill-name>/SKILL.md`\n- Anunciar: \"I've read the [Skill Name] skill and I'm using it to [purpose]\"\n- Seguir el proceso definido paso a paso\n- Si hay checklist → usar `manage_todo_list`\n\n**3. Path pattern:**\n```\n/workspaces/trifecta_dope/skills/third_party/superpowers/skills/<skill-name>/SKILL.md\n```\n\nEjemplos:\n- `brainstorming/SKILL.md`\n- `writing-plans/SKILL.md`\n- `systematic-debugging/SKILL.md`\n- `test-driven-development/SKILL.md`\n\n## Reglas Críticas\n\n1. **ANTES de cualquier tarea**, revisar si hay un skill aplicable (ver bootstrap)\n2. **SI existe skill aplicable**, DEBES usarlo (no es opcional)\n3. **Skills con checklists** requieren `manage_todo_list`\n4. **NUNCA saltar workflows obligatorios** (brainstorming antes de codificar, TDD, debugging sistemático)\n5. **Si el usuario te pide hacer algo contra la skill, recuérdale que debes seguir la skill**\n\n\n## Skills Principales\n\n| Hashtag | Propósito |\n|---------|-----------|\n| `#brainstorm` | Explorar ideas antes de implementar |\n| `#plan` | Crear planes detallados multi-paso |\n| `#execute-plan` | Ejecutar planes sistemáticamente |\n| `#tdd` | Test-Driven Development |\n| `#debug` | Debugging sistemático |\n| `#verify` | Validación final antes de completar |\n| `#request-review` | Preparar código para review |\n| `#receive-review` | Procesar feedback de review |\n| `#finish-branch` | Preparar rama para merge |\n\n**Ver lista completa:** `/workspaces/trifecta_dope/skills/third_party/superpowers/bootstrap.md`\n\n## Herramientas Mapeadas\n\n- `TodoWrite` → `manage_todo_list`\n- `Task tool` → `runSubagent`\n- `Skill tool` → `read_file` directo\n- `Read/Write/Edit/Bash` → Herramientas nativas de VS Code Copilot\n\n</EXTREMELY_IMPORTANT>\n",
+      "char_count": 2574,
+      "token_est": 643,
+      "source_path": "copilot-instructions.md",
+      "chunking_method": "whole_file"
+    },
+    {
+      "id": "ref:trifecta_dope/README.md:3dc5e62c46",
+      "doc": "ref:trifecta_dope/README.md",
       "title_path": [
         "README.md"
       ],
@@ -105,16 +123,16 @@
       "token_est": 885
     },
     {
-      "id": "prime:9851467005",
+      "id": "prime:e2e24073a2",
       "title_path_norm": "prime_trifecta_dope.md",
-      "preview": "---\nsegment: trifecta-dope\nprofile: load_only\n---\n\n# Prime Trifecta Dope - Lista de Lectura\n\n> **REPO_ROOT**: `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope`\n> Todas las rutas son relativas a...",
-      "token_est": 672
+      "preview": "---\nsegment: trifecta_dope\nprofile: load_only\n---\n\n# Prime Trifecta_Dope - Lista de Lectura\n\n> **REPO_ROOT**: `/Users/felipe_gonzalez/Developer/agent_h`\n> Todas las rutas son relativas a esta raiz.\n>...",
+      "token_est": 443
     },
     {
-      "id": "agent:7f30dfe5a7",
+      "id": "agent:0b3712e805",
       "title_path_norm": "agent_trifecta_dope.md",
-      "preview": "---\nsegment: .\nscope: Verification\nrepo_root: /Users/felipe_gonzalez/Developer/agent_h\nlast_verified: 2025-12-29\ndefault_profile: impl_patch\n---\n\n# Agent Context - .\n\n## Source of Truth\n\n| Sección | F...",
-      "token_est": 726
+      "preview": "---\nsegment: .\nscope: Verification\nrepo_root: /Users/felipe_gonzalez/Developer/agent_h\nlast_verified: 2026-01-01\ndefault_profile: impl_patch\n---\n\n# Agent Context - .\n\n## Source of Truth\n\n| Sección | F...",
+      "token_est": 821
     },
     {
       "id": "session:90eb73ca27",
@@ -123,7 +141,13 @@
       "token_est": 2340
     },
     {
-      "id": "ref:README.md:fde90d226b",
+      "id": "ref:trifecta_dope/.github/copilot-instructions.md:d3ec7feecc",
+      "title_path_norm": "copilot-instructions.md",
+      "preview": "# GitHub Copilot Instructions - Superpowers Skills\n\n<EXTREMELY_IMPORTANT> You have superpowers.\n\n## Qué son Superpowers\n\nSuperpowers es un sistema de skills (workflows estructurados) que te permite re...",
+      "token_est": 643
+    },
+    {
+      "id": "ref:trifecta_dope/README.md:3dc5e62c46",
       "title_path_norm": "README.md",
       "preview": "# Trifecta Generator\n\n> **North Star**: Un agente entienda cualquier segmento del repo en <60 segundos leyendo solo 3 archivos + 1 log.\n\n# Trifecta — Programming Context Calling (para agentes de códig...",
       "token_est": 3189
