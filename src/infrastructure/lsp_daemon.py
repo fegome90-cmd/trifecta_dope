@@ -12,11 +12,13 @@ from typing import Optional, Dict, Any
 from src.infrastructure.lsp_client import LSPClient, LSPState
 from src.infrastructure.telemetry import Telemetry
 from src.infrastructure.segment_utils import resolve_segment_root, compute_segment_id
+from src.infrastructure.daemon_paths import (
+    get_daemon_socket_path,
+    get_daemon_lock_path,
+    get_daemon_pid_path,
+)
 
 # --- Constants ---
-SOCKET_NAME = "daemon.sock"
-LOCK_NAME = "daemon.lock"
-PID_NAME = "daemon.pid"
 DEFAULT_TTL = 180
 
 
@@ -29,12 +31,11 @@ class LSPDaemonServer:
 
         # Unified Segment ID / Dir
         self.segment_id = compute_segment_id(self.root)
-        self.lsp_dir = self.root / "_ctx" / "lsp" / self.segment_id
-        self.lsp_dir.mkdir(parents=True, exist_ok=True)
 
-        self.lock_file = self.lsp_dir / LOCK_NAME
-        self.pid_file = self.lsp_dir / PID_NAME
-        self.socket_path = self.lsp_dir / SOCKET_NAME
+        # Use short paths from daemon_paths to avoid AF_UNIX limit
+        self.socket_path = get_daemon_socket_path(self.segment_id)
+        self.lock_path = get_daemon_lock_path(self.segment_id)
+        self.pid_path = get_daemon_pid_path(self.segment_id)
 
         self.telemetry = Telemetry(self.root)
         self.lsp_client = LSPClient(self.root, self.telemetry)
@@ -44,7 +45,7 @@ class LSPDaemonServer:
     def start(self):
         """Main Daemon Entrypoint"""
         # 1. Acquire Lock
-        self._lock_fp = open(self.lock_file, "w")
+        self._lock_fp = open(self.lock_path, "w")
         try:
             fcntl.lockf(self._lock_fp, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except IOError:
@@ -52,7 +53,7 @@ class LSPDaemonServer:
             return
 
         # 2. Write PID
-        self.pid_file.write_text(str(os.getpid()))
+        self.pid_path.write_text(str(os.getpid()))
 
         # 3. Setup Socket
         if self.socket_path.exists():
@@ -170,24 +171,28 @@ class LSPDaemonServer:
         self.running = False
 
     def cleanup(self):
+        """Clean up daemon resources on shutdown."""
         self.lsp_client.stop()
         if self.socket_path.exists():
             self.socket_path.unlink()
-        if self.pid_file.exists():
-            self.pid_file.unlink()
+        if self.pid_path.exists():
+            self.pid_path.unlink()
         if self._lock_fp:
             fcntl.lockf(self._lock_fp, fcntl.LOCK_UN)
             self._lock_fp.close()
-            if self.lock_file.exists():
-                self.lock_file.unlink()
+            if self.lock_path.exists():
+                self.lock_path.unlink()
 
 
 class LSPDaemonClient:
     def __init__(self, root: Path):
         self.root = resolve_segment_root(root)
         self.segment_id = compute_segment_id(self.root)
-        self.lsp_dir = self.root / "_ctx" / "lsp" / self.segment_id
-        self.socket_path = self.lsp_dir / SOCKET_NAME
+
+        # Use short paths from daemon_paths
+        self.socket_path = get_daemon_socket_path(self.segment_id)
+        self.lock_path = get_daemon_lock_path(self.segment_id)
+        self.pid_path = get_daemon_pid_path(self.segment_id)
 
     def connect_or_spawn(self) -> bool:
         """Returns True if connected/spawned, False if error."""

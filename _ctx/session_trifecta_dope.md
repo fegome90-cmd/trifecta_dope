@@ -220,3 +220,21 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Commands**: git pull, uv sync, pytest
 - **Pack SHA**: `365c67055285ad84`
 
+## 2026-01-01 22:34 UTC
+- **Summary**: Leer README y skill.md; cargar contexto con CLI
+- **Files**: README.md, skill.md, _ctx/prime_trifecta_dope.md, _ctx/agent_trifecta_dope.md, _ctx/session_trifecta_dope.md
+- **Commands**: uv run trifecta session append, uv run trifecta ctx sync, uv run trifecta ctx search, uv run trifecta ctx get, sed
+- **Pack SHA**: `0fc64a4e9b1f16c9`
+
+## 2026-01-01 22:36 UTC
+- **Summary**: ctx search failed: Telemetry.event() takes 5 positional arguments but 6 were given
+- **Files**: _ctx/session_trifecta_dope.md
+- **Commands**: uv run trifecta ctx search --segment . --query 'README skill.md onboarding' --limit 6
+- **Pack SHA**: `702e19ef8ee813a0`
+
+## 2026-01-01 22:41 UTC
+- **Summary**: Audit Phase 3 LSP telemetry evidence; run required commands
+- **Files**: _ctx/session_trifecta_dope.md
+- **Commands**: uv run trifecta session append, uv run trifecta ctx sync, uv run trifecta ctx search, uv run trifecta ctx get, git status, uv --version, python --version, uv run pytest, uv run trifecta <lsp cmd>, jq, rg, ls, tail
+- **Pack SHA**: `702e19ef8ee813a0`
+

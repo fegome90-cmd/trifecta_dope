@@ -10,13 +10,13 @@ from src.infrastructure.segment_utils import resolve_segment_root, compute_segme
 
 
 class Telemetry:
-    def __init__(self, root: Path, level: str = "lite"):
-        # Enforce unified resolution for Source of Truth
-        self.root = resolve_segment_root(root)
-        self.level = level
-        self.metrics: Dict[str, Any] = {}
+    def __init__(self, root: Path = None, level: str = "full"):
+        self.root = resolve_segment_root(root or Path.cwd())
         self._ctx_dir = self.root / "_ctx" / "telemetry"
         self._ctx_dir.mkdir(parents=True, exist_ok=True)
+        self.metrics: Dict[str, int] = {}
+        self.timings: Dict[str, list] = {}  # For observe() latency tracking
+        self.level = level
         self.run_id = f"run_{int(time.time())}"
 
         # Phase 3 Audit: segment_id hash 8 chars (Unified)
@@ -28,8 +28,14 @@ class Telemetry:
         # Load prev metrics if needed?
         # For restoration simple start.
 
-    def incr(self, key: str, value: int = 1):
-        self.metrics[key] = self.metrics.get(key, 0) + value
+    def incr(self, key: str, val: int = 1):
+        self.metrics[key] = self.metrics.get(key, 0) + val
+
+    def observe(self, cmd: str, timing_ms: int):
+        """Record a timing observation for latency aggregation."""
+        if cmd not in self.timings:
+            self.timings[cmd] = []
+        self.timings[cmd].append(timing_ms)
 
     def event(self, cmd: str, args: Dict, result: Dict, timing_ms: int, **kwargs):
         if self.level == "off":
@@ -82,9 +88,33 @@ class Telemetry:
                 "lsp_spawn_count": self.metrics.get("lsp_spawn_count", 0),
                 "lsp_ready_count": self.metrics.get("lsp_ready_count", 0),
                 "lsp_fallback_count": self.metrics.get("lsp_fallback_count", 0),
+                "lsp_request_count": self.metrics.get("lsp_request_count", 0),
             },
             "telemetry_drops": {"drop_rate": 0.0},
         }
 
+        # Add latencies if any timings were observed
+        if self.timings:
+            latencies = {}
+            for cmd, vals in self.timings.items():
+                stats = self._compute_stats(vals)
+                if stats:
+                    latencies[cmd] = stats
+            if latencies:
+                summary["latencies"] = latencies
+
         with open(self._ctx_dir / "last_run.json", "w") as f:
             f.write(json.dumps(summary, indent=2))
+
+    def _compute_stats(self, vals: list[int]):
+        """Compute p50, p95, max from timing values."""
+        if not vals:
+            return {}
+        sorted_vals = sorted(vals)
+        n = len(sorted_vals)
+        return {
+            "count": n,
+            "p50_ms": sorted_vals[int(n * 0.5)],
+            "p95_ms": sorted_vals[int(n * 0.95)],
+            "max_ms": sorted_vals[-1],
+        }

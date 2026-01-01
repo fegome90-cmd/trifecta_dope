@@ -9,9 +9,11 @@ from pathlib import Path
 from src.infrastructure.lsp_daemon import (
     LSPDaemonServer,
     LSPDaemonClient,
-    SOCKET_NAME,
-    LOCK_NAME,
-    PID_NAME,
+)
+from src.infrastructure.daemon_paths import (
+    get_daemon_socket_path,
+    get_daemon_lock_path,
+    get_daemon_pid_path,
 )
 from src.infrastructure.segment_utils import compute_segment_id
 
@@ -40,8 +42,8 @@ def test_daemon_spawn_and_connect(clean_daemon_env):
     # 3. Wait for daemon to write PID/Socket (Async start)
     seg_id = compute_segment_id(root)
     lsp_dir = root / "_ctx" / "lsp" / seg_id
-    pid_file = lsp_dir / PID_NAME
-    sock_file = lsp_dir / SOCKET_NAME
+    pid_file = get_daemon_pid_path(seg_id)
+    sock_file = get_daemon_socket_path(seg_id)
 
     max_retries = 50
     for _ in range(max_retries):
@@ -132,8 +134,8 @@ def test_ttl_shutdown_cleans_files(clean_daemon_env):
 
     seg_id = compute_segment_id(root)
     lsp_dir = root / "_ctx" / "lsp" / seg_id
-    pid_file = lsp_dir / PID_NAME
-    sock_file = lsp_dir / SOCKET_NAME
+    pid_file = get_daemon_pid_path(seg_id)
+    sock_file = get_daemon_socket_path(seg_id)
 
     # Wait for startup
     started = False
@@ -168,7 +170,7 @@ def test_no_blocking_on_cold_start(clean_daemon_env):
     # Ensure process is actually running
     seg_id = compute_segment_id(root)
     lsp_dir = root / "_ctx" / "lsp" / seg_id
-    pid_file = lsp_dir / PID_NAME
+    pid_file = get_daemon_pid_path(seg_id)
     # Wait briefly for PID to prove it spawned
     for _ in range(20):
         if pid_file.exists():
@@ -209,8 +211,8 @@ def test_daemon_spawn_and_connect(clean_daemon_env):
     # Re-compute segment ID based on THIS root
     seg_id = compute_segment_id(root)
     lsp_dir = root / "_ctx" / "lsp" / seg_id
-    pid_file = lsp_dir / PID_NAME
-    sock_file = lsp_dir / SOCKET_NAME
+    pid_file = get_daemon_pid_path(seg_id)
+    sock_file = get_daemon_socket_path(seg_id)
 
     max_retries = 50
     for _ in range(max_retries):
@@ -251,7 +253,7 @@ def test_daemon_singleton_lock(clean_daemon_env):
     client1.connect_or_spawn()
 
     seg_id = compute_segment_id(root)
-    pid_file = root / "_ctx" / "lsp" / seg_id / PID_NAME
+    pid_file = get_daemon_pid_path(seg_id)
 
     # Wait for start
     for _ in range(50):
@@ -310,8 +312,8 @@ def test_ttl_shutdown_cleans_files(clean_daemon_env):
 
     seg_id = compute_segment_id(root)
     lsp_dir = root / "_ctx" / "lsp" / seg_id
-    pid_file = lsp_dir / PID_NAME
-    sock_file = lsp_dir / SOCKET_NAME
+    pid_file = get_daemon_pid_path(seg_id)
+    sock_file = get_daemon_socket_path(seg_id)
 
     # Wait for startup
     started = False
@@ -352,7 +354,7 @@ def test_no_blocking_on_cold_start(clean_daemon_env):
     # Ensure process is actually running
     seg_id = compute_segment_id(root)
     lsp_dir = root / "_ctx" / "lsp" / seg_id
-    pid_file = lsp_dir / PID_NAME
+    pid_file = get_daemon_pid_path(seg_id)
     # Wait briefly for PID to prove it spawned
     for _ in range(20):
         if pid_file.exists():

@@ -116,14 +116,14 @@ def test_timing_ms_min_1_for_lsp_events():
 def test_latency_schema_compliance():
     """Tripwire: ensure latencies use strict p50_ms/p95_ms/max_ms schema."""
     t = Telemetry(Path.cwd())
-    t.metrics["lsp.request"] = [10, 20, 30]
+    t.timings["lsp.request"] = [10, 20, 30]  # Use timings dict for observe()
 
     t.flush()  # writes last_run.json
 
     last_run_file = Path("_ctx/telemetry/last_run.json")
     data = json.loads(last_run_file.read_text())
 
-    stats = data["latencies"].get("lsp.request", {})
+    stats = data.get("latencies", {}).get("lsp.request", {})
     assert "count" in stats
     assert "p50_ms" in stats
     assert "p95_ms" in stats
