@@ -1285,3 +1285,5 @@ def legacy_scan(
             for err in errors:
                 typer.echo(f"   - {err}")
             raise typer.Exit(code=1)
+if __name__ == "__main__":
+    app()

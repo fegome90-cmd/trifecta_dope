@@ -1,0 +1,33 @@
+{
+  "name": "trifecta_dope",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11-bullseye",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "editor.fontFamily": "IosevkaNerdFont",
+        "editor.fontSize": 12,
+        "editor.fontLigatures": true,
+        "workbench.colorTheme": "Kanagawa Wave",
+        "python.linting.enabled": true,
+        "python.linting.pylintEnabled": true,
+        "python.formatting.provider": "black",
+        "[python]": {
+          "editor.defaultFormatter": "ms-python.python",
+          "editor.formatOnSave": true
+        }
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.black-formatter",
+        "charliermarsh.ruff",
+        "ms-vscode.makefile-tools",
+        "metaphore.kanagawa-vscode-color-theme"
+      ]
+    }
+  },
+  "postCreateCommand": "mkdir -p ~/.local/share/fonts && cd ~/.local/share/fonts && wget -q https://github.com/ryanoasis/nerd-fonts/releases/download/v3.1.1/Iosevka.zip && unzip -q Iosevka.zip && rm Iosevka.zip && fc-cache -f -v ~/.local/share/fonts/ > /dev/null 2>&1 && echo 'Iosevka Nerd Font installed'",
+  "remoteUser": "vscode",
+  "forwardPorts": [],
+  "mounts": []
+}

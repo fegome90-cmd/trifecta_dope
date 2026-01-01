@@ -29,3 +29,6 @@ example-segment/
 
 # Worktrees
 .worktrees/
+
+# Third-party skills (git submodules/embedded repos)
+skills/third_party/

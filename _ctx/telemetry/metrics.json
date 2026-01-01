@@ -1,9 +1,9 @@
 {
   "ctx_build_count": 25,
   "ctx_validate_pass_count": 24,
-  "ctx_search_count": 39,
+  "ctx_search_count": 40,
   "ctx_search_hits_total": 47,
-  "ctx_search_zero_hits_count": 20,
+  "ctx_search_zero_hits_count": 21,
   "ctx_get_count": 7,
   "ctx_get_chunks_total": 6,
   "ctx_get_mode_excerpt_count": 6,
@@ -12,6 +12,6 @@
   "ctx_search_alias_terms_total": 83,
   "ctx_get_mode_raw_count": 1,
   "ctx_validate_fail_count": 1,
-  "ctx_stats_count": 2,
+  "ctx_stats_count": 4,
   "ctx_plan_count": 955
 }
