@@ -1,42 +1,43 @@
 {
-  "run_id": "run_1767250969",
-  "ts": "2026-01-01T07:02:49.569077+00:00",
+  "run_id": "run_1767275164",
+  "ts": "2026-01-01T13:46:05.070594+00:00",
   "metrics_delta": {
-    "telemetry_events_attempted": 2,
-    "telemetry_events_written": 2,
-    "ast_parse_count": 1,
-    "ast_cache_miss_count": 1
+    "ctx_build_count": 1,
+    "prime_links_included_total": 2,
+    "ctx_validate_pass_count": 1,
+    "telemetry_events_attempted": 3,
+    "telemetry_events_written": 3
   },
   "latencies": {
-    "ast.parse": {
+    "ctx.sync": {
       "count": 1,
-      "p50_ms": 0.0,
-      "p95_ms": 0.0,
-      "max_ms": 0.0
+      "p50_ms": 358.0,
+      "p95_ms": 358.0,
+      "max_ms": 358.0
     }
   },
   "tokens": {
-    "ast.parse": {
+    "ctx.sync.stub_regen": {
+      "count": 2,
+      "total_input_tokens": 0,
+      "total_output_tokens": 16,
+      "total_tokens": 16,
+      "total_retrieved_tokens": 0,
+      "avg_tokens_per_call": 8.0
+    },
+    "ctx.sync": {
       "count": 1,
       "total_input_tokens": 0,
-      "total_output_tokens": 9,
-      "total_tokens": 9,
+      "total_output_tokens": 4,
+      "total_tokens": 4,
       "total_retrieved_tokens": 0,
-      "avg_tokens_per_call": 9.0
-    },
-    "selector.resolve": {
-      "count": 1,
-      "total_input_tokens": 4,
-      "total_output_tokens": 11,
-      "total_tokens": 15,
-      "total_retrieved_tokens": 0,
-      "avg_tokens_per_call": 15.0
+      "avg_tokens_per_call": 4.0
     }
   },
   "ast": {
-    "ast_parse_count": 1,
+    "ast_parse_count": 0,
     "ast_cache_hit_count": 0,
-    "ast_cache_miss_count": 1,
+    "ast_cache_miss_count": 0,
     "ast_cache_hit_rate": 0.0
   },
   "lsp": {
@@ -56,13 +57,14 @@
   },
   "telemetry_drops": {
     "lock_skipped": 0,
-    "attempted": 2,
-    "written": 2,
+    "attempted": 3,
+    "written": 3,
     "drop_rate": 0.0
   },
   "top_warnings": [],
   "pack_state": {
     "pack_sha": "365c67055285ad84",
-    "pack_mtime": 1767230435.5603714
+    "pack_mtime": 1767213863.7554393,
+    "stale_detected": false
   }
 }

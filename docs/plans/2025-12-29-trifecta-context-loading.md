@@ -804,7 +804,8 @@ def ctx_refs(
 **Date**: 2025-12-29  
 **Status**: Design Revised  
 **Approach**: Heuristic file loading (no RAG, no chunking)
-**Name**: Programming Context Caller (PCC) - Simplified
+**Name**: 
+Programming Context Caller (PCC) - Simplified
 ---
 
 ## Problem Statement
