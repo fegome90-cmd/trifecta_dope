@@ -23,7 +23,11 @@ def parse_feature_map(prime_path: Path) -> dict[str, list[str]]:
     found_header = False
 
     def is_separator_col(c: str) -> bool:
-        """Check if a column is part of a markdown table separator row."""
+        """Check if a column is part of a markdown table separator row.
+
+        Empty columns are allowed. Non-empty columns must contain only dashes
+        and colons with at least one dash.
+        """
         if not c:  # Empty columns are allowed
             return True
         # Non-empty columns must contain only dashes and colons, with at least one dash
@@ -43,7 +47,9 @@ def parse_feature_map(prime_path: Path) -> dict[str, list[str]]:
 
         # Skip separator row: all non-empty columns must contain only dashes/colons with at least one dash
         # Also ensure at least one non-empty column exists
-        if cols and any(c for c in cols) and all(is_separator_col(c) for c in cols):
+        has_non_empty_cols = any(c for c in cols)
+        all_cols_are_separators = all(is_separator_col(c) for c in cols)
+        if cols and has_non_empty_cols and all_cols_are_separators:
             continue
 
         # Header row starts with "Feature"
