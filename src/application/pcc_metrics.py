@@ -81,6 +81,20 @@ def evaluate_pcc(
 
 
 def summarize_pcc(rows: list[dict[str, bool]]) -> dict[str, int]:
+    """Aggregate PCC evaluation metrics across multiple task results.
+
+    Args:
+        rows: A list of dictionaries, typically produced by :func:`evaluate_pcc`,
+            where each dictionary contains boolean flags for "path_correct",
+            "false_fallback", and "safe_fallback".
+
+    Returns:
+        A dictionary with integer counts summarizing the input rows:
+
+        - "path_correct_count": Number of rows with ``path_correct`` set to True.
+        - "false_fallback_count": Number of rows with ``false_fallback`` set to True.
+        - "safe_fallback_count": Number of rows with ``safe_fallback`` set to True.
+    """
     return {
         "path_correct_count": sum(1 for r in rows if r.get("path_correct")),
         "false_fallback_count": sum(1 for r in rows if r.get("false_fallback")),
