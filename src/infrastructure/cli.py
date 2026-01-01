@@ -674,12 +674,6 @@ def eval_plan(
     typer.echo(f"Segment: {segment}")
     typer.echo(f"Total tasks: {total}")
     typer.echo("")
-    typer.echo(f"Dataset: {dataset_path}")
-    typer.echo(f"Dataset SHA256: {dataset_sha256}")
-    typer.echo(f"Dataset mtime: {dataset_mtime}")
-    typer.echo(f"Segment: {segment}")
-    typer.echo(f"Total tasks: {total}")
-    typer.echo("")
 
     typer.echo(f"Distribution (MUST SUM TO {total}):")
     typer.echo(f"  feature (L1):   {feature_count} ({feature_hit_rate:.1f}%)")
