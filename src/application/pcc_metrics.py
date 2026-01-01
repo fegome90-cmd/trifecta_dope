@@ -22,6 +22,10 @@ def parse_feature_map(prime_path: Path) -> dict[str, list[str]]:
     in_table = False
     found_header = False
 
+    def is_separator_col(c: str) -> bool:
+        """Check if a column is part of a markdown table separator row."""
+        return not c or (all(ch in "-:" for ch in c) and "-" in c)
+
     for line in lines:
         if line.strip().startswith("### index.feature_map"):
             in_table = True
@@ -35,9 +39,6 @@ def parse_feature_map(prime_path: Path) -> dict[str, list[str]]:
         cols = [c.strip() for c in line.strip("|").split("|")]
 
         # Skip separator row: each non-empty column must contain only dashes and optional colons
-        def is_separator_col(c: str) -> bool:
-            return not c or (all(ch in "-:" for ch in c) and "-" in c)
-
         if len(cols) >= 1 and all(is_separator_col(c) for c in cols):
             continue
 
