@@ -24,6 +24,7 @@ def test_parse_feature_map_paths(tmp_path: Path) -> None:
 
 
 def test_parse_feature_map_feature_in_name(tmp_path: Path) -> None:
+    """Ensure feature names containing 'feature' are parsed as data, not mistaken for the 'Feature' header."""
     prime = tmp_path / "prime_test.md"
     prime.write_text(
         """
@@ -42,6 +43,7 @@ def test_parse_feature_map_feature_in_name(tmp_path: Path) -> None:
 
 
 def test_parse_feature_map_malformed_no_header(tmp_path: Path) -> None:
+    """Verify error handling when the feature_map table lacks the required header row."""
     prime = tmp_path / "prime_test.md"
     prime.write_text(
         """

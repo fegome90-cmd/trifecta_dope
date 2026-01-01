@@ -34,8 +34,8 @@ def parse_feature_map(prime_path: Path) -> dict[str, list[str]]:
 
         cols = [c.strip() for c in line.strip("|").split("|")]
 
-        # Skip separator row (contains only dashes and pipes)
-        if len(cols) >= 1 and all(c == "" or all(ch == "-" for ch in c) for c in cols):
+        # Skip separator row (non-empty columns contain only dashes)
+        if len(cols) >= 1 and all(c == "" or (c and all(ch == "-" for ch in c)) for c in cols):
             continue
 
         # Header row starts with "Feature"
@@ -63,6 +63,35 @@ def evaluate_pcc(
     feature_map: dict[str, list[str]],
     selected_by: str,
 ) -> dict[str, bool]:
+    """Evaluate PCC metrics for a single prediction against an expected feature.
+
+    The function compares an expected feature and its associated paths from
+    ``feature_map`` with a predicted feature and predicted paths, and computes
+    simple boolean metrics that can be aggregated by :func:`summarize_pcc`.
+
+    Args:
+        expected_feature: The ground-truth feature name. The special value
+            ``"fallback"`` indicates that no specific feature was expected.
+        predicted_feature: The feature selected by the model or system, or
+            ``None`` if no feature was predicted.
+        predicted_paths: List of file paths associated with the prediction.
+        feature_map: Mapping from feature name to the list of canonical file
+            paths for that feature, as returned by :func:`parse_feature_map`.
+        selected_by: A string indicating which selector chose the prediction,
+            e.g. ``"fallback"`` when the fallback mechanism was used.
+
+    Returns:
+        A dictionary with the following boolean keys:
+
+        * ``"path_correct"``: ``True`` if a non-fallback expected feature was
+          correctly predicted and at least one predicted path matches a path
+          for the expected feature.
+        * ``"false_fallback"``: ``True`` if a specific feature was expected
+          but the prediction was selected by the fallback mechanism.
+        * ``"safe_fallback"``: ``True`` if no specific feature was expected
+          (``expected_feature == "fallback"``) and the fallback mechanism was
+          used.
+    """
     expected_paths = feature_map.get(expected_feature, []) if expected_feature != "fallback" else []
     path_correct = bool(
         expected_feature != "fallback"
@@ -81,6 +110,20 @@ def evaluate_pcc(
 
 
 def summarize_pcc(rows: list[dict[str, bool]]) -> dict[str, int]:
+    """Aggregate PCC evaluation metrics across multiple task results.
+
+    Args:
+        rows: A list of dictionaries, typically produced by :func:`evaluate_pcc`,
+            where each dictionary contains boolean flags for "path_correct",
+            "false_fallback", and "safe_fallback".
+
+    Returns:
+        A dictionary with integer counts summarizing the input rows:
+
+        - "path_correct_count": Number of rows with ``path_correct`` set to True.
+        - "false_fallback_count": Number of rows with ``false_fallback`` set to True.
+        - "safe_fallback_count": Number of rows with ``safe_fallback`` set to True.
+    """
     return {
         "path_correct_count": sum(1 for r in rows if r.get("path_correct")),
         "false_fallback_count": sum(1 for r in rows if r.get("false_fallback")),
