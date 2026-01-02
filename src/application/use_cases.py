@@ -312,10 +312,9 @@ class BuildContextPackUseCase:
         # 2. FAIL-CLOSED: Validate exactly one prime file with correct suffix
         expected_prime = ctx_dir / f"prime_{segment_id}.md"
         if not expected_prime.exists():
-            raise FileNotFoundError(
-                f"Expected prime file not found: _ctx/prime_{segment_id}.md. "
-                f"Segment ID derived from directory name: '{target_path.name}' -> '{segment_id}'"
-            )
+            from src.application.exceptions import PrimeFileNotFoundError
+
+            raise PrimeFileNotFoundError(expected_path=expected_prime, segment_id=segment_id)
 
         # 3. FAIL-CLOSED: Detect contamination (other prime_*.md files)
         all_prime_files = list(ctx_dir.glob("prime_*.md"))

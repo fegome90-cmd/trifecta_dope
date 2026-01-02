@@ -23,7 +23,7 @@ from src.application.use_cases import (
     ValidateTrifectaUseCase,
 )
 from src.domain.models import TrifectaConfig
-from src.domain.result import Err, Ok
+
 from src.infrastructure.file_system import FileSystemAdapter
 from src.infrastructure.telemetry import Telemetry
 from src.infrastructure.templates import TemplateRenderer
@@ -589,7 +589,7 @@ def eval_plan(
             expected_features[task_str] = expected_id
 
     if not tasks:
-        typer.echo(f"❌ No tasks found in dataset file")
+        typer.echo("❌ No tasks found in dataset file")
         raise typer.Exit(1)
 
     # Run evaluation
@@ -632,17 +632,10 @@ def eval_plan(
             elif selected_id == expected_id:
                 # Correct if selected_feature matches expected
                 correct_predictions += 1
-
         # Check for true_zero_guidance (bug condition)
         chunks_count = len(result.get("chunk_ids", []))
         paths_count = len(result.get("paths", []))
-        entrypoints_count = len(
-            [
-                p
-                for p in result.get("paths", [])
-                if p in ["README.md", "skill.md", "RELEASE_NOTES_v1.md"]
-            ]
-        )
+        # entrypoints_count calculation removed (unused)
         next_steps_count = len(result.get("next_steps", []))
 
         if chunks_count == 0 and paths_count == 0 and next_steps_count == 0:
@@ -700,7 +693,7 @@ def eval_plan(
     typer.echo(f"  nl_trigger (L2): {nl_trigger_count} ({nl_trigger_hit_rate:.1f}%)")
     typer.echo(f"  alias (L3):      {alias_count} ({alias_hit_rate:.1f}%)")
     typer.echo(f"  fallback (L4):   {fallback_count} ({fallback_rate:.1f}%)")
-    typer.echo(f"  ─────────────────────────────")
+    typer.echo("  ─────────────────────────────")
     typer.echo(f"  total:          {total} (100.0%)")
     typer.echo("")
 
@@ -893,13 +886,68 @@ def sync(
         if not result.passed:
             raise typer.Exit(code=1)
 
+    # Type-based error classification (preferred - robust)
     except Exception as e:
-        telemetry.event(
-            "ctx.sync",
-            {"segment": segment},
-            {"status": "error"},
-            int((time.time() - start_time) * 1000),
-        )
+        from src.application.exceptions import PrimeFileNotFoundError
+
+        if isinstance(e, PrimeFileNotFoundError):
+            # Prime file missing - emit SEGMENT_NOT_INITIALIZED Error Card
+            from src.cli.error_cards import render_error_card
+
+            error_card = render_error_card(
+                error_code="SEGMENT_NOT_INITIALIZED",
+                error_class="PRECONDITION",
+                cause=f"Missing prime file: {e.expected_path}",
+                next_steps=[
+                    f"trifecta create -s {segment}",
+                    f"trifecta refresh-prime -s {segment}",
+                ],
+                verify_cmd=f"trifecta ctx sync -s {segment}",
+            )
+            telemetry.event(
+                "ctx.sync",
+                {"segment": segment},
+                {"status": "error", "error_code": "SEGMENT_NOT_INITIALIZED"},
+                int((time.time() - start_time) * 1000),
+            )
+            typer.echo(error_card, err=True)
+            raise typer.Exit(1)
+
+        # Substring fallback for backward compatibility (deprecated)
+        elif isinstance(e, FileNotFoundError) and "Expected prime file not found" in str(e):
+            import sys
+            from src.cli.error_cards import render_error_card
+
+            # Emit deprecation warning for harness detection
+            print("TRIFECTA_DEPRECATED: fallback_prime_missing_string_match_used", file=sys.stderr)
+
+            error_card = render_error_card(
+                error_code="SEGMENT_NOT_INITIALIZED",
+                error_class="PRECONDITION",
+                cause=str(e),
+                next_steps=[
+                    f"trifecta create -s {segment}",
+                    f"trifecta refresh-prime -s {segment}",
+                ],
+                verify_cmd=f"trifecta ctx sync -s {segment}",
+            )
+            telemetry.event(
+                "ctx.sync",
+                {"segment": segment},
+                {"status": "error", "error_code": "SEGMENT_NOT_INITIALIZED"},
+                int((time.time() - start_time) * 1000),
+            )
+            typer.echo(error_card, err=True)
+            raise typer.Exit(1)
+
+        # All other exceptions (fail-closed)
+        else:
+            telemetry.event(
+                "ctx.sync",
+                {"segment": segment},
+                {"status": "error"},
+                int((time.time() - start_time) * 1000),
+            )
         typer.echo(_format_error(e, "Sync Error"), err=True)
         if not isinstance(e, typer.Exit):
             raise typer.Exit(1)
@@ -983,9 +1031,8 @@ def ctx_reset(
 
 @app.command("create")
 def create(
-    segment: str = typer.Option(..., "--segment", "-s", help="Segment name (slug)"),
+    segment: str = typer.Option(..., "--segment", "-s", help="Path to segment directory"),
     scope: str = typer.Option("Scope", "--scope", help="Short description of segment scope"),
-    path: Path = typer.Option(Path.cwd(), "--path", "-p", help="Target directory (default: CWD)"),
 ) -> None:
     """
     Scaffold a new Trifecta Segment.
@@ -997,32 +1044,27 @@ def create(
     - _ctx/session_{segment}.md (Runbook)
     - readme_tf.md (Documentation)
     """
-    template_renderer, file_system, _ = _get_dependencies(segment)
+    # FIXED: -s is now path to target directory (consistent with ctx sync/search/get)
+    # Segment ID derived from directory name
+    target_dir = Path(segment).resolve()
 
-    # Dependencies not needed for scaffold mostly
-    # But logic is inside a usecase? No, currently scaffold logic was simple enough to be here or moved?
-    # Logic in previous version was likely here or implied.
-    # Let's recreate the scaffold logic using ValidateTrifectaUseCase structure or just plain logic.
-    # Actually, UseCase logic for create is missing in imports, let's check imports.
-    # ValidateTrifectaUseCase is for validate-trifecta command.
-    # Create logic is typically simple file writing.
+    template_renderer, _, _ = _get_dependencies(str(target_dir))
 
-    # Re-implementing simplified create logic here to match previous state
-
-    target_dir = path
     if not target_dir.exists():
         target_dir.mkdir(parents=True)
 
+    # Derive segment_id from directory name (same logic as use_cases.py)
+    from src.domain.naming import normalize_segment_id
+
+    segment_id = normalize_segment_id(target_dir.name)
+
     config = TrifectaConfig(
-        segment=segment,
+        segment=segment_id,
         scope=scope,
-        repo_root=str(path.absolute()),
+        repo_root=str(target_dir),
         last_verified=time.strftime("%Y-%m-%d"),
         default_profile="impl_patch",
     )
-
-    # Use config.segment_id (normalized) for all file names
-    segment_id = config.segment_id
 
     files = {
         "skill.md": template_renderer.render_skill(config),
