@@ -238,3 +238,86 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Commands**: uv run trifecta session append, uv run trifecta ctx sync, uv run trifecta ctx search, uv run trifecta ctx get, git status, uv --version, python --version, uv run pytest, uv run trifecta <lsp cmd>, jq, rg, ls, tail
 - **Pack SHA**: `702e19ef8ee813a0`
 
+## 2026-01-01 22:53 UTC
+- **Summary**: Audit Phase 3 LSP telemetry evidence per Judge Auditor
+- **Files**: _ctx/session_trifecta_dope.md
+- **Commands**: uv run trifecta session append, uv run trifecta ctx sync, uv run trifecta ctx search, uv run trifecta ctx get, git status, uv --version, python --version, uv run pytest -q, uv run pytest -q tests/integration/test_ast_telemetry_consistency.py, uv run pytest -q tests/integration/test_lsp_telemetry.py, uv run pytest -q tests/integration/test_lsp_daemon.py, uv run trifecta <lsp cmd>, jq, rg, ls, tail
+- **Pack SHA**: `31701c07e080f89c`
+
+## 2026-01-01 23:04 UTC
+- **Summary**: Audit LSP telemetry runs + tests; warm runs only; collected evidence outputs
+- **Files**: _ctx/session_trifecta_dope.md, _ctx/telemetry/events.jsonl, _ctx/telemetry/last_run.json
+- **Commands**: git status, uv --version, python --version, uv run pytest -q, uv run pytest -q tests/integration/test_ast_telemetry_consistency.py, uv run pytest -q tests/integration/test_lsp_telemetry.py, uv run pytest -q tests/integration/test_lsp_daemon.py, uv run trifecta ast hover, ls -l tempdir, cat pid, ps, jq
+- **Pack SHA**: `3b045595acf7ffcd`
+
+## 2026-01-01 23:08 UTC
+- **Summary**: Guardar reporte de auditoria Phase 3 LSP en Desktop
+- **Files**: _ctx/session_trifecta_dope.md
+- **Commands**: uv run trifecta session append, uv run trifecta ctx sync, uv run trifecta ctx search, uv run trifecta ctx get, cat > ~/Desktop/*.md
+- **Pack SHA**: `3b045595acf7ffcd`
+
+## 2026-01-01 23:28 UTC
+- **Summary**: External Audit: Phase 3 LSP Daemon (AUDITABLE-PASS)
+- **Files**: audit_report_phase3_lsp_daemon.md
+- **Commands**: pytest, trifecta ast hover
+- **Pack SHA**: `ec673055b16e9433`
+
+## 2026-01-02 01:18 UTC
+- **Summary**: LSP Lifecycle Hardening + Error Card System
+- **Changes**:
+  - `lsp_client.py`: Added post-join guard (skip close if thread alive), increased timeout to 1.0s, defensive stopping check
+  - `daemon_paths.py`: Added /tmp validation + AF_UNIX path length checks
+  - `src/cli/error_cards.py`: NEW - Error Card renderer with stable markers
+  - `cli.py`: Added FileNotFoundError handler → SEGMENT_NOT_INITIALIZED Error Card
+  - `test_lsp_no_stderr_errors.py`: LSP activation verification gate
+  - `test_daemon_paths_constraints.py`: NEW - platform constraint tripwires
+  - `tests/acceptance/test_ctx_sync_preconditions.py`: NEW - black-box CLI tests
+- **Tests**: 17 integration + 2 acceptance passing
+- **Next**: Fix `trifecta create -s` to write to target dir (not CLI cwd)
+
+## 2026-01-02 09:56 UTC
+- **Summary**: Error Card & Dogfooding Sprint COMPLETE
+- **Fixes**:
+  - `cli.py`: Error Card handler hardened (only emits `SEGMENT_NOT_INITIALIZED` for prime-specific errors)
+  - `cli.py`: Fixed `create -s` to write to target directory (was writing to CLI cwd)
+  - `cli.py`: Removed duplicate `--path` param, segment_id derived from dirname
+- **Tests**: 5 acceptance tests passing
+  - `test_ctx_sync_fails_when_prime_missing` - Error Card
+  - `test_ctx_sync_succeeds_after_initialization` - Real dogfooding (create→refresh-prime→sync)
+  - `test_ctx_sync_succeeds_with_valid_prime` - Happy path
+  - `test_error_card_not_emitted_for_other_file_errors` - Anti-false-positive tripwire
+  - `test_create_from_different_cwd` - Confirms create writes to target, not cwd
+- **Bug Fixed**: `docs/bugs/create_cwd_bug.md` marked FIXED
+- **Next**: Consider replacing substring matching with path comparison for more robust error classification
+
+## 2026-01-02 11:30 UTC
+- **Summary**: Type-Based Error Classification Implementation COMPLETE
+- **Changes**:
+  - `src/application/exceptions.py`: NEW - PrimeFileNotFoundError with path/segment_id attributes
+  - `src/application/use_cases.py`: Raise PrimeFileNotFoundError instead of generic FileNotFoundError
+  - `src/infrastructure/cli.py`: Type-based handler with isinstance() check + substring fallback
+  - Deprecation warning: `TRIFECTA_DEPRECATED: fallback_prime_missing_string_match_used` to stderr
+- **Tests**: 9/9 passing
+  - 5 acceptance tests (dogfooding verde)
+  - 3 unit tests (exception attributes, custom message, type independence)
+  - 1 unit test (type priority verification)
+- **Docs Optimization**: skill.md 96→69 lines, agent.md +protocols section, prime.md filled with new paths/glossary
+- **Commit**: 9c394c6 "feat: replace substring matching with type-based error classification"
+- **Next**: Monitor TRIFECTA_DEPRECATED in dogfooding, remove substring fallback after 2026-03-01
+
+## 2026-01-02 12:45 UTC
+- **Summary**: Deprecated Tracking System Implementation COMPLETE
+- **Changes**:
+  - `docs/deprecations.yaml`: NEW - Static registry of deprecated code paths (source-of-truth)
+  - `src/infrastructure/deprecations.py`: NEW - Helper function `maybe_emit_deprecated()` with env-based policy
+  - `src/infrastructure/cli.py`: Instrumented substring fallback with deprecated tracking
+  - Policy: TRIFECTA_DEPRECATED env var (off|warn|fail)
+- **Tests**: 10/10 passing
+  - 5 unit tests (policy off/warn/fail, default, invalid values)
+  - 5 acceptance tests (all existing tests still passing)
+- **Features**:
+  - Emits `deprecated.used` event via existing telemetry (no new log files)
+  - Policy 'off' (default): no tracking
+  - Policy 'warn': emit telemetry event only
+  - Policy 'fail': emit event + exit code 2 (for CI/harness)
+- **Next**: Use TRIFECTA_DEPRECATED=warn in dogfooding to detect deprecated paths, remove fallback by 2026-02-15

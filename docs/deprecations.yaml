@@ -1,0 +1,21 @@
+# Trifecta Deprecations Registry
+#
+# This file is the source-of-truth for all deprecated code paths.
+# Runtime tracking emits events via existing telemetry (no new log files).
+#
+# Policy controlled by env var TRIFECTA_DEPRECATED:
+#   off  - no tracking
+#   warn - emit telemetry event (default for dev)
+#   fail - emit event + exit code != 0 (for CI/harness)
+
+deprecations:
+  - id: fallback_prime_missing_string_match
+    since: 2026-01-02
+    remove_by: 2026-02-15
+    replacement: "PrimeFileNotFoundError type-based classification"
+    owner: infra
+    location: src/infrastructure/cli.py:L916-L937
+    description: |
+      Substring matching fallback for prime file missing error.
+      Kept for backward compatibility during migration period.
+      All use_cases should raise PrimeFileNotFoundError by removal date.

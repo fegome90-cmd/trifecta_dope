@@ -917,8 +917,12 @@ def sync(
         elif isinstance(e, FileNotFoundError) and "Expected prime file not found" in str(e):
             import sys
             from src.cli.error_cards import render_error_card
+            from src.infrastructure.deprecations import maybe_emit_deprecated
 
-            # Emit deprecation warning for harness detection
+            # Track deprecated usage (policy: off|warn|fail via env var)
+            maybe_emit_deprecated("fallback_prime_missing_string_match", telemetry)
+
+            # Emit deprecation warning for harness detection (legacy)
             print("TRIFECTA_DEPRECATED: fallback_prime_missing_string_match_used", file=sys.stderr)
 
             error_card = render_error_card(
