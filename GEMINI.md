@@ -48,3 +48,9 @@
       capa_modificada: "Infrastructure | Interfaces | Verification"
       impacto_contrato: "CLI output contract: Error Cards now include stable markers (TRIFECTA_ERROR_CODE, CLASS, NEXT_STEPS, VERIFY) for agent parsing."
       siguiente_paso_tecnico: "Fix `trifecta create -s` to create files in target directory, not CLI cwd."
+- history:
+    - user_prompt_summary: "Implement Pre-Commit Telemetry Kill Switch and harden gates."
+      agent_response_summary: "Implemented TRIFECTA_NO_TELEMETRY (no-op) and TRIFECTA_TELEMETRY_DIR (redirection) for zero side-effects during pre-commit. Hardened test-gate script and tripwire validator. Verified with 4/4 contract tests and 34/34 acceptance tests passing with clean worktree."
+      capa_modificada: "Infrastructure | Verification | Configuration"
+      impacto_contrato: "None"
+      siguiente_paso_tecnico: "Maintain zero telemetry debt via strict pre-commit gates."
