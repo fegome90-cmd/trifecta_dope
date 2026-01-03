@@ -36,6 +36,20 @@ class HookifyViolation:
         context: Additional context (file path, user message, etc.)
         status: Current status (open, resolved, ignored)
         resolved_at: Optional timestamp when resolved
+
+        # Metrics fields for lifecycle management
+        trigger_count: Total times this rule has triggered
+        accepted_count: Times user accepted the suggestion (useful detection)
+        false_positive_count: Times user rejected (false positive)
+        precision: Ratio of accepted/trigger (0.0-1.0)
+        false_positive_rate: Ratio of FP/trigger (0.0-1.0)
+        days_since_creation: Days since rule was first created
+        days_since_last_trigger: Days since this rule last triggered
+        avg_latency_ms: Average latency to process this rule
+        avg_token_penalty: Average token cost penalty
+        disable_count: Times user temporarily disabled this rule
+        override_count: Times user overrode the block/warning
+        complaint_count: Times user complained about this rule
     """
 
     id: str
@@ -45,6 +59,20 @@ class HookifyViolation:
     context: Mapping[str, str]
     status: Literal["open", "resolved", "ignored"] = "open"
     resolved_at: Optional[str] = None
+
+    # Metrics fields for lifecycle management
+    trigger_count: int = 0
+    accepted_count: int = 0
+    false_positive_count: int = 0
+    precision: float = 0.0
+    false_positive_rate: float = 0.0
+    days_since_creation: int = 0
+    days_since_last_trigger: int = 0
+    avg_latency_ms: float = 0.0
+    avg_token_penalty: float = 0.0
+    disable_count: int = 0
+    override_count: int = 0
+    complaint_count: int = 0
 
     def to_dict(self) -> dict:
         """Convert to dictionary for JSON serialization."""
@@ -56,6 +84,19 @@ class HookifyViolation:
             "context": dict(self.context),
             "status": self.status,
             "resolved_at": self.resolved_at,
+            # Metrics fields
+            "trigger_count": self.trigger_count,
+            "accepted_count": self.accepted_count,
+            "false_positive_count": self.false_positive_count,
+            "precision": self.precision,
+            "false_positive_rate": self.false_positive_rate,
+            "days_since_creation": self.days_since_creation,
+            "days_since_last_trigger": self.days_since_last_trigger,
+            "avg_latency_ms": self.avg_latency_ms,
+            "avg_token_penalty": self.avg_token_penalty,
+            "disable_count": self.disable_count,
+            "override_count": self.override_count,
+            "complaint_count": self.complaint_count,
         }
 
     @classmethod

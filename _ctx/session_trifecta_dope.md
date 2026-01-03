@@ -368,3 +368,8 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Commands**: `uv run pre-commit run --all-files`, `uv run pytest -q tests/unit/test_telemetry_env_contracts.py`
 - **Result**: Zero side-effects in repo, all gates PASS.
 - **Pack SHA**: `5fa564bb`
+## 2026-01-03 18:08 UTC
+- **Summary**: Dogfooding Cycle: Fixed Prime path redundancy & implemented Search Full-Text Fallback in ContextService.
+- **Files**: src/application/context_service.py, _ctx/prime_trifecta_dope.md
+- **Commands**: ctx sync, ctx search, ctx get, load
+- **Pack SHA**: `5805674187cbae6b`

@@ -16,31 +16,33 @@ profile: load_only
 ## [HIGH] Prioridad ALTA - Fundamentos
 
 **Leer primero para entender el contexto del segmento.**
+1. `_ctx/generated/repo_map.md`
+2. `_ctx/generated/symbols_stub.md`
 
-1. `trifecta_dope/src/infrastructure/lsp_daemon.py`
-2. `trifecta_dope/src/infrastructure/cli.py`
-3. `trifecta_dope/src/infrastructure/lsp_client.py`
-4. `trifecta_dope/src/infrastructure/telemetry.py`
-5. `trifecta_dope/tests/integration/test_lsp_daemon.py`
-6. `trifecta_dope/src/application/use_cases.py`
-7. `trifecta_dope/src/domain/ast_models.py`
-8. `trifecta_dope/.github/copilot-instructions.md`
-9. `trifecta_dope/src/infrastructure/cli_ast.py`
-10. `trifecta_dope/README.md`
-11. `trifecta_dope/src/cli/error_cards.py`
-12. `trifecta_dope/tests/acceptance/test_ctx_sync_preconditions.py`
-13. `trifecta_dope/src/domain/naming.py`
-14. `trifecta_dope/src/infrastructure/daemon_paths.py`
+1. `src/infrastructure/lsp_daemon.py`
+2. `src/infrastructure/cli.py`
+3. `src/infrastructure/lsp_client.py`
+4. `src/infrastructure/telemetry.py`
+5. `tests/integration/test_lsp_daemon.py`
+6. `src/application/use_cases.py`
+7. `src/domain/ast_models.py`
+8. `.github/copilot-instructions.md`
+9. `src/infrastructure/cli_ast.py`
+10. `README.md`
+11. `src/cli/error_cards.py`
+12. `tests/acceptance/test_ctx_sync_preconditions.py`
+13. `src/domain/naming.py`
+14. `src/infrastructure/daemon_paths.py`
 
 
 ## [MED] Prioridad MEDIA - Implementación
 
 **Leer para entender bugs recientes y testing.**
 
-1. `trifecta_dope/docs/bugs/create_cwd_bug.md`
-2. `trifecta_dope/tests/integration/test_lsp_telemetry.py`
-3. `trifecta_dope/src/application/telemetry_reports.py`
-4. `trifecta_dope/tests/integration/test_daemon_paths_constraints.py`
+1. `docs/bugs/create_cwd_bug.md`
+2. `tests/integration/test_lsp_telemetry.py`
+3. `src/application/telemetry_reports.py`
+4. `tests/integration/test_daemon_paths_constraints.py`
 
 ## [LOW] Prioridad BAJA - Referencias
 

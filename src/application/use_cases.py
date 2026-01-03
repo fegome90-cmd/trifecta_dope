@@ -1,9 +1,14 @@
+"""Application layer use cases for Trifecta."""
+
 import json
 import re
 import subprocess
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+# Preview length for context pack index (extended to capture buried technical terms)
+PREVIEW_LENGTH = 1000
 
 import yaml  # type: ignore[import-untyped]
 
@@ -461,7 +466,11 @@ class BuildContextPackUseCase:
             chunks.append(chunk)
 
             # Index entry (L0)
-            preview = content[:200].strip() + "..." if len(content) > 200 else content
+            preview = (
+                content[:PREVIEW_LENGTH].strip() + "..."
+                if len(content) > PREVIEW_LENGTH
+                else content
+            )
             index.append(
                 ContextIndexEntry(
                     id=chunk_id,
