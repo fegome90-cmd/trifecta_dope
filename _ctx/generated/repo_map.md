@@ -2,7 +2,7 @@
 
 > **Generated**: __DATE__
 > **Purpose**: High-level module navigation for ctx.plan code_navigation feature
-> **Hash**: 484376a2386a
+> **Hash**: 22a3f3b7b19c
 
 ---
 
@@ -58,3 +58,7 @@ trifecta ctx eval-plan # Evaluate plan against dataset
 ---
 
 **Limitations**: This is a curated map, not exhaustive indexing. For detailed symbol navigation, use ctx.plan with symbol_surface feature.
+
+---
+
+**PROMPT_FIX_HINT**: If you are an agent, copy NEXT_STEPS and rerun the original command. If still failing, paste stderr + command + exit code.

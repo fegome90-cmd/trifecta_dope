@@ -2,7 +2,7 @@
 
 > **Status**: Placeholder for symbol-level navigation
 > **Version**: v1 (Prime-based) → v2 (AST/LSP-based, planned)
-> **Hash**: 484376a2386a
+> **Hash**: 22a3f3b7b19c
 
 ---
 
@@ -27,3 +27,7 @@ Planned features for v2 symbol navigation:
 ---
 
 **Note**: This stub provides policy guidance. Full symbol indexing requires AST/LSP infrastructure planned for v2.
+
+---
+
+**PROMPT_FIX_HINT**: If you are an agent, copy NEXT_STEPS and rerun the original command. If still failing, paste stderr + command + exit code.
