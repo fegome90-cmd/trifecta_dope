@@ -4,6 +4,9 @@
 
 set -e
 
+# Activate telemetry kill switch (no writes to repo during pre-commit)
+export TRIFECTA_NO_TELEMETRY=1
+
 echo "🤖 Trifecta AI Guard: Real-time Review"
 echo "   Critical path modification detected."
 

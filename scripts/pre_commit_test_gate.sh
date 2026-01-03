@@ -8,7 +8,8 @@ echo "🧪 Pre-commit: Acceptance Test Gate"
 echo "   Running acceptance tests (not slow)..."
 
 # Run acceptance tests with timeout
-export TRIFECTA_TELEMETRY=off
+# Note: Tests write telemetry to /tmp (pytest fixture isolation)
+# PRE_COMMIT=1 is NOT set here so tests can validate telemetry behavior
 
 if timeout 30s uv run pytest -q tests/acceptance -m "not slow" 2>&1; then
     echo "   ✅ Test gate passed"

@@ -73,19 +73,37 @@ def _sanitize_event(event: dict) -> dict:
 
 class Telemetry:
     def __init__(self, root: Path = None, level: str = "full"):
+        # KILL SWITCH: Detect pre-commit or explicit off mode
+        # Priority:
+        # 1. PRE_COMMIT=1 or level="off" => Complete NO-OP (no dirs, no writes)
+        # 2. TRIFECTA_TELEMETRY_DIR => Write to custom dir (for tests)
+        # 3. Default => _ctx/telemetry
+
+        self.level = level
         self.root = resolve_segment_root(root or Path.cwd())
+        self.segment_id = compute_segment_id(self.root)
+        self.segment_label = root.name if root else self.root.name
+        self.run_id = f"run_{int(time.time())}"
+        self.metrics: Dict[str, int] = {}
+        self.timings: Dict[str, list] = {}
+
+        # NO-OP mode: complete disable for pre-commit
+        # Use TRIFECTA_NO_TELEMETRY instead of PRE_COMMIT to avoid conflicts
+        if level == "off" or os.environ.get("TRIFECTA_NO_TELEMETRY") == "1":
+            # Set _ctx_dir but do NOT create, do NOT write
+            self._ctx_dir = self.root / "_ctx" / "telemetry"
+            return  # Early exit, no directory creation, no file writes
+
+        # Override mode: redirect to custom directory (for tests)
+        telemetry_dir_override = os.environ.get("TRIFECTA_TELEMETRY_DIR")
+        if telemetry_dir_override:
+            self._ctx_dir = Path(telemetry_dir_override)
+            self._ctx_dir.mkdir(parents=True, exist_ok=True)
+            return
+
+        # Default mode: use _ctx/telemetry in segment
         self._ctx_dir = self.root / "_ctx" / "telemetry"
         self._ctx_dir.mkdir(parents=True, exist_ok=True)
-        self.metrics: Dict[str, int] = {}
-        self.timings: Dict[str, list] = {}  # For observe() latency tracking
-        self.level = level
-        self.run_id = f"run_{int(time.time())}"
-
-        # Phase 3 Audit: segment_id hash 8 chars (Unified)
-        self.segment_id = compute_segment_id(self.root)
-        self.segment_label = (
-            root.name
-        )  # Keep original name logic for label if needed contextually, or self.root.name
 
         # Load prev metrics if needed?
         # For restoration simple start.

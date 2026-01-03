@@ -9,14 +9,19 @@ import sys
 
 def check_integrity():
     import subprocess
+    import os
 
     print("   Running deep integrity check via 'trifecta ctx validate'...")
     try:
         # Usamos uv run para asegurar el entorno correcto
+        # Set TRIFECTA_NO_TELEMETRY=1 to activate telemetry kill switch (no writes to repo)
+        env = os.environ.copy()
+        env["TRIFECTA_NO_TELEMETRY"] = "1"
         result = subprocess.run(
             ["uv", "run", "trifecta", "ctx", "validate", "-s", ".", "--telemetry", "off"],
             capture_output=True,
             text=True,
+            env=env,
         )
         if result.returncode == 0:
             print("   ✅ Context integrity verified")
