@@ -13,6 +13,15 @@ echo "   Running acceptance tests (not slow)..."
 export TRIFECTA_TELEMETRY_DIR="/tmp/trifecta_test_telemetry_$$"
 mkdir -p "$TRIFECTA_TELEMETRY_DIR"
 
+# HARDENING: Cleanup best-effort on exit
+trap "rm -rf $TRIFECTA_TELEMETRY_DIR" EXIT
+
+# INVARIANT CHECK: Ensure redirection is active
+if [ -z "$TRIFECTA_TELEMETRY_DIR" ]; then
+    echo "   ❌ FATAL: TRIFECTA_TELEMETRY_DIR is not set. Aborting to prevent repo contamination."
+    exit 1
+fi
+
 if timeout 30s uv run pytest -q tests/acceptance -m "not slow" 2>&1; then
     echo "   ✅ Test gate passed"
     exit 0

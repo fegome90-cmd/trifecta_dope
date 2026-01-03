@@ -90,6 +90,7 @@ class Telemetry:
         # NO-OP mode: complete disable for pre-commit
         # Use TRIFECTA_NO_TELEMETRY instead of PRE_COMMIT to avoid conflicts
         if level == "off" or os.environ.get("TRIFECTA_NO_TELEMETRY") == "1":
+            self.level = "off"  # Force off to ensure event() and flush() are NO-OP
             # Set _ctx_dir but do NOT create, do NOT write
             self._ctx_dir = self.root / "_ctx" / "telemetry"
             return  # Early exit, no directory creation, no file writes

@@ -1,12 +1,18 @@
 #!/usr/bin/env bash
-# Tripwire: Verifies that pre-commit run --all-files does not leave dirty artifacts.
-
+# Verify pre-commit does not leave dirty worktree (Auditable Logic)
 set -e
 
 echo "⚙️🧨 Running Auditable Pre-commit Tripwire..."
-uv run pre-commit run --all-files
+PRECOMMIT_OUTPUT=$(uv run pre-commit run --all-files 2>&1 || true)
+echo "$PRECOMMIT_OUTPUT"
 
-# Exclude telemetry from dirty check (tests write telemetry to /tmp, but some leaks to worktree)
+# BLOCK 1: Check for pre-commit "files were modified" string
+if echo "$PRECOMMIT_OUTPUT" | grep -q "files were modified by this hook"; then
+    echo "❌ TRIPWIRE FAILED: Pre-commit detected side-effects ('files were modified by this hook')."
+    exit 1
+fi
+
+# BLOCK 2: Check for dirty worktree (excluding allowed paths)
 # Only check non-telemetry files for modifications
 DIRTY_FILES=$(git status --porcelain | grep -v "_ctx/telemetry/" | grep -v "hookify_violations.jsonl" || true)
 if [ -n "$DIRTY_FILES" ]; then
@@ -15,5 +21,5 @@ if [ -n "$DIRTY_FILES" ]; then
     exit 1
 fi
 
-echo "✅ TRIPWIRE PASSED: Clean execution verified."
+echo "✅ TRIPWIRE PASSED: Worktree is clean and no side-effects detected."
 exit 0
