@@ -8,7 +8,7 @@
 
 2. Create src/infrastructure/validators.py:
    └─ Paste extracted code
-   
+
 3. Keep install_FP.py as reference (can deprecate later)
 ```
 

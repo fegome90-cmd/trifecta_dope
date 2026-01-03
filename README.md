@@ -312,6 +312,27 @@ uv run pytest tests/ -v
 uv run typer src/infrastructure/cli.py run create --help
 ```
 
+## 🐛 Debugging Scripts
+
+Scripts de utilidad para debugging de componentes LSP y daemon:
+
+| Script | Propósito |
+|--------|-----------|
+| `debug_client.py` | Debug LSP Client (lifecycle, state transitions) |
+| `debug_status.py` | Debug LSP Daemon (status checks) |
+| `debug_ts.py` | Test tree-sitter parser initialization |
+
+### Uso
+
+```bash
+# Desde el root del proyecto (requiere venv activo)
+.venv/bin/python scripts/debug/debug_client.py
+.venv/bin/python scripts/debug/debug_status.py
+.venv/bin/python scripts/debug/debug_ts.py
+```
+
+> **Nota**: Estos scripts asumen que el proyecto está instalado en modo editable (`uv sync`).
+
 ## Referencias
 
 - [`docs/braindope.md`](./docs/braindope.md) - Especificación completa del sistema

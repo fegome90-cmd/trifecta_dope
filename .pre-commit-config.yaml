@@ -1,0 +1,78 @@
+exclude: '^(_ctx/telemetry/|.*last_run\.json|.*events\.jsonl)'
+repos:
+  # Built-in validators
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-yaml
+        name: Validate YAML syntax
+      - id: check-json
+        name: Validate JSON syntax
+      - id: check-ast
+        name: Validate Python syntax (detect SyntaxError)
+      - id: trailing-whitespace
+        name: Remove trailing whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+        name: Ensure files end with newline
+      - id: check-added-large-files
+        name: Prevent large files from being committed
+        args: [--maxkb=500]
+      - id: detect-private-key
+        name: Detect private keys
+
+  # Ruff linter (NO destructivo - sin --fix)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.5.1
+    hooks:
+      - id: ruff
+        name: Ruff linter (check-only, no autofix)
+        args:
+          - --select=F401,F841,E999
+          - --exit-non-zero-on-fix
+
+  # Security analysis (Bandit)
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.9
+    hooks:
+      - id: bandit
+        name: Bandit security check
+        args: ["-c", "pyproject.toml"]
+        additional_dependencies: ["toml"]
+
+  # Additional hygiene hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-merge-conflict
+      - id: debug-statements
+      - id: check-docstring-first
+
+  # Custom local hooks
+  - repo: local
+    hooks:
+      - id: integrity-check
+        name: Trifecta Context Integrity
+        entry: python scripts/trifecta_integrity_check.py
+        language: system
+        pass_filenames: false
+        files: '^(src/|scripts/|tests/|_ctx/|pyproject\.toml|uv\.lock|README\.md|skill\.md)'
+        exclude: "_ctx/telemetry/|logs/|.*last_run\\.json|.*events\\.jsonl"
+
+      - id: ai-review
+        name: Trifecta AI Guard Review
+        entry: bash scripts/trifecta_ai_review.sh --telemetry off
+        language: system
+        pass_filenames: false
+        files: '^(src/|scripts/|tests/|_ctx/|pyproject\.toml|uv\.lock|README\.md|skill\.md)'
+        exclude: "_ctx/telemetry/|logs/|.*last_run\\.json|.*events\\.jsonl"
+        verbose: true
+
+      - id: test-gate
+        name: Acceptance Test Gate (not slow)
+        entry: bash scripts/pre_commit_test_gate.sh --telemetry off
+        language: system
+        pass_filenames: false
+        files: '^(src/|scripts/|tests/|_ctx/|pyproject\.toml|uv\.lock|README\.md|skill\.md)'
+        exclude: "_ctx/telemetry/|logs/|.*last_run\\.json|.*events\\.jsonl"
+        verbose: true

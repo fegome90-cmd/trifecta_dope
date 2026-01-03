@@ -17,12 +17,12 @@ def test_prime_paths_strict_format():
 
     # Extract numbered items 1-10
     # Logic: Look for lines starting with digit + "."
-    item_lines = [l.strip() for l in lines if re.match(r"^\d+\.", l.strip())]
+    item_lines = [line.strip() for line in lines if re.match(r"^\d+\.", line.strip())]
 
     assert len(item_lines) >= 9, f"Expected at least 9 high priority items, found {len(item_lines)}"
 
     repo_root_marker = "**REPO_ROOT**: "
-    repo_root_line = next((l for l in lines if repo_root_marker in l), None)
+    _repo_root_line = next((line for line in lines if repo_root_marker in line), None)
     repo_root = Path("..").resolve()  # Default assumption based on cwd=trifecta_dope
 
     for line in item_lines:

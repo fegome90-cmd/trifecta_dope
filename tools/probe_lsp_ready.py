@@ -1,5 +1,4 @@
 import time
-import sys
 from pathlib import Path
 from src.infrastructure.lsp_client import LSPClient
 

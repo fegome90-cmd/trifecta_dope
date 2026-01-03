@@ -29,7 +29,7 @@ The system operates as a **Parallel Dispatch** based on Intent, with AST serving
 ```mermaid
 stateDiagram-v2
     [*] --> DecisionLayer
-    
+
     state DecisionLayer {
         [*] --> ClassifyIntent
         ClassifyIntent --> EngineA_Context : "Concept/Docs"
@@ -39,17 +39,17 @@ stateDiagram-v2
     state EngineB_Code {
         [*] --> ParseURI : "sym://..."
         ParseURI --> AST_Lookup : "1. Static Lookup (Mandatory)"
-        
+
         state ast_check <<choice>>
         AST_Lookup --> ast_check
-        
+
         ast_check --> ValidateOutput : Symbol Not Found (Fail)
         ast_check --> CheckLSP : Symbol Found
-        
+
         state CheckLSP <<choice>>
         CheckLSP --> ValidateOutput : LSP Not Ready / Not Needed
         CheckLSP --> LSP_Query : LSP Ready & Needed (Hover/Def)
-        
+
         LSP_Query --> ValidateOutput : "Result<Hover>"
     }
 
@@ -139,8 +139,8 @@ The CLI and Internal API MUST return this exact JSON structure.
     "signature": "def bar() -> None",
     "children": ["baz", "qux"]
   },
-  "refs": [ 
-    { "kind": "definition", "uri": "sym://python/mod/other" } 
+  "refs": [
+    { "kind": "definition", "uri": "sym://python/mod/other" }
   ],
   "errors": [],
   "next_actions": [

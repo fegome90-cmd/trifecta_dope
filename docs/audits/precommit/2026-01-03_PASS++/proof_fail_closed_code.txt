@@ -1,0 +1,17 @@
+[WARNING] Unstaged files detected.
+[INFO] Stashing unstaged files to /Users/felipe_gonzalez/.cache/pre-commit/patch1767458812-1123.
+Trifecta Context Integrity...............................................Failed
+- hook id: integrity-check
+- exit code: 1
+
+Running deep integrity check via 'trifecta ctx validate'...
+   ❌ Integrity Check FAILED:
+❌ Validation Failed
+
+   - Source file content changed (Hash mismatch): trifecta_dope/README.md
+   - Source file size mismatch: trifecta_dope/README.md (12758 vs 13388)
+
+❌ Validation Error
+   Detail:
+
+[INFO] Restored changes from /Users/felipe_gonzalez/.cache/pre-commit/patch1767458812-1123.

@@ -27,12 +27,20 @@ profile: load_only
 8. `trifecta_dope/.github/copilot-instructions.md`
 9. `trifecta_dope/src/infrastructure/cli_ast.py`
 10. `trifecta_dope/README.md`
+11. `trifecta_dope/src/cli/error_cards.py`
+12. `trifecta_dope/tests/acceptance/test_ctx_sync_preconditions.py`
+13. `trifecta_dope/src/domain/naming.py`
+14. `trifecta_dope/src/infrastructure/daemon_paths.py`
 
 
-## [MED] Prioridad MEDIA - Implementacion
+## [MED] Prioridad MEDIA - Implementación
 
-<!-- Documentacion de implementacion especifica -->
-<!-- Ejemplos: guias de uso, patrones de disenio -->
+**Leer para entender bugs recientes y testing.**
+
+1. `trifecta_dope/docs/bugs/create_cwd_bug.md`
+2. `trifecta_dope/tests/integration/test_lsp_telemetry.py`
+3. `trifecta_dope/src/application/telemetry_reports.py`
+4. `trifecta_dope/tests/integration/test_daemon_paths_constraints.py`
 
 ## [LOW] Prioridad BAJA - Referencias
 
@@ -55,12 +63,17 @@ mindmap
 
 ## [DICT] Glosario
 
-| Termino | Definicion |
+| Término | Definición |
 |---------|------------|
-| <!-- Agregar terminos clave del segmento --> | <!-- Definiciones breves --> |
+| **LSP Daemon** | Servidor LSP persistente con UNIX socket IPC, 180s TTL |
+| **Error Card** | Sistema de errores estructurados con códigos estables (TRIFECTA_ERROR_CODE) |
+| **Context Pack** | Archivo JSON con chunks de documentación indexados |
+| **Segment** | Directorio de proyecto con `_ctx/` y configuración Trifecta |
+| **Prime File** | `_ctx/prime_{segment_id}.md` - Lista de lectura prioritizada |
+| **Dogfooding** | Testing real del CLI usando workflows completos (create→refresh-prime→sync) |
 
 ## [NOTE] Notas
 
-- **Fecha ultima actualizacion**: 
+- **Fecha ultima actualizacion**:
 - **Mantenedor**: <!-- Agregar si aplica -->
 - **Ver tambien**: [skill.md](../skill.md) | [agent.md](./agent.md)

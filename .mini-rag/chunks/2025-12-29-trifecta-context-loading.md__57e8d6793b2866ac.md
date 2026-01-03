@@ -12,11 +12,11 @@ class LoadContextUseCase:
     def execute(self, segment: str, task: str) -> str:
         files = self.select_files(task, segment)
         return self.format_context(files)
-    
+
     def select_files(self, task: str, segment: str) -> list[Path]:
         base = Path(f\"/path/to/{segment}\")
         files = [base / \"skill.md\"]  # Always
-        
+
         task_lower = task.lower()
         if any(kw in task_lower for kw in [\"implement\", \"debug\", \"fix\"]):
             files.append(base / \"_ctx/agent.md\")
@@ -24,7 +24,7 @@ class LoadContextUseCase:
             files.append(base / \"_ctx/prime_{segment}.md\")
         if any(kw in task_lower for kw in [\"session\", \"handoff\"]):
             files.append(base / \"_ctx/session_{segment}.md\")
-        
+
         files.append(base / \"README_TF.md\")
         return [f for f in files if f.exists()]
 ```

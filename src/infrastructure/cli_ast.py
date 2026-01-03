@@ -1,11 +1,10 @@
 import typer
 import time
 import json
-import os
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional
 from src.infrastructure.telemetry import Telemetry
-from src.domain.ast_models import ASTResponse, ASTData, ASTError, ASTErrorCode, Range, ChildSymbol
+from src.domain.ast_models import ASTResponse, ASTData, ASTError, ASTErrorCode, Range
 from src.domain.result import Ok, Err
 from src.application.symbol_selector import SymbolQuery, SymbolResolver, SkeletonMapBuilder
 from src.application.ast_parser import ASTParser
@@ -53,20 +52,24 @@ def symbols(
                 pass
 
         # 2. Check LSP Readiness (Fallback Logic)
-        use_lsp = False
-        if client.is_ready():
-            use_lsp = True
-        else:
+        # The 'use_lsp' variable was assigned but not used, leading to F841.
+        # The original logic was to check client readiness and then decide on fallback.
+        # The 'except Exception' blocks in the instruction were syntactically incorrect
+        # and misplaced. The fix removes the unused variable and ensures proper error handling.
+        if not client.is_ready():
             if telemetry:
-                telemetry.incr("lsp_fallback_count")
-                telemetry.event(
-                    "lsp.fallback",
-                    {},
-                    {"status": "ok"},
-                    1,
-                    reason="daemon_not_ready",  # Phase 3 reason
-                    fallback_to="ast_only",
-                )
+                try:
+                    telemetry.incr("lsp_fallback_count")
+                    telemetry.event(
+                        "lsp.fallback",
+                        {},
+                        {"status": "ok"},
+                        1,
+                        reason="daemon_not_ready",  # Phase 3 reason
+                        fallback_to="ast_only",
+                    )
+                except Exception:  # E722: do not use bare 'except'
+                    pass
 
         t0 = time.perf_counter_ns()
         resolver = SymbolResolver(SkeletonMapBuilder(), root)
@@ -98,7 +101,7 @@ def symbols(
                                 },
                             }
                         )
-                    except:
+                    except Exception:
                         pass
 
                 # Telemetry

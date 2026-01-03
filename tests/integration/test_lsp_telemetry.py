@@ -1,4 +1,3 @@
-import pytest
 import json
 from pathlib import Path
 from src.infrastructure.telemetry import Telemetry
@@ -15,7 +14,7 @@ def test_lsp_events_schema_pr1():
 
     events_file = Path("_ctx/telemetry/events.jsonl")
     lines = events_file.read_text().splitlines()
-    last_events = [json.loads(l) for l in lines[-2:]]
+    last_events = [json.loads(line) for line in lines[-2:]]
 
     required_keys = {
         "ts",
@@ -88,7 +87,7 @@ def test_no_absolute_paths_in_events():
 
     events_file = Path("_ctx/telemetry/events.jsonl")
     lines = events_file.read_text().splitlines()
-    last_run_events = [json.loads(l) for l in lines if json.loads(l)["run_id"] == t.run_id]
+    last_run_events = [json.loads(line) for line in lines if json.loads(line)["run_id"] == t.run_id]
 
     for e in last_run_events:
         # Check values in args and x

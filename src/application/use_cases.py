@@ -431,12 +431,12 @@ class BuildContextPackUseCase:
             mtime = file_path.stat().st_mtime
             source_files.append(
                 SourceFile(
-                    path=str(file_path.relative_to(target_path.parent)),
+                    path=str(file_path.relative_to(target_path)),
                     sha256=sha256,
                     mtime=mtime,
                     chars=len(content),
                 )
-                if target_path.parent in file_path.parents
+                if target_path in file_path.parents or target_path == file_path
                 else SourceFile(path=file_path.name, sha256=sha256, mtime=mtime, chars=len(content))
             )
 
@@ -662,13 +662,17 @@ class ValidateContextPackUseCase:
             # 4. Source file traceability (SHA256/mtime/chars)
             for src in data.get("source_files", []):
                 src_rel_path = src["path"]
-                src_abs_path = target_path.parent / src_rel_path
+                src_abs_path = target_path / src_rel_path
 
                 if not src_abs_path.exists():
-                    errors.append(
-                        f"Source file listed in pack but missing from disk: {src_rel_path}"
-                    )
-                    continue
+                    # Fallback for files outside segment: check if it's just a filename
+                    # Try direct filename in segment
+                    src_abs_path = target_path / Path(src_rel_path).name
+                    if not src_abs_path.exists():
+                        errors.append(
+                            f"Source file listed in pack but missing from disk: {src_rel_path}"
+                        )
+                        continue
 
                 # Deep verification
                 content = src_abs_path.read_bytes()

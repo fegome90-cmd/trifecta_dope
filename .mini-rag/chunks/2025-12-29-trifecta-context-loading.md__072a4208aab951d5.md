@@ -6,7 +6,7 @@ def ctx_refs(
     k: int = 5
 ) -> list[Reference]:
     """Get references to symbol."""
-    
+
     refs = lsp.references(symbol_id)
     return refs[:k]
 ```

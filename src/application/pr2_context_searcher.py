@@ -4,17 +4,21 @@ PR#2 Façade: Unified interface for AST skeleton + selector + LSP + telemetry.
 This is the main entry point for CLI integration (ctx.search, ctx.get).
 """
 
-import os
 import threading
 from pathlib import Path
 from time import perf_counter_ns
 from typing import Optional
 
 from src.infrastructure.telemetry import Telemetry
-from src.application.ast_parser import SkeletonMapBuilder, SymbolInfo
-from src.application.symbol_selector import SymbolQuery, SymbolResolver, SymbolResolveResult
+from src.application.ast_parser import SkeletonMapBuilder
+from src.application.symbol_selector import SymbolQuery, SymbolResolver
 from src.application.lsp_manager import LSPManager
-from src.application.telemetry_pr2 import ASTTelemetry, SelectorTelemetry, FileTelemetry, LSPTelemetry
+from src.application.telemetry_pr2 import (
+    ASTTelemetry,
+    SelectorTelemetry,
+    FileTelemetry,
+    LSPTelemetry,
+)
 
 __all__ = ["PR2ContextSearcher"]
 
@@ -88,26 +92,33 @@ class PR2ContextSearcher:
         """
         t_start = perf_counter_ns()
 
-        # Parse query
-        query = SymbolQuery.parse(query_str)
-        if not query:
+        # Parse query - returns Result[SymbolQuery, ASTError]
+        from src.domain.result import Err
+
+        query_result = SymbolQuery.parse(query_str)
+        if isinstance(query_result, Err):
             return None
+        query = query_result.value
 
         # If file provided: extract skeleton
         if file_path:
             self._extract_skeleton(file_path)
 
-        # Resolve symbol
-        result = self.selector.resolve(query)
+        # Resolve symbol - returns Result[Candidate, ASTError]
+        resolve_result = self.selector.resolve(query)
+
+        # Handle Result pattern for resolve
+        if isinstance(resolve_result, Err):
+            return None
+
+        result = resolve_result.value
         self.selector_tel.track_resolve(query, result)
 
-        if not result.resolved:
+        if not hasattr(result, "file_rel") or not result.file_rel:
             return None
 
         # Get file and range from result
-        resolved_file = result.file
-        if not resolved_file:
-            return None
+        resolved_file = result.file_rel
 
         start_line = result.start_line or 0
         end_line = result.end_line or start_line
@@ -132,7 +143,7 @@ class PR2ContextSearcher:
                     output["excerpt_start_line"] = excerpt_start
                 else:  # raw
                     output["content"] = content
-        
+
         # Warm-up LSP in parallel (non-blocking)
         if self.lsp_manager.enabled:
             self._warmup_lsp_async(resolved_file, start_line)
@@ -216,7 +227,9 @@ class PR2ContextSearcher:
         t_start = perf_counter_ns()
 
         if self.lsp_manager.is_ready():
-            result: Optional[dict[str, object]] = self.lsp_manager.request_definition(file_uri, line, col)
+            result: Optional[dict[str, object]] = self.lsp_manager.request_definition(
+                file_uri, line, col
+            )
             t_end = perf_counter_ns()
             timing_ms = (t_end - t_start) // 1_000_000
             self.lsp_tel.track_request(

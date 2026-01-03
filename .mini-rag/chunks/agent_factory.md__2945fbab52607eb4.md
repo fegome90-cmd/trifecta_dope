@@ -1,6 +1,6 @@
 # Lógica: Si estoy en 'target', NO puedo tener 'import' de 'disallow'
     disallowed_patterns = "|".join([p.replace("**/*.ts", "") for p in rule.get('disallow', [])])
-    
+
     return {
         'id': rule['id'],
         'message': rule['description'],
@@ -33,7 +33,7 @@ def compile_security_rule(rule):
         'dangerouslySetInnerHTML': 'dangerouslySetInnerHTML={$$$PROPS}',
         'process-env': 'process.env.$VAR'
     }
-    
+
     return {
         'id': rule['id'],
         'message': rule['description'],

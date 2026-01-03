@@ -11,7 +11,7 @@ def ctx_search(
 ) -> SearchResult:
     """
     Busca chunks relevantes en el context pack.
-    
+
     Returns:
         {
             "hits": [

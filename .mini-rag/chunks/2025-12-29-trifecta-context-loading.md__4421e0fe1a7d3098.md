@@ -16,7 +16,7 @@ class ContextCache:
                 chars INTEGER
             )
         """)
-    
+
     def needs_rebuild(self, path: Path) -> bool:
         """Check if file changed since last ingest."""
         current_sha = hashlib.sha256(path.read_bytes()).hexdigest()

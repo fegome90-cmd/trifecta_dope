@@ -7,7 +7,7 @@ def ctx_get(
     budget: int = 1200
 ) -> GetResult:
     """Get context with precise modes."""
-    
+
     if mode == "skeleton":
         # Solo firmas
         return get_skeletons(ids)

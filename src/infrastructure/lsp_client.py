@@ -1,10 +1,8 @@
 import subprocess
 import json
-import time
 import shutil
 import threading
 import os
-import signal
 from typing import Optional, Dict, Any
 from enum import Enum
 from pathlib import Path
@@ -23,8 +21,11 @@ class LSPClient:
         self.root_path = root_path
         self.telemetry = telemetry
         self.state = LSPState.COLD
-        self.process: Optional[subprocess.Popen] = None
+        self.process: Optional[subprocess.Popen[bytes]] = None
         self.lock = threading.Lock()
+        self._stop_lock = threading.Lock()  # Separate lock for stop idempotency
+        self.stopping = threading.Event()
+        self._thread: Optional[threading.Thread] = None  # Track loop thread for join
         self._capabilities: Dict[str, Any] = {}
         self._warmup_file: Optional[Path] = None
 
@@ -82,8 +83,9 @@ class LSPClient:
                     1,
                 )
 
-                # Start handshake + Read Loop
-                threading.Thread(target=self._run_loop, daemon=True).start()
+                # Start handshake + Read Loop (save thread reference for join)
+                self._thread = threading.Thread(target=self._run_loop, daemon=True)
+                self._thread.start()
 
             except Exception as e:
                 self._transition(LSPState.FAILED)
@@ -97,7 +99,7 @@ class LSPClient:
                         _, stderr_data = self.process.communicate(timeout=0.2)
                         if stderr_data:
                             err_out = stderr_data.decode("utf-8")
-                    except:
+                    except Exception:
                         pass
                 print(f"DEBUG: LSP Start Failed: {e}. Stderr: {err_out}")
 
@@ -111,30 +113,63 @@ class LSPClient:
                 )
 
     def stop(self) -> None:
-        """Strict cleanup: terminate -> wait -> kill."""
-        with self.lock:
-            if self.state == LSPState.CLOSED:
-                return
-            self.state = LSPState.CLOSED
+        """Strict cleanup: signal -> terminate -> join thread -> close streams.
 
-        if self.process:
-            try:
-                self.process.terminate()
+        SHUTDOWN ORDER INVARIANT (do not reorder):
+          1. Set stopping flag (signal intent)
+          2. Terminate process
+          3. Join loop thread (wait for exit)
+          4. Close streams (only after thread exits)
+
+        Idempotent: safe to call multiple times.
+        """
+        with self._stop_lock:
+            # 1. Signal threads first (defensive: stopping should only be set here)
+            if not self.stopping.is_set():
+                self.stopping.set()
+
+            # 2. Check/set state (idempotent)
+            with self.lock:
+                if self.state == LSPState.CLOSED:
+                    return
+                self.state = LSPState.CLOSED
+
+            # 3. Terminate process
+            if self.process:
                 try:
-                    self.process.wait(timeout=0.5)
-                except subprocess.TimeoutExpired:
-                    self.process.kill()
-                    self.process.wait(timeout=0.2)
-            except Exception:
-                pass  # Process might be gone
+                    self.process.terminate()
+                    try:
+                        self.process.wait(timeout=0.5)
+                    except subprocess.TimeoutExpired:
+                        self.process.kill()
+                        self.process.wait(timeout=0.2)
+                except Exception:
+                    pass  # Process might be gone
 
-            # Close pipes
-            if self.process.stdin:
-                self.process.stdin.close()
-            if self.process.stdout:
-                self.process.stdout.close()
-            if self.process.stderr:
-                self.process.stderr.close()
+            # 4. Join background thread BEFORE closing streams
+            # Increased timeout for CI stability (was 0.5s)
+            if self._thread and self._thread.is_alive():
+                self._thread.join(timeout=1.0)
+
+                # CRITICAL: If thread still alive after join, DO NOT close streams
+                # This avoids write-to-closed-file race in edge cases (blocked I/O)
+                # Better to leak streams in rare shutdown failure than reintroduce bug
+                if self._thread.is_alive():
+                    # Thread didn't terminate cleanly; leave streams open
+                    # Process is already terminated, thread will eventually exit on EOF
+                    return
+
+            # 5. Close streams ONLY after thread exits
+            if self.process:
+                try:
+                    if self.process.stdin:
+                        self.process.stdin.close()
+                    if self.process.stdout:
+                        self.process.stdout.close()
+                    if self.process.stderr:
+                        self.process.stderr.close()
+                except Exception:
+                    pass  # Already closed
 
     def did_open(self, file_path: Path, content: str) -> None:
         """Notify file open to trigger diagnostics."""
@@ -163,7 +198,9 @@ class LSPClient:
     def _transition(self, new_state: LSPState) -> None:
         self.state = new_state
 
-    def _log_event(self, cmd: str, args: Dict, result: Dict, timing: int, **kwargs) -> None:
+    def _log_event(
+        self, cmd: str, args: Dict[str, Any], result: Dict[str, Any], timing: int, **kwargs: Any
+    ) -> None:
         if self.telemetry:
             # kwargs are passed to event as x_fields
             self.telemetry.event(cmd, args, result, timing, lsp_state=self.state.value, **kwargs)
@@ -227,6 +264,11 @@ class LSPClient:
                     # Log diagnostics but do not control state (already READY)
                     pass
         except Exception as e:
+            # If we're stopping, silently exit without printing debug messages
+            if self.stopping.is_set():
+                return
+
+            # Only log errors if NOT intentionally stopping
             # Capture stderr
             err_out = "Unknown"
             if self.process:
@@ -234,7 +276,7 @@ class LSPClient:
                     _, stderr_data = self.process.communicate(timeout=0.2)
                     if stderr_data:
                         err_out = stderr_data.decode("utf-8")
-                except:
+                except Exception:
                     pass
             print(f"DEBUG: LSP Loop Exception: {e}. Stderr: {err_out}")
             self._transition(LSPState.FAILED)
@@ -256,18 +298,23 @@ class LSPClient:
         msg = {"jsonrpc": "2.0", "id": req_id, "method": method, "params": params}
         self._send_rpc(msg)
 
+        # Wait for response
         if event.wait(timeout):
             with self.lock:
                 result = self._pending_requests.pop(req_id, None)
                 self._request_events.pop(req_id, None)
-                return result
+                # Type guard for mypy
+                return result if isinstance(result, dict) else None
         else:
             with self.lock:
                 self._pending_requests.pop(req_id, None)
                 self._request_events.pop(req_id, None)
-            return None  # Timeout
+                return None  # Timeout
 
     def _send_rpc(self, msg: Dict[str, Any]) -> None:
+        # Don't attempt writes if stopping
+        if self.stopping.is_set():
+            return
         if not self.process or not self.process.stdin:
             return
         try:
@@ -275,7 +322,8 @@ class LSPClient:
             header = f"Content-Length: {len(content)}\r\n\r\n".encode("ascii")
             self.process.stdin.write(header + content)
             self.process.stdin.flush()
-        except OSError:
+        except (OSError, ValueError, BrokenPipeError):
+            # Silently ignore write errors during shutdown
             pass
 
     def _read_rpc(self) -> Optional[Dict[str, Any]]:
@@ -312,8 +360,12 @@ class LSPClient:
                     break
                 content += chunk
 
-            return json.loads(content)
-        except Exception as e:
-            # print(f"DEBUG: Read RPC Exception: {e}")
-            pass
-        return None
+            # Parse JSON
+            try:
+                msg = json.loads(content.decode("utf-8"))
+                # Type guard for mypy
+                return msg if isinstance(msg, dict) else None
+            except json.JSONDecodeError:
+                return None
+        except Exception:
+            return None

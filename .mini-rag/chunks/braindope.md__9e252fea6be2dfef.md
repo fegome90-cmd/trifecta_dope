@@ -15,10 +15,10 @@ output_contract:
 ---
 
 # Active Session
-- **Objetivo**: 
-- **Archivos a tocar**: 
-- **Gates a correr**: 
-- **Riesgos detectados**: 
+- **Objetivo**:
+- **Archivos a tocar**:
+- **Gates a correr**:
+- **Riesgos detectados**:
 
 ---
 

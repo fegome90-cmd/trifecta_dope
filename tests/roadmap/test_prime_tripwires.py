@@ -1,7 +1,6 @@
 import re
 from pathlib import Path
 import pytest
-import subprocess
 import json
 
 
@@ -130,10 +129,9 @@ def test_prime_topN_in_pack_after_sync(tmp_path):
 
     # Run `ctx sync` inside dest
     # We call the CLI module directly
-    from src.infrastructure.cli import ctx_app
     from typer.testing import CliRunner
 
-    runner = CliRunner()
+    _runner = CliRunner()
 
     # We need to mock sys.path or ensure imports work?
     # We will use subprocess instead to be closer to real execution, but we need the project code available.

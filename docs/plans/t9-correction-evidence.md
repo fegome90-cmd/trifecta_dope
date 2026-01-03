@@ -253,42 +253,42 @@ aliases:
   workflow: [tdd, process, development]
   rules: [protocol, critical, must]
   parser: [ast_parser, parsing, parse]
-  
+
   # === ROUTING TO prime_ast.md ===
   implementation: [impl, code, tree_sitter, sitter]
   status: [progress, tasks, complete, done]
   reading: [mandatory, docs, guide, prime]
   tree: [tree_sitter, sitter, syntax_tree]
-  
+
   # === ROUTING TO agent.md ===
   stack: [tech_stack, tools, dependencies, typescript]
   gates: [quality, verification, tests, build]
   technical: [tech, stack, dependencies]
-  
+
   # === ROUTING TO session_ast.md ===
   history: [session, handoff, log, previous]
   handoff: [session, history, context, previous]
-  
+
   # === DOMAIN CONCEPTS ===
   ast: [abstract_syntax_tree, syntax_tree, tree, node]
   node: [ast_node, tree_node, syntax_node]
   symbol: [symbols, identifier, extractor]
-  
+
   # === LANGUAGES ===
   language: [languages, lang, typescript, python, javascript]
   typescript: [ts, type_script]
   python: [py]
   javascript: [js]
-  
+
   # === ARCHITECTURE LAYERS ===
   domain: [entities, ports, pure, core]
   infrastructure: [parsers, extractors, io]
   application: [services, use_cases]
   interface: [interfaces, api, public]
-  
+
   # === DOCUMENTATION ===
   documentation: [docs, readme, guide]
-  
+
   # === SERVICE CONCEPTS ===
   service: [ast_service, facade, api]
 ```

@@ -11,12 +11,12 @@ def ctx_get(
 ) -> GetResult:
     """
     Obtiene chunks por ID con control de presupuesto.
-    
+
     Modes:
         - raw: Texto completo
         - excerpt: Primeras N líneas
         - skeleton: Solo headings + primera línea
-    
+
     Returns:
         {
             "chunks": [

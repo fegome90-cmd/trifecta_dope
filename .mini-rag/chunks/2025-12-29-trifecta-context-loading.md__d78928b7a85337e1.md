@@ -7,11 +7,11 @@ def ctx_search(
     scope: Literal["hot", "project"] = "hot"
 ) -> SearchResult:
     """Search using LSP symbols if available, else AST index."""
-    
+
     if lsp_available:
         symbols = lsp.workspace_symbols(query)
     else:
         symbols = ast_index.search(query)
-    
+
     return filter_by_score(symbols, k)
 ```

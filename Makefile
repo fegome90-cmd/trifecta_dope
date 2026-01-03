@@ -1,92 +1,93 @@
-# Trifecta CLI Makefile
-# Usage: make trifecta-create SEGMENT=my-segment PATH=path/to/segment SCOPE="Description"
+# Trifecta Dope Makefile
+# v2.0 - Auditability & PCC Workflow
 
 SHELL := /bin/bash
+UV := uv run
 
-.PHONY: trifecta-create trifecta-validate trifecta-refresh trifecta-help \
-	minirag-help minirag-setup minirag-chunk minirag-init minirag-index minirag-query \
-	minirag-doctor
+.PHONY: help install start \
+	test test-unit test-integration test-acceptance test-roadmap test-slow gate-all \
+	audit \
+	ctx-sync ctx-search ctx-get ctx-stats \
+	create
 
-# Default values
-SEGMENT ?= my-segment
-PATH ?= .
-SCOPE ?= "Segment $(SEGMENT)"
-SCAN_DOCS ?=
-PROFILE ?= impl_patch
+# Default Segment (current directory)
+SEGMENT ?= .
 
-# Trifecta CLI wrapper
-TRIFECTA = ~/.local/bin/uv run python -m src.infrastructure.cli
-
-# Mini-RAG defaults (override as needed)
-MINIRAG_SOURCE ?= $(HOME)/Developer/Minirag
-MINIRAG_QUERY ?= "PCC"
-
-trifecta-help:
-	@echo "Trifecta CLI Commands:"
+help:
+	@echo "Trifecta Dope v2.0"
+	@echo "=================="
+	@echo "Dev Lifecycle:"
+	@echo "  make install          Install dependencies (uv sync)"
+	@echo "  make gate-all         Run full acceptance gate (Unit + Int + Acceptance)"
+	@echo "  make audit            Run comprehensive audit (Ola 5 style)"
 	@echo ""
-	@echo "  make trifecta-create SEGMENT=<name> PATH=<dir> [SCOPE=<desc>] [SCAN_DOCS=<dir>] [PROFILE=<profile>]"
-	@echo "  make trifecta-validate PATH=<dir>"
-	@echo "  make trifecta-refresh PATH=<dir> SCAN_DOCS=<dir>"
+	@echo "Testing Gates:"
+	@echo "  make test-unit"
+	@echo "  make test-integration"
+	@echo "  make test-acceptance       (default: -m 'not slow')"
+	@echo "  make test-acceptance-slow  (includes @slow)"
+	@echo "  make test-roadmap          (features in progress)"
 	@echo ""
-	@echo "Mini-RAG Commands:"
-	@echo "  make minirag-setup [MINIRAG_SOURCE=<path>]"
-	@echo "  make minirag-init"
-	@echo "  make minirag-index"
-	@echo "  make minirag-query [MINIRAG_QUERY='your question']"
-	@echo "  make minirag-doctor"
+	@echo "Context Operations (PCC):"
+	@echo "  make ctx-sync [SEGMENT=.]"
+	@echo "  make ctx-search Q='query' [SEGMENT=.]"
+	@echo "  make ctx-get IDS='id1,id2' [SEGMENT=.]"
+	@echo "  make ctx-stats [SEGMENT=.]"
 	@echo ""
-	@echo "Examples:"
-	@echo "  make trifecta-create SEGMENT=memory-system PATH=hemdov/memory-system/ SCOPE='Memory management' SCAN_DOCS=hemdov/docs/"
-	@echo "  make trifecta-validate PATH=eval/lime-harness/"
-	@echo "  make trifecta-refresh PATH=eval/lime-harness/ SCAN_DOCS=eval/docs/"
-	@echo "  make minirag-setup MINIRAG_SOURCE=~/Developer/Minirag"
-	@echo "  make minirag-query MINIRAG_QUERY='programming context caller'"
+	@echo "Scaffolding:"
+	@echo "  make create SEGMENT=path/to/segment SCOPE='Description'"
 
-trifecta-create:
-	@echo "Creating Trifecta pack for $(SEGMENT)..."
-	$(TRIFECTA) create \
-		--segment $(SEGMENT) \
-		--path $(PATH) \
-		--scope "$(SCOPE)" \
-		--profile $(PROFILE) \
-		$(if $(SCAN_DOCS),--scan-docs $(SCAN_DOCS),)
+# =============================================================================
+# Development
+# =============================================================================
+install:
+	uv sync
 
-trifecta-validate:
-	@echo "Validating Trifecta at $(PATH)..."
-	$(TRIFECTA) validate --path $(PATH)
+# =============================================================================
+# Testing Gates
+# =============================================================================
+test-unit:
+	$(UV) pytest -q tests/unit
 
-trifecta-refresh:
-	@echo "Refreshing prime at $(PATH)..."
-	$(TRIFECTA) refresh-prime --path $(PATH) --scan-docs $(SCAN_DOCS)
+test-integration:
+	$(UV) pytest -q tests/integration
 
-minirag-help:
-	@echo "Mini-RAG quick usage:"
-	@echo "  make minirag-setup MINIRAG_SOURCE=<path>"
-	@echo "  make minirag-chunk"
-	@echo "  make minirag-index"
-	@echo "  make minirag-query MINIRAG_QUERY='your question'"
+test-acceptance:
+	$(UV) pytest -q tests/acceptance -m "not slow"
 
-minirag-setup:
-	@echo "Installing Mini-RAG from $(MINIRAG_SOURCE)..."
-	python $(MINIRAG_SOURCE)/install_improved.py --source $(MINIRAG_SOURCE)
+test-acceptance-slow:
+	$(UV) pytest -q tests/acceptance -m "slow"
 
-minirag-init:
-	@echo "Initializing Mini-RAG..."
-	. .venv/bin/activate && mini-rag init
+test-roadmap:
+	$(UV) pytest -q tests/roadmap
 
-minirag-chunk:
-	@echo "Chunking docs for Mini-RAG..."
-	. .venv/bin/activate && python scripts/minirag_chunker.py --config .mini-rag/config.yaml
+gate-all: test-unit test-integration test-acceptance
+	@echo "✅ GATE PASSED: Unit + Integration + Acceptance (Fast)"
 
-minirag-index:
-	@echo "Indexing Mini-RAG documents..."
-	@$(MAKE) minirag-chunk
-	. .venv/bin/activate && mini-rag index
+audit: gate-all
+	@echo "🔍 Auditing Code Quality..."
+	@rg -n "pytest.skip" tests/acceptance && echo "❌ SKIP FOUND in Acceptance" && exit 1 || echo "✅ No Skips in Acceptance"
+	@git diff --stat
+	@echo "✅ AUDIT COMPLETE"
 
-minirag-query:
-	@echo "Querying Mini-RAG..."
-	. .venv/bin/activate && mini-rag query $(MINIRAG_QUERY)
+# =============================================================================
+# Context Operations
+# =============================================================================
+ctx-sync:
+	$(UV) trifecta ctx sync --segment $(SEGMENT)
 
-minirag-doctor:
-	@echo "Running Mini-RAG doctor..."
-	. .venv/bin/activate && mini-rag doctor
+ctx-search:
+	$(UV) trifecta ctx search --segment $(SEGMENT) --query "$(Q)"
+
+ctx-get:
+	$(UV) trifecta ctx get --segment $(SEGMENT) --ids "$(IDS)"
+
+ctx-stats:
+	$(UV) trifecta ctx stats --segment $(SEGMENT)
+
+# =============================================================================
+# Scaffolding
+# =============================================================================
+create:
+	@test -n "$(SEGMENT)" || (echo "SEGMENT is required"; exit 1)
+	$(UV) trifecta create --segment $(SEGMENT) --scope "$(SCOPE)"

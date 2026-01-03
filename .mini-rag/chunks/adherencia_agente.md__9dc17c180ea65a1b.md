@@ -45,7 +45,7 @@ D. El Loop de Iteración Forzada
 Plain Text
 
 
-Agente propone acción → Linter valida → 
+Agente propone acción → Linter valida →
   Si pasa: Ejecutar
   Si falla: Proporcionar feedback → Agente itera
 

@@ -1,0 +1,6 @@
+=== PREFLIGHT ===
+pwd: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope
+git root: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope
+git status: (see modified/untracked files)
+ripgrep: 15.1.0 (features:+pcre2, simd:+NEON)
+python: 3.13.7

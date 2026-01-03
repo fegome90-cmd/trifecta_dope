@@ -86,7 +86,7 @@ La feature T9 (alias expansion) está siendo utilizada activamente, demostrando 
 | excerpt | 4x | 66.7% |
 | raw | 2x | 33.3% |
 
-**✅ Observación Positiva:** 
+**✅ Observación Positiva:**
 - El uso predominante de `excerpt` (66.7%) demuestra que los usuarios están siendo conscientes del budget
 - 0 trimming indica que el tamaño de chunks está bien calibrado
 - 742 tokens promedio es un tamaño eficiente para contexto (no sobrecarga al LLM)
@@ -166,7 +166,7 @@ La feature T9 (alias expansion) está siendo utilizada activamente, demostrando 
 ### Recomendaciones Estratégicas
 
 #### Corto Plazo
-1. **Indexar archivos faltantes:** 
+1. **Indexar archivos faltantes:**
    - `docs/plans/*.md`
    - `docs/walkthroughs/*.md`
    - Docstrings de clases key (Telemetry, validators)

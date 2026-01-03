@@ -43,3 +43,8 @@ strict = true
 testpaths = ["tests"]
 python_files = "test_*.py"
 pythonpath = [".", "scripts"]
+addopts = "--ignore=tests/roadmap"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "roadmap: marks tests for unimplemented features (run with '-m roadmap')",
+]

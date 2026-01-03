@@ -7,12 +7,12 @@
    from dataclasses import dataclass
    from pathlib import Path
    from typing import List
-   
+
    @dataclass(frozen=True)
    class ValidationResult:
        valid: bool
        errors: List[str]
-   
+
    def validate_segment_structure(path: Path) -> ValidationResult:
        """[Move entire function from install_FP.py]"""
        # ...
@@ -22,7 +22,7 @@
    ```python
    # scripts/install_trifecta_context.py
    from src.infrastructure.validators import validate_segment
-   
+
    def validate_segment(segment_path: Path) -> bool:
        result = validate_segment(segment_path)
        return result.valid

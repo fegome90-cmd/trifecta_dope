@@ -1159,7 +1159,7 @@ graph TD
     D --> E[Fase 4: CLI Integration T5.1-T5.4]
     E --> F[Fase 5: Documentation T6.1-T6.2]
     F --> G[Fase 6: Validation T7.1-T7.2]
-    
+
     style A fill:#ff9999
     style B fill:#ff9999
     style C fill:#ff9999

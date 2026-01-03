@@ -4,7 +4,6 @@ Tests for TrifectaConfig with segment_id derivation.
 TDD Phase: RED -> GREEN
 """
 
-from pathlib import Path
 
 import pytest
 

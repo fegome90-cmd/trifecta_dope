@@ -472,7 +472,7 @@ Para mantener una arquitectura limpia, la capa de `core` nunca debe importar des
   severity: "error"
   description: "La capa 'core' no puede importar desde 'api' o 'ui'."
   target: "src/core/**/*.ts"
-  disallow: 
+  disallow:
     - "src/api/**/*.ts"
     - "src/ui/**/*.ts"
 
@@ -679,7 +679,7 @@ def compile_boundary_rule(rule):
     """
     # Lógica: Si estoy en 'target', NO puedo tener 'import' de 'disallow'
     disallowed_patterns = "|".join([p.replace("**/*.ts", "") for p in rule.get('disallow', [])])
-    
+
     return {
         'id': rule['id'],
         'message': rule['description'],
@@ -712,7 +712,7 @@ def compile_security_rule(rule):
         'dangerouslySetInnerHTML': 'dangerouslySetInnerHTML={$$$PROPS}',
         'process-env': 'process.env.$VAR'
     }
-    
+
     return {
         'id': rule['id'],
         'message': rule['description'],
@@ -730,21 +730,21 @@ def parse_agents_md(file_path):
     # Regex para extraer bloques YAML
     # Busca ```yaml ... ```
     yaml_blocks = re.findall(r'```yaml\n(.*?)\n```', content, re.DOTALL)
-    
+
     compiled_rules = []
-    
+
     for block in yaml_blocks:
         try:
             rules_list = yaml.safe_load(block)
             if not isinstance(rules_list, list): continue # Ignorar configs que no son listas de reglas
-            
+
             for rule in rules_list:
                 if rule['rule'] == 'architectural-boundary':
                     compiled_rules.append(compile_boundary_rule(rule))
                 elif rule['rule'] == 'security-guard':
                     compiled_rules.append(compile_security_rule(rule))
                 # Aquí añadirías 'naming-convention' y 'function-style'
-                
+
         except yaml.YAMLError as e:
             print(f"Error parseando bloque YAML: {e}")
 

@@ -33,9 +33,8 @@ class TestNamingContractIntegration:
         project_dir.mkdir()
 
         # 1. Create (target path is the project dir)
-        result = runner.invoke(
-            app, ["create", "--segment", segment_raw, "--path", str(project_dir)]
-        )
+        # Note: 'create' command now takes -s as the path and derives ID from dirname
+        result = runner.invoke(app, ["create", "--segment", str(project_dir)])
         assert result.exit_code == 0
 
         # Verify filenames match segment_id

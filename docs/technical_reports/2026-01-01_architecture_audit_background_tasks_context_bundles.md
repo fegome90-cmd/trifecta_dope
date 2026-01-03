@@ -761,13 +761,13 @@ Usa este checklist para auditar la implementación post-MVP:
 @ctx_app.command("search")
 def search(...):
     telemetry = _get_telemetry(segment, telemetry_level)
-    
+
     # NUEVO: Bundle recorder hook
     bundle_recorder = None
     if typer.get_context().params.get("bundle_capture", False):
         bundle_recorder = BundleRecorder(segment, run_id=telemetry.run_id)
         bundle_recorder.start_session("ctx search", {"query": query, "limit": limit})
-    
+
     use_case = SearchUseCase(file_system, telemetry, bundle_recorder)  # Inject recorder
     # ...
 ```
@@ -787,7 +787,7 @@ def search(...):
 
 def execute(self, target_path, query, limit):
     result = service.search(term, k=limit * 2)
-    
+
     # NUEVO: Log tool call to bundle
     if self.bundle_recorder:
         self.bundle_recorder.log_tool_call(
@@ -796,7 +796,7 @@ def execute(self, target_path, query, limit):
             result={"hits": len(result.hits)},
             timing_ms=elapsed_ms
         )
-    
+
     # ... rest of formatting
 ```
 
@@ -814,10 +814,10 @@ def execute(self, target_path, query, limit):
 class FileSystemAdapter:
     def __init__(self, bundle_recorder=None):
         self.bundle_recorder = bundle_recorder
-    
+
     def read_text(self, path: Path) -> str:
         content = path.read_text()
-        
+
         # NUEVO: Log file read to bundle
         if self.bundle_recorder:
             self.bundle_recorder.log_file_read(
@@ -825,7 +825,7 @@ class FileSystemAdapter:
                 lines_read=[1, len(content.splitlines())],
                 char_count=len(content)
             )
-        
+
         return content
 ```
 
@@ -844,13 +844,13 @@ class BackgroundTaskManager:
     def _update_state(self, task_id: str, new_state: str):
         state_path = self._task_dir(task_id) / "state.json"
         lock_path = self._task_dir(task_id) / "task.lock"
-        
+
         with file_lock(lock_path):
             state = json.loads(state_path.read_text())
             state["state"] = new_state
             state["updated_at"] = datetime.now().isoformat()
             state["state_history"].append({"state": new_state, "timestamp": state["updated_at"]})
-            
+
             AtomicWriter.write(state_path, json.dumps(state, indent=2))
 ```
 

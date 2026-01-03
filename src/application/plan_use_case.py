@@ -104,7 +104,7 @@ class PlanUseCase:
         # Generate unigrams and bigrams
         tokens = normalized.split()
         unigrams = tokens
-        bigrams = [f"{tokens[i]} {tokens[i+1]}" for i in range(len(tokens) - 1)]
+        bigrams = [f"{tokens[i]} {tokens[i + 1]}" for i in range(len(tokens) - 1)]
 
         return unigrams + bigrams
 
@@ -441,9 +441,7 @@ class PlanUseCase:
             },
         )
 
-    def _match_l3_alias(
-        self, task: str, features: dict
-    ) -> tuple[str | None, int, str | None]:
+    def _match_l3_alias(self, task: str, features: dict) -> tuple[str | None, int, str | None]:
         """L3: Alias match with structured triggers.
 
         Args:
@@ -470,15 +468,17 @@ class PlanUseCase:
                 high_signal = trigger.get("high_signal", False)
 
                 # Check if task contains the phrase
-                phrase_lower = phrase.lower()
-                phrase_tokens = self._tokenize(phrase)
+                _phrase_lower = phrase.lower()
+                _phrase_tokens = self._tokenize(phrase)
 
                 # Count matching terms
                 matching_terms = sum(1 for t in terms if t.lower() in task_tokens)
 
                 # High signal triggers auto-match if any term matches
                 if high_signal and matching_terms >= 1:
-                    if priority > best_priority or (priority == best_priority and matching_terms > best_score):
+                    if priority > best_priority or (
+                        priority == best_priority and matching_terms > best_score
+                    ):
                         best_match = feature_id
                         best_score = matching_terms
                         best_trigger_phrase = phrase
@@ -487,7 +487,9 @@ class PlanUseCase:
 
                 # Standard triggers require >= 2 term matches
                 if matching_terms >= 2:
-                    if priority > best_priority or (priority == best_priority and matching_terms > best_score):
+                    if priority > best_priority or (
+                        priority == best_priority and matching_terms > best_score
+                    ):
                         best_match = feature_id
                         best_score = matching_terms
                         best_trigger_phrase = phrase
@@ -505,9 +507,7 @@ class PlanUseCase:
         entrypoints = []
 
         # Find index.entrypoints section
-        entrypoints_match = re.search(
-            r"### index\.entrypoints.*?\n\n(.*?)###", content, re.DOTALL
-        )
+        entrypoints_match = re.search(r"### index\.entrypoints.*?\n\n(.*?)###", content, re.DOTALL)
         if entrypoints_match:
             table_text = entrypoints_match.group(1)
             # Parse table rows
@@ -670,18 +670,26 @@ class PlanUseCase:
                 result["l2_match_mode"] = match_mode
                 result["l2_blocked"] = debug_info.get("blocked")
                 result["l2_block_reason"] = debug_info.get("block_reason")
-                result["l2_support_terms_required"] = debug_info.get("support_terms_required", False)
+                result["l2_support_terms_required"] = debug_info.get(
+                    "support_terms_required", False
+                )
                 result["l2_support_terms_present"] = debug_info.get("support_terms_present", [])
-                result["l2_weak_single_word_trigger"] = debug_info.get("weak_single_word_trigger", False)
+                result["l2_weak_single_word_trigger"] = debug_info.get(
+                    "weak_single_word_trigger", False
+                )
                 result["l2_clamp_decision"] = debug_info.get("clamp_decision", "allow")
-                result["budget_est"]["why"] = f"L2: NL trigger '{nl_trigger}' (score={score}, mode={match_mode})"
+                result["budget_est"]["why"] = (
+                    f"L2: NL trigger '{nl_trigger}' (score={score}, mode={match_mode})"
+                )
             elif warning:
                 # L2 matched but guardrail/tie caused fallback
                 result["selected_by"] = "fallback"
                 result["l2_warning"] = warning
                 result["l2_blocked"] = debug_info.get("blocked")
                 result["l2_block_reason"] = debug_info.get("block_reason")
-                result["l2_support_terms_required"] = debug_info.get("support_terms_required", False)
+                result["l2_support_terms_required"] = debug_info.get(
+                    "support_terms_required", False
+                )
                 result["l2_support_terms_present"] = debug_info.get("support_terms_present", [])
                 result["l2_weak_single_word_trigger"] = debug_info.get(
                     "weak_single_word_trigger", warning == "weak_single_word_trigger"
@@ -690,7 +698,9 @@ class PlanUseCase:
                 result["budget_est"]["why"] = f"L4: L2 guardrail/tie ({warning}), using entrypoints"
             else:
                 # === L3: Alias match (using normalized task) ===
-                feature_id, match_score, trigger_phrase = self._match_l3_alias(normalized_task, features)
+                feature_id, match_score, trigger_phrase = self._match_l3_alias(
+                    normalized_task, features
+                )
 
                 if feature_id:
                     result["selected_feature"] = feature_id
@@ -698,7 +708,9 @@ class PlanUseCase:
                     result["selected_by"] = "alias"
                     result["match_terms_count"] = match_score
                     result["matched_trigger"] = trigger_phrase
-                    result["budget_est"]["why"] = f"L3: Alias match via '{trigger_phrase}' ({match_score} terms)"
+                    result["budget_est"]["why"] = (
+                        f"L3: Alias match via '{trigger_phrase}' ({match_score} terms)"
+                    )
                 else:
                     # === L4: Fallback to entrypoints ===
                     result["selected_by"] = "fallback"
@@ -709,16 +721,19 @@ class PlanUseCase:
             if "l2_block_reason" not in result:
                 result["l2_block_reason"] = debug_info.get("block_reason")
             if "l2_support_terms_required" not in result:
-                result["l2_support_terms_required"] = debug_info.get("support_terms_required", False)
+                result["l2_support_terms_required"] = debug_info.get(
+                    "support_terms_required", False
+                )
             if "l2_support_terms_present" not in result:
                 result["l2_support_terms_present"] = debug_info.get("support_terms_present", [])
             if "l2_weak_single_word_trigger" not in result:
-                result["l2_weak_single_word_trigger"] = debug_info.get("weak_single_word_trigger", False)
+                result["l2_weak_single_word_trigger"] = debug_info.get(
+                    "weak_single_word_trigger", False
+                )
             if "l2_clamp_decision" not in result:
                 result["l2_clamp_decision"] = debug_info.get(
                     "clamp_decision", "block" if warning else "allow"
                 )
-
 
         # Generate bundle and next_steps
         if result["plan_hit"]:
@@ -738,21 +753,32 @@ class PlanUseCase:
                 result["bundle_assert_ok"] = False
                 result["bundle_assert_failed_paths"] = assertion_result["failed_paths"]
                 result["bundle_assert_failed_anchors"] = assertion_result["failed_anchors"]
-                result["budget_est"]["why"] = f"L3: Bundle assertions failed for {failed_feature_id}, using entrypoints"
+                result["budget_est"]["why"] = (
+                    f"L3: Bundle assertions failed for {failed_feature_id}, using entrypoints"
+                )
             else:
                 # Assertions passed - use the bundle
                 result["bundle_assert_ok"] = True
 
                 # Parse chunk IDs
                 chunks_str = ", ".join(bundle["chunks"])
-                result["chunk_ids"] = [cid.strip() for cid in re.findall(r"`?([^:,`]+)`?", chunks_str)]
+                result["chunk_ids"] = [
+                    cid.strip() for cid in re.findall(r"`?([^:,`]+)`?", chunks_str)
+                ]
                 result["paths"] = bundle["paths"]
 
                 # Generate next steps
                 if any(kw in task.lower() for kw in ["implement", "add", "create"]):
-                    result["next_steps"].append({"action": "implement", "target": result["paths"][0] if result["paths"] else "."})
+                    result["next_steps"].append(
+                        {
+                            "action": "implement",
+                            "target": result["paths"][0] if result["paths"] else ".",
+                        }
+                    )
                 else:
-                    result["next_steps"].append({"action": "read", "target": result["paths"][0] if result["paths"] else "."})
+                    result["next_steps"].append(
+                        {"action": "read", "target": result["paths"][0] if result["paths"] else "."}
+                    )
 
                 # Estimate tokens
                 chunk_count = len(result["chunk_ids"])
@@ -794,8 +820,12 @@ class PlanUseCase:
             if "bundle_assert_ok" in result:
                 telemetry_attrs["bundle_assert_ok"] = result["bundle_assert_ok"]
                 if not result["bundle_assert_ok"]:
-                    telemetry_attrs["bundle_assert_failed_paths"] = result.get("bundle_assert_failed_paths", [])
-                    telemetry_attrs["bundle_assert_failed_anchors"] = result.get("bundle_assert_failed_anchors", [])
+                    telemetry_attrs["bundle_assert_failed_paths"] = result.get(
+                        "bundle_assert_failed_paths", []
+                    )
+                    telemetry_attrs["bundle_assert_failed_anchors"] = result.get(
+                        "bundle_assert_failed_anchors", []
+                    )
 
             # T9.3.3: Include L2 matching details
             if result.get("l2_warning"):
@@ -815,7 +845,9 @@ class PlanUseCase:
                 telemetry_attrs["l2_support_terms_present"] = result["l2_support_terms_present"]
                 telemetry_attrs["support_terms_present"] = result["l2_support_terms_present"]
             if "l2_weak_single_word_trigger" in result:
-                telemetry_attrs["l2_weak_single_word_trigger"] = result["l2_weak_single_word_trigger"]
+                telemetry_attrs["l2_weak_single_word_trigger"] = result[
+                    "l2_weak_single_word_trigger"
+                ]
                 telemetry_attrs["weak_single_word_trigger"] = result["l2_weak_single_word_trigger"]
             if "l2_clamp_decision" in result:
                 telemetry_attrs["l2_clamp_decision"] = result["l2_clamp_decision"]

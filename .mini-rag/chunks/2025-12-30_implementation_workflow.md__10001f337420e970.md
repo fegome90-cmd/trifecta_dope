@@ -2,7 +2,7 @@
 
 ```
 src/infrastructure/file_system.py:
-  
+
   ADD at top level:
   ┌──────────────────────────────────────────────────────┐
   │ REFERENCE_EXCLUSION = {                              │
@@ -10,7 +10,7 @@ src/infrastructure/file_system.py:
   │     "_ctx/session_*.md",  # Append-only, not indexed │
   │ }                                                    │
   └──────────────────────────────────────────────────────┘
-  
+
   MODIFY in scan_files():
   ┌──────────────────────────────────────────────────────┐
   │ if file.name in REFERENCE_EXCLUSION:                 │

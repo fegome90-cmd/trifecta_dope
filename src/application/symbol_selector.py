@@ -1,7 +1,21 @@
 from pathlib import Path
+from dataclasses import dataclass, field
 from typing import Optional, List, Any
 from src.domain.result import Result, Ok, Err
-from src.domain.ast_models import ASTError, ASTErrorCode, ChildSymbol, Range
+from src.domain.ast_models import ASTError, ASTErrorCode
+
+
+@dataclass
+class SymbolResolveResult:
+    """Result of symbol resolution."""
+
+    resolved: bool = False
+    ambiguous: bool = False
+    file: Optional[str] = None
+    start_line: Optional[int] = None
+    end_line: Optional[int] = None
+    matches: int = 0
+    candidates: List[Any] = field(default_factory=list)
 
 
 class SymbolQuery:
@@ -36,6 +50,13 @@ class SymbolQuery:
         else:
             path_only = path_member
 
+        if kind == "mod" and member:
+            return Err(
+                ASTError(
+                    code=ASTErrorCode.INVALID_URI, message="Kind 'mod' should not have fragment"
+                )
+            )
+
         return Ok(cls(kind, path_only, member))
 
 
@@ -63,9 +84,9 @@ class SkeletonMapBuilder:
 
 
 class SymbolResolver:
-    def __init__(self, builder: Any, root: Path):
+    def __init__(self, builder: Any, root: Optional[Path] = None):
         self.builder = builder
-        self.root = root
+        self.root = root or Path.cwd()
 
     def resolve(self, query: SymbolQuery) -> Result[Candidate, ASTError]:
         # Simple resolution logic

@@ -6,13 +6,12 @@ All extras go under payload["x"] namespace.
 """
 
 from pathlib import Path
-from time import perf_counter_ns
-from typing import Any, Optional
+from typing import Optional
 
 from src.infrastructure.telemetry import Telemetry
 from src.application.ast_parser import SkeletonMapBuilder, SymbolInfo
-from src.application.symbol_selector import SymbolQuery, SymbolResolver, SymbolResolveResult
-from src.application.lsp_manager import LSPManager, LSPState
+from src.application.symbol_selector import SymbolQuery, SymbolResolveResult
+from src.application.lsp_manager import LSPState
 
 __all__ = [
     "ASTTelemetry",

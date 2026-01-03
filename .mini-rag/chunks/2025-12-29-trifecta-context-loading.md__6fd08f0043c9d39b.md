@@ -14,12 +14,12 @@ class IngestMetrics:
             "cache_misses": 0,
             "elapsed_ms": 0
         }
-    
+
     def record(self, **kwargs):
         for k, v in kwargs.items():
             if k in self.metrics:
                 self.metrics[k] += v
-    
+
     def write_log(self):
         with open(self.log_path, 'a') as f:
             f.write(f"{datetime.now().isoformat()} {json.dumps(self.metrics)}\n")

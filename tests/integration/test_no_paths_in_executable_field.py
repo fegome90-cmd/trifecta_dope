@@ -1,5 +1,3 @@
-import pytest
-from pathlib import Path
 from src.infrastructure.telemetry import Telemetry
 from src.infrastructure.lsp_client import LSPClient
 

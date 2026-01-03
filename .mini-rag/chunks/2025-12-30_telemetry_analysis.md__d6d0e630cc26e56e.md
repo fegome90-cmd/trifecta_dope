@@ -1,5 +1,5 @@
 #### Corto Plazo
-1. **Indexar archivos faltantes:** 
+1. **Indexar archivos faltantes:**
    - `docs/plans/*.md`
    - `docs/walkthroughs/*.md`
    - Docstrings de clases key (Telemetry, validators)

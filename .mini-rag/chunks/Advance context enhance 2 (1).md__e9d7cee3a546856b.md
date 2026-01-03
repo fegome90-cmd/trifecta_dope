@@ -9,7 +9,7 @@ def ctx_get_symbol(
 ) -> dict:
     """
     Retrieve a specific symbol with context.
-    
+
     Uses LSP or Tree-sitter to locate the symbol,
     then returns it with surrounding lines.
     """

@@ -6,7 +6,6 @@ TDD Phase: RED -> GREEN
 
 from pathlib import Path
 
-import pytest
 
 from src.infrastructure.validators import validate_segment_fp
 

@@ -1,7 +1,6 @@
 import json
 import pytest
 import re
-from pathlib import Path
 from src.infrastructure.telemetry import Telemetry
 from src.infrastructure.segment_utils import resolve_segment_root, compute_segment_id
 

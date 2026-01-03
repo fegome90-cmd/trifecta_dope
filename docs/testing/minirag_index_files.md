@@ -11,4 +11,3 @@ Use this reference when you need to locate index artifacts on disk.
 
 - `paths.metadata_file`
 - `paths.embeddings_file`
-

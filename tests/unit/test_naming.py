@@ -10,7 +10,6 @@ Tests the normalization rules:
 - empty -> "segment"
 """
 
-import pytest
 
 from src.domain.naming import normalize_segment_id
 

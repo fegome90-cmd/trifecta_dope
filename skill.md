@@ -22,38 +22,14 @@ Verification
 3. **Read Before Write**: Lee código antes de modificar
 4. **Document**: Actualiza `session_..md`
 
-### CRITICAL PROTOCOL: Session Evidence Persistence (Trifecta)
+### Session Evidence Protocol
 
-Antes de ejecutar cualquier herramienta (Trifecta CLI o agentes externos), DEBES seguir este orden. NO tomes atajos.
+1. **Persist**: `trifecta session append --segment . --summary "<task>"`
+2. **Sync**: `trifecta ctx sync --segment .`
+3. **Execute**: `ctx search` → `ctx get`
+4. **Record**: `trifecta session append --segment . --summary "Completed <task>"`
 
-1) PERSISTE intencion minima (CLI proactivo - NO depende del LLM):
-```bash
-trifecta session append --segment . --summary "<que vas a hacer>" --files "<csv>" --commands "<csv>"
-```
-
-2) SYNC del segmento
-```bash
-trifecta ctx sync --segment .
-```
-
-3) LEE lo que acabas de escribir (confirma Objective/Plan registrado en session.md)
-
-4) EJECUTA el ciclo de contexto (Plan A por defecto)
-```bash
-trifecta ctx search --segment . --query "<tema>" --limit 6
-trifecta ctx get --segment . --ids "<id1>,<id2>" --mode excerpt --budget-token-est 900
-```
-
-5) REGISTRA resultado (CLI proactivo):
-```bash
-trifecta session append --segment . --summary "Completed <task>" --files "<touched>" --commands "<executed>"
-```
-
-STALE FAIL-CLOSED PROTOCOL (CRITICAL):
-- Si `ctx validate` falla o `stale_detected=true` -> STOP inmediatamente
-- Ejecutar: `trifecta ctx sync --segment .` + `trifecta ctx validate --segment .`
-- Registrar en session.md: "Stale: true -> sync+validate executed"
-- Prohibido continuar hasta PASS
+> Ver [agent.md](./_ctx/agent_trifecta_dope.md) para comandos completos y protocolos detallados.
 
 Prohibido:
 - YAML de historial largo
@@ -87,10 +63,7 @@ Prohibido:
 - **Presupuesto excedido**: Intentar cargar más de 1200 tokens en un solo turno degrada la atención del agente.
 - **Rutas absolutas**: Siempre usa rutas relativas al segmento o al repo root.
 
-## Resources (On-Demand)
-- `@_ctx/prime_trifecta_dope.md` - Lista de lectura obligatoria
-- `@_ctx/agent.md` - Stack técnico y gates
-- `@_ctx/session_trifecta_dope.md` - Log de handoffs (runtime)
+
 
 ---
 **Profile**: `impl_patch` | **Updated**: 2025-12-29

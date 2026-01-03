@@ -1,8 +1,14 @@
 import sys
-import time
 import logging
 from pathlib import Path
-from src.infrastructure.lsp_client import LSPClient, LSPState
+
+# Path hack: ensure project root is in sys.path for imports
+_script_dir = Path(__file__).parent
+_project_root = _script_dir.parent.parent
+if str(_project_root) not in sys.path:
+    sys.path.insert(0, str(_project_root))
+
+from src.infrastructure.lsp_client import LSPClient, LSPState  # noqa: E402
 
 # Configure logging to stdout
 logging.basicConfig(level=logging.DEBUG)

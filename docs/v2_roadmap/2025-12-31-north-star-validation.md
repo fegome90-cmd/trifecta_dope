@@ -222,14 +222,14 @@ from src.domain.result import Ok, Err, Result
 def validate_segment_fp(path: Path) -> Result[ValidationResult, list[str]]:
     """
     FP version of validate_segment_structure.
-    
+
     Returns:
         Ok(ValidationResult) if valid
         Err(list[str]) with error messages if invalid
     """
     # Delegate to existing pure function
     result = validate_segment_structure(path)
-    
+
     if result.valid:
         return Ok(result)
     else:
@@ -267,12 +267,12 @@ class TestCLIFPGate:
         """ctx build should use FP validation and fail cleanly."""
         segment = tmp_path / "bad_fp_seg"
         segment.mkdir()
-        
+
         result = subprocess.run(
             ["uv", "run", "trifecta", "ctx", "build", "--segment", str(segment)],
             capture_output=True, text=True
         )
-        
+
         assert result.returncode != 0
         assert "validation" in result.stdout.lower() or "error" in result.stdout.lower()
 ```
@@ -292,7 +292,7 @@ from src.infrastructure.validators import validate_segment_fp
 @ctx_app.command("build")
 def build(...):
     path = Path(segment).resolve()
-    
+
     # FP Gate: Pattern matching on Result
     match validate_segment_fp(path):
         case Err(errors):
@@ -307,7 +307,7 @@ def build(...):
                 typer.echo("⚠️  Legacy files detected (consider renaming):")
                 for lf in legacy:
                     typer.echo(f"   - _ctx/{lf}")
-    
+
     # ... rest of build logic
 ```
 
@@ -374,23 +374,23 @@ flowchart LR
     subgraph INPUT["📥 Input"]
         PATH["segment path"]
     end
-    
+
     subgraph PURE["🔷 Pure Functions"]
         V1["validate_segment_fp()"]
         V2["detect_legacy_files()"]
     end
-    
+
     subgraph RESULT["📦 Result Monad"]
         OK["Ok(ValidationResult)"]
         ERR["Err(errors)"]
     end
-    
+
     subgraph CLI["🖥️ CLI"]
         MATCH["match/case"]
         SUCCESS["✅ Proceed to build"]
         FAIL["❌ Exit code 1"]
     end
-    
+
     PATH --> V1
     V1 --> OK
     V1 --> ERR
@@ -410,13 +410,13 @@ flowchart TD
         S2 --> S3["Ok(context_pack)"]
         S3 --> S4["✅ Write to disk"]
     end
-    
+
     subgraph FAILURE_TRACK["🔴 Failure Track"]
         F1["Err(missing skill.md)"]
         F2["Err(missing _ctx/)"]
         F3["❌ Show errors & exit"]
     end
-    
+
     S1 -.->|"validation fails"| F1
     S2 -.->|"missing files"| F2
     F1 --> F3
@@ -451,9 +451,9 @@ graph TB
             SESSION["session_{name}.md<br/>(Runtime Log)"]
         end
     end
-    
+
     SKILL --> CTX
-    
+
     style SKILL fill:#4CAF50,color:white
     style AGENT fill:#2196F3,color:white
     style PRIME fill:#2196F3,color:white

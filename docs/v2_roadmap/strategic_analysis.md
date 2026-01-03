@@ -10,7 +10,7 @@ Este documento sintetiza el análisis de los 11 documentos de investigación que
 *   **idea_de_pipeline.md**: Define el **Time Travel Debugging** mediante Almacenamiento Direccionable por Contenido (CAS). El estado es inmutable y cada transición es auditable.
 
 ### 📄 Documentos de Control y Calidad (The Factory Pattern)
-*   **agent_factory.md**: Define la **Constitución (AGENTS.md)** como un DSL ejecutable que se transpila a reglas de `ast-grep` y `ruff`. 
+*   **agent_factory.md**: Define la **Constitución (AGENTS.md)** como un DSL ejecutable que se transpila a reglas de `ast-grep` y `ruff`.
 *   **factory_idea.md**: El hallazgo disruptivo: **Los Linters son la API de Control**. El mensaje de error del linter es la instrucción más efectiva para corregir al agente.
 *   **adherencia_agente.md**: Describe el **Structured Communication Protocol**. Obliga al agente a seguir pasos deterministas (`[PLAN]`, `[IMPLEMENTATION]`, `[RISKS]`).
 

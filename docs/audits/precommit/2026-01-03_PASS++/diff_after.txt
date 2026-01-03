@@ -1,0 +1,4 @@
+README.md
+_ctx/context_pack.json
+_ctx/generated/repo_map.md
+_ctx/generated/symbols_stub.md

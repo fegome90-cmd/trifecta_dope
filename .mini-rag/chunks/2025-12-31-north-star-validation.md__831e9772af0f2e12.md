@@ -6,14 +6,14 @@ from src.domain.result import Ok, Err, Result
 def validate_segment_fp(path: Path) -> Result[ValidationResult, list[str]]:
     """
     FP version of validate_segment_structure.
-    
+
     Returns:
         Ok(ValidationResult) if valid
         Err(list[str]) with error messages if invalid
     """
     # Delegate to existing pure function
     result = validate_segment_structure(path)
-    
+
     if result.valid:
         return Ok(result)
     else:

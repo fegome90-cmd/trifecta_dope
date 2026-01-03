@@ -3,8 +3,6 @@ Integration tests for CLI AST commands.
 """
 
 import pytest
-import shutil
-from pathlib import Path
 from typer.testing import CliRunner
 from src.infrastructure.cli import app
 from src.domain.ast_models import ASTResponse

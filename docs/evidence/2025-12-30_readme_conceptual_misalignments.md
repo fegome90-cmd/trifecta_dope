@@ -33,7 +33,7 @@ La analogía 1:1:
 **Problema de redacción**:
 
 ```markdown
-El **Context Pack** es un JSON estructurado que permite a los LLMs ingerir 
+El **Context Pack** es un JSON estructurado que permite a los LLMs ingerir
 documentación de manera eficiente sin cargar textos completos en el prompt.
 ```
 

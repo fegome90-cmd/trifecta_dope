@@ -44,7 +44,7 @@ def event(
 ) -> None:
     """
     Log a discrete event with optional structured fields.
-    
+
     Extra fields will be serialized directly to the event JSON.
     Example: telemetry.event("ctx.search", {...}, {...}, 100, bytes_read=1024)
     """
@@ -87,7 +87,7 @@ Before final `run_summary` dict assembly (line ~230), add:
         "ast_parse_count": self.metrics.get("ast_parse_count", 0),
         "ast_cache_hit_count": self.metrics.get("ast_cache_hit_count", 0),
         "ast_cache_hit_rate": round(
-            self.metrics.get("ast_cache_hit_count", 0) / 
+            self.metrics.get("ast_cache_hit_count", 0) /
             max(self.metrics.get("ast_parse_count", 1), 1),
             3
         ),
@@ -100,7 +100,7 @@ Before final `run_summary` dict assembly (line ~230), add:
         "lsp_timeout_count": self.metrics.get("lsp_timeout_count", 0),
         "lsp_fallback_count": self.metrics.get("lsp_fallback_count", 0),
         "lsp_timeout_rate": round(
-            self.metrics.get("lsp_timeout_count", 0) / 
+            self.metrics.get("lsp_timeout_count", 0) /
             max(self.metrics.get("lsp_spawn_count", 1), 1),
             3
         ),
@@ -186,51 +186,51 @@ class SkeletonMap:
 
 class SkeletonMapBuilder:
     """Build skeleton maps using Tree-sitter Python parser."""
-    
+
     def __init__(self, telemetry: Telemetry, segment_root: Path):
         self.telemetry = telemetry
         self.segment_root = segment_root
         self._skeleton_cache: Dict[str, SkeletonMap] = {}
         self._file_sha_cache: Dict[Path, str] = {}
-    
+
     def _relative_path(self, path: Path) -> str:
         """Convert to relative path for telemetry (redaction)."""
         try:
             return str(path.relative_to(self.segment_root))
         except ValueError:
             return str(path.name)
-    
+
     def parse_python(self, code: str, file_path: Path) -> SkeletonMap:
         """
         Parse Python code, extract structure (functions/classes only).
         Uses monotonic clock for timing.
         """
         start_ns = time.perf_counter_ns()
-        
+
         try:
             # Import tree-sitter on first use
             from tree_sitter import Language, Parser
-            
+
             PYTHON_LANGUAGE = Language("tree-sitter-python")
             parser = Parser()
             parser.set_language(PYTHON_LANGUAGE)
-            
+
             tree = parser.parse(code.encode('utf-8'))
             functions, classes, imports = self._extract_structure(tree)
-            
+
             skeleton = SkeletonMap(
                 functions=functions,
                 classes=classes,
                 imports=imports,
                 file_path=file_path
             )
-            
+
             elapsed_ns = time.perf_counter_ns() - start_ns
             elapsed_ms = int(elapsed_ns / 1_000_000)
-            
+
             skeleton_bytes = len(json.dumps(skeleton.__dict__, default=str))
             reduction_ratio = skeleton_bytes / max(len(code), 1)
-            
+
             # Emit event with monotonic timing
             self.telemetry.event(
                 "ast.parse",
@@ -244,16 +244,16 @@ class SkeletonMapBuilder:
                 skeleton_bytes=skeleton_bytes,
                 reduction_ratio=round(reduction_ratio, 4),
             )
-            
+
             # Increment counter
             self.telemetry.incr("ast_parse_count")
-            
+
             return skeleton
-            
+
         except Exception as e:
             elapsed_ns = time.perf_counter_ns() - start_ns
             elapsed_ms = int(elapsed_ns / 1_000_000)
-            
+
             self.telemetry.event(
                 "ast.parse",
                 {"file": self._relative_path(file_path)},
@@ -261,7 +261,7 @@ class SkeletonMapBuilder:
                 elapsed_ms,
             )
             raise
-    
+
     def _extract_structure(self, tree) -> tuple:
         """Extract functions, classes, imports from AST tree."""
         # Pseudocode: walk tree, identify function_definition / class_definition / import_statement nodes
@@ -271,16 +271,16 @@ class SkeletonMapBuilder:
 
 class LSPClient:
     """JSON-RPC client for Pyright language server."""
-    
+
     def __init__(self, telemetry: Telemetry, pyright_binary: str = "pyright-langserver"):
         self.telemetry = telemetry
         self.pyright_binary = pyright_binary
         self.process: Optional[subprocess.Popen] = None
         self.initialized = False
         self._message_id = 0
-        
+
         self.spawn_time_ns = time.perf_counter_ns()
-        
+
         try:
             self.process = subprocess.Popen(
                 [pyright_binary],
@@ -289,16 +289,16 @@ class LSPClient:
                 stderr=subprocess.PIPE,
                 text=True,
             )
-            
+
             self.telemetry.event(
                 "lsp.spawn",
                 {"pyright_binary": pyright_binary},
                 {"subprocess_pid": self.process.pid, "status": "ok"},
                 0,
             )
-            
+
             self.telemetry.incr("lsp_spawn_count")
-            
+
         except Exception as e:
             self.telemetry.event(
                 "lsp.spawn",
@@ -307,31 +307,31 @@ class LSPClient:
                 0,
             )
             raise
-    
+
     def initialize(self, workspace_path: Path) -> None:
         """Send LSP initialize request."""
         start_ns = time.perf_counter_ns()
-        
+
         try:
             # Construct and send initialize JSON-RPC request
             # (Pseudocode; actual implementation: send JSON-RPC message)
-            
+
             elapsed_ns = time.perf_counter_ns() - start_ns
             elapsed_ms = int(elapsed_ns / 1_000_000)
-            
+
             self.telemetry.event(
                 "lsp.initialize",
                 {"workspace": str(workspace_path)},
                 {"status": "ok", "initialized": True},
                 elapsed_ms,
             )
-            
+
             self.initialized = True
-            
+
         except Exception as e:
             elapsed_ns = time.perf_counter_ns() - start_ns
             elapsed_ms = int(elapsed_ns / 1_000_000)
-            
+
             self.telemetry.event(
                 "lsp.initialize",
                 {"workspace": str(workspace_path)},
@@ -339,40 +339,40 @@ class LSPClient:
                 elapsed_ms,
             )
             raise
-    
+
     def definition(self, file_path: Path, line: int, col: int) -> Optional[Dict]:
         """Request textDocument/definition."""
         start_ns = time.perf_counter_ns()
-        
+
         try:
             # Send textDocument/definition request, wait for response (timeout 500ms)
             response = self._send_request("textDocument/definition", {
                 "textDocument": {"uri": file_path.as_uri()},
                 "position": {"line": line, "character": col}
             }, timeout_ms=500)
-            
+
             elapsed_ns = time.perf_counter_ns() - start_ns
             elapsed_ms = int(elapsed_ns / 1_000_000)
-            
+
             if response:
                 # Extract file + line from response
                 target_file = response.get("uri", "unknown")
                 target_line = response.get("range", {}).get("start", {}).get("line", 0)
-                
+
                 self.telemetry.event(
                     "lsp.definition",
                     {"file": str(file_path.name), "line": line, "col": col},
                     {"resolved": True, "target_file": target_file, "target_line": target_line},
                     elapsed_ms,
                 )
-            
+
             self.telemetry.incr("lsp_definition_count")
             return response
-            
+
         except TimeoutError:
             elapsed_ns = time.perf_counter_ns() - start_ns
             elapsed_ms = int(elapsed_ns / 1_000_000)
-            
+
             self.telemetry.event(
                 "lsp.timeout",
                 {"method": "definition"},
@@ -380,18 +380,18 @@ class LSPClient:
                 elapsed_ms,
                 fallback_to="tree_sitter"
             )
-            
+
             self.telemetry.incr("lsp_timeout_count")
             self.telemetry.incr("lsp_fallback_count")
-            
+
             raise
-    
+
     def _send_request(self, method: str, params: dict, timeout_ms: int = 500) -> Optional[dict]:
         """Send JSON-RPC request, wait for response."""
         # Pseudocode: assemble JSON-RPC message, send, wait for response, parse
         # ACTUAL: Use python-jsonrpc2 or similar
         pass
-    
+
     def shutdown(self) -> None:
         """Kill LSP process."""
         if self.process:
@@ -405,54 +405,54 @@ class LSPClient:
 
 class Selector:
     """Symbol resolver for sym:// DSL."""
-    
+
     def __init__(self, telemetry: Telemetry, skeleton_map_builder: SkeletonMapBuilder):
         self.telemetry = telemetry
         self.skeleton_map_builder = skeleton_map_builder
-    
+
     def resolve_symbol(self, symbol_query: str) -> Optional[Dict]:
         """
         Resolve sym://python/module.path/SymbolName to file + line + kind.
         Uses monotonic timing.
         """
         start_ns = time.perf_counter_ns()
-        
+
         try:
             # Parse sym://python/src.domain.models/Config
             # Find file, load skeleton, locate symbol in skeleton
-            
+
             resolved = True  # simplified
             matches_count = 1
             ambiguous = False
-            
+
             elapsed_ns = time.perf_counter_ns() - start_ns
             elapsed_ms = int(elapsed_ns / 1_000_000)
-            
+
             self.telemetry.event(
                 "selector.resolve",
                 {"symbol_query": symbol_query},
                 {"resolved": resolved, "matches": matches_count, "ambiguous": ambiguous},
                 elapsed_ms,
             )
-            
+
             if resolved:
                 self.telemetry.incr("selector_resolve_success_count")
-            
+
             self.telemetry.incr("selector_resolve_count")
-            
+
             return {"file": "src/domain/models.py", "line": 42, "kind": "class"}
-            
+
         except Exception as e:
             elapsed_ns = time.perf_counter_ns() - start_ns
             elapsed_ms = int(elapsed_ns / 1_000_000)
-            
+
             self.telemetry.event(
                 "selector.resolve",
                 {"symbol_query": symbol_query},
                 {"resolved": False, "error": str(e)},
                 elapsed_ms,
             )
-            
+
             raise
 ```
 
@@ -506,13 +506,13 @@ def search(
     try:
         output = use_case.execute(Path(segment), query, limit=limit)
         typer.echo(output)
-        
+
         # NEW: Record with monotonic timing
         elapsed_ms = int((time.perf_counter_ns() - start_ns) / 1_000_000)
-        
+
         # Collect bytes read from file_system
         bytes_read = getattr(file_system, 'total_bytes_read', 0)
-        
+
         # Log event with new fields
         telemetry.event(
             "ctx.search",
@@ -522,10 +522,10 @@ def search(
             bytes_read=bytes_read,  # NEW
             disclosure_mode=None,   # NEW (N/A for search)
         )
-        
+
     except Exception as e:
         elapsed_ms = int((time.perf_counter_ns() - start_ns) / 1_000_000)
-        
+
         telemetry.event(
             "ctx.search",
             {"query": query, "limit": limit},
@@ -564,13 +564,13 @@ def get(
             Path(segment), id_list, mode=mode, budget_token_est=budget_token_est
         )
         typer.echo(output)
-        
+
         # NEW: Record with monotonic timing
         elapsed_ms = int((time.perf_counter_ns() - start_ns) / 1_000_000)
-        
+
         # Collect bytes read from file_system
         bytes_read = getattr(file_system, 'total_bytes_read', 0)
-        
+
         # Log event with new fields
         telemetry.event(
             "ctx.get",
@@ -580,10 +580,10 @@ def get(
             bytes_read=bytes_read,        # NEW
             disclosure_mode=mode,         # NEW
         )
-        
+
     except Exception as e:
         elapsed_ms = int((time.perf_counter_ns() - start_ns) / 1_000_000)
-        
+
         telemetry.event(
             "ctx.get",
             {"ids": id_list, "mode": mode},
@@ -605,33 +605,33 @@ def get(
 ```python
 class FileSystemAdapter:
     """File system operations with telemetry."""
-    
+
     def __init__(self):
         self.total_bytes_read = 0  # NEW
-    
+
     def read_file_at_mode(self, path: Path, mode: Literal["raw", "excerpt", "skeleton"] = "excerpt") -> str:
         """Read file content at disclosure level."""
         start_ns = time.perf_counter_ns()  # NEW
-        
+
         content = self._do_read(path, mode)
-        
+
         bytes_read = len(content.encode('utf-8'))
         self.total_bytes_read += bytes_read  # NEW
-        
+
         if hasattr(self, 'telemetry') and self.telemetry:
             # NEW: Emit per-file read event
             elapsed_ms = int((time.perf_counter_ns() - start_ns) / 1_000_000)
-            
+
             self.telemetry.event(
                 "file.read",
                 {"file": str(path.name), "mode": mode},
                 {"bytes": bytes_read, "status": "ok"},
                 elapsed_ms,
             )
-            
+
             # NEW: Increment mode-specific counter
             self.telemetry.incr(f"file_read_{mode}_bytes_total", bytes_read)
-        
+
         return content
 ```
 
@@ -671,11 +671,11 @@ from src.infrastructure.telemetry import Telemetry
 
 class TestTelemetryExtension:
     """Test telemetry.event() extended fields."""
-    
+
     def test_extra_fields_serialized(self, tmp_path):
         """Verify extra fields appear in events.jsonl."""
         telemetry = Telemetry(tmp_path, level="lite")
-        
+
         telemetry.event(
             "test.command",
             {"arg": "value"},
@@ -686,22 +686,22 @@ class TestTelemetryExtension:
             cache_hit=True,            # NEW
         )
         telemetry.flush()
-        
+
         events_file = tmp_path / "_ctx" / "telemetry" / "events.jsonl"
         event = json.loads(events_file.read_text().strip().split("\n")[0])
-        
+
         assert event["bytes_read"] == 1024
         assert event["disclosure_mode"] == "excerpt"
         assert event["cache_hit"] is True
-    
+
     def test_monotonic_timing(self, tmp_path):
         """Verify timing uses perf_counter_ns (monotonic)."""
         telemetry = Telemetry(tmp_path, level="lite")
-        
+
         start_ns = time.perf_counter_ns()
         time.sleep(0.01)  # 10ms
         elapsed_ms = int((time.perf_counter_ns() - start_ns) / 1_000_000)
-        
+
         telemetry.event(
             "test.command",
             {},
@@ -709,62 +709,62 @@ class TestTelemetryExtension:
             elapsed_ms,
         )
         telemetry.flush()
-        
+
         events_file = tmp_path / "_ctx" / "telemetry" / "events.jsonl"
         event = json.loads(events_file.read_text().strip().split("\n")[0])
-        
+
         # Assert timing is reasonable (10-20ms for 10ms sleep + overhead)
         assert 8 <= event["timing_ms"] <= 30, f"Unrealistic timing {event['timing_ms']}ms"
 
 class TestTelemetrySummary:
     """Test last_run.json aggregation."""
-    
+
     def test_ast_summary_calculation(self, tmp_path):
         """Verify AST counters aggregated correctly."""
         telemetry = Telemetry(tmp_path, level="lite")
-        
+
         telemetry.incr("ast_parse_count", 100)
         telemetry.incr("ast_cache_hit_count", 86)
-        
+
         telemetry.flush()
-        
+
         last_run_file = tmp_path / "_ctx" / "telemetry" / "last_run.json"
         last_run = json.loads(last_run_file.read_text())
-        
+
         assert last_run["ast"]["ast_parse_count"] == 100
         assert last_run["ast"]["ast_cache_hit_count"] == 86
         assert abs(last_run["ast"]["ast_cache_hit_rate"] - 0.86) < 0.01
-    
+
     def test_lsp_summary_calculation(self, tmp_path):
         """Verify LSP counters + timeout_rate aggregated correctly."""
         telemetry = Telemetry(tmp_path, level="lite")
-        
+
         telemetry.incr("lsp_spawn_count", 5)
         telemetry.incr("lsp_ready_count", 5)
         telemetry.incr("lsp_timeout_count", 0)
         telemetry.incr("lsp_fallback_count", 0)
-        
+
         telemetry.flush()
-        
+
         last_run_file = tmp_path / "_ctx" / "telemetry" / "last_run.json"
         last_run = json.loads(last_run_file.read_text())
-        
+
         assert last_run["lsp"]["lsp_spawn_count"] == 5
         assert last_run["lsp"]["lsp_timeout_rate"] == 0.0
-    
+
     def test_file_read_summary_calculation(self, tmp_path):
         """Verify file read bytes aggregated by mode."""
         telemetry = Telemetry(tmp_path, level="lite")
-        
+
         telemetry.incr("file_read_skeleton_bytes_total", 1024)
         telemetry.incr("file_read_excerpt_bytes_total", 5120)
         telemetry.incr("file_read_raw_bytes_total", 10240)
-        
+
         telemetry.flush()
-        
+
         last_run_file = tmp_path / "_ctx" / "telemetry" / "last_run.json"
         last_run = json.loads(last_run_file.read_text())
-        
+
         assert last_run["file_read"]["skeleton_bytes"] == 1024
         assert last_run["file_read"]["excerpt_bytes"] == 5120
         assert last_run["file_read"]["raw_bytes"] == 10240
@@ -772,21 +772,21 @@ class TestTelemetrySummary:
 
 class TestTelemetryAggregation:
     """Test percentile calculations."""
-    
+
     def test_p50_p95_calculation(self, tmp_path):
         """Verify percentile math on synthetic data."""
         telemetry = Telemetry(tmp_path, level="lite")
-        
+
         # Record 100 latency observations
         times_ms = [10 + (i % 100) for i in range(100)]
         for t in times_ms:
             telemetry.observe("test.cmd", t)
-        
+
         telemetry.flush()
-        
+
         last_run_file = tmp_path / "_ctx" / "telemetry" / "last_run.json"
         last_run = json.loads(last_run_file.read_text())
-        
+
         # Verify counts and percentiles are in expected range
         assert last_run["latencies"]["test.cmd"]["count"] == 100
         assert 10 <= last_run["latencies"]["test.cmd"]["p50_ms"] <= 60
@@ -806,12 +806,12 @@ from src.infrastructure.ast_lsp import SkeletonMapBuilder, LSPClient, Selector
 
 class TestSkeletonInstrumentation:
     """Test AST skeleton parsing emits correct telemetry."""
-    
+
     def test_skeleton_parse_emits_event(self, tmp_path):
         """Verify parse_python() emits ast.parse event."""
         telemetry = Telemetry(tmp_path, level="lite")
         builder = SkeletonMapBuilder(telemetry, tmp_path)
-        
+
         code = """
 def hello():
     pass
@@ -820,46 +820,46 @@ class Greeter:
     def greet(self):
         pass
 """
-        
+
         skeleton = builder.parse_python(code, Path("test.py"))
         telemetry.flush()
-        
+
         events_file = tmp_path / "_ctx" / "telemetry" / "events.jsonl"
         event = json.loads(events_file.read_text().strip().split("\n")[0])
-        
+
         assert event["cmd"] == "ast.parse"
         assert event["result"]["status"] == "ok"
         assert "skeleton_bytes" in event
         assert "reduction_ratio" in event
-    
+
     def test_skeleton_cache_tracking(self, tmp_path):
         """Verify cache hits are counted."""
         telemetry = Telemetry(tmp_path, level="lite")
         builder = SkeletonMapBuilder(telemetry, tmp_path)
-        
+
         code = "def test(): pass"
-        
+
         # First parse: cache miss
         builder.parse_python(code, Path("test.py"))
-        
+
         # Second parse same file: cache hit (if implemented)
         # (This test will verify once caching is implemented)
-        
+
         telemetry.flush()
-        
+
         # Verify counter incremented
         last_run_file = tmp_path / "_ctx" / "telemetry" / "last_run.json"
         last_run = json.loads(last_run_file.read_text())
-        
+
         assert last_run["metrics_delta"]["ast_parse_count"] >= 1
 
 class TestConcurrentTelemetry:
     """Test concurrent command execution doesn't corrupt logs."""
-    
+
     def test_concurrent_commands_no_corruption(self, tmp_path):
         """Spawn multiple commands, verify no event loss or corruption."""
         import threading
-        
+
         def run_command(cmd_id: int):
             telemetry = Telemetry(tmp_path, level="lite")
             for i in range(5):
@@ -870,20 +870,20 @@ class TestConcurrentTelemetry:
                     10,
                 )
             telemetry.flush()
-        
+
         threads = [threading.Thread(target=run_command, args=(i,)) for i in range(3)]
         for t in threads:
             t.start()
         for t in threads:
             t.join()
-        
+
         # Verify events logged
         events_file = tmp_path / "_ctx" / "telemetry" / "events.jsonl"
         events = [json.loads(line) for line in events_file.read_text().strip().split("\n") if line]
-        
+
         # Should have at least some events (may drop due to lock, but structure is valid)
         assert len(events) > 0
-        
+
         # All events should be valid JSON
         for event in events:
             assert "cmd" in event
@@ -920,27 +920,27 @@ def test_summary_percentile_validation():
     """Validate percentile calculations with synthetic data."""
     from src.infrastructure.telemetry import Telemetry
     import tempfile
-    
+
     with tempfile.TemporaryDirectory() as tmp_path:
         tmp = Path(tmp_path)
         telemetry = Telemetry(tmp, level="lite")
-        
+
         # Record synthetic timings
         for i in range(100):
             telemetry.observe("ctx.search", 10 + (i % 100))
-        
+
         telemetry.flush()
-        
+
         # Load and validate
         last_run_file = tmp / "_ctx" / "telemetry" / "last_run.json"
         last_run = json.loads(last_run_file.read_text())
-        
+
         latencies = last_run["latencies"]["ctx.search"]
-        
+
         # Verify percentile ordering: p50 <= p95 <= max
         assert latencies["p50_ms"] <= latencies["p95_ms"]
         assert latencies["p95_ms"] <= latencies["max_ms"]
-        
+
         # Verify count matches
         assert latencies["count"] == 100
 ```
@@ -1012,4 +1012,3 @@ jq 'select(.cmd == "lsp.spawn")' _ctx/telemetry/events.jsonl
 **Owner:** Senior Engineer / Telemetry Architect  
 **Estimated Duration:** 4–5 days  
 **Success Criterion:** All tests pass, no data loss, all metrics queryable from last_run.json
-

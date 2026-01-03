@@ -1,4 +1,5 @@
 """Domain Models for Trifecta Context."""
+
 from datetime import datetime
 from typing import List
 from pydantic import BaseModel, Field
@@ -6,6 +7,7 @@ from pydantic import BaseModel, Field
 
 class ContextChunk(BaseModel):
     """A single chunk of context evidence."""
+
     id: str = Field(..., description="Stable deterministic ID: doc:sha1(doc+text)[:10]")
     doc: str = Field(..., description="Source document name (skill, agent, etc.)")
     title_path: List[str] = Field(..., description="Hierarchical path to this chunk")
@@ -18,6 +20,7 @@ class ContextChunk(BaseModel):
 
 class ContextIndexEntry(BaseModel):
     """Lightweight entry for search and discovery (L0)."""
+
     id: str
     title_path_norm: str
     preview: str
@@ -26,6 +29,7 @@ class ContextIndexEntry(BaseModel):
 
 class SourceFile(BaseModel):
     """Metadata about a source file used for the context pack."""
+
     path: str
     sha256: str
     mtime: float
@@ -34,6 +38,7 @@ class SourceFile(BaseModel):
 
 class ContextPack(BaseModel):
     """The complete context pack (Context Pack v1)."""
+
     schema_version: int = 1
     segment: str
     created_at: str = Field(default_factory=lambda: datetime.now().isoformat())
@@ -45,6 +50,7 @@ class ContextPack(BaseModel):
 
 class SearchHit(BaseModel):
     """A single search result hit."""
+
     id: str
     title_path: List[str]
     preview: str
@@ -55,10 +61,21 @@ class SearchHit(BaseModel):
 
 class SearchResult(BaseModel):
     """Result from ctx.search."""
+
     hits: List[SearchHit]
 
 
 class GetResult(BaseModel):
     """Result from ctx.get."""
+
     chunks: List[ContextChunk]
     total_tokens: int
+    stop_reason: str = Field(
+        ..., description="Reason for stopping: complete, budget, max_chunks, evidence, error"
+    )
+    chunks_requested: int = Field(..., description="Number of chunk IDs requested")
+    chunks_returned: int = Field(..., description="Number of chunks actually returned")
+    chars_returned_total: int = Field(..., description="Total characters returned")
+    evidence_metadata: dict = Field(
+        default_factory=dict, description="Evidence signals: strong_hit, support"
+    )

@@ -8,6 +8,9 @@ from typing import Literal, Optional, Tuple
 
 import typer
 
+# AST/LSP Integration (Phase 2a/2b)
+from src.infrastructure.cli_ast import ast_app
+
 from src.application.search_get_usecases import GetChunkUseCase, SearchUseCase
 from src.application.telemetry_charts import generate_chart
 from src.application.telemetry_reports import export_data, generate_report
@@ -27,29 +30,25 @@ from src.domain.models import TrifectaConfig
 from src.infrastructure.file_system import FileSystemAdapter
 from src.infrastructure.telemetry import Telemetry
 from src.infrastructure.templates import TemplateRenderer
+from src.application.obsidian_sync_use_case import create_sync_use_case
+from src.infrastructure.obsidian_config import ObsidianConfigManager
 
 app = typer.Typer(
     name="trifecta",
-    help="Generate and manage Trifecta documentation packs for code segments.",
+    help="Trifecta Context Engine v2.0 - Agentic Context Management (PCC).",
 )
-
-# AST/LSP Integration (Phase 2a/2b)
-from src.infrastructure.cli_ast import ast_app
 
 app.add_typer(ast_app, name="ast")
 
 ctx_app = typer.Typer(help="Manage Trifecta Context Packs (ctx.search, ctx.get).")
 session_app = typer.Typer(help="Session logging commands")
 telemetry_app = typer.Typer(help="Telemetry analysis commands")
+obsidian_app = typer.Typer(help="Obsidian vault integration for findings")
 
 app.add_typer(ctx_app, name="ctx")
 app.add_typer(session_app, name="session")
 app.add_typer(telemetry_app, name="telemetry")
-
-# AST/LSP Integration (Phase 2a)
-from src.infrastructure.cli_ast import ast_app
-
-app.add_typer(ast_app, name="ast")
+app.add_typer(obsidian_app, name="obsidian")
 
 # Legacy Burn-Down
 legacy_app = typer.Typer(help="Legacy Burn-Down commands")
@@ -288,7 +287,7 @@ def search(
     use_case = SearchUseCase(file_system, telemetry)
 
     try:
-        output = use_case.execute(Path(segment), query, limit=limit)
+        output = use_case.execute(Path(segment).resolve(), query, limit=limit)
         typer.echo(output)
         telemetry.observe("ctx.search", int((time.time() - start_time) * 1000))
     except Exception as e:
@@ -312,6 +311,18 @@ def get(
         "excerpt", "--mode", "-m", help="Output mode: raw, excerpt, summary"
     ),
     budget_token_est: int = typer.Option(1500, "--budget-token-est", "-b", help="Max token budget"),
+    max_chunks: Optional[int] = typer.Option(
+        None, "--max-chunks", help="Max chunks to retrieve (early-stop)"
+    ),
+    stop_on_evidence: bool = typer.Option(
+        False, "--stop-on-evidence", help="Stop early when evidence found (feature flag)"
+    ),
+    query: Optional[str] = typer.Option(
+        None, "--query", "-q", help="Query term for evidence matching"
+    ),
+    pd_report: bool = typer.Option(
+        False, "--pd-report", help="Output parseable PD metrics line (for testing)"
+    ),
     telemetry_level: str = typer.Option("lite", "--telemetry", help=HELP_TELEMETRY),
 ) -> None:
     """Retrieve full content for specific chunks."""
@@ -323,11 +334,65 @@ def get(
 
     id_list = [x.strip() for x in ids.split(",") if x.strip()]
 
+    # Agent-safe defaults: Check env vars if CLI flags not provided
+    effective_max_chunks = max_chunks
+    if effective_max_chunks is None:
+        import os
+
+        env_max_chunks = os.environ.get("TRIFECTA_PD_MAX_CHUNKS")
+        if env_max_chunks:
+            try:
+                effective_max_chunks = int(env_max_chunks)
+            except ValueError:
+                pass  # Ignore invalid env var, use None
+
+    effective_stop_on_evidence = stop_on_evidence
+    if not effective_stop_on_evidence:
+        import os
+
+        env_stop_on_evidence = os.environ.get("TRIFECTA_PD_STOP_ON_EVIDENCE")
+        if env_stop_on_evidence and env_stop_on_evidence == "1":
+            effective_stop_on_evidence = True
+
     try:
-        output = use_case.execute(
-            Path(segment), id_list, mode=mode, budget_token_est=budget_token_est
-        )
-        typer.echo(output)
+        # Use execute_with_result when --pd-report is active for access to GetResult
+        if pd_report:
+            output, result = use_case.execute_with_result(
+                Path(segment).resolve(),
+                id_list,
+                mode=mode,
+                budget_token_est=budget_token_est,
+                max_chunks=effective_max_chunks,
+                stop_on_evidence=effective_stop_on_evidence,
+                query=query,
+            )
+            typer.echo(output)
+
+            # Emit PD_REPORT with version and invariant keys
+            strong_hit = 1 if result.evidence_metadata.get("strong_hit") else 0
+            support = 1 if result.evidence_metadata.get("support") else 0
+            typer.echo(
+                f"PD_REPORT v=1 "
+                f"stop_reason={result.stop_reason} "
+                f"chunks_returned={result.chunks_returned} "
+                f"chunks_requested={result.chunks_requested} "
+                f"chars_returned_total={result.chars_returned_total} "
+                f"strong_hit={strong_hit} "
+                f"support={support}"
+            )
+        else:
+            # Standard path: just get output string
+            output = use_case.execute(
+                Path(segment).resolve(),
+                id_list,
+                mode=mode,
+                budget_token_est=budget_token_est,
+                max_chunks=effective_max_chunks,
+                stop_on_evidence=effective_stop_on_evidence,
+                query=query,
+            )
+            typer.echo(output)
+
         telemetry.observe("ctx.get", int((time.time() - start_time) * 1000))
     except Exception as e:
         telemetry.event(
@@ -352,7 +417,7 @@ def validate(
     use_case = ValidateContextPackUseCase(file_system, telemetry)
 
     try:
-        result = use_case.execute(Path(segment))
+        result = use_case.execute(Path(segment).resolve())
         # Format ValidationResult for display
         if result.passed:
             output = "✅ Validation Passed"
@@ -475,7 +540,7 @@ def plan(
     use_case = PlanUseCase(file_system, telemetry)
 
     try:
-        result = use_case.execute(Path(segment), task)
+        result = use_case.execute(Path(segment).resolve(), task)
 
         if json_output:
             typer.echo(json.dumps(result, indent=2))
@@ -1108,7 +1173,7 @@ def create(
         raise typer.Exit(1)
 
 
-@app.command("validate-trifecta")
+@app.command("validate-trifecta", hidden=True, help="[DEPRECATED] Use 'ctx validate' instead.")
 def validate_trifecta(
     segment: str = typer.Option(..., "--segment", "-s", help=HELP_SEGMENT),
 ) -> None:
@@ -1131,7 +1196,7 @@ def validate_trifecta(
         raise typer.Exit(1)
 
 
-@app.command("refresh-prime")
+@app.command("refresh-prime", hidden=True, help="[DEPRECATED] Use 'ctx sync' instead.")
 def refresh_prime(
     segment: str = typer.Option(..., "--segment", "-s", help=HELP_SEGMENT),
 ) -> None:
@@ -1353,5 +1418,142 @@ def legacy_scan(
             raise typer.Exit(code=1)
 
 
+# =============================================================================
+# Obsidian Integration Commands
+# =============================================================================
+
+
+@obsidian_app.command("sync")
+def obsidian_sync(
+    segment: str = typer.Option(".", "--segment", "-s", help=HELP_SEGMENT),
+    vault_path: Optional[str] = typer.Option(
+        None, "--vault-path", "-v", help="Obsidian vault path"
+    ),
+    min_priority: str = typer.Option("P5", "--min-priority", "-p", help="Minimum priority (P1-P5)"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Preview without writing"),
+    include_hookify: bool = typer.Option(
+        True, "--include-hookify/--no-hookify", help="Include hookify violations"
+    ),
+    include_telemetry: bool = typer.Option(
+        True, "--include-telemetry/--no-telemetry", help="Include telemetry anomalies"
+    ),
+    include_micro_audit: bool = typer.Option(
+        True, "--include-micro-audit/--no-micro-audit", help="Include micro-audit report findings"
+    ),
+) -> None:
+    """Sync findings to Obsidian vault as atomic notes."""
+    segment_path = Path(segment).expanduser().resolve()
+
+    # Validate priority
+    valid_priorities = {"P1", "P2", "P3", "P4", "P5"}
+    if min_priority not in valid_priorities:
+        typer.echo(f"❌ Invalid priority: {min_priority}. Must be one of {valid_priorities}")
+        raise typer.Exit(code=1)
+
+    # Create use case with config
+    try:
+        use_case = create_sync_use_case(
+            vault_path=Path(vault_path).expanduser() if vault_path else None,
+            min_priority=min_priority,  # type: ignore
+        )
+    except Exception as e:
+        typer.echo(f"❌ Configuration error: {e}")
+        typer.echo("\n💡 Tip: Run 'trifecta obsidian config --vault-path <path>' first")
+        raise typer.Exit(code=1)
+
+    # Execute sync
+    sources = {
+        "hookify": include_hookify,
+        "telemetry": include_telemetry,
+        "micro_audit": include_micro_audit,
+    }
+
+    try:
+        result = use_case.execute(
+            segment_path=segment_path,
+            min_priority=min_priority,  # type: ignore
+            dry_run=dry_run,
+            sources=sources,
+        )
+    except RuntimeError as e:
+        typer.echo(f"❌ Sync failed: {e}")
+        raise typer.Exit(code=1)
+
+    # Show summary
+    typer.echo("\n✨ Sync complete!")
+    typer.echo(
+        f"  Sources: {', '.join(result.active_sources) if result.active_sources else 'None'}"
+    )
+    typer.echo(f"  Findings: {result.total_findings}")
+    typer.echo(f"  Notes created: {result.notes_created}")
+    typer.echo(f"  Notes updated: {result.notes_updated}")
+    typer.echo(f"  Notes skipped: {result.notes_skipped}")
+    typer.echo(f"  Duration: {result.duration_ms}ms")
+
+    if dry_run and result.previews:
+        typer.echo(f"\n🔍 Dry-run mode - {len(result.previews)} notes would be created:")
+        for preview in result.previews[:5]:  # Show first 5
+            typer.echo(f"\n  📄 {preview['path']}")
+            typer.echo(f"     {preview['content'][:200]}...")
+        if len(result.previews) > 5:
+            typer.echo(f"\n  ... and {len(result.previews) - 5} more")
+
+
+@obsidian_app.command("config")
+def obsidian_config(
+    vault_path: Optional[str] = typer.Option(None, "--vault-path", "-v", help="Set vault path"),
+    show: bool = typer.Option(False, "--show", help="Show current config"),
+) -> None:
+    """Configure Obsidian integration."""
+    config_manager = ObsidianConfigManager()
+
+    if show:
+        typer.echo(config_manager.show())
+    elif vault_path:
+        config = config_manager.load()
+        # Update vault path
+        from src.domain.obsidian_models import ObsidianConfig
+
+        new_config = ObsidianConfig(
+            vault_path=Path(vault_path).expanduser().resolve(),
+            default_segment=config.default_segment,
+            min_priority=config.min_priority,
+            note_folder=config.note_folder,
+            auto_link=config.auto_link,
+            date_format=config.date_format,
+        )
+        config_manager.save(new_config)
+        typer.echo(f"✅ Vault path set to: {new_config.vault_path}")
+        typer.echo("\nRun 'trifecta obsidian config --show' to see full config")
+    else:
+        typer.echo("Usage:")
+        typer.echo("  trifecta obsidian config --vault-path <path>   Set vault path")
+        typer.echo("  trifecta obsidian config --show               Show current config")
+        raise typer.Exit(code=1)
+
+
+@obsidian_app.command("validate")
+def obsidian_validate() -> None:
+    """Validate Obsidian vault configuration."""
+    try:
+        use_case = create_sync_use_case()
+    except Exception as e:
+        typer.echo(f"❌ Configuration error: {e}")
+        raise typer.Exit(code=1)
+
+    validation = use_case.validate_vault()
+
+    if validation.valid:
+        typer.echo("✅ Vault is valid and writable")
+        typer.echo(f"   Findings folder: {validation.findings_dir}")
+        typer.echo(f"   Existing notes: {validation.existing_notes}")
+    else:
+        typer.echo("❌ Vault validation failed")
+        typer.echo(f"   Error: {validation.error}")
+        raise typer.Exit(code=1)
+
+
 if __name__ == "__main__":
     app()
+# Audit Trigger
+# Audit Trigger Code

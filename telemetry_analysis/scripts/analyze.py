@@ -13,7 +13,7 @@ Uso:
 import argparse
 import json
 from pathlib import Path
-from collections import Counter, defaultdict
+from collections import Counter
 from datetime import datetime
 
 
@@ -56,7 +56,7 @@ def executive_summary(events, metrics, last_run):
 
     # Latencies
     if last_run.get("latencies"):
-        print(f"\n⚡ Latency:")
+        print("\n⚡ Latency:")
         for cmd, stats in last_run["latencies"].items():
             print(f"   - {cmd}: P50={stats['p50_ms']}ms, P95={stats['p95_ms']}ms")
 
@@ -69,7 +69,7 @@ def executive_summary(events, metrics, last_run):
             print(f"   - {err_type}: {count}")
 
     # Key Insight
-    print(f"\n💡 Key Insight:")
+    print("\n💡 Key Insight:")
     if metrics.get("ctx_search_count", 0) > 0:
         hit_rate = metrics.get("ctx_search_hits_total", 0) / metrics.get("ctx_search_count", 1)
         zero_hit_pct = metrics.get("ctx_search_zero_hits_count", 0) / metrics.get("ctx_search_count", 1) * 100
@@ -104,7 +104,7 @@ def performance_analysis(events, metrics, last_run):
         hits = metrics.get("ctx_search_hits_total", 0)
         zero_hits = metrics.get("ctx_search_zero_hits_count", 0)
 
-        print(f"\n🔍 Search Effectiveness:")
+        print("\n🔍 Search Effectiveness:")
         print(f"   - Total searches: {total_search}")
         print(f"   - Total hits: {hits}")
         print(f"   - Zero-hit: {zero_hits} ({zero_hits/total_search*100:.1f}%)")
@@ -118,7 +118,7 @@ def performance_analysis(events, metrics, last_run):
     # Pack State
     if last_run.get("pack_state"):
         pack = last_run["pack_state"]
-        print(f"\n📦 Pack State:")
+        print("\n📦 Pack State:")
         print(f"   - SHA: {pack.get('pack_sha', 'N/A')}")
         if pack.get('pack_mtime'):
             mtime = datetime.fromtimestamp(pack['pack_mtime'])

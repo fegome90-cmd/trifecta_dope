@@ -128,7 +128,7 @@ def main():
                 print(f"        → HIT ({result['hit_count']} chunks)")
             else:
                 zero_hits += 1
-                print(f"        → ZERO HIT")
+                print("        → ZERO HIT")
 
         print()
         print("=" * 60)
@@ -159,7 +159,7 @@ def main():
                 print(f"        → PLAN HIT: {result['selected_feature']}")
             else:
                 plan_misses += 1
-                print(f"        → NO PLAN HIT")
+                print("        → NO PLAN HIT")
 
         print()
         print("=" * 60)

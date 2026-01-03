@@ -120,7 +120,7 @@ def _write_jsonl(self, filename: str, data: Dict[str, Any]) -> None:
                 return  # ← SKIP WRITE if busy (fail-safe, lossy)
 ```
 
-**Behavior:** 
+**Behavior:**
 - Non-blocking lock (LOCK_NB); if lock held, skip write and log warning
 - **This is LOSSY**: If concurrent writes happen, some events are dropped
 - **Acceptable for**: Sampling-grade telemetry (metrics counters)
@@ -326,12 +326,12 @@ telemetry.event(
 class SkeletonMapBuilder:
     def __init__(self, telemetry: Telemetry):
         self.telemetry = telemetry
-    
+
     def parse_python(self, code: str, file_path: Path) -> SkeletonMap:
         start_ns = time.perf_counter_ns()
         skeleton = self._do_parse(code)
         elapsed_ms = (time.perf_counter_ns() - start_ns) / 1_000_000
-        
+
         self.telemetry.event(
             "ast.parse",
             {"file": str(file_path.relative_to(...))},
@@ -354,7 +354,7 @@ class LSPClient:
     def __init__(self, telemetry: Telemetry):
         self.telemetry = telemetry
         self.spawn_time_ns = time.perf_counter_ns()
-        
+
         self.telemetry.event(
             "lsp.spawn",
             {"pyright_binary": PYRIGHT_BIN},
@@ -362,13 +362,13 @@ class LSPClient:
             0,  # timing_ms will be updated on ready
         )
         self.telemetry.incr("lsp_spawn_count")
-    
+
     def send_request(self, method: str, params: dict) -> dict:
         start_ns = time.perf_counter_ns()
         try:
             response = self._do_send(method, params)
             elapsed_ms = (time.perf_counter_ns() - start_ns) / 1_000_000
-            
+
             self.telemetry.event(
                 f"lsp.{method.split('/')[-1]}",
                 {"method": method, "params_hash": hash(str(params))},
@@ -378,7 +378,7 @@ class LSPClient:
             return response
         except TimeoutError:
             elapsed_ms = (time.perf_counter_ns() - start_ns) / 1_000_000
-            
+
             self.telemetry.event(
                 "lsp.timeout",
                 {"method": method},
@@ -401,12 +401,12 @@ class FileSystemAdapter:
         start_ns = time.perf_counter_ns()
         content = self._do_read(path, mode)
         elapsed_ms = (time.perf_counter_ns() - start_ns) / 1_000_000
-        
+
         bytes_read = len(content.encode('utf-8'))
         self.total_bytes_read += bytes_read
-        
+
         self.telemetry.incr(f"file_read_{mode}_bytes_total", bytes_read)
-        
+
         return content
 ```
 
@@ -453,7 +453,7 @@ def event(
         "warnings": warnings or [],
         **extra_fields,  # NEW: merge arbitrary fields
     }
-    
+
     # ... rest of event() unchanged ...
 ```
 
@@ -467,7 +467,7 @@ def event(
 ast_summary = {
     "ast_parse_count": self.metrics.get("ast_parse_count", 0),
     "ast_cache_hit_rate": (
-        self.metrics.get("ast_cache_hit_count", 0) / 
+        self.metrics.get("ast_cache_hit_count", 0) /
         self.metrics.get("ast_parse_count", 1)
     ),
 }
@@ -477,7 +477,7 @@ lsp_summary = {
     "lsp_ready_count": self.metrics.get("lsp_ready_count", 0),
     "lsp_timeout_count": self.metrics.get("lsp_timeout_count", 0),
     "lsp_timeout_rate": (
-        self.metrics.get("lsp_timeout_count", 0) / 
+        self.metrics.get("lsp_timeout_count", 0) /
         max(self.metrics.get("lsp_spawn_count", 1), 1)
     ),
     "lsp_fallback_count": self.metrics.get("lsp_fallback_count", 0),
@@ -558,13 +558,13 @@ def _redact_code_snippet(snippet: str) -> str:
 def _on_diagnostics(self, params):
     uri = params["uri"]
     diags = params.get("diagnostics", [])
-    
+
     # Redact message if contains code
     for diag in diags:
         if "source" in diag and "message" in diag:
             diag["message"] = diag["message"][:100]  # Truncate
             # Don't log the actual error snippet
-    
+
     self.diagnostics[uri] = diags
 ```
 
@@ -595,12 +595,12 @@ def test_ast_event_uses_monotonic_clock(tmp_path):
     """Verify AST events use perf_counter_ns, not time.time()."""
     import json
     telemetry = Telemetry(tmp_path, level="lite")
-    
+
     # Parse with instrumentation
     start_ns = time.perf_counter_ns()
     time.sleep(0.01)  # 10ms
     elapsed_ms = int((time.perf_counter_ns() - start_ns) / 1_000_000)
-    
+
     telemetry.event(
         "ast.parse",
         {"file": "test.py"},
@@ -608,14 +608,14 @@ def test_ast_event_uses_monotonic_clock(tmp_path):
         elapsed_ms,
     )
     telemetry.flush()
-    
+
     # Read back event
     events_file = tmp_path / "_ctx" / "telemetry" / "events.jsonl"
     assert events_file.exists()
-    
+
     with open(events_file) as f:
         event = json.loads(f.readline())
-    
+
     # Assert timing is reasonable (10-20ms for the 10ms sleep + overhead)
     assert 8 <= event["timing_ms"] <= 30, f"Timing {event['timing_ms']}ms is unrealistic"
 ```
@@ -643,22 +643,22 @@ def test_full_search_flow_logs_all_metrics(tmp_path, monkeypatch):
     segment_dir.mkdir()
     ctx_dir = segment_dir / "_ctx"
     ctx_dir.mkdir()
-    
+
     # Stub file system with small context pack
     pack_file = ctx_dir / "context_pack.json"
     pack_file.write_text(json.dumps({
         "index": {"test": ["chunk:1", "chunk:2"]},
         "chunks": {"chunk:1": {"content": "x" * 1000}}
     }))
-    
+
     # Run search command
     from src.infrastructure.cli import ctx_search
     # ... invoke search("--segment", str(segment_dir), ...)
-    
+
     # Verify events logged
     events_file = ctx_dir / "telemetry" / "events.jsonl"
     events = [json.loads(line) for line in events_file.read_text().strip().split("\n")]
-    
+
     search_event = next((e for e in events if e["cmd"] == "ctx.search"), None)
     assert search_event is not None
     assert "bytes_read" in search_event  # NEW field
@@ -689,12 +689,12 @@ def test_summary_p50_p95_calculation():
     events = generate_synthetic_events(100)
     times = [e["timing_ms"] for e in events]
     times_sorted = sorted(times)
-    
+
     p50_expected = times_sorted[50]  # Median
     p95_expected = times_sorted[int(100 * 0.95)]
-    
+
     # ... call Telemetry.flush() and parse last_run.json ...
-    
+
     assert last_run["latencies"]["ctx.search"]["p50_ms"] == p50_expected
     assert last_run["latencies"]["ctx.search"]["p95_ms"] == p95_expected
 ```
@@ -723,7 +723,7 @@ def test_summary_p50_p95_calculation():
 
 ### F.3 Documentation
 
-- [ ] **docs/telemetry.md** (NEW or UPDATE existing): 
+- [ ] **docs/telemetry.md** (NEW or UPDATE existing):
   - [ ] Extend to document AST/LSP events
   - [ ] Document "READY" definition
   - [ ] Example: How to query last_run.json for LSP metrics
@@ -872,4 +872,3 @@ cat _ctx/telemetry/last_run.json | jq '.latencies."lsp.definition"'
 **Audit Complete:** 2026-01-01  
 **Next Step:** Begin Day 1 implementation  
 **Owner:** Senior Engineer / Telemetry Architect
-

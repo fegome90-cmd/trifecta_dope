@@ -165,7 +165,7 @@ def generate_report(
         lines.append(f"  Zero hits:           {zero_hits}  ({100-hit_rate:.1f}%)")
 
         if zero_hits > total_searches * 0.5:
-            lines.append(f"  ⚠️  High zero-hit rate")
+            lines.append("  ⚠️  High zero-hit rate")
 
     lines.append("")
 

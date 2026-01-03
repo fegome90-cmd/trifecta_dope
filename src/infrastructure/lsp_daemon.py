@@ -1,15 +1,14 @@
 import os
 import sys
 import socket
-import threading
 import time
 import json
 import signal
 import fcntl
 import subprocess
 from pathlib import Path
-from typing import Optional, Dict, Any
-from src.infrastructure.lsp_client import LSPClient, LSPState
+from typing import Optional, Dict
+from src.infrastructure.lsp_client import LSPClient
 from src.infrastructure.telemetry import Telemetry
 from src.infrastructure.segment_utils import resolve_segment_root, compute_segment_id
 from src.infrastructure.daemon_paths import (
@@ -113,7 +112,7 @@ class LSPDaemonServer:
             err = {"status": "error", "errors": [{"message": str(e)}]}
             try:
                 conn.sendall(json.dumps(err).encode("utf-8") + b"\n")
-            except:
+            except Exception:
                 pass
         finally:
             conn.close()
@@ -209,7 +208,7 @@ class LSPDaemonClient:
             s.connect(str(self.socket_path))
             s.close()
             return True
-        except:
+        except Exception:
             return False
 
     def _spawn_daemon(self) -> bool:

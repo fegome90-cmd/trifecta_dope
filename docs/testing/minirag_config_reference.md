@@ -17,4 +17,3 @@ It mirrors key settings from `.mini-rag/config.yaml`.
 - `paths.index_dir`: `.mini-rag/index`
 - `paths.metadata_file`: `.mini-rag/index/metadata.json`
 - `paths.embeddings_file`: `.mini-rag/index/embeddings.npy`
-

@@ -19,18 +19,18 @@
             "source_files": [...] (Diseño Original)
 
 > **⚠️ Comandos Actualizados**:
-> 
+>
 > El diseño original usaba `scripts/ingest_trifecta.py`. En v1.0+, usa:
 > ```bash
 > # Generar context pack
 > uv run trifecta ctx build --segment .
-> 
+>
 > # Sincronizar (build + validate)
 > uv run trifecta ctx sync --segment .
-> 
+>
 > # Buscar en el pack
 > uv run trifecta ctx search --segment . --query "tema"
-> 
+>
 > # Obtener chunks específicos
 > uv run trifecta ctx get --segment . --ids "chunk_id" --mode raw
 > ```

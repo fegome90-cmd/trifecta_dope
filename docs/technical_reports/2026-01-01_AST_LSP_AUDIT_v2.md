@@ -9,7 +9,7 @@
 
 ## EXECUTIVE SUMMARY
 
-**Trifecta is a Python 3.12+ context-calling system** (6,038 LOC across 28 .py files, 784KB in src/) with **existing Progressive Disclosure** (3 modes: skeleton/excerpt/raw) and **fcntl-based locking infrastructure**. 
+**Trifecta is a Python 3.12+ context-calling system** (6,038 LOC across 28 .py files, 784KB in src/) with **existing Progressive Disclosure** (3 modes: skeleton/excerpt/raw) and **fcntl-based locking infrastructure**.
 
 **AST+LSP integration is feasible and minimal**, but:
 1. ✅ **No daemon infrastructure exists** → MVP uses on-demand LSP (no persistence). Daemon → Phase 2.
@@ -85,13 +85,13 @@
 # Pseudocode structure (v0 minimal)
 class SkeletonMapBuilder:
     """Extract structure-only AST for Python."""
-    
+
     @staticmethod
     def parse_python(code: str) -> SkeletonMap:
         """Parse Python code, extract functions/classes/signatures only."""
         # Uses tree-sitter-python binary (installed via pip)
         # Returns: SkeletonMap(functions=[...], classes=[...])
-        
+
     @staticmethod
     def compute_structural_hash(skeleton: SkeletonMap) -> str:
         """Hash signature-only, not implementation."""
@@ -173,20 +173,20 @@ Return results
 ```python
 class DiagnosticsCollector:
     """Collect publishDiagnostics notifications from LSP server."""
-    
+
     def __init__(self, lsp_client):
         self.diagnostics: dict[str, list] = {}
         self.lsp_client = lsp_client
         # Register handler for incoming notifications
-        self.lsp_client.on_notification("textDocument/publishDiagnostics", 
+        self.lsp_client.on_notification("textDocument/publishDiagnostics",
                                          self._on_diagnostics)
-    
+
     def _on_diagnostics(self, params):
         """Handle publishDiagnostics notification."""
         uri = params["uri"]
         diags = params.get("diagnostics", [])
         self.diagnostics[uri] = diags
-    
+
     def await_diagnostics(self, uri: str, timeout_ms: int = 500) -> list:
         """Wait for diagnostics or timeout."""
         start = time.time()
@@ -217,20 +217,20 @@ Add symbol-aware disclosure level selection in `ContextService.search_by_symbol(
 ```python
 def search_by_symbol(self, symbol_name: str, kind: str = None) -> SearchResult:
     """AST-aware search: find symbols, return at inferred disclosure level."""
-    
+
     # Step 1: Resolve symbol → file, line, kind
     symbol_info = self.ast_router.resolve(symbol_name)
     if not symbol_info:
         return SearchResult(hits=[])  # Fail-closed
-    
+
     # Step 2: Infer disclosure level (heuristic)
     disclosure_level = self._infer_disclosure(
-        symbol_name, 
+        symbol_name,
         symbol_info["kind"],
         match_exact=True
     )
     # exact → skeleton, ambiguous → excerpt, large → raw
-    
+
     # Step 3: Retrieve at disclosure level
     chunk = self.get_chunk_at_disclosure(
         symbol_info["file"],
@@ -238,7 +238,7 @@ def search_by_symbol(self, symbol_name: str, kind: str = None) -> SearchResult:
         disclosure_level,
         budget_token_est=1500
     )
-    
+
     return SearchResult(hits=[chunk])
 ```
 
@@ -272,9 +272,9 @@ Concurrent writes → corruption risk.
 def session_append(...):
     session_file = segment_path / "_ctx" / f"session_{segment_name}.md"
     lock_file = session_file.parent / f".session_{segment_name}.lock"
-    
+
     from src.infrastructure.file_system_utils import file_lock
-    
+
     with file_lock(lock_file):  # Single-writer enforcement
         with open(session_file, "a", encoding="utf-8") as f:
             f.write("\n".join(entry_lines) + "\n")
@@ -491,7 +491,7 @@ telemetry.event(
 ### Denylist (Hard - Skip Parsing)
 ```python
 HARD_DENYLIST = {
-    ".git", ".env", ".env.local", 
+    ".git", ".env", ".env.local",
     "node_modules", "__pycache__", ".venv", "venv",
     "*.pyc", "*.pyo", "*.so", "*.egg-info"
 }
@@ -677,10 +677,10 @@ Search Results (1 hit):
 
 1. [sym://python/src.application.context_service/ContextService]
    Kind: class | Line: 10 | Tokens: ~150
-   
+
    class ContextService:
        """Handles ctx.search and ctx.get logic."""
-       
+
        def __init__(self, target_path: Path): ...
        def _load_pack(self) -> ContextPack: ...
        def search(self, query: str, k: int = 5, ...) -> SearchResult: ...

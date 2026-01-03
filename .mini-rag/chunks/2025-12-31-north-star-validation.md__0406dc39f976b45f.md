@@ -15,12 +15,12 @@ class TestCLIFPGate:
         """ctx build should use FP validation and fail cleanly."""
         segment = tmp_path / "bad_fp_seg"
         segment.mkdir()
-        
+
         result = subprocess.run(
             ["uv", "run", "trifecta", "ctx", "build", "--segment", str(segment)],
             capture_output=True, text=True
         )
-        
+
         assert result.returncode != 0
         assert "validation" in result.stdout.lower() or "error" in result.stdout.lower()
 ```

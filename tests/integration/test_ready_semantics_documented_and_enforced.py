@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import MagicMock, patch
 from src.infrastructure.lsp_client import LSPClient, LSPState
 

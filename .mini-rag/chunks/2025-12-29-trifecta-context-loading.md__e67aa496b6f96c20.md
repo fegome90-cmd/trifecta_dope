@@ -13,7 +13,7 @@ def load(
     """Load context files for a task."""
     files = select_files(task, segment)
     context = format_context(files)
-    
+
     if output:
         Path(output).write_text(context)
     else:

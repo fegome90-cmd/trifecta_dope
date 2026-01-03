@@ -6,7 +6,7 @@ from src.infrastructure.validators import validate_segment_fp
 @ctx_app.command("build")
 def build(...):
     path = Path(segment).resolve()
-    
+
     # FP Gate: Pattern matching on Result
     match validate_segment_fp(path):
         case Err(errors):
@@ -21,7 +21,7 @@ def build(...):
                 typer.echo("⚠️  Legacy files detected (consider renaming):")
                 for lf in legacy:
                     typer.echo(f"   - _ctx/{lf}")
-    
+
     # ... rest of build logic
 ```
 

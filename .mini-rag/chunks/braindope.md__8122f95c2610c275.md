@@ -6,7 +6,7 @@ from pathlib import Path
 def expand_resource_refs(skill_content: str, segment_path: Path) -> str:
     """Expande referencias @_ctx/... on-demand."""
     resource_refs = re.findall(r'@(_ctx/[^\s]+\.md)', skill_content)
-    
+
     for ref in resource_refs:
         resource_path = segment_path / ref
         if resource_path.exists():

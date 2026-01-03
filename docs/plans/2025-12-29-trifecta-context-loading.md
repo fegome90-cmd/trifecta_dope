@@ -49,7 +49,7 @@ def ctx_search(
 ) -> SearchResult:
     """
     Busca chunks relevantes en el context pack.
-    
+
     Returns:
         {
             "hits": [
@@ -79,12 +79,12 @@ def ctx_get(
 ) -> GetResult:
     """
     Obtiene chunks por ID con control de presupuesto.
-    
+
     Modes:
         - raw: Texto completo
         - excerpt: Primeras N líneas
         - skeleton: Solo headings + primera línea
-    
+
     Returns:
         {
             "chunks": [
@@ -157,25 +157,25 @@ autopilot:
 class ContextRouter:
     def route(self, task: str, segment: str) -> list[str]:
         """Route task to relevant chunks."""
-        
+
         # Check if context_pack exists
         pack_path = Path(f"{segment}/_ctx/context_pack.json")
-        
+
         if not pack_path.exists():
             # FALLBACK: Load complete files
             return self.load_complete_files(task, segment)
-        
+
         # Use context pack with heuristic boost
         query = self.build_query(task)
         boosts = self.heuristic_boosts(task)
-        
+
         results = ctx_search(
             segment=segment,
             query=query,
             k=5,
             filters={"boost": boosts}
         )
-        
+
         return [hit["id"] for hit in results["hits"]]
 ```
 
@@ -354,23 +354,23 @@ def heuristic_boosts(query: str) -> dict:
     """Simple keyword-based boosts."""
     boosts = {}
     query_lower = query.lower()
-    
+
     # Boost skill.md
     if any(kw in query_lower for kw in ["cómo usar", "comandos", "setup", "reglas"]):
         boosts["skill.md"] = 2.0
-    
+
     # Boost prime.md
     if any(kw in query_lower for kw in ["diseño", "plan", "arquitectura", "docs"]):
         boosts["prime.md"] = 2.0
-    
+
     # Boost session.md
     if any(kw in query_lower for kw in ["pasos", "checklist", "runbook", "handoff"]):
         boosts["session.md"] = 2.0
-    
+
     # Boost agent.md
     if any(kw in query_lower for kw in ["stack", "tech", "implementación", "código"]):
         boosts["agent.md"] = 2.0
-    
+
     return boosts
 ```
 
@@ -381,12 +381,12 @@ def filter_by_budget(hits: list, budget: int) -> list:
     """Filter hits to fit within token budget."""
     selected = []
     total_tokens = 0
-    
+
     for hit in sorted(hits, key=lambda h: h["score"], reverse=True):
         if total_tokens + hit["token_est"] <= budget:
             selected.append(hit)
             total_tokens += hit["token_est"]
-    
+
     return selected
 ```
 
@@ -418,7 +418,7 @@ class ContextBudget:
         self.max_tokens_per_round = 1200
         self.current_round = 0
         self.total_tokens = 0
-    
+
     def can_request(self, token_est: int) -> bool:
         """Check if request fits budget."""
         if self.current_round >= self.max_ctx_rounds:
@@ -426,7 +426,7 @@ class ContextBudget:
         if self.total_tokens + token_est > self.max_tokens_per_round:
             return False
         return True
-    
+
     def record(self, token_est: int):
         """Record token usage."""
         self.total_tokens += token_est
@@ -614,11 +614,11 @@ refs = lsp.references("build_pack")
 class HotsetCache:
     def __init__(self):
         self.cache = {}  # file_path -> CachedFile
-    
+
     def update(self, file_path: Path):
         """Update cache when file changes."""
         content = file_path.read_text()
-        
+
         self.cache[str(file_path)] = {
             "text": content,
             "ast": parse_ast(content),
@@ -652,23 +652,23 @@ def on_file_change(file_path: Path):
 class SymbolRouter:
     def route(self, query: str, context: dict) -> list[str]:
         """Route based on intent + signals."""
-        
+
         # Señales de intención
         mentioned_symbols = extract_symbols_from_query(query)
         mentioned_errors = extract_errors_from_query(query)
-        
+
         # Señales del sistema (LSP)
         active_diagnostics = lsp.diagnostics(scope="hot")
-        
+
         # Acción
         if mentioned_symbols:
             # Búsqueda por símbolo
             return ctx.search_symbol(mentioned_symbols[0])
-        
+
         if mentioned_errors or active_diagnostics:
             # Contexto de error
             return ctx.get_error_context(active_diagnostics[0])
-        
+
         # Fallback: búsqueda semántica
         return ctx.search(query, k=5)
 ```
@@ -686,12 +686,12 @@ def ctx_search(
     scope: Literal["hot", "project"] = "hot"
 ) -> SearchResult:
     """Search using LSP symbols if available, else AST index."""
-    
+
     if lsp_available:
         symbols = lsp.workspace_symbols(query)
     else:
         symbols = ast_index.search(query)
-    
+
     return filter_by_score(symbols, k)
 ```
 
@@ -704,7 +704,7 @@ def ctx_get(
     budget: int = 1200
 ) -> GetResult:
     """Get context with precise modes."""
-    
+
     if mode == "skeleton":
         # Solo firmas
         return get_skeletons(ids)
@@ -726,12 +726,12 @@ def ctx_diagnostics(
     scope: Literal["hot", "project"] = "hot"
 ) -> list[Diagnostic]:
     """Get active diagnostics from LSP."""
-    
+
     if scope == "hot":
         files = hotset_files
     else:
         files = all_project_files
-    
+
     return lsp.diagnostics(files)
 ```
 
@@ -743,7 +743,7 @@ def ctx_refs(
     k: int = 5
 ) -> list[Reference]:
     """Get references to symbol."""
-    
+
     refs = lsp.references(symbol_id)
     return refs[:k]
 ```
@@ -804,7 +804,7 @@ def ctx_refs(
 **Date**: 2025-12-29  
 **Status**: Design Revised  
 **Approach**: Heuristic file loading (no RAG, no chunking)
-**Name**: 
+**Name**:
 Programming Context Caller (PCC) - Simplified
 ---
 
@@ -864,25 +864,25 @@ def select_files(task: str, segment: str) -> list[str]:
     """
     files = []
     task_lower = task.lower()
-    
+
     # ALWAYS include skill.md (core rules)
     files.append(f"{segment}/skill.md")
-    
+
     # Implementation/debugging → agent.md
     if any(kw in task_lower for kw in ["implement", "debug", "fix", "build"]):
         files.append(f"{segment}/agent.md")
-    
+
     # Planning/design → prime.md
     if any(kw in task_lower for kw in ["plan", "design", "architecture"]):
         files.append(f"{segment}/prime.md")
-    
+
     # Session review/handoff → session.md
     if any(kw in task_lower for kw in ["session", "handoff", "history", "previous"]):
         files.append(f"{segment}/session.md")
-    
+
     # Always include README for quick reference
     files.append(f"{segment}/README_TF.md")
-    
+
     return files
 ```
 
@@ -949,7 +949,7 @@ def load(
     """Load context files for a task."""
     files = select_files(task, segment)
     context = format_context(files)
-    
+
     if output:
         Path(output).write_text(context)
     else:
@@ -968,32 +968,32 @@ def select_files(task: str, segment: str) -> list[Path]:
     base = Path(f"/projects/{segment}")
     files = []
     task_lower = task.lower()
-    
+
     # Always skill.md
     files.append(base / "skill.md")
-    
+
     # Conditional files
     if any(kw in task_lower for kw in ["implement", "debug", "fix"]):
         files.append(base / "_ctx/agent.md")
-    
+
     if any(kw in task_lower for kw in ["plan", "design"]):
         files.append(base / "_ctx/prime.md")
-    
+
     if any(kw in task_lower for kw in ["session", "handoff"]):
         files.append(base / "_ctx/session.md")
-    
+
     files.append(base / "README_TF.md")
-    
+
     return [f for f in files if f.exists()]
 
 def format_context(files: list[Path]) -> str:
     """Format files as markdown."""
     sections = []
-    
+
     for file in files:
         content = file.read_text()
         sections.append(f"## {file.name}\n\n{content}")
-    
+
     return "\n\n---\n\n".join(sections)
 ```
 
@@ -1101,7 +1101,7 @@ class ContextCache:
                 chars INTEGER
             )
         """)
-    
+
     def needs_rebuild(self, path: Path) -> bool:
         """Check if file changed since last ingest."""
         current_sha = hashlib.sha256(path.read_bytes()).hexdigest()
@@ -1125,26 +1125,26 @@ class ContextCache:
 class SourceCircuitBreaker:
     def __init__(self, max_chars: int = 100_000):
         self.max_chars = max_chars
-    
+
     def check_file(self, path: Path) -> bool:
         """Validate file before processing."""
         # Size check
         if path.stat().st_size > self.max_chars:
             logger.warning(f"File too large: {path}")
             return False
-        
+
         # Encoding check
         try:
             content = path.read_text()
         except UnicodeDecodeError:
             logger.error(f"Invalid encoding: {path}")
             return False
-        
+
         # Fence balance check
         fence_count = content.count("```")
         if fence_count % 2 != 0:
             logger.warning(f"Unbalanced fences: {path}")
-        
+
         return True
 ```
 
@@ -1161,24 +1161,24 @@ class SourceCircuitBreaker:
 def validate_context_pack(pack_path: Path) -> ValidationResult:
     """Validate context pack structure and invariants."""
     errors = []
-    
+
     pack = json.loads(pack_path.read_text())
-    
+
     # Schema version
     if pack.get("schema_version") != "1.0":
         errors.append(f"Unsupported schema: {pack.get('schema_version')}")
-    
+
     # Index integrity
     chunk_ids = {c["id"] for c in pack["chunks"]}
     for entry in pack["index"]:
         if entry["id"] not in chunk_ids:
             errors.append(f"Index references missing chunk: {entry['id']}")
-    
+
     # Token estimates
     for chunk in pack["chunks"]:
         if chunk.get("token_est", 0) < 0:
             errors.append(f"Negative token_est in chunk: {chunk['id']}")
-    
+
     return ValidationResult(passed=len(errors) == 0, errors=errors)
 ```
 
@@ -1198,20 +1198,20 @@ class AtomicWriter:
     def write(self, target: Path, content: str):
         """Write atomically with lock."""
         lock_file = target.parent / ".lock"
-        
+
         with open(lock_file, 'w') as lock:
             fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
-            
+
             try:
                 # Write to temp
                 temp = target.with_suffix('.tmp')
                 temp.write_text(content)
-                
+
                 # Sync to disk
                 with open(temp, 'r+') as f:
                     f.flush()
                     os.fsync(f.fileno())
-                
+
                 # Atomic rename
                 temp.rename(target)
             finally:
@@ -1238,12 +1238,12 @@ class IngestMetrics:
             "cache_misses": 0,
             "elapsed_ms": 0
         }
-    
+
     def record(self, **kwargs):
         for k, v in kwargs.items():
             if k in self.metrics:
                 self.metrics[k] += v
-    
+
     def write_log(self):
         with open(self.log_path, 'a') as f:
             f.write(f"{datetime.now().isoformat()} {json.dumps(self.metrics)}\n")
@@ -1347,11 +1347,11 @@ class LoadContextUseCase:
     def execute(self, segment: str, task: str) -> str:
         files = self.select_files(task, segment)
         return self.format_context(files)
-    
+
     def select_files(self, task: str, segment: str) -> list[Path]:
         base = Path(f\"/path/to/{segment}\")
         files = [base / \"skill.md\"]  # Always
-        
+
         task_lower = task.lower()
         if any(kw in task_lower for kw in [\"implement\", \"debug\", \"fix\"]):
             files.append(base / \"_ctx/agent.md\")
@@ -1359,7 +1359,7 @@ class LoadContextUseCase:
             files.append(base / \"_ctx/prime_{segment}.md\")
         if any(kw in task_lower for kw in [\"session\", \"handoff\"]):
             files.append(base / \"_ctx/session_{segment}.md\")
-        
+
         files.append(base / \"README_TF.md\")
         return [f for f in files if f.exists()]
 ```

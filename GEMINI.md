@@ -35,3 +35,16 @@
       capa_modificada: "Infrastructure | Verification | Documentation"
       impacto_contrato: "None. Debt eliminated."
       siguiente_paso_tecnico: "Proceed to next roadmap item (MemTech or Linter-Driven Loop)."
+- history:
+    - user_prompt_summary: "Realizar auditoría externa de Phase 3 LSP Daemon (AUDITABLE-PASS) y generar informe en Desktop."
+      agent_response_summary: "Ejecuté protocolo de auditoría completo: verificación de entorno, tests de integración (9/9 passed), y análisis de telemetría (Cold vs Warm). Confirmé 'Run 1' cold (139ms, lsp.spawn) y 'Run 2' warm (2ms, reutilización daemon). Generé dictamen PASS y moví el informe 'audit_report_phase3_lsp_daemon.md' al escritorio."
+      capa_modificada: "Verification | Documentation"
+      impacto_contrato: "None. Auditoría externa cumplida."
+      siguiente_paso_tecnico: "Proceed to Phase 4 (VFS / Multi-Language)."
+
+- history:
+    - user_prompt_summary: "Harden LSP Client shutdown, implement Error Card system for ctx sync preconditions."
+      agent_response_summary: "Implemented 4-part LSP lifecycle hardening: (1) `stopping.set()` first, (2) `thread.join()` before close streams, (3) post-join guard to skip close if thread alive, (4) tripwire test with LSP activation verification. Created `src/cli/error_cards.py` for fail-closed Error Cards. Modified `cli.py` to render `SEGMENT_NOT_INITIALIZED` Error Card when prime file missing. Created acceptance tests in `tests/acceptance/test_ctx_sync_preconditions.py`. All 17 integration + 2 acceptance tests passing."
+      capa_modificada: "Infrastructure | Interfaces | Verification"
+      impacto_contrato: "CLI output contract: Error Cards now include stable markers (TRIFECTA_ERROR_CODE, CLASS, NEXT_STEPS, VERIFY) for agent parsing."
+      siguiente_paso_tecnico: "Fix `trifecta create -s` to create files in target directory, not CLI cwd."

@@ -1,0 +1,236 @@
+ M .gitignore
+ M .kilocode/mcp.json
+ M .mini-rag/chunks/2025-12-29-context-pack-ingestion.md__01ba4719c80b6fe9.md
+ M .mini-rag/chunks/2025-12-29-trifecta-context-loading.md__038c32d1af72039f.md
+ M .mini-rag/chunks/2025-12-29-trifecta-context-loading.md__072a4208aab951d5.md
+ M .mini-rag/chunks/2025-12-29-trifecta-context-loading.md__0c34d660482f83d8.md
+ M .mini-rag/chunks/2025-12-29-trifecta-context-loading.md__285f967ccae9ccee.md
+ M .mini-rag/chunks/2025-12-29-trifecta-context-loading.md__371d9cd8d3624dec.md
+ M .mini-rag/chunks/2025-12-29-trifecta-context-loading.md__3943317cf5e8f3df.md
+ M .mini-rag/chunks/2025-12-29-trifecta-context-loading.md__4421e0fe1a7d3098.md
+ M .mini-rag/chunks/2025-12-29-trifecta-context-loading.md__57e8d6793b2866ac.md
+ M .mini-rag/chunks/2025-12-29-trifecta-context-loading.md__6fd08f0043c9d39b.md
+ M .mini-rag/chunks/2025-12-29-trifecta-context-loading.md__784e32b66fe262e4.md
+ M .mini-rag/chunks/2025-12-29-trifecta-context-loading.md__8e48c11584b67e14.md
+ M .mini-rag/chunks/2025-12-29-trifecta-context-loading.md__947b62c4008d91f6.md
+ M .mini-rag/chunks/2025-12-29-trifecta-context-loading.md__96f542a4c6d4f371.md
+ M .mini-rag/chunks/2025-12-29-trifecta-context-loading.md__b19f4dd0eae7cce4.md
+ M .mini-rag/chunks/2025-12-29-trifecta-context-loading.md__c6712a5b9fde10c8.md
+ M .mini-rag/chunks/2025-12-29-trifecta-context-loading.md__d1ec59f3b777ab5f.md
+ M .mini-rag/chunks/2025-12-29-trifecta-context-loading.md__d78928b7a85337e1.md
+ M .mini-rag/chunks/2025-12-29-trifecta-context-loading.md__d82dbf3293a2474f.md
+ M .mini-rag/chunks/2025-12-29-trifecta-context-loading.md__e3bedf446b8317f2.md
+ M .mini-rag/chunks/2025-12-29-trifecta-context-loading.md__e67aa496b6f96c20.md
+ M .mini-rag/chunks/2025-12-30_action_plan_v1.1.md__b398ee7590ebeb1c.md
+ M .mini-rag/chunks/2025-12-30_implementation_workflow.md__10001f337420e970.md
+ M .mini-rag/chunks/2025-12-30_implementation_workflow.md__8e5963c1d5459fe7.md
+ M .mini-rag/chunks/2025-12-30_implementation_workflow.md__964fd8bcc306590d.md
+ M .mini-rag/chunks/2025-12-30_implementation_workflow.md__9a0430f8e73d587c.md
+ M .mini-rag/chunks/2025-12-30_readme_conceptual_misalignments.md__197be0e02843d987.md
+ M .mini-rag/chunks/2025-12-30_telemetry_analysis.md__d6d0e630cc26e56e.md
+ M .mini-rag/chunks/2025-12-30_telemetry_analysis.md__fae9c999380768df.md
+ M .mini-rag/chunks/2025-12-31-north-star-validation.md__0406dc39f976b45f.md
+ M .mini-rag/chunks/2025-12-31-north-star-validation.md__0ccc2bf52b5a6778.md
+ M .mini-rag/chunks/2025-12-31-north-star-validation.md__0dad67c4a3dcb3f1.md
+ M .mini-rag/chunks/2025-12-31-north-star-validation.md__699b7de48bf134a9.md
+ M .mini-rag/chunks/2025-12-31-north-star-validation.md__831e9772af0f2e12.md
+ M .mini-rag/chunks/2025-12-31-north-star-validation.md__98f5c1f6c6e7eeb9.md
+ M ".mini-rag/chunks/Advance context enhance 2 (1).md__3a98b3e1dcfa7721.md"
+ M ".mini-rag/chunks/Advance context enhance 2 (1).md__98783418e5f152fb.md"
+ M ".mini-rag/chunks/Advance context enhance 2 (1).md__e9d7cee3a546856b.md"
+ M .mini-rag/chunks/adherencia_agente.md__9dc17c180ea65a1b.md
+ M .mini-rag/chunks/agent_factory.md__2945fbab52607eb4.md
+ M .mini-rag/chunks/agent_factory.md__3780c93d938f0bd7.md
+ M .mini-rag/chunks/agent_factory.md__aa58285f99e2562f.md
+ M .mini-rag/chunks/agent_factory.md__c8d2685074382345.md
+ M .mini-rag/chunks/braindope.md__8122f95c2610c275.md
+ M .mini-rag/chunks/braindope.md__9e252fea6be2dfef.md
+ M .mini-rag/chunks/context-pack-implementation.md__45f22da5f1fb545b.md
+ M .mini-rag/chunks/context-pack-implementation.md__b047b47058a659fd.md
+ M .mini-rag/chunks/fallas.md__c801af60367e9c0f.md
+ M .mini-rag/chunks/strategic_analysis.md__a18616988115fb94.md
+ M .mini-rag/index/metadata.json
+ M GEMINI.md
+ M Makefile
+ M README.md
+ D TELEMETRY_AUDIT_SUMMARY.md
+ M _ctx/agent_trifecta_dope.md
+ M _ctx/context_pack.json
+ M _ctx/generated/repo_map.md
+ M _ctx/generated/symbols_stub.md
+ M _ctx/prime_trifecta_dope.md
+ M _ctx/session_trifecta_dope.md
+ M _ctx/telemetry/events.jsonl
+ M _ctx/telemetry/last_run.json
+ M _ctx/telemetry/last_run_1.json
+ M _ctx/telemetry/last_run_2.json
+ M _ctx/telemetry/last_run_cold.json
+ M _ctx/telemetry/last_run_warm.json
+ M _ctx/telemetry/metrics.json
+ M _ctx/telemetry/run1_extract.json
+ M _ctx/telemetry/run2_extract.json
+ M debug-terminal/_ctx/telemetry/last_run.json
+ M debug-terminal/_ctx/telemetry/metrics.json
+ D debug_client.py
+ D debug_status.py
+ D debug_ts.py
+ D demo_pr2_sample.py
+ M demo_workspace/.trifecta/_ctx/telemetry/last_run.json
+ M demo_workspace/.trifecta/_ctx/telemetry/metrics.json
+ M docs/data/2025-12-30_telemetry_analysis.md
+ M docs/evidence/2025-12-30_readme_conceptual_misalignments.md
+ M docs/implementation/context-pack-implementation.md
+ M docs/plans/2025-12-29-trifecta-context-loading.md
+ M docs/plans/2025-12-30_action_plan_v1.1.md
+ M docs/plans/2025-12-30_implementation_workflow.md
+ M docs/plans/plan-script.md
+ M docs/plans/t9-correction-evidence.md
+ M docs/plans/t9_3_6_clamp_calibration.md
+ M docs/research/braindope.md
+ M "docs/research/futuro/Advance context enhance 2 (1).md"
+ M docs/research/futuro/adherencia_agente.md
+ M docs/research/futuro/agent_factory.md
+ M docs/research/futuro/alterantive.md
+ M docs/research/futuro/factory_idea.md
+ M docs/research/futuro/fallas.md
+ M docs/research/futuro/idea_de_pipeline.md
+ M docs/research/futuro/pipeline_idea.md
+ M docs/security/secrets_scan_report.md
+ M docs/technical_reports/2026-01-01_AST_LSP_AUDIT_v2.md
+ M docs/technical_reports/2026-01-01_TELEMETRY_COMPLETION_REPORT.md
+ M docs/technical_reports/2026-01-01_TELEMETRY_EVIDENCE_FINAL.md
+ M docs/technical_reports/2026-01-01_TELEMETRY_EXTENSION_AUDIT.md
+ M docs/technical_reports/2026-01-01_TELEMETRY_INDEX.md
+ M docs/technical_reports/2026-01-01_TELEMETRY_PR_PLAN.md
+ M docs/technical_reports/2026-01-01_TELEMETRY_PR_PLAN_CORRECTED.md
+ M docs/technical_reports/2026-01-01_TELEMETRY_QUICK_START.md
+ M docs/technical_reports/2026-01-01_architecture_audit_background_tasks_context_bundles.md
+ M docs/technical_reports/2026-01-01_architecture_visual_ast_integration.md
+ M docs/technical_reports/2026-01-01_ast_lsp_audit_architecture.md
+ M docs/telemetry_concurrency.md
+ M docs/testing/minirag_config_reference.md
+ M docs/testing/minirag_index_files.md
+ M docs/v2_roadmap/2025-12-31-north-star-validation.md
+ M docs/v2_roadmap/strategic_analysis.md
+ M plans/analisis_exhaustivo_telemetria_pr1.md
+ M pyproject.toml
+ D readme_minirag.md
+ D readme_tf.md
+ M scripts/evaluate_plan.py
+ M skill.md
+ M src/application/ast_parser.py
+ M src/application/context_service.py
+ M src/application/lsp_manager.py
+ M src/application/plan_use_case.py
+ M src/application/pr2_context_searcher.py
+ M src/application/query_normalizer.py
+ M src/application/search_get_usecases.py
+ M src/application/symbol_selector.py
+ M src/application/telemetry_charts.py
+ M src/application/telemetry_pr2.py
+ M src/application/telemetry_reports.py
+ M src/domain/context_models.py
+ M src/infrastructure/alias_loader.py
+ M src/infrastructure/cli.py
+ M src/infrastructure/cli_ast.py
+ M src/infrastructure/daemon_paths.py
+ M src/infrastructure/file_system_utils.py
+ M src/infrastructure/lsp_client.py
+ M src/infrastructure/lsp_daemon.py
+ M src/infrastructure/telemetry.py
+ M telemetry_analysis/scripts/analyze.py
+ D tests/integration/test_ast_audit_strict.py
+ D tests/integration/test_ast_phase2a_strict.py
+ D tests/integration/test_cli_ast.py
+ M tests/integration/test_lsp_daemon.py
+ M tests/integration/test_lsp_telemetry.py
+ M tests/integration/test_naming_contract_integration.py
+ M tests/integration/test_no_paths_in_executable_field.py
+ M tests/integration/test_prime_paths_only.py
+ D tests/integration/test_prime_top10_in_pack.py
+ D tests/integration/test_prime_tripwires.py
+ M tests/integration/test_ready_requires_diagnostics.py
+ M tests/integration/test_ready_semantics_documented_and_enforced.py
+ M tests/integration/test_repro_counters.py
+ M tests/integration/test_segment_id_invariants.py
+ M tests/unit/test_ast_lsp_pr2.py
+ M tests/unit/test_chunking.py
+ M tests/unit/test_cli_create_naming.py
+ M tests/unit/test_config_segment_id.py
+ M tests/unit/test_lsp_client_strict.py
+ M tests/unit/test_naming.py
+ M tests/unit/test_prime_file_not_found_error.py
+ M tests/unit/test_result_monad.py
+ M tests/unit/test_selector_dsl.py
+ M tests/unit/test_strict_validation.py
+ M tests/unit/test_t8_2_consistency.py
+ D tests/unit/test_t8_observability.py
+ M tests/unit/test_t9_alias_expansion.py
+ M tests/unit/test_telemetry_extension.py
+ M tests/unit/test_type_priority.py
+ M tests/unit/test_validators.py
+ M tests/unit/test_validators_fp.py
+ M tmp_plan_test/_ctx/aliases.yaml
+ M tmp_plan_test/_ctx/prime_test.md
+ M tmp_plan_test/t9_3_4_baseline_tasks.json
+ M tmp_plan_test/t9_3_5_current_tasks.json
+ M tmp_plan_test/t9_3_6_clamp_delta.json
+ M tmp_plan_test/t9_3_6_observability_metrics.json
+ M tools/probe_lsp_ready.py
+?? .claude/
+?? .pre-commit-config.yaml
+?? ADR/
+?? demo_workspace/demo_pr2_sample.py
+?? docs/DEVELOPMENT.md
+?? docs/ERROR_PROMPTS.md
+?? docs/PD_REPORT_CONTRACT.md
+?? docs/SECURITY.md
+?? docs/TEST_GATES.md
+?? docs/auditoria/
+?? docs/audits/
+?? docs/bugs/
+?? docs/contracts/
+?? docs/evidence/2026-01-02_trifecta_docs_optimization.md
+?? docs/minirag/guia_rapida.md
+?? docs/plans/2026-01-02-auditability-gates-plan.md
+?? docs/plans/2026-01-02-auditability-gates-v2-antipatterns.md
+?? docs/plans/2026-01-02-auditability-gates-v2.1-patch.md
+?? docs/plans/2026-01-02-auditability-gates-v2.2-diff.md
+?? docs/trifecta/
+?? scripts/agent_harness.sh
+?? scripts/agent_harness_fp.sh
+?? scripts/debug/
+?? scripts/harness_blackbox.py
+?? scripts/pre_commit_test_gate.sh
+?? scripts/scrub_telemetry_pii.py
+?? scripts/trifecta_ai_review.sh
+?? scripts/trifecta_integrity_check.py
+?? scripts/verify_precommit_clean.sh
+?? src/application/hookify_extractor.py
+?? src/application/obsidian_renderer.py
+?? src/application/obsidian_sync_use_case.py
+?? src/cli/
+?? src/domain/obsidian_models.py
+?? src/infrastructure/hookify_logger.py
+?? src/infrastructure/obsidian_config.py
+?? src/infrastructure/obsidian_writer.py
+?? telemetry_analysis/TELEMETRY_AUDIT_SUMMARY.md
+?? tests/acceptance/
+?? tests/helpers.py
+?? tests/integration/test_daemon_paths_constraints.py
+?? tests/integration/test_debug_scripts.py
+?? tests/integration/test_lsp_no_stderr_errors.py
+?? tests/roadmap/
+?? tests/unit/test_chunk_id_parse.py
+?? tests/unit/test_hookify_logger.py
+?? tests/unit/test_lsp_ready_contract.py
+?? tests/unit/test_obsidian_components.py
+?? tests/unit/test_obsidian_models.py
+?? tests/unit/test_pd_env_var.py
+?? tests/unit/test_pd_evidence_false_positives.py
+?? tests/unit/test_pd_evidence_stop.py
+?? tests/unit/test_pd_operational.py
+?? tests/unit/test_pd_precedence.py
+?? tests/unit/test_pd_regression.py
+?? tests/unit/test_scrub_telemetry_pii.py
+?? tests/unit/test_telemetry_pii_sanitizer.py

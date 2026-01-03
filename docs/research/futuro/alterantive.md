@@ -338,4 +338,3 @@ Linters (similar a Constitutional AI)
 Sandboxing (similar a Formal Verification)
 
 Trifecta debería hacer lo mismo: combinar los tres métodos según el caso de uso.
-

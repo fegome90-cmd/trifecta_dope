@@ -6,11 +6,7 @@ Generate simple ASCII charts for terminal display.
 from typing import List, Tuple
 
 
-def draw_line_chart(
-    data: List[Tuple[str, int]],
-    width: int = 60,
-    height: int = 10
-) -> str:
+def draw_line_chart(data: List[Tuple[str, int]], width: int = 60, height: int = 10) -> str:
     """Draw ASCII line chart.
 
     Args:
@@ -61,16 +57,13 @@ def draw_line_chart(
         lines.append(label + "".join(line_chars))
 
     # X axis labels
-    x_label = "     " + "".join(f" {l:<3}" for l in labels)
+    _x_label = "     " + "".join(f" {label:<3}" for label in labels)
     lines.append("     └" + "─" * (3 * len(labels)) + "→")
 
     return "\n".join(lines)
 
 
-def draw_bar_chart(
-    data: List[Tuple[str, int]],
-    max_bar_width: int = 40
-) -> str:
+def draw_bar_chart(data: List[Tuple[str, int]], max_bar_width: int = 40) -> str:
     """Draw ASCII bar chart.
 
     Args:
@@ -102,10 +95,7 @@ def draw_bar_chart(
     return "\n".join(lines)
 
 
-def draw_histogram(
-    data: List[int],
-    bins: int = 10
-) -> str:
+def draw_histogram(data: List[int], bins: int = 10) -> str:
     """Draw ASCII histogram.
 
     Args:
@@ -151,11 +141,7 @@ def draw_histogram(
     return "\n".join(lines)
 
 
-def generate_chart(
-    segment_path,
-    chart_type: str = "hits",
-    days: int = 7
-) -> str:
+def generate_chart(segment_path, chart_type: str = "hits", days: int = 7) -> str:
     """Generate chart from telemetry data.
 
     Args:
@@ -174,6 +160,7 @@ def generate_chart(
     if chart_type == "commands":
         # Bar chart of command usage
         from collections import Counter
+
         cmd_counts = Counter(e["cmd"] for e in events)
         data = [(cmd, count) for cmd, count in cmd_counts.most_common(10)]
 
@@ -182,7 +169,7 @@ def generate_chart(
 
     elif chart_type == "hits":
         # Daily search hits
-        from datetime import datetime, timedelta, timezone
+        from datetime import datetime
         from collections import defaultdict
 
         daily_hits = defaultdict(int)

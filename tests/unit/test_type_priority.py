@@ -1,6 +1,5 @@
 """Test to verify type-based classification takes precedence over substring fallback."""
 
-import pytest
 from pathlib import Path
 from src.application.exceptions import PrimeFileNotFoundError
 

@@ -41,7 +41,7 @@ Instrument Trifecta's **existing telemetry system** (`_ctx/telemetry/events.json
    ```python
    # WRONG:
    telemetry.event("ast.parse", {"file": "/Users/alice/my_code.py"}, ...)
-   
+
    # RIGHT:
    telemetry.event("ast.parse", {"file": "src/domain/models.py"}, ...)
    ```
@@ -101,13 +101,13 @@ python -m pytest tests/unit/test_telemetry_ast_lsp.py::TestTelemetryExtension -v
    - `parse_python(code, file_path)` → SkeletonMap
    - Uses tree-sitter for parsing
    - Emits `ast.parse` event with monotonic timing
-   
+
 2. `LSPClient` (200 lines)
    - `__init__(telemetry, pyright_binary)`
    - `initialize(workspace_path)`
    - `definition(file_path, line, col)` → response (or timeout)
    - Emits `lsp.spawn`, `lsp.initialize`, `lsp.definition`, `lsp.timeout` events
-   
+
 3. `Selector` (100 lines)
    - `resolve_symbol(symbol_query)` → {file, line, kind}
    - Parses `sym://python/module/Name`
@@ -296,4 +296,3 @@ Questions? Refer to:
 - **Architecture:** TELEMETRY_EXTENSION_AUDIT.md Phase A–G
 - **Implementation:** TELEMETRY_PR_PLAN.md Tickets 1–4  
 - **Quick answers:** This doc
-

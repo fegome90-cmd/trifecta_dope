@@ -27,7 +27,7 @@ $ python scripts/ingest_trifecta.py --segment debug_terminal
 >
 > Esta sección describe una **propuesta futura** para cuando el context pack crezca.
 > Actualmente (v1.0), usamos JSON simple que funciona bien para <100 chunks.
-> 
+>
 > **Estado actual**: JSON en `_ctx/context_pack.json`  
 > **Roadmap**: SQLite cuando superemos ~200 chunks o necesitemos búsqueda compleja
 

@@ -15,7 +15,7 @@ def test_alias_expansion_increases_hits(tmp_path: Path) -> None:
     segment = tmp_path / "test_segment"
     ctx_dir = segment / "_ctx"
     ctx_dir.mkdir(parents=True)
-    
+
     # Create context pack with a chunk containing "tree_sitter" but not "parser"
     context_pack = {
         "schema_version": 1,
@@ -31,7 +31,7 @@ def test_alias_expansion_increases_hits(tmp_path: Path) -> None:
         ]
     }
     (ctx_dir / "context_pack.json").write_text(json.dumps(context_pack))
-    
+
     # Create aliases.yaml: parser -> tree_sitter
     aliases = {
         "schema_version": 1,
@@ -40,22 +40,22 @@ def test_alias_expansion_increases_hits(tmp_path: Path) -> None:
         }
     }
     (ctx_dir / "aliases.yaml").write_text(yaml.dump(aliases))
-    
+
     # Load aliases and expand query
     loader = AliasLoader(segment)
     loaded_aliases = loader.load()
-    
+
     assert "parser" in loaded_aliases
     assert "tree_sitter" in loaded_aliases["parser"]
-    
+
     # Expand query "parser"
     normalizer = QueryNormalizer()
     normalized = normalizer.normalize("parser")
     tokens = normalizer.tokenize(normalized)
-    
+
     expander = QueryExpander(loaded_aliases)
     expanded = expander.expand(normalized, tokens)
-    
+
     # Should have original + synonyms
     assert len(expanded) > 1
     assert ("parser", 1.0) in expanded
@@ -67,7 +67,7 @@ def test_alias_expansion_caps_terms(tmp_path: Path) -> None:
     segment = tmp_path / "test_segment"
     ctx_dir = segment / "_ctx"
     ctx_dir.mkdir(parents=True)
-    
+
     # Create aliases with >8 synonyms
     aliases = {
         "schema_version": 1,
@@ -76,13 +76,13 @@ def test_alias_expansion_caps_terms(tmp_path: Path) -> None:
         }
     }
     (ctx_dir / "aliases.yaml").write_text(yaml.dump(aliases))
-    
+
     loader = AliasLoader(segment)
     loaded_aliases = loader.load()
-    
+
     expander = QueryExpander(loaded_aliases)
     expanded = expander.expand("test", ["test"])
-    
+
     # Should have original (1) + max 8 extra = 9 total
     assert len(expanded) <= 9
 
@@ -92,7 +92,7 @@ def test_alias_expansion_dedupes_ids(tmp_path: Path) -> None:
     segment = tmp_path / "test_segment"
     ctx_dir = segment / "_ctx"
     ctx_dir.mkdir(parents=True)
-    
+
     # Create context pack with one chunk matching multiple synonyms
     context_pack = {
         "schema_version": 1,
@@ -108,7 +108,7 @@ def test_alias_expansion_dedupes_ids(tmp_path: Path) -> None:
         ]
     }
     (ctx_dir / "context_pack.json").write_text(json.dumps(context_pack))
-    
+
     # Create aliases
     aliases = {
         "schema_version": 1,
@@ -117,13 +117,13 @@ def test_alias_expansion_dedupes_ids(tmp_path: Path) -> None:
         }
     }
     (ctx_dir / "aliases.yaml").write_text(yaml.dump(aliases))
-    
+
     loader = AliasLoader(segment)
     loaded_aliases = loader.load()
-    
+
     expander = QueryExpander(loaded_aliases)
     expanded = expander.expand("auth", ["auth"])
-    
+
     # All terms point to same chunk -> should de-dupe
     assert len(expanded) == 4  # auth + 3 synonyms
 
@@ -133,7 +133,7 @@ def test_telemetry_records_alias_fields(tmp_path: Path) -> None:
     segment = tmp_path / "test_segment"
     ctx_dir = segment / "_ctx"
     ctx_dir.mkdir(parents=True)
-    
+
     # Create aliases
     aliases = {
         "schema_version": 1,
@@ -142,15 +142,15 @@ def test_telemetry_records_alias_fields(tmp_path: Path) -> None:
         }
     }
     (ctx_dir / "aliases.yaml").write_text(yaml.dump(aliases))
-    
+
     loader = AliasLoader(segment)
     loaded_aliases = loader.load()
-    
+
     expander = QueryExpander(loaded_aliases)
     expanded = expander.expand("parser", ["parser"])
-    
+
     metadata = expander.get_expansion_metadata(expanded)
-    
+
     assert metadata["alias_expanded"] is True
     assert metadata["alias_terms_count"] == 2  # tree_sitter + ast_parser
     assert "parser" in metadata["alias_keys_used"]
@@ -161,16 +161,16 @@ def test_no_aliases_file_works_normally(tmp_path: Path) -> None:
     segment = tmp_path / "test_segment"
     ctx_dir = segment / "_ctx"
     ctx_dir.mkdir(parents=True)
-    
+
     # No aliases.yaml file
     loader = AliasLoader(segment)
     loaded_aliases = loader.load()
-    
+
     assert loaded_aliases == {}
-    
+
     expander = QueryExpander(loaded_aliases)
     expanded = expander.expand("test", ["test"])
-    
+
     # Should only have original query
     assert len(expanded) == 1
     assert expanded[0] == ("test", 1.0)
@@ -181,7 +181,7 @@ def test_alias_file_validation(tmp_path: Path) -> None:
     segment = tmp_path / "test_segment"
     ctx_dir = segment / "_ctx"
     ctx_dir.mkdir(parents=True)
-    
+
     # Create aliases exceeding MAX_KEYS (200)
     aliases_dict = {f"key{i}": [f"syn{i}"] for i in range(250)}
     aliases = {
@@ -189,13 +189,13 @@ def test_alias_file_validation(tmp_path: Path) -> None:
         "aliases": aliases_dict
     }
     (ctx_dir / "aliases.yaml").write_text(yaml.dump(aliases))
-    
+
     loader = AliasLoader(segment)
     loaded_aliases = loader.load()
-    
+
     # Should cap at MAX_KEYS (200)
     assert len(loaded_aliases) <= AliasLoader.MAX_KEYS
-    
+
     # Test MAX_SYNONYMS_PER_KEY
     aliases_long = {
         "schema_version": 1,
@@ -204,9 +204,9 @@ def test_alias_file_validation(tmp_path: Path) -> None:
         }
     }
     (ctx_dir / "aliases.yaml").write_text(yaml.dump(aliases_long))
-    
+
     loader2 = AliasLoader(segment)
     loaded_aliases2 = loader2.load()
-    
+
     # Should cap at MAX_SYNONYMS_PER_KEY (20)
     assert len(loaded_aliases2["test"]) <= AliasLoader.MAX_SYNONYMS_PER_KEY

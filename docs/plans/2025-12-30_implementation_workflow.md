@@ -99,7 +99,7 @@ BENEFITS:
 
 2. Create src/infrastructure/validators.py:
    └─ Paste extracted code
-   
+
 3. Keep install_FP.py as reference (can deprecate later)
 ```
 
@@ -124,7 +124,7 @@ src/infrastructure/validators.py
 scripts/install_trifecta_context.py:
   OLD: from install_FP import validate_segment
   NEW: from src.infrastructure.validators import validate_segment_structure
-  
+
   Update function call:
     OLD: validate_segment(path)
     NEW: validate_segment_structure(path).valid
@@ -141,7 +141,7 @@ tests/installer_test.py:
 
 ```
 src/infrastructure/file_system.py:
-  
+
   ADD at top level:
   ┌──────────────────────────────────────────────────────┐
   │ REFERENCE_EXCLUSION = {                              │
@@ -149,7 +149,7 @@ src/infrastructure/file_system.py:
   │     "_ctx/session_*.md",  # Append-only, not indexed │
   │ }                                                    │
   └──────────────────────────────────────────────────────┘
-  
+
   MODIFY in scan_files():
   ┌──────────────────────────────────────────────────────┐
   │ if file.name in REFERENCE_EXCLUSION:                 │
@@ -162,27 +162,27 @@ src/infrastructure/file_system.py:
 ```
 1. Sync context pack:
    $ uv run trifecta ctx sync --segment .
-   
+
    Expected: 6 chunks (was 7), -1.7K tokens, PASS validation
 
 2. Run unit tests:
    $ uv run pytest tests/installer_test.py -v
-   
+
    Expected: All PASS (imports now clean)
 
 3. Type checking:
    $ uv run mypy src/ --strict
-   
+
    Expected: All PASS (validators.py properly typed)
 
 4. Linting:
    $ uv run ruff check .
-   
+
    Expected: All PASS (clean imports, no sys.path hacks)
 
 5. Context validation:
    $ uv run trifecta ctx validate --segment .
-   
+
    Expected: PASS (no duplicates, all chunks valid)
 ```
 

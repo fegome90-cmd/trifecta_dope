@@ -35,7 +35,7 @@
 3. **[2026-01-01_TELEMETRY_QUICK_START.md](2026-01-01_TELEMETRY_QUICK_START.md)** ← IMPLEMENTATION STARTS HERE
    - **What:** Day-by-day implementation guide with critical rules
    - **Length:** 10 min read
-   - **Covers:** 
+   - **Covers:**
      - One-page summary of what you're building
      - Critical rules (monotonic timing, redaction, LSP READY)
      - Ticket sequence (T1–T4 with hours per ticket)
@@ -309,4 +309,3 @@ Read: Extension Audit Phase E (requirements) → PR Plan T4 (specs) → PR Plan 
 **Last Updated:** 2026-01-01 02:45 UTC  
 **Status:** ✅ Ready for Implementation  
 **Next Action:** Assign implementation owner + begin Day 1 (T1)
-

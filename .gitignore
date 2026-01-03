@@ -27,8 +27,17 @@ example-segment/
 # Logs
 *.log
 
+# Test coverage
+.coverage
+.coverage.*
+htmlcov/
+
 # Worktrees
 .worktrees/
 
 # Third-party skills (git submodules/embedded repos)
 skills/third_party/
+
+# Trifecta Telemetry
+_ctx/telemetry/
+tmp_*

@@ -1,0 +1,39 @@
+Validate YAML syntax.....................................................Passed
+Validate JSON syntax.....................................................Passed
+Validate Python syntax (detect SyntaxError)..............................Passed
+Remove trailing whitespace...............................................Passed
+Ensure files end with newline............................................Failed
+- hook id: end-of-file-fixer
+- exit code: 1
+- files were modified by this hook
+
+Fixing _ctx/context_pack.json
+
+Prevent large files from being committed.................................Passed
+Detect private keys......................................................Passed
+Ruff linter (check-only, no autofix).....................................Passed
+Bandit security check....................................................Passed
+check for merge conflicts................................................Passed
+debug statements (python)................................................Passed
+check docstring is first.................................................Passed
+Trifecta Context Integrity...............................................Passed
+Trifecta AI Guard Review.................................................Passed
+- hook id: ai-review
+- duration: 0.15s
+
+🤖 Trifecta AI Guard: Real-time Review
+   Critical path modification detected.
+   Checking against PCC Constitution (AGENTS.md)...
+✅ Validation Passed
+   ✅ AI Audit Passed: No constitution violations found.
+
+Acceptance Test Gate (not slow)..........................................Failed
+- hook id: test-gate
+- duration: 5.3s
+- files were modified by this hook
+
+🧪 Pre-commit: Acceptance Test Gate
+   Running acceptance tests (not slow)...
+..................................                                       [100%]
+34 passed, 4 deselected in 5.11s
+   ✅ Test gate passed

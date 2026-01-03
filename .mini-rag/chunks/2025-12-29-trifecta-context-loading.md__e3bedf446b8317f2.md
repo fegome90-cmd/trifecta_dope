@@ -7,7 +7,7 @@ class ContextBudget:
         self.max_tokens_per_round = 1200
         self.current_round = 0
         self.total_tokens = 0
-    
+
     def can_request(self, token_est: int) -> bool:
         """Check if request fits budget."""
         if self.current_round >= self.max_ctx_rounds:
@@ -15,7 +15,7 @@ class ContextBudget:
         if self.total_tokens + token_est > self.max_tokens_per_round:
             return False
         return True
-    
+
     def record(self, token_est: int):
         """Record token usage."""
         self.total_tokens += token_est

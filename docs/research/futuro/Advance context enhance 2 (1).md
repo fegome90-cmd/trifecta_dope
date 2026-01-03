@@ -51,7 +51,7 @@ def ctx_search(
 ) -> list[dict]:
     """
     Search for relevant context chunks.
-    
+
     Returns:
         list of {
             id: str,
@@ -73,11 +73,11 @@ def ctx_get(
 ) -> list[dict]:
     """
     Retrieve specific chunks within token budget.
-    
+
     Args:
         mode: "excerpt" | "raw" | "skeleton"
         budget_token_est: maximum tokens to return
-        
+
     Returns:
         list of {
             id: str,
@@ -143,14 +143,14 @@ def gather_evidence(segment: str, query: str, budget: int = 1200) -> str:
     Orchestrate search + retrieval within token budget.
     """
     hits = ctx_search(segment=segment, query=query, k=8)
-    
+
     # Sort by value per token
     hits = sorted(
         hits,
         key=lambda h: h["score"] / max(h["token_est"], 1),
         reverse=True
     )
-    
+
     # Select chunks that fit budget
     chosen = []
     used = 0
@@ -161,7 +161,7 @@ def gather_evidence(segment: str, query: str, budget: int = 1200) -> str:
         used += h["token_est"]
         if len(chosen) >= 4:  # max 4 chunks per query
             break
-    
+
     # Retrieve with citation-ready format
     chunks = ctx_get(
         segment=segment,
@@ -169,13 +169,13 @@ def gather_evidence(segment: str, query: str, budget: int = 1200) -> str:
         mode="excerpt",
         budget_token_est=budget
     )
-    
+
     # Format for model consumption
     lines = ["EVIDENCE (read-only):"]
     for c in chunks:
         path = " > ".join(c["title_path"])
         lines.append(f"\n[{c['id']}] {path}\n{c['text'].strip()}")
-    
+
     return "\n".join(lines)
 ```
 
@@ -399,7 +399,7 @@ def ctx_get_symbol(
 ) -> dict:
     """
     Retrieve a specific symbol with context.
-    
+
     Uses LSP or Tree-sitter to locate the symbol,
     then returns it with surrounding lines.
     """

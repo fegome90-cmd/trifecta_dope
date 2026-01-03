@@ -4,7 +4,6 @@ Verifies that Error Card classification works by exception type,
 not by substring matching of error messages.
 """
 
-import pytest
 from pathlib import Path
 from src.application.exceptions import PrimeFileNotFoundError
 

@@ -1,6 +1,3 @@
-import pytest
-import time
-from pathlib import Path
 from src.infrastructure.lsp_client import LSPClient, LSPState
 from unittest.mock import MagicMock, patch
 
@@ -25,7 +22,7 @@ def test_ready_requires_publish_diagnostics(tmp_path):
 
     other_notif = {"jsonrpc": "2.0", "method": "window/logMessage", "params": {"message": "hello"}}
 
-    diag_notif = {
+    {
         "jsonrpc": "2.0",
         "method": "textDocument/publishDiagnostics",
         "params": {"uri": "file://" + str(tmp_path / "test.py")},

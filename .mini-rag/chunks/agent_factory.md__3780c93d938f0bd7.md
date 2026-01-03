@@ -1,5 +1,5 @@
 # Aquí añadirías 'naming-convention' y 'function-style'
-                
+
         except yaml.YAMLError as e:
             print(f"Error parseando bloque YAML: {e}")
 

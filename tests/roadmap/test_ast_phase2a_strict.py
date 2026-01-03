@@ -1,6 +1,5 @@
 import pytest
 import json
-from pathlib import Path
 from typer.testing import CliRunner
 from src.infrastructure.cli_ast import ast_app as app
 from src.domain.ast_models import ASTResponse, ChildSymbol

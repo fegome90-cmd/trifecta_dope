@@ -13,7 +13,7 @@ def ctx_search(
 ) -> list[dict]:
     """
     Search for relevant context chunks.
-    
+
     Returns:
         list of {
             id: str,
@@ -35,11 +35,11 @@ def ctx_get(
 ) -> list[dict]:
     """
     Retrieve specific chunks within token budget.
-    
+
     Args:
         mode: "excerpt" | "raw" | "skeleton"
         budget_token_est: maximum tokens to return
-        
+
     Returns:
         list of {
             id: str,

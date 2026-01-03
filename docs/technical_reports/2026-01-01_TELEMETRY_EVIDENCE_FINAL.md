@@ -517,4 +517,3 @@ NEW (AST/LSP) LAYER:
 **Audit Status: ✅ SIGNED OFF & READY**
 
 *All evidence preserved, all decisions documented, all risks mitigated. Implementation can proceed with confidence.*
-

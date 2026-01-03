@@ -200,7 +200,7 @@ D. El Loop de Iteración Forzada
 Plain Text
 
 
-Agente propone acción → Linter valida → 
+Agente propone acción → Linter valida →
   Si pasa: Ejecutar
   Si falla: Proporcionar feedback → Agente itera
 
@@ -264,7 +264,3 @@ Feedback que itera hasta conformidad
 Aislamiento que previene escape
 
 Esto es lo que Factory hace. Esto es lo que Trifecta debe hacer.
-
-
-
-

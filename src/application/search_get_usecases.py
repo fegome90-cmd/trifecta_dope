@@ -1,9 +1,9 @@
 """Use case wrappers for Search and Get with telemetry."""
 
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, Optional
 
-from src.application.context_service import ContextService
+from src.application.context_service import ContextService, GetResult
 from src.infrastructure.file_system import FileSystemAdapter
 
 
@@ -91,16 +91,26 @@ class GetChunkUseCase:
         self.file_system = file_system
         self.telemetry = telemetry
 
-    def execute(
+    def execute_with_result(
         self,
         target_path: Path,
         ids: list[str],
         mode: Literal["raw", "excerpt", "skeleton"] = "excerpt",
         budget_token_est: int = 1500,
-    ) -> str:
-        """Execute get and format output."""
+        max_chunks: Optional[int] = None,
+        stop_on_evidence: bool = False,
+        query: Optional[str] = None,
+    ) -> tuple[str, GetResult]:
+        """Execute get and return both output and GetResult (for PD_REPORT)."""
         service = ContextService(target_path)
-        result = service.get(ids, mode=mode, budget_token_est=budget_token_est)
+        result = service.get(
+            ids,
+            mode=mode,
+            budget_token_est=budget_token_est,
+            max_chunks=max_chunks,
+            stop_on_evidence=stop_on_evidence,
+            query=query,
+        )
 
         # Record telemetry
         if self.telemetry:
@@ -115,14 +125,24 @@ class GetChunkUseCase:
             if result.total_tokens > budget_token_est:
                 self.telemetry.incr("ctx_get_budget_trim_count")
 
-            # Event
+            # Event with enhanced fields
             self.telemetry.event(
                 "ctx.get",
-                {"ids": ids, "mode": mode, "budget": budget_token_est},
+                {
+                    "ids": ids,
+                    "mode": mode,
+                    "budget": budget_token_est,
+                    "max_chunks": max_chunks,
+                    "stop_on_evidence": stop_on_evidence,
+                },
                 {
                     "chunks_returned": len(result.chunks),
                     "total_tokens": result.total_tokens,
                     "trimmed": result.total_tokens > budget_token_est,
+                    "stop_reason": result.stop_reason,
+                    "chunks_requested": result.chunks_requested,
+                    "chars_returned_total": result.chars_returned_total,
+                    "evidence": result.evidence_metadata,
                 },
                 1,  # timing_ms >= 1 required
             )
@@ -141,7 +161,23 @@ class GetChunkUseCase:
             output.append("\n> [!WARNING]")
             output.append("> Budget exceeded. Some content may have been truncated.")
 
-        return "\n".join(output)
+        return ("\n".join(output), result)
+
+    def execute(
+        self,
+        target_path: Path,
+        ids: list[str],
+        mode: Literal["raw", "excerpt", "skeleton"] = "excerpt",
+        budget_token_est: int = 1500,
+        max_chunks: Optional[int] = None,
+        stop_on_evidence: bool = False,
+        query: Optional[str] = None,
+    ) -> str:
+        """Execute get and format output (API-compatible version)."""
+        output, _ = self.execute_with_result(
+            target_path, ids, mode, budget_token_est, max_chunks, stop_on_evidence, query
+        )
+        return output
 
 
 class SyncContextUseCase:

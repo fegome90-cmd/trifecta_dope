@@ -3,8 +3,7 @@ Unit tests for Symbol Selector DSL (v0).
 Focus: Strict regex, path splitting, fail-closed logic.
 """
 
-import pytest
-from src.application.symbol_selector import SymbolQuery, SymbolResolver
+from src.application.symbol_selector import SymbolQuery
 from src.domain.ast_models import ASTErrorCode
 from src.domain.result import Err, Ok
 
@@ -41,7 +40,7 @@ class TestSymbolQuery:
         """Invalid scheme -> Error"""
         res = SymbolQuery.parse("http://python/mod/foo")
         assert isinstance(res, Err)
-        assert res.error.code == ASTErrorCode.INVALID_SELECTOR_SYNTAX
+        assert res.error.code == ASTErrorCode.INVALID_URI
 
     def test_parse_invalid_lang(self):
         """Only python supported"""

@@ -10,9 +10,9 @@ graph TB
             SESSION["session_{name}.md<br/>(Runtime Log)"]
         end
     end
-    
+
     SKILL --> CTX
-    
+
     style SKILL fill:#4CAF50,color:white
     style AGENT fill:#2196F3,color:white
     style PRIME fill:#2196F3,color:white

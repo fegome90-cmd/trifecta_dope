@@ -3,7 +3,6 @@
 import hashlib
 import pytest
 from src.application.chunking import chunk_whole_file
-from src.domain.models import Chunk
 
 
 class TestWholeFileChunking:

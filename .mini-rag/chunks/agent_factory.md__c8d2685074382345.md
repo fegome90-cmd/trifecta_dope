@@ -8,7 +8,7 @@ Para mantener una arquitectura limpia, la capa de `core` nunca debe importar des
   severity: "error"
   description: "La capa 'core' no puede importar desde 'api' o 'ui'."
   target: "src/core/**/*.ts"
-  disallow: 
+  disallow:
     - "src/api/**/*.ts"
     - "src/ui/**/*.ts"
 
