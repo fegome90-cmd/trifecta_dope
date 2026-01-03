@@ -151,7 +151,10 @@ class Telemetry:
 
         # Write to events.jsonl
         with open(self._ctx_dir / "events.jsonl", "a") as f:
-            f.write(json.dumps(payload) + "\n")
+            content = json.dumps(payload)
+            if not content.endswith("\n"):
+                content += "\n"
+            f.write(content)
 
     def flush(self):
         if self.level == "off":
@@ -190,8 +193,11 @@ class Telemetry:
         if hasattr(self, "pack_state") and self.pack_state:
             summary["pack_state"] = self.pack_state
 
+        content = json.dumps(summary, indent=2)
+        if not content.endswith("\n"):
+            content += "\n"
         with open(self._ctx_dir / "last_run.json", "w") as f:
-            f.write(json.dumps(summary, indent=2))
+            f.write(content)
 
     def _compute_stats(self, vals: list[int]):
         """Compute p50, p95, max from timing values."""
