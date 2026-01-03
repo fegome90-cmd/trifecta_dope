@@ -172,12 +172,13 @@ class NoteRenderer:
             if related:
                 frontmatter["related"] = related
 
-        # Links (wiki-links)
+        # Links (reference strings, not wiki-links for portability)
         links: dict[str, str] = {}
-        links["segment"] = f"[[{finding.segment}]]"
+        links["segment_name"] = finding.segment
+        links["segment_id"] = finding.segment_id
 
         if finding.metadata and finding.metadata.adr:
-            links["adr"] = f"[[ADR-{finding.metadata.adr}]]"
+            links["adr_reference"] = f"ADR-{finding.metadata.adr}"
 
         frontmatter["links"] = links
 
@@ -267,9 +268,9 @@ class NoteRenderer:
             [
                 "## Traceability",
                 f"- **Detected**: {finding.created.isoformat()}",
-                "- **Source**: [[Hookify]]",
-                f"- **Segment**: [[{finding.segment}]]",
-                f"- **Priority**: [[Priority/{finding.priority}]]",
+                f"- **Source**: `{finding.metadata.detected_by if finding.metadata else 'unknown'}`",
+                f"- **Segment**: `{finding.segment}` (ID: `{finding.segment_id}`)",
+                f"- **Priority**: `{finding.priority}`",
                 "",
             ]
         )
