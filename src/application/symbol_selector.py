@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from typing import Optional, List, Any
 from src.domain.result import Result, Ok, Err
 from src.domain.ast_models import ASTError, ASTErrorCode
+from src.application.ast_parser import SkeletonMapBuilder
 
 
 @dataclass
@@ -72,15 +73,6 @@ class Candidate:
         self.kind = kind
         self.start_line = start_line
         self.end_line = end_line
-
-
-class SkeletonMapBuilder:
-    def build(self, file_path: Path) -> List[Any]:
-        # Minimal mock for now or restore real logic if needed.
-        # Using tree-sitter is hard to restore blindly.
-        # I'll rely on ASTParser imports in cli_ast if I can restore them.
-        # But wait, SymbolResolver needs to find the file.
-        return []
 
 
 class SymbolResolver:

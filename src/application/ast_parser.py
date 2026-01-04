@@ -1,6 +1,7 @@
 from pathlib import Path
 import hashlib
 import json
+import ast as ast_module
 from dataclasses import dataclass, asdict
 from typing import List, Tuple, Optional
 from src.domain.ast_models import ChildSymbol, Range
@@ -23,16 +24,14 @@ class SkeletonMapBuilder:
 
     def __init__(self):
         self._cache: dict[str, List[SymbolInfo]] = {}
-        self._tree_sitter: bool = True  # Assume available
-        self._parser = None
 
     def build(self, file_path: Path, content: Optional[str] = None) -> List[SymbolInfo]:
-        """Build skeleton from file content."""
+        """Build skeleton from file content using stdlib ast.parse."""
         if content is None:
             try:
                 content = file_path.read_text(errors="replace")
-            except FileNotFoundError:
-                return []
+            except FileNotFoundError as e:
+                raise FileNotFoundError(f"File not found: {file_path}") from e
 
         # Content hash for cache
         content_hash = hashlib.sha256(content.encode()).hexdigest()[:8]
@@ -41,12 +40,46 @@ class SkeletonMapBuilder:
         if content_hash in self._cache:
             return self._cache[content_hash]
 
-        # If tree-sitter not available, return empty
-        if not self._tree_sitter:
-            return []
+        # Parse with stdlib ast
+        try:
+            tree = ast_module.parse(content, filename=str(file_path))
+        except SyntaxError:
+            # Fail-closed: syntax errors return empty (could be logged)
+            symbols: List[SymbolInfo] = []
+            self._cache[content_hash] = symbols
+            return symbols
 
-        # Stub: return empty skeleton (real impl would use tree-sitter)
+        # Extract top-level symbols (only top-level, not nested)
         symbols: List[SymbolInfo] = []
+        
+        for node in tree.body:  # tree.body gives only top-level nodes
+            if isinstance(node, (ast_module.FunctionDef, ast_module.AsyncFunctionDef)):
+                symbols.append(
+                    SymbolInfo(
+                        kind="function",
+                        name=node.name,
+                        qualified_name=node.name,  # top-level, so qualified == name
+                        start_line=node.lineno,
+                        end_line=node.end_lineno or node.lineno,
+                        signature_stub=f"def {node.name}(...)",
+                    )
+                )
+            elif isinstance(node, ast_module.ClassDef):
+                symbols.append(
+                    SymbolInfo(
+                        kind="class",
+                        name=node.name,
+                        qualified_name=node.name,
+                        start_line=node.lineno,
+                        end_line=node.end_lineno or node.lineno,
+                        signature_stub=f"class {node.name}:",
+                    )
+                )
+
+        # Sort by line number
+        symbols.sort(key=lambda s: s.start_line)
+
+        # Cache and return
         self._cache[content_hash] = symbols
         return symbols
 
