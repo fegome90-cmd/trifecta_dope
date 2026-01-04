@@ -183,9 +183,7 @@ class LSPManager:
         with self._lock:
             return self.state == LSPState.READY
 
-    def request_definition(
-        self, uri: str, line: int, col: int
-    ) -> Optional[dict[str, Any]]:
+    def request_definition(self, uri: str, line: int, col: int) -> Optional[dict[str, Any]]:
         """
         Request textDocument/definition (READY-only gating).
 
@@ -206,9 +204,7 @@ class LSPManager:
         }
         return self._request_with_timeout(request)
 
-    def request_hover(
-        self, uri: str, line: int, col: int
-    ) -> Optional[dict[str, Any]]:
+    def request_hover(self, uri: str, line: int, col: int) -> Optional[dict[str, Any]]:
         """Request textDocument/hover (READY-only gating)."""
         if not self.is_ready():
             return None

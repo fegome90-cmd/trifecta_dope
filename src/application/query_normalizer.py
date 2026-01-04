@@ -27,7 +27,7 @@ class QueryNormalizer:
         q = q.strip()
 
         # Collapse multiple whitespace to single space
-        q = re.sub(r'\s+', ' ', q)
+        q = re.sub(r"\s+", " ", q)
 
         return q
 
@@ -49,7 +49,7 @@ class QueryNormalizer:
             return []
 
         # Split by separators: whitespace, -, _, /, .
-        tokens = re.split(r'[\s\-_/\.]+', query)
+        tokens = re.split(r"[\s\-_/\.]+", query)
 
         # Remove empty strings and tokens of length 1
         tokens = [t for t in tokens if len(t) > 1]

@@ -226,7 +226,7 @@ def real_segment() -> Path:
     """Use actual trifecta_dope segment for E2E test."""
     seg = Path("/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope")
     if not seg.exists():
-        pytest.fail("Real segment does not exist - test requires specific environment")
+        pytest.skip("Real segment does not exist - test requires specific environment")
     return seg
 
 
