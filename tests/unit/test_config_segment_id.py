@@ -4,7 +4,6 @@ Tests for TrifectaConfig with segment_id derivation.
 TDD Phase: RED -> GREEN
 """
 
-
 import pytest
 
 from src.domain.models import TrifectaConfig

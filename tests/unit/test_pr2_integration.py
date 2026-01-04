@@ -136,9 +136,7 @@ class TestContextSearcherFlow:
         assert content is not None
         assert searcher.total_bytes_read > initial_bytes
 
-    def test_request_definition_when_not_ready(
-        self, searcher: PR2ContextSearcher
-    ) -> None:
+    def test_request_definition_when_not_ready(self, searcher: PR2ContextSearcher) -> None:
         """request_definition should return None when LSP not READY."""
         # LSP is disabled, so should not be ready
         result = searcher.request_definition("file://test.py", 5, 10)

@@ -40,7 +40,7 @@ def sample_violation() -> HookifyViolation:
         id="violation-1",
         timestamp=datetime.now(timezone.utc).isoformat(),
         rule_name="metodo-p1-stringly-typed",
-        pattern_matched='in str(',
+        pattern_matched="in str(",
         context={
             "file_path": "src/main.py",
             "line": "42",
@@ -292,7 +292,7 @@ class TestNoteRenderer:
             summary="test",
             description="test",
             evidence=FindingEvidence(
-                pattern='in str(',
+                pattern="in str(",
                 context={"line": "42"},
             ),
         )

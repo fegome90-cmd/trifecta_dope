@@ -29,19 +29,19 @@ class AliasLoader:
             return {}
 
         try:
-            with open(self.aliases_path, 'r', encoding='utf-8') as f:
+            with open(self.aliases_path, "r", encoding="utf-8") as f:
                 data = yaml.safe_load(f)
 
             if not data or not isinstance(data, dict):
                 return {}
 
             # Validate schema version
-            schema_version = data.get('schema_version')
+            schema_version = data.get("schema_version")
             if schema_version != 1:
                 return {}
 
             # Extract and validate aliases
-            aliases = data.get('aliases', {})
+            aliases = data.get("aliases", {})
             if not isinstance(aliases, dict):
                 return {}
 
@@ -56,7 +56,7 @@ class AliasLoader:
 
                 # Enforce max synonyms per key
                 if len(valid_synonyms) > self.MAX_SYNONYMS_PER_KEY:
-                    valid_synonyms = valid_synonyms[:self.MAX_SYNONYMS_PER_KEY]
+                    valid_synonyms = valid_synonyms[: self.MAX_SYNONYMS_PER_KEY]
 
                 if valid_synonyms:
                     validated[key.lower()] = [s.lower() for s in valid_synonyms]

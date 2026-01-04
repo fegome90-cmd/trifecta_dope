@@ -1,10 +1,27 @@
 #!/bin/bash
-# Pre-commit hook wrapper for ctx sync
-# Runs ctx sync and always returns success to allow commit
+# Pre-commit hook: muestra instrucciones para actualizar sesión y sincronizar
+# NO ejecuta nada automáticamente - solo muestra el prompt para el agente
 
-set -e
+cat << 'EOF'
 
-echo "🔄 Running ctx sync..."
-uv run trifecta ctx sync -s . > /dev/null 2>&1 || echo "⚠️  ctx sync had issues, but continuing..."
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  ⚠️  ANTES DE COMMITEAR: Actualizar sesión + sincronizar contexto              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+1. AGREGAR entrada a _ctx/session_trifecta_dope.md (append):
+   ```md
+   ## YYYY-MM-DD HH:MM - <descripción>
+   - Segment: .
+   - Objective: <que necesitas resolver>
+   - Plan: ctx sync -> ctx search -> ctx get
+   - Commands: (pending/executed)
+   - Evidence: (pending/[chunk_id] list)
+   - Warnings: (none/<code>)
+   - Next: <1 concrete step>
+   ```
+
+2. LUEGO ejecutar: uv run trifecta ctx sync -s .
+
+EOF
 
 exit 0

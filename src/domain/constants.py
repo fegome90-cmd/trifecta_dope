@@ -26,7 +26,6 @@ def validate_profile(profile: str) -> str:
     """
     if profile not in VALID_PROFILES:
         raise ValueError(
-            f"Invalid profile '{profile}'. "
-            f"Valid profiles: {', '.join(VALID_PROFILES)}"
+            f"Invalid profile '{profile}'. Valid profiles: {', '.join(VALID_PROFILES)}"
         )
     return profile

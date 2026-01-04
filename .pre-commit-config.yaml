@@ -56,7 +56,6 @@ repos:
         entry: bash scripts/ctx_sync_hook.sh
         language: system
         pass_filenames: false
-        stages: [manual]
 
       - id: integrity-check
         name: Trifecta Context Integrity

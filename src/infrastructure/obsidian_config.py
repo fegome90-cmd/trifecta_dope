@@ -104,9 +104,7 @@ class ObsidianConfigManager:
             # Validate priority value
             valid = {"P0", "P1", "P2", "P3", "P4", "P5"}
             if min_priority not in valid:
-                raise ValueError(
-                    f"Invalid min_priority: {min_priority}. Must be one of {valid}"
-                )
+                raise ValueError(f"Invalid min_priority: {min_priority}. Must be one of {valid}")
 
             config = ObsidianConfig(
                 vault_path=config.vault_path,
@@ -169,9 +167,7 @@ class ObsidianConfigManager:
             min_priority = config.min_priority
 
         # TRIFECTA_OBSIDIAN_FOLDER
-        note_folder = os.environ.get(
-            f"{self.ENV_PREFIX}FOLDER", config.note_folder
-        )
+        note_folder = os.environ.get(f"{self.ENV_PREFIX}FOLDER", config.note_folder)
 
         # TRIFECTA_OBSIDIAN_AUTO_LINK
         auto_link_str = os.environ.get(f"{self.ENV_PREFIX}AUTO_LINK", "")

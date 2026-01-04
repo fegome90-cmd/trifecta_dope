@@ -4,7 +4,6 @@ Tests for Result Monad (FP Error Handling).
 TDD Phase: RED -> GREEN
 """
 
-
 import pytest
 
 from src.domain.result import Err, Ok

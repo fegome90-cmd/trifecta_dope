@@ -79,11 +79,7 @@ def filter_events_by_date(events: List[Dict], days: int) -> List[Dict]:
     return filtered
 
 
-def generate_report(
-    segment_path: Path,
-    last_days: int = 7,
-    format_type: str = "table"
-) -> str:
+def generate_report(segment_path: Path, last_days: int = 7, format_type: str = "table") -> str:
     """Generate telemetry report.
 
     Args:
@@ -104,11 +100,7 @@ def generate_report(
         events = filter_events_by_date(events, last_days)
 
     if format_type == "json":
-        return json.dumps({
-            "events": events,
-            "metrics": metrics,
-            "last_run": last_run
-        }, indent=2)
+        return json.dumps({"events": events, "metrics": metrics, "last_run": last_run}, indent=2)
 
     # Generate table report
     lines = []
@@ -162,7 +154,7 @@ def generate_report(
         lines.append("─" * 50)
         lines.append(f"  Total searches:      {total_searches}")
         lines.append(f"  With hits:           {with_hits}  ({hit_rate:.1f}%)")
-        lines.append(f"  Zero hits:           {zero_hits}  ({100-hit_rate:.1f}%)")
+        lines.append(f"  Zero hits:           {zero_hits}  ({100 - hit_rate:.1f}%)")
 
         if zero_hits > total_searches * 0.5:
             lines.append("  ⚠️  High zero-hit rate")
@@ -181,7 +173,10 @@ def generate_report(
         cmd_token_stats[cmd]["count"] += 1
         cmd_token_stats[cmd]["tokens"] += tokens.get("total_tokens", 0)
 
-    for cmd, stats in sorted(cmd_token_stats.items(), key=lambda x: x[1]["tokens"] / x[1]["count"] if x[1]["count"] > 0 else 0):
+    for cmd, stats in sorted(
+        cmd_token_stats.items(),
+        key=lambda x: x[1]["tokens"] / x[1]["count"] if x[1]["count"] > 0 else 0,
+    ):
         avg_t = stats["tokens"] / stats["count"] if stats["count"] > 0 else 0
         lines.append(f"  {cmd:<20} {avg_t:>6.0f} avg tokens")
     lines.append("")
@@ -190,9 +185,7 @@ def generate_report(
 
 
 def export_data(
-    segment_path: Path,
-    format_type: str = "json",
-    output_path: Optional[Path] = None
+    segment_path: Path, format_type: str = "json", output_path: Optional[Path] = None
 ) -> str:
     """Export telemetry data.
 
@@ -224,12 +217,15 @@ def export_data(
         data = "\n".join(lines)
     else:
         # Export as JSON
-        data = json.dumps({
-            "events": events,
-            "metrics": metrics,
-            "last_run": last_run,
-            "exported_at": datetime.now(timezone.utc).isoformat()
-        }, indent=2)
+        data = json.dumps(
+            {
+                "events": events,
+                "metrics": metrics,
+                "last_run": last_run,
+                "exported_at": datetime.now(timezone.utc).isoformat(),
+            },
+            indent=2,
+        )
 
     if output_path:
         output_path.write_text(data)

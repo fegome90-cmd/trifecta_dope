@@ -26,19 +26,14 @@ def test_alias_expansion_increases_hits(tmp_path: Path) -> None:
                 "text": "This module uses tree_sitter for parsing",
                 "token_est": 10,
                 "source_file": "test.py",
-                "source_hash": "abc123"
+                "source_hash": "abc123",
             }
-        ]
+        ],
     }
     (ctx_dir / "context_pack.json").write_text(json.dumps(context_pack))
 
     # Create aliases.yaml: parser -> tree_sitter
-    aliases = {
-        "schema_version": 1,
-        "aliases": {
-            "parser": ["tree_sitter", "ast_parser"]
-        }
-    }
+    aliases = {"schema_version": 1, "aliases": {"parser": ["tree_sitter", "ast_parser"]}}
     (ctx_dir / "aliases.yaml").write_text(yaml.dump(aliases))
 
     # Load aliases and expand query
@@ -73,7 +68,7 @@ def test_alias_expansion_caps_terms(tmp_path: Path) -> None:
         "schema_version": 1,
         "aliases": {
             "test": [f"synonym{i}" for i in range(20)]  # 20 synonyms
-        }
+        },
     }
     (ctx_dir / "aliases.yaml").write_text(yaml.dump(aliases))
 
@@ -103,18 +98,16 @@ def test_alias_expansion_dedupes_ids(tmp_path: Path) -> None:
                 "text": "authentication login session_guard",  # Contains all synonyms
                 "token_est": 10,
                 "source_file": "test.py",
-                "source_hash": "abc123"
+                "source_hash": "abc123",
             }
-        ]
+        ],
     }
     (ctx_dir / "context_pack.json").write_text(json.dumps(context_pack))
 
     # Create aliases
     aliases = {
         "schema_version": 1,
-        "aliases": {
-            "auth": ["authentication", "login", "session_guard"]
-        }
+        "aliases": {"auth": ["authentication", "login", "session_guard"]},
     }
     (ctx_dir / "aliases.yaml").write_text(yaml.dump(aliases))
 
@@ -135,12 +128,7 @@ def test_telemetry_records_alias_fields(tmp_path: Path) -> None:
     ctx_dir.mkdir(parents=True)
 
     # Create aliases
-    aliases = {
-        "schema_version": 1,
-        "aliases": {
-            "parser": ["tree_sitter", "ast_parser"]
-        }
-    }
+    aliases = {"schema_version": 1, "aliases": {"parser": ["tree_sitter", "ast_parser"]}}
     (ctx_dir / "aliases.yaml").write_text(yaml.dump(aliases))
 
     loader = AliasLoader(segment)
@@ -184,10 +172,7 @@ def test_alias_file_validation(tmp_path: Path) -> None:
 
     # Create aliases exceeding MAX_KEYS (200)
     aliases_dict = {f"key{i}": [f"syn{i}"] for i in range(250)}
-    aliases = {
-        "schema_version": 1,
-        "aliases": aliases_dict
-    }
+    aliases = {"schema_version": 1, "aliases": aliases_dict}
     (ctx_dir / "aliases.yaml").write_text(yaml.dump(aliases))
 
     loader = AliasLoader(segment)
@@ -201,7 +186,7 @@ def test_alias_file_validation(tmp_path: Path) -> None:
         "schema_version": 1,
         "aliases": {
             "test": [f"synonym{i}" for i in range(30)]  # 30 synonyms
-        }
+        },
     }
     (ctx_dir / "aliases.yaml").write_text(yaml.dump(aliases_long))
 

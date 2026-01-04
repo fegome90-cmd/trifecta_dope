@@ -8,6 +8,7 @@ Tests cover:
 - Fence-aware chunking (no splits inside code blocks)
 - Digest scoring (top-2 relevant chunks selected)
 """
+
 from __future__ import annotations
 
 import json
