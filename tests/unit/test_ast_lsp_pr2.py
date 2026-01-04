@@ -123,7 +123,7 @@ class TestSkeletonMapBuilder:
         assert isinstance(symbols2, list)
 
     def test_graceful_failure_without_tree_sitter(self) -> None:
-        """Return empty skeleton if tree-sitter unavailable."""
+        """Verify fallback to stdlib ast when tree-sitter unavailable."""
         builder = SkeletonMapBuilder()
         builder._tree_sitter = False
         builder._parser = None
@@ -131,8 +131,10 @@ class TestSkeletonMapBuilder:
         content = "def foo(): pass\n"
         symbols = builder.build(Path("test.py"), content)
 
-        # Should return empty list (not crash)
-        assert symbols == []
+        # Should fallback to stdlib ast (not crash or return empty)
+        assert len(symbols) == 1, f"Expected 1 symbol from fallback, got: {symbols}"
+        assert symbols[0].name == "foo"
+        assert symbols[0].kind == "function"
 
     def test_skeleton_bytes_estimation(self) -> None:
         """Get skeleton size for telemetry."""

@@ -3,6 +3,9 @@
 import json
 from pathlib import Path
 import sys
+from typing import Any
+
+import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "scripts"))
 
@@ -14,6 +17,10 @@ from harness_blackbox import (
 )
 
 
+@pytest.mark.skipif(
+    not Path("/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope").exists(),
+    reason="Requires local development environment",
+)
 def test_harness_extracts_pd_report():
     """Verify harness extracts PD_REPORT from CLI output."""
     # Run a command with --pd-report

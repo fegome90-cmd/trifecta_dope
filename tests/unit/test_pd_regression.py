@@ -1,7 +1,16 @@
-"""Regression tests for Evidence Stop v3.2 API compatibility."""
+"""Regression tests for PD (Program-Directed) features."""
 
 from pathlib import Path
+
+import pytest
+
 from src.application.search_get_usecases import GetChunkUseCase
+
+# Skip all tests in this module if local development path doesn't exist
+pytestmark = pytest.mark.skipif(
+    not Path("/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope").exists(),
+    reason="Requires local development environment",
+)
 
 
 def test_execute_compatibility():

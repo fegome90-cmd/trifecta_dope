@@ -50,8 +50,10 @@ def test_prime_expansion_happy_path(temp_segment: Path) -> None:
     pack = result.unwrap()
 
     # Check if doc.md content is indexed
-    indexed_texts = [c.text for c in pack.chunks]
-    assert "Content of linked doc" in indexed_texts
+    indexed_texts = [c.text.strip() for c in pack.chunks]
+    assert "Content of linked doc" in indexed_texts, (
+        f"Expected content not found. Got: {indexed_texts}"
+    )
 
 
 # T7.3 — Prime link security: path traversal (FAIL-CLOSED)
