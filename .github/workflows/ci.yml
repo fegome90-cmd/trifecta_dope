@@ -30,7 +30,7 @@ jobs:
         uses: astral-sh/setup-uv@v4
 
       - name: Install dependencies
-        run: uv sync
+        run: uv sync --all-extras
 
       - name: Run unit tests
         run: uv run pytest tests/unit -v
@@ -71,7 +71,7 @@ jobs:
         uses: astral-sh/setup-uv@v4
 
       - name: Install dependencies
-        run: uv sync
+        run: uv sync --all-extras
 
       - name: Run Ruff linter
         run: uv run ruff check src/ tests/

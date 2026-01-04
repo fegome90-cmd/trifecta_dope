@@ -5,7 +5,7 @@
 If you discover a security vulnerability in Trifecta, please report it responsibly:
 
 1. **Do NOT** open a public GitHub issue
-2. Email the maintainers at: security@trifecta-project.dev (or create a private security advisory on GitHub)
+2. Email the maintainers at: security-trifecta@protonmail.com
 3. Include:
    - Description of the vulnerability
    - Steps to reproduce

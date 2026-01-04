@@ -6,7 +6,6 @@
     "architecture": {
         "64bit": {
             "url": "https://github.com/fegome90-cmd/trifecta_dope/archive/refs/tags/v0.1.0.zip",
-            "hash": "",
             "extract_dir": "trifecta_dope-0.1.0"
         }
     },
@@ -24,9 +23,8 @@
     },
     "bin": [
         [
-            "uv",
-            "trifecta",
-            "run trifecta"
+            ".venv\\Scripts\\trifecta.exe",
+            "trifecta"
         ]
     ],
     "checkver": {

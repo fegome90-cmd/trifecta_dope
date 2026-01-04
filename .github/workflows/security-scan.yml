@@ -65,11 +65,10 @@ jobs:
         uses: astral-sh/setup-uv@v4
 
       - name: Install dependencies
-        run: uv sync
+        run: uv sync --all-extras
 
       - name: Run Bandit security checks
         run: |
-          uv pip install bandit[toml]
           uv run bandit -r src/ -f json -o bandit-report.json || true
           uv run bandit -r src/ -ll
 
@@ -81,9 +80,7 @@ jobs:
           path: bandit-report.json
 
       - name: Run Safety check for vulnerabilities
-        run: |
-          uv pip install safety
-          uv run safety check --json || true
+        run: uv run safety check --json || true
 
   secrets-scan:
     name: Secret Scanning
