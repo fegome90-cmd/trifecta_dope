@@ -39,7 +39,7 @@ jobs:
         run: uv run pytest tests/integration -v
 
       - name: Run acceptance tests
-        run: uv run pytest tests/acceptance -v -m "not slow" -m "not slow"
+        run: uv run pytest tests/acceptance -v -m "not slow"
 
       - name: Generate coverage report
         run: |
