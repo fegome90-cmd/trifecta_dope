@@ -79,6 +79,5 @@ jobs:
       - name: Run Ruff formatter check
         run: uv run ruff format --check src/ tests/
 
-      # TEMPORARY: Disabled for Dependabot merge - re-enable after merges complete
-      # - name: Run mypy type checker
-      #   run: uv run mypy src/
+      - name: Run mypy type checker
+        run: uv run mypy src/
