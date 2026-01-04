@@ -394,3 +394,27 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Commits** (trifecta_dope): 3eb0e5c, a2806e0, c2f604a, 18cba55, 14e7752, dd206e6
 - **Commits** (agent_h): 63104af (workflows update)
 - **Pack SHA**: `dd206e6`
+## 2026-01-04 12:10 UTC
+- **Summary**: Created Northstar SOT Kanban
+- **Files**: docs/v2_roadmap/TRIFECTA_NORTHSTAR_KANBAN.kanban.md
+- **Pack SHA**: `dc7fc4ef759e54a6`
+
+## 2026-01-04 12:18 UTC
+- **Summary**: Deep Kanban SOT Audit v2.0 with AST symbols
+- **Files**: docs/v2_roadmap/TRIFECTA_NORTHSTAR_KANBAN_V2.md
+- **Pack SHA**: `8da73bd1a885c2b7`
+
+## 2026-01-04 12:25 UTC
+- **Summary**: Corrected AST/LSP status: separate by design (not orphaned)
+- **Files**: docs/v2_roadmap/TRIFECTA_NORTHSTAR_KANBAN_V2.md, docs/ast-lsp-connect/reevaluation_northstar.md
+- **Pack SHA**: `8da73bd1a885c2b7`
+
+## 2026-01-04 12:27 UTC
+- **Summary**: Eliminated 2 outdated Kanban files with incorrect AST/LSP status
+- **Files**: docs/v2_roadmap/TRIFECTA_NORTHSTAR_KANBAN_V2.md
+- **Pack SHA**: `8da73bd1a885c2b7`
+
+## 2026-01-04 12:54 UTC
+- **Summary**: Created critical analysis doc for session JSONL proposal
+- **Files**: docs/session_update/braindope_critical_analysis.md
+- **Pack SHA**: `8da73bd1a885c2b7`

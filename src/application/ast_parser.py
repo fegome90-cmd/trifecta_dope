@@ -51,7 +51,7 @@ class SkeletonMapBuilder:
 
         # Extract top-level symbols (only top-level, not nested)
         symbols: List[SymbolInfo] = []
-        
+
         for node in tree.body:  # tree.body gives only top-level nodes
             if isinstance(node, (ast_module.FunctionDef, ast_module.AsyncFunctionDef)):
                 symbols.append(

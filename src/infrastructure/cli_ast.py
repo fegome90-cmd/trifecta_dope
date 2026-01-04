@@ -4,11 +4,9 @@ import json
 from pathlib import Path
 from typing import Optional
 from src.infrastructure.telemetry import Telemetry
-from src.domain.ast_models import ASTResponse, ASTData, ASTError, ASTErrorCode, Range
 from src.domain.result import Ok, Err
 from src.application.symbol_selector import SymbolQuery
-from src.application.ast_parser import SkeletonMapBuilder, ASTParser
-from src.infrastructure.segment_utils import resolve_segment_root
+from src.application.ast_parser import SkeletonMapBuilder
 
 ast_app = typer.Typer(help="AST & Parsing Commands")
 

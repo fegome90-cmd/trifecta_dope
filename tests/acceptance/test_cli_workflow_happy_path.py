@@ -6,7 +6,6 @@ Tests the contract: create → sync → search → get → ast symbols.
 
 import subprocess
 import json
-from pathlib import Path
 from tests.helpers import repo_root
 
 

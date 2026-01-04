@@ -1,6 +1,5 @@
 """Unit tests for SkeletonMapBuilder with real ast parsing."""
 
-from pathlib import Path
 from src.application.ast_parser import SkeletonMapBuilder
 
 

@@ -1,6 +1,4 @@
 import os
-import shutil
-from pathlib import Path
 from src.infrastructure.telemetry import Telemetry
 
 

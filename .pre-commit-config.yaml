@@ -1,4 +1,4 @@
-exclude: '^(_ctx/telemetry/|.*last_run\.json|.*events\.jsonl)'
+exclude: '^(_ctx/telemetry/|_ctx/generated/|.*last_run\.json|.*events\.jsonl)'
 repos:
   # Built-in validators
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -51,13 +51,20 @@ repos:
   # Custom local hooks
   - repo: local
     hooks:
+      - id: ctx-sync
+        name: Trifecta Context Sync
+        entry: bash scripts/ctx_sync_hook.sh
+        language: system
+        pass_filenames: false
+        stages: [manual]
+
       - id: integrity-check
         name: Trifecta Context Integrity
         entry: python scripts/trifecta_integrity_check.py
         language: system
         pass_filenames: false
         files: '^(src/|scripts/|tests/|_ctx/|pyproject\.toml|uv\.lock|README\.md|skill\.md)'
-        exclude: "_ctx/telemetry/|logs/|.*last_run\\.json|.*events\\.jsonl"
+        exclude: "_ctx/telemetry/|_ctx/generated/|logs/|.*last_run\\.json|.*events\\.jsonl"
 
       - id: ai-review
         name: Trifecta AI Guard Review
@@ -65,7 +72,7 @@ repos:
         language: system
         pass_filenames: false
         files: '^(src/|scripts/|tests/|_ctx/|pyproject\.toml|uv\.lock|README\.md|skill\.md)'
-        exclude: "_ctx/telemetry/|logs/|.*last_run\\.json|.*events\\.jsonl"
+        exclude: "_ctx/telemetry/|_ctx/generated/|logs/|.*last_run\\.json|.*events\\.jsonl"
         verbose: true
 
       - id: test-gate

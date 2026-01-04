@@ -3,7 +3,6 @@ from dataclasses import dataclass, field
 from typing import Optional, List, Any
 from src.domain.result import Result, Ok, Err
 from src.domain.ast_models import ASTError, ASTErrorCode
-from src.application.ast_parser import SkeletonMapBuilder
 
 
 @dataclass

@@ -61,25 +61,25 @@ def wait_for_file_removal(path, timeout: float = 5.0) -> bool:
 
 def repo_root():
     """Find repository root by searching for pyproject.toml upwards.
-    
+
     Returns:
         Path: Absolute path to repository root
-        
+
     Raises:
         FileNotFoundError: If pyproject.toml not found (fail-closed)
     """
     from pathlib import Path
-    
+
     current = Path(__file__).resolve()
-    
+
     # Search upwards for pyproject.toml (max 5 levels)
     for _ in range(5):
         current = current.parent
         pyproject = current / "pyproject.toml"
-        
+
         if pyproject.exists():
             return current
-    
+
     # Fail-closed: explicit error if not found
     raise FileNotFoundError(
         "Could not find repository root (pyproject.toml). "

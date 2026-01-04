@@ -32,12 +32,12 @@ def test_symbol_resolver_converts_dots_to_slashes(tmp_path):
     # Create a nested module structure
     (tmp_path / "src" / "infrastructure").mkdir(parents=True)
     (tmp_path / "src" / "infrastructure" / "telemetry.py").write_text("# test")
-    
+
     resolver = SymbolResolver(builder=SkeletonMapBuilder(), root=tmp_path)
     query = SymbolQuery(kind="mod", path="src.infrastructure.telemetry")
-    
+
     result = resolver.resolve(query)
-    
+
     assert result.is_ok(), f"Expected Ok, got Err: {result}"
     candidate = result.unwrap()
     assert candidate.file_rel == "src/infrastructure/telemetry.py"
@@ -48,12 +48,12 @@ def test_symbol_resolver_handles_init_packages(tmp_path):
     # Create a package with __init__.py
     (tmp_path / "src" / "domain").mkdir(parents=True)
     (tmp_path / "src" / "domain" / "__init__.py").write_text("# pkg")
-    
+
     resolver = SymbolResolver(builder=SkeletonMapBuilder(), root=tmp_path)
     query = SymbolQuery(kind="mod", path="src.domain")
-    
+
     result = resolver.resolve(query)
-    
+
     assert result.is_ok(), f"Expected Ok, got Err: {result}"
     candidate = result.unwrap()
     assert candidate.file_rel == "src/domain/__init__.py"
@@ -75,7 +75,7 @@ Modify `src/application/symbol_selector.py:91-116`:
 def resolve(self, query: SymbolQuery) -> Result[Candidate, ASTError]:
     # Convert Python module path (dots) to filesystem path (slashes)
     path_as_dir = query.path.replace(".", "/")
-    
+
     # Simple resolution logic
     candidate_file = self.root / f"{path_as_dir}.py"
     candidate_init = self.root / path_as_dir / "__init__.py"
@@ -129,7 +129,7 @@ Update the workflow to warn about incomplete functionality:
 ```markdown
 ## ⚠️ Estado del Sistema AST/LSP
 
-> **[WIP]**: Los comandos `ast symbols` están en desarrollo. 
+> **[WIP]**: Los comandos `ast symbols` están en desarrollo.
 > El fallback `grep` es más confiable para búsquedas rápidas.
 
 ## Formato URI Correcto

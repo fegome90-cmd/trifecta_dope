@@ -21,7 +21,6 @@ import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Literal
 
 VERSION = "0.1.0"
 SCHEMA_VERSION = 1
@@ -229,7 +228,7 @@ def chunk_by_headings_fence_aware(
         paragraphs = []
         current_para = []
         in_fence_para = False
-        
+
         for line in lines:
             if FENCE_RE.match(line):
                 in_fence_para = not in_fence_para
@@ -241,10 +240,10 @@ def chunk_by_headings_fence_aware(
                     current_para = []
             else:
                 current_para.append(line)
-        
+
         if current_para:
             paragraphs.append("\n".join(current_para))
-        
+
         # Now split oversized chunk by paragraphs
         acc: list[str] = []
         acc_len = 0
@@ -378,9 +377,9 @@ class ContextPackBuilder:
         digest_lines = []
         for c in selected_chunks:
             # Extract first 10 non-empty lines from chunk
-            lines = [l.strip() for l in c["text"].split("\n") if l.strip()]
+            lines = [line.strip() for line in c["text"].split("\n") if line.strip()]
             digest_lines.extend(lines[:10])
-        
+
         digest_text = "\n".join(digest_lines[:30])  # Max 30 lines total
 
         return {
@@ -424,7 +423,6 @@ class ContextPackBuilder:
         # Build index (digest is separate)
         index = []
         for chunk in all_chunks:
-            title = " → ".join(chunk["title_path"]) if chunk["title_path"] else "Introduction"
             index.append({
                 "id": chunk["id"],
                 "doc": chunk["doc"],
@@ -545,13 +543,13 @@ def main():
                 f"Invalid segment name: '{args.segment}'\n"
                 f"Segment must contain only alphanumeric characters, underscores, and hyphens."
             )
-        
+
         builder = ContextPackBuilder(args.segment, args.repo_root)
 
         # Validate segment exists
         if not builder.segment_path.exists():
             raise ValueError(f"Segment path does not exist: {builder.segment_path}")
-        
+
         # Validate segment path is within repo_root (prevent traversal)
         try:
             builder.segment_path.resolve().relative_to(args.repo_root.resolve())
@@ -571,7 +569,6 @@ def main():
         pack = builder.build(args.output if not args.dry_run else None)
 
         chunk_count = len(pack["chunks"])
-        digest_size = sum(d["summary"].count("|") + 1 for d in pack["digest"])
         output_path = args.output or (args.repo_root / args.segment / "_ctx" / "context_pack.json")
 
         if args.dry_run:
@@ -595,12 +592,12 @@ def main():
 
         if args.verbose:
             # Show digest entries
-            print(f"\n[verbose] Digest entries:", file=sys.stderr)
+            print("\n[verbose] Digest entries:", file=sys.stderr)
             for d in pack["digest"]:
                 print(f"  - {d['doc']}: {d['summary']}", file=sys.stderr)
 
             # Show sample chunk IDs
-            print(f"\n[verbose] Sample chunk IDs:", file=sys.stderr)
+            print("\n[verbose] Sample chunk IDs:", file=sys.stderr)
             for c in pack["chunks"][:3]:
                 title = " → ".join(c["title_path"]) if c["title_path"] else "INTRO"
                 print(f"  - {c['id']}: {title} ({c['char_count']} chars)", file=sys.stderr)

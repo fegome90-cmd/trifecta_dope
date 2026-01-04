@@ -5,7 +5,6 @@ Tests are deterministic and use tmp_path only (no repo state dependency).
 
 import subprocess
 import json
-from pathlib import Path
 from tests.helpers import repo_root
 
 

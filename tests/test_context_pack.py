@@ -10,7 +10,6 @@ Tests cover:
 """
 from __future__ import annotations
 
-import hashlib
 import json
 import sys
 from pathlib import Path
@@ -460,7 +459,7 @@ def test_output_file_written(tmp_path):
     (segment / "skill.md").write_text("# Test\n\nContent.")
 
     builder = ContextPackBuilder("output_test", tmp_path)
-    pack = builder.build()
+    builder.build()
 
     expected_output = tmp_path / "output_test" / "_ctx" / "context_pack.json"
     assert expected_output.exists()

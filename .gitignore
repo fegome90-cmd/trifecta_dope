@@ -41,3 +41,4 @@ skills/third_party/
 # Trifecta Telemetry
 _ctx/telemetry/
 tmp_*
+_ctx/generated/
