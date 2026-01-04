@@ -286,6 +286,21 @@ cd trifecta_dope
 uv sync
 ```
 
+### Instalación en Windows con Scoop
+
+Para usuarios de Windows, Trifecta puede instalarse fácilmente usando [Scoop](https://scoop.sh/):
+
+```powershell
+# Instalar dependencias
+scoop install python uv
+
+# Instalar trifecta desde el repositorio
+scoop bucket add trifecta https://github.com/fegome90-cmd/trifecta_dope
+scoop install trifecta
+```
+
+Ver [`scoop/README.md`](./scoop/README.md) para más detalles.
+
 ### Multi-Segment Installation
 
 Para instalar contexto en múltiples segmentos del repositorio, usa el script estable:
@@ -312,6 +327,21 @@ uv run pytest tests/ -v
 uv run typer src/infrastructure/cli.py run create --help
 ```
 
+## Seguridad
+
+Trifecta incluye múltiples capas de seguridad:
+
+- **PII Protection**: Sanitización automática de rutas absolutas en telemetría
+- **Dependabot**: Actualizaciones automáticas de dependencias semanales
+- **CodeQL**: Análisis de seguridad automatizado en cada PR
+- **Bandit**: Análisis estático de seguridad para código Python
+- **Safety**: Verificación de vulnerabilidades en dependencias
+- **Secret Scanning**: Detección de credenciales accidentales con TruffleHog
+
+Para reportar vulnerabilidades, ver [`SECURITY.md`](./SECURITY.md).
+
+Documentación completa: [`docs/security/SECURITY_IMPROVEMENTS.md`](./docs/security/SECURITY_IMPROVEMENTS.md)
+
 ## 🐛 Debugging Scripts
 
 Scripts de utilidad para debugging de componentes LSP y daemon:
@@ -337,6 +367,8 @@ Scripts de utilidad para debugging de componentes LSP y daemon:
 
 - [`docs/braindope.md`](./docs/braindope.md) - Especificación completa del sistema
 - [`writing-skills`](../.claude/skills/superpowers/writing-skills/) - Metodología para crear SKILL.md
+- [`SECURITY.md`](./SECURITY.md) - Política de seguridad y reporte de vulnerabilidades
+- [`scoop/README.md`](./scoop/README.md) - Instalación en Windows con Scoop
 
 ## Roadmap
 
