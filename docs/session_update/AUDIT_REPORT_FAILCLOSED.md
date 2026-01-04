@@ -258,22 +258,22 @@ import numpy as np
 def benchmark_session_query(dataset_size: int, iterations: int = 200):
     """Benchmark session query con dataset generado."""
     # Setup: generar dataset
-    subprocess.run(["python", "scripts/generate_benchmark_dataset.py", 
+    subprocess.run(["python", "scripts/generate_benchmark_dataset.py",
                     "--events", str(dataset_size)])
-    
+
     latencies = []
     for _ in range(iterations):
         start = time.perf_counter()
-        subprocess.run(["uv", "run", "trifecta", "session", "query", 
-                        "-s", ".", "--last", "5"], 
+        subprocess.run(["uv", "run", "trifecta", "session", "query",
+                        "-s", ".", "--last", "5"],
                        capture_output=True, check=True)
         end = time.perf_counter()
         latencies.append((end - start) * 1000)  # ms
-    
+
     p50 = np.percentile(latencies, 50)
     p95 = np.percentile(latencies, 95)
     p99 = np.percentile(latencies, 99)
-    
+
     result = {
         "dataset_size": dataset_size,
         "iterations": iterations,
@@ -282,13 +282,13 @@ def benchmark_session_query(dataset_size: int, iterations: int = 200):
         "p99_ms": round(p99, 2),
         "max_ms": round(max(latencies), 2)
     }
-    
+
     print(json.dumps(result, indent=2))
     return result
 
 if __name__ == "__main__":
     result = benchmark_session_query(dataset_size=10000)
-    
+
     # GATE: p95 < 100ms
     if result["p95_ms"] > 100:
         print(f"❌ FAIL: p95={result['p95_ms']}ms > 100ms threshold")
@@ -391,7 +391,7 @@ def generate_event(event_type: str, ts: datetime) -> dict:
         "warnings": [],
         "x": {}
     }
-    
+
     if event_type == "session.entry":
         base["args"] = {
             "summary": f"Synthetic task {random.randint(1, 1000)}",
@@ -401,39 +401,39 @@ def generate_event(event_type: str, ts: datetime) -> dict:
         }
         base["result"] = {"outcome": random.choice(["success", "partial", "failed"])}
         base["x"] = {"tags": [random.choice(["bug", "feature", "refactor"])]}
-    
+
     return base
 
 def generate_dataset(total_events: int, ctx_ratio: float, lsp_ratio: float, session_ratio: float, output: str):
     """Generate benchmark dataset with specified distribution."""
     assert abs((ctx_ratio + lsp_ratio + session_ratio) - 1.0) < 0.01
-    
+
     ctx_count = int(total_events * ctx_ratio)
     lsp_count = int(total_events * lsp_ratio)
     session_count = int(total_events * session_ratio)
-    
+
     events = []
     base_time = datetime.now()
-    
+
     for i in range(ctx_count):
-        events.append(generate_event(random.choice(["ctx.search", "ctx.get", "ctx.sync"]), 
+        events.append(generate_event(random.choice(["ctx.search", "ctx.get", "ctx.sync"]),
                                       base_time + timedelta(seconds=i)))
-    
+
     for i in range(lsp_count):
-        events.append(generate_event(random.choice(["lsp.spawn", "lsp.request"]), 
+        events.append(generate_event(random.choice(["lsp.spawn", "lsp.request"]),
                                       base_time + timedelta(seconds=ctx_count+i)))
-    
+
     for i in range(session_count):
-        events.append(generate_event("session.entry", 
+        events.append(generate_event("session.entry",
                                       base_time + timedelta(seconds=ctx_count+lsp_count+i)))
-    
+
     # Shuffle to mimic real interleaved events
     random.shuffle(events)
-    
+
     with open(output, "w") as f:
         for event in events:
             f.write(json.dumps(event)+ "\n")
-    
+
     print(f"✅ Generated {len(events)} events to {output}")
 
 if __name__ == "__main__":
@@ -445,7 +445,7 @@ if __name__ == "__main__":
     parser.add_argument("--lsp-ratio", type=float, default=0.2)
     parser.add_argument("--session-ratio", type=float, default=0.1)
     args = parser.parse_args()
-    
+
     generate_dataset(args.events, args.ctx_ratio, args.lsp_ratio, args.session_ratio, args.output)
 ```
 
@@ -535,18 +535,18 @@ def test_session_query_no_absolute_paths():
         ["uv", "run", "trifecta", "session", "query", "-s", ".", "--last", "5"],
         capture_output=True, text=True, check=True
     )
-    
+
     # Patterns to detect
     patterns = [
         r"/Users/\w+",
         r"/home/\w+",
         r"C:\\Users\\\w+",
     ]
-    
+
     for pattern in patterns:
         matches = re.findall(pattern, result.stdout)
         assert not matches, f"❌ Found absolute paths: {matches}"
-    
+
     print("✅ No privacy leaks detected")
 
 def test_session_query_no_secrets():
@@ -555,18 +555,18 @@ def test_session_query_no_secrets():
         ["uv", "run", "trifecta", "session", "query", "-s", ".", "--all"],
         capture_output=True, text=True, check=True
     )
-    
+
     # Patterns for common secrets
     patterns = [
         r"API_KEY=\w+",
         r"sk-[a-zA-Z0-9]{20,}",  # OpenAI-style keys
         r"GEMINI_API_KEY",
     ]
-    
+
     for pattern in patterns:
         matches = re.findall(pattern, result.stdout, re.IGNORECASE)
         assert not matches, f"❌ Found secrets: {matches}"
-    
+
     print("✅ No secrets leaked")
 ```
 
@@ -621,7 +621,7 @@ def test_session_query_no_secrets():
 @session_app.command("append")
 def session_append(...):
     # ... existing code ...
-    
+
     # NEW: Write to telemetry.jsonl
     from src.infrastructure.telemetry import Telemetry
     telemetry = Telemetry(root=segment_path)
@@ -637,14 +637,14 @@ def session_append(...):
         timing_ms=0,
         tags=[]  # TODO: add --tags flag in V1.1
     )
-    
+
     # EXISTING: Write to session.md (KEEP for backward compat)
     if not session_file.exists():
         session_file.write_text(...)
     else:
         with open(session_file, "a") as f:
             f.write(...)
-    
+
     typer.echo(f"✅ Appended to {session_file.relative_to(segment_path)}")
 ```
 
@@ -722,17 +722,17 @@ def session_query(
 ):
     """Query session entries from telemetry."""
     import subprocess
-    
+
     # Use grep for performance (filter early)
     grep_result = subprocess.run(
         ["grep", '"cmd": "session.entry"', f"{segment}/_ctx/telemetry/events.jsonl"],
         capture_output=True, text=True
     )
-    
+
     entries = []
     for line in grep_result.stdout.splitlines():
         event = json.loads(line)
-        
+
         # Apply filters
         if type and event["args"].get("type") != type:
             continue
@@ -740,7 +740,7 @@ def session_query(
             continue
         if tag and tag not in event["x"].get("tags", []):
             continue
-        
+
         # Format output
         if format == "clean":
             entry = {
@@ -754,13 +754,13 @@ def session_query(
             }
         else:  # raw
             entry = event
-        
+
         entries.append(entry)
-    
+
     # Apply --last limit
     if last:
         entries = entries[-last:]
-    
+
     print(json.dumps(entries, indent=2))
 ```
 
@@ -795,12 +795,12 @@ def test_session_query_validates_against_schema():
     """Ensure session query output matches JSON schema."""
     with open("docs/schemas/session_query_clean.schema.json") as f:
         schema = json.load(f)
-    
+
     result = subprocess.run(
         ["uv", "run", "trifecta", "session", "query", "-s", ".", "--last", "5"],
         capture_output=True, text=True, check=True
     )
-    
+
     output = json.loads(result.stdout)
     validate(instance=output, schema=schema)  # Raises if invalid
     print("✅ Output validates against schema")
@@ -828,14 +828,14 @@ rg "def _sanitize_event" src/infrastructure/telemetry.py -A 30
 def _sanitize_event(event: dict) -> dict:
     """Sanitize PII from event before writing."""
     # Existing logic...
-    
+
     # NEW: Sanitize session.entry args
     if event["cmd"] == "session.entry":
         if "files" in event["args"]:
             event["args"]["files"] = [
                 _relpath(f) for f in event["args"]["files"]
             ]
-    
+
     return event
 ```
 
@@ -932,4 +932,3 @@ git revert <commit-hash>
 **NEXT ACTION**: Implementar Step 1 (dual write) + verificar tests pasan → debloquea resto
 
 **APPROVAL REQUIRED**: User debe revisar y aprobar plan antes de ejecutar
-

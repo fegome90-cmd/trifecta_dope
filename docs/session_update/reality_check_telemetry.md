@@ -216,4 +216,3 @@ Son **propósitos diferentes** con **niveles de abstracción diferentes**.
 3. ¿El costo de DOS archivos JSONL realmente te duele, o es acceptable?
 
 **NO implementes hasta responder estas 3.**
-

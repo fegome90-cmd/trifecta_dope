@@ -19,6 +19,21 @@ dev = [
     "ruff",
     "mypy",
     "pyright==1.1.390",
+    "bandit",  # Security scanner for Python code
+    "safety",  # Dependency vulnerability scanner
+    # Analysis tools (kept in dev for convenience during development)
+    "jupyter>=1.0.0",
+    "plotly>=5.18.0",
+    "pandas>=2.0.0",
+    "kaleido>=0.2.0",
+]
+# Production-ready optional group for telemetry analysis
+# Install with: uv sync --extra telemetry
+telemetry = [
+    "jupyter>=1.0.0",
+    "plotly>=5.18.0",
+    "pandas>=2.0.0",
+    "kaleido>=0.2.0",
 ]
 
 [project.scripts]

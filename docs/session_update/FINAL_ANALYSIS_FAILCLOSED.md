@@ -244,14 +244,14 @@ def session_append(...):
         timing_ms=0,
         tags=[]
     )
-    
+
     # EXISTENTE: Write to session.md (NO TOCAR)
     if not session_file.exists():
         session_file.write_text(header + entry_text)
     else:
         with open(session_file, "a") as f:
             f.write(entry_text)
-    
+
     # Output text (backward compat)
     typer.echo(f"✅ Appended to {session_file.relative_to(segment_path)}")
 ```
@@ -297,8 +297,8 @@ def session_append(...):
 > # 1. Append a telemetry.jsonl (source of truth)  
 > # 2. Regenera session.md DESDE telemetry (opcional, si --sync-md flag)
 
-**INTERPRETACIÓN CORRECTA**: 
-- V1: Dual write (ambos) 
+**INTERPRETACIÓN CORRECTA**:
+- V1: Dual write (ambos)
 - V2: Opcional `--sync-md` flag para regenerar completo desde JSONL
 
 ---
@@ -337,4 +337,3 @@ def session_append(...):
 ---
 
 **CONCLUSIÓN**: No se borra ninguna feature existente. El único riesgo era session.md congelado, mitigado con dual write obligatorio.
-

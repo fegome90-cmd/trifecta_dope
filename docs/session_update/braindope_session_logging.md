@@ -137,7 +137,7 @@ En 28 horas podrías implementar:
 PREGUNTA BRUTAL:
 ¿Session queries valen MÁS que implementar la prioridad #2 del roadmap?
 
-Si NO puedes demostrar que queries a session son MÁS valiosos que Linter-Driven Loop → 
+Si NO puedes demostrar que queries a session son MÁS valiosos que Linter-Driven Loop →
 Tu propuesta gasta tiempo en algo de menor ROI.
 
 DEMUESTRA valor con números: ¿Cuántas veces por semana necesitas buscar en session histórico?

@@ -239,7 +239,7 @@
    uv run trifecta session append -s . --summary "Fixed bug" --type debug --files "a.py" --commands "pytest" --outcome success --tags "lsp"
    ```
    Uso real: Agente registra task completada después de debugging session
-   
+
    Output Contract (JSON Schema):
    ```json
    {
@@ -252,16 +252,16 @@
      }
    }
    ```
-   
+
    Output válido ejemplo:
    ```json
    {"status": "ok", "message": "✅ Appended to telemetry", "entry_id": "session:abc1234567"}
    ```
-   
+
    Regresión (ejemplos INVÁLIDOS):
    - `{"status": "error", "message": "File not found"}` (NO debe fallar silenciosamente)
    - Output sin entry_id (no se puede verificar write)
-   
+
    Test E2E:
    ```bash
    pytest tests/e2e/test_session_append_workflow.py -v
@@ -272,7 +272,7 @@
    uv run trifecta session query -s . --type debug --last 10
    ```
    Uso real: Agente busca últimas 10 entries de debugging para contexto
-   
+
    Output Contract (JSON Schema):
    ```json
    {
@@ -292,7 +292,7 @@
      }
    }
    ```
-   
+
    Output válido ejemplo:
    ```json
    [
@@ -307,11 +307,11 @@
      }
    ]
    ```
-   
+
    Regresión:
    - Output incluye `run_id`, `timing_ms`, `warnings` (campos telemetry no limpiados)
    - `ts` en formato no-ISO (ej: epoch)
-   
+
    Test E2E:
    ```bash
    pytest tests/e2e/test_session_query_workflow.py -v
@@ -322,7 +322,7 @@
    uv run trifecta ctx sync -s .
    ```
    Uso real: Macro que rebuild context pack + validate + session sync
-   
+
    Output Contract (same as current - NO DEBE CAMBIAR):
    ```json
    {
@@ -341,16 +341,16 @@
      }
    }
    ```
-   
+
    Output válido ejemplo:
    ```json
    {"status": "ok", "actions": {"context_pack_rebuilt": true, "validated": true, "session_synced": true}}
    ```
-   
+
    Regresión:
    - Cambio en estructura de output (rompe scripts que parsean)
    - `ctx sync` NO llama session sync (workflow incompleto)
-   
+
    Test E2E:
    ```bash
    pytest tests/e2e/test_ctx_sync_workflow.py -v
@@ -361,7 +361,7 @@
    uv run trifecta session load -s . --last 3 --format compact
    ```
    Uso real: Agente carga últimas 3 entries como contexto minimalista
-   
+
    Output Contract:
    ```json
    {
@@ -377,7 +377,7 @@
      }
    }
    ```
-   
+
    Output válido ejemplo:
    ```json
    [
@@ -386,10 +386,10 @@
      {"ts": "2026-01-04T10:00", "summary": "Updated docs", "type": "document"}
    ]
    ```
-   
+
    Regresión:
    - `compact` mode incluye fields innecesarios (files, commands) → viola token efficiency
-   
+
    Test E2E:
    ```bash
    pytest tests/e2e/test_session_load_workflow.py -v
@@ -400,21 +400,21 @@
    rg '"cmd": "session.entry"' _ctx/telemetry/events.jsonl | head -n 5
    ```
    Uso real: Debugging manual / auditoría de telemetry
-   
+
    Output Contract:
    ```
    Cada línea debe ser JSON válido con cmd == "session.entry"
    ```
-   
+
    Output válido ejemplo:
    ```json
    {"ts": "2026-01-04T11:00:00", "cmd": "session.entry", "args": {...}, "result": {...}}
    ```
-   
+
    Regresión:
    - Malformed JSON (comas dobles, quotes sin escape)
    - `cmd` != "session.entry" (typo en write logic)
-   
+
    Test E2E:
    ```bash
    # Validate all session entries are parseable JSON
@@ -426,22 +426,22 @@
 ## 5) Dolor actual (evidencia cuantificada)
 
 1. **Problema**: session.md crece indefinidamente sin archivado automático
-   
+
    Reproducible:
    ```bash
    wc -l _ctx/session_trifecta_dope.md
    ```
-   
+
    Output actual:
    ```
    397 _ctx/session_trifecta_dope.md
    ```
-   
+
    Output esperado:
    ```
    < 100 líneas (últimas ~20 entradas, resto archivado)
    ```
-   
+
    Impacto CUANTIFICADO:
    - Tiempo perdido: ~5 min/semana navegando archivo grande
    - Tokens desperdiciados: 5165 tokens si se carga completo (viola North Star <60s)
@@ -449,23 +449,23 @@
    - Stakeholders afectados: 1 (Felipe - único dev actual)
 
 2. **Problema**: No hay forma de query session por tipo/fecha/tags
-   
+
    Reproducible:
    ```bash
    # Intento buscar entradas de debug en último mes
    uv run trifecta session query -s . --type debug 2>&1
    ```
-   
+
    Output actual:
    ```
    Error: Unknown command 'query'
    ```
-   
+
    Output esperado:
    ```json
    [{"ts": "...", "summary": "...", "type": "debug", ...}]
    ```
-   
+
    Impacto CUANTIFICADO:
    - Tiempo perdido: ~10 min/hora buscando manualmente en session.md
    - Bugs: 0 directo, pero dificulta debugging post-mortem
@@ -473,22 +473,22 @@
    - Stakeholders afectados: 1 (Felipe)
 
 3. **Problema**: session.md no es queryable vía `ctx search` (no está en context pack)
-   
+
    Reproducible:
    ```bash
    uv run trifecta ctx search -s . -q "LSP daemon" --limit 10 | jq '.[] | select(.doc == "session")'
    ```
-   
+
    Output actual:
    ```
    (vacío - session.md no está indexado)
    ```
-   
+
    Output esperado:
    ```json
    [{"id": "session:...", "preview": "Fixed LSP daemon...", ...}]
    ```
-   
+
    Impacto CUANTIFICADO:
    - Tiempo perdido: ~3 min/búsqueda (cambiar de `ctx search` a grep manual)
    - Inconsistencia: Todos los docs están en ctx EXCEPTO session
@@ -496,51 +496,51 @@
    - Stakeholders afectados: 1
 
 4. **Problema**: session.md contiene metadata no estructurada (parsing manual necesario)
-   
+
    Reproducible:
    ```bash
    grep "## 2026-01-04" _ctx/session_trifecta_dope.md -A 10
    ```
-   
+
    Output actual:
    ```markdown
    ## 2026-01-04T09:16:00-0300
    **Summary**: Created critical analysis doc for session JSONL proposal
    **Files**: docs/session_update/braindope_critical_analysis.md
    ```
-   
+
    Output esperado (structured):
    ```json
    {"ts": "2026-01-04T09:16:00", "summary": "...", "files": ["..."], "type": "document"}
    ```
-   
+
    Impacto CUANTIFICADO:
    - Tiempo perdido: ~2 horas implementando parser ad-hoc si se necesita
    - Bugs potenciales: Markdown parsing frágil (headings cambian formato)
    - Stakeholders afectados: 1
 
 5. **Problema**: Telemetry ya tiene toda la infraestructura (JSONL, rotation, schema) pero session no la usa
-   
+
    Reproducible:
    ```bash
    ls _ctx/telemetry/
    # vs
    ls _ctx/session*.jsonl 2>&1
    ```
-   
+
    Output actual:
    ```
    _ctx/telemetry/events.jsonl
    _ctx/telemetry/last_run.json
-   
+
    ls: _ctx/session*.jsonl: No such file or directory
    ```
-   
+
    Output esperado:
    ```
    Session entries están EN telemetry.jsonl como event type
    ```
-   
+
    Impacto CUANTIFICADO:
    - Deuda técnica: Duplicación de infra si se crea session_journal.jsonl separado (~10 horas dev)
    - Complejidad: +15 puntos si se añade segundo JSONL
@@ -563,119 +563,119 @@
 
 1. **Feature**: Auto-detección automática de tool use
    Por qué NO en V1: Nunca (eliminaciónsay permanente)
-   
+
    **ELIMINATION GATE**:
-   
+
    a) **Casos de uso afectados**:
       - Caso 1: "Agente registra files touched sin flag manual" → Owner: Felipe → Impacto: Conveniencia (no blocker)
       - Caso 2: Ningún otro caso conocido
-   
+
    b) **ROI de eliminación**:
       Ahorro: 15 horas dev (parser complejo) + 10 puntos complejidad
       Costo de mantener: ~5 horas/mes (parser se rompe con cambios en output del agente)
       Net: POSITIVO (+15h -5h/m indefinido = massive win)
-   
+
    c) **Reemplazo o pérdida**:
       Reemplazo: Flags `--files` y `--commands` (YA EXISTEN en `session append`)
       Pérdida aceptada: Felipe (owner) acepta escribir flags manualmente
       Firmado: 2026-01-04 (braindope convergencia Ronda 1)
-   
+
    d) **Plan de migración**:
       No aplica (feature nunca existió - no hay migración)
       Rollback: N/A
       Escape hatch: N/A
-   
+
    e) **Test de no-regresión**:
       ```bash
       # Verifica que NO hay parser de tool use en código
       rg "parse.*tool.*use|detect.*files.*touched" src/ && exit 1 || exit 0
       ```
-   
+
    **ELIMINATION GATE STATUS**: ✅ PASS (5/5 requisitos cumplidos)
 
 2. **Feature**: session_journal.jsonl (JSONL separado de telemetry)
    Por qué NO en V1: Nunca (decisión arquitectónica - reutilizar telemetry)
-   
+
    **ELIMINATION GATE**:
-   
+
    a) **Casos de uso afectados**:
       - Caso 1: "Separación semántica limpia de session vs observability" → Owner: Felipe → Impacto: Purismo arquitectónico (no funcional)
       - Caso 2: Ningún otro
-   
+
    b) **ROI de eliminación**:
       Ahorro: 10 horas dev (JSONL writer duplicado) + 15 puntos complejidad + cero bugs de sincronización
       Costo de mantener: Mixing "narrative" (session) con "metrics" (telemetry) = ~0 horas (pragmatismo > pureza)
       Net: POSITIVO (+10h ahorro, costo conceptual aceptable)
-   
+
    c) **Reemplazo o pérdida**:
       Reemplazo: Event type `session.entry` en telemetry.jsonl existente
       Pérdida: Pureza semántica (session y telemetry mezclados)
       Aceptada por: Felipe, 2026-01-04 (braindope Ronda 4)
-   
+
    d) **Plan de migración**:
       No aplica (jamás existió)
       Rollback: N/A
       Escape hatch: Si en futuro se necesita separar, crear `session.jsonl` y migrar entries filtradas
-   
+
    e) **Test de no-regresión**:
       ```bash
       # Verifica que NO existe session_journal.jsonl
       test ! -f _ctx/session_journal.jsonl
       ```
-   
+
    **ELIMINATION GATE STATUS**: ✅ PASS (5/5 requisitos cumplidos)
 
 3. **Feature**: Background script daemon para escribir session entries
    Por qué NO en V1: Nunca (operational risk alto)
-   
+
    **ELIMINATION GATE**:
-   
+
    a) **Casos de uso afectados**:
       - Caso 1: "Writes asincrónicos sin bloquear CLI" → Owner: Felipe → Impacto: Latencia de append +10ms síncrono (acceptable)
-   
+
    b) **ROI de eliminación**:
       Ahorro: Cero supervisión, cero recovery logic, cero debugging de daemon muerto
       Costo de mantener: Infinite (daemon fallas silenciosas = data loss)
       Net: MASSIVE WIN (evita operational nightmare)
-   
+
    c) **Reemplazo**:
       Reemplazo: Hook síncrono en `session append` (simple, confiable)
       Pérdida: Async writes (no necesario - write a JSONL es < 5ms)
       Aceptada por: Felipe, 2026-01-04
-   
+
    d) **Plan de migración**: N/A (never existed)
-   
+
    e) **Test de no-regresión**:
       ```bash
       ps aux | grep -i "session.*daemon" && exit 1 || exit 0
       ```
-   
+
    **ELIMINATION GATE STATUS**: ✅ PASS (5/5)
 
 4. **Feature**: session.md generado automáticamente en cada `session append`
    Por qué NO en V1: V2 (opcional - puede implementarse después)
-   
+
    **ELIMINATION GATE**:
-   
+
    a) **Casos de uso afectados**:
       - Caso 1: "Leer session como markdown humano" → Owner: Felipe → Impacto: Minor (puede usar `session query | jq`)
-   
+
    b) **ROI de postergación**:
       Ahorro V1: 2 horas dev (script generador)
       Costo de NO tener: ~1 min/semana (comando query extra)
       Net: Postponer es razonable (low priority)
-   
+
    c) **Reemplazo TEMPORAL**:
       Workaround V1: `session query --all | jq -r` para ver entries
       O mantener session.md manual (status quo)
       Pérdida: Sync automático .md ↔ JSONL
       Aceptada por: Felipe, 2026-01-04
-   
+
    d) **Plan de migración**:
       V2: Implementar `session generate-md` command
       Deadline tentativo: 2026-02-01 (1 mes post-V1)
       Rollback: Mantener .md manual indefinidamente (acceptable)
-   
+
    e) **Test de no-regresión**:
       ```bash
       # V1 NO debe auto-regenerar session.md
@@ -684,22 +684,22 @@
       uv run trifecta session append -s . --summary "test"
       test ! -s _ctx/session_test.md  # Debe seguir vacío
       ```
-   
+
    **ELIMINATION GATE STATUS**: ✅ PASS (5/5) - Postponed to V2 with clear deadline
 
 5. **Feature**: Telemetry rotation automática en `session append`
    Por qué NO en V1: V2 (puede implementarse después, workaround existe)
-   
+
    **ELIMINATION GATE**:
-   
+
    a) **Casos de uso afectados**:
       - Caso 1: "Query rápido en telemetry > 10K events" → Owner: Felipe → Impacto: Latency degrada a ~200ms (vs <50ms con rotation)
-   
+
    b) **ROI de postergación**:
       Ahorro V1: 3 horas dev (rotation logic)
       Costo de NO tener: Query lento si telemetry crece > 10K
       Net: Postponer OK si proyecto < 6 meses uso (unlikely to hit 10K)
-   
+
    c) **Reemplazo TEMPORAL**:
       Workaround: Manual rotation via script:
       ```bash
@@ -708,19 +708,19 @@
       ```
       Pérdida: Auto-rotation
       Aceptada por: Felipe, 2026-01-04
-   
+
    d) **Plan de migración**:
       V2: Integrar rotation en `ctx sync` macro
       Deadline: 2026-03-01 (o cuando telemetry hits 5K events, whichever first)
       Rollback: Manual cleanup (status quo)
-   
+
    e) **Test de no-regresión**:
       ```bash
       # V1: telemetry NO debe auto-rotate
       # Test: append hasta 100 events, verificar que NO se creó archive
       test ! -f _ctx/telemetry/archive_*.jsonl
       ```
-   
+
    **ELIMINATION GATE STATUS**: ✅ PASS (5/5) - Postponed to V2 with trigger condition
 
 **MÓDULOS**:
@@ -989,7 +989,7 @@ V2 tentativo: **2026-02-15** (1 mes post-V1) - features:
 
 **TRADE-OFFS** (orden descendente):
 
-1. **Correctness > Performance** 
+1. **Correctness > Performance**
    Justificación: Reliable writes > fast writes. Si hay trade-off, priorizar data integrity.
 
 2. **Backward compatibility > Elegancia**
@@ -1034,4 +1034,3 @@ V2 tentativo: **2026-02-15** (1 mes post-V1) - features:
 2. Correct any misunderstandings or add missing context
 3. Approve or request changes
 4. Once approved → STATUS changes to COMPLETE → Auditor can proceed to execution analysis
-
