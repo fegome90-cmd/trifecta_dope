@@ -6,9 +6,7 @@ Tests are deterministic and use tmp_path only (no repo state dependency).
 import subprocess
 import json
 from pathlib import Path
-
-# Repo root for portable cwd (uv run needs pyproject.toml)
-REPO_ROOT = Path(__file__).resolve().parents[2]
+from tests.helpers import repo_root
 
 
 def test_ast_symbols_cli_returns_real_symbols(tmp_path):
@@ -34,7 +32,7 @@ def test_ast_symbols_cli_returns_real_symbols(tmp_path):
         ],
         capture_output=True,
         text=True,
-        cwd=str(REPO_ROOT),
+        cwd=str(repo_root()),
     )
 
     # Verify return code
@@ -80,7 +78,7 @@ def test_ast_symbols_cli_file_not_found(tmp_path):
         ],
         capture_output=True,
         text=True,
-        cwd=str(REPO_ROOT),
+        cwd=str(repo_root()),
     )
 
     # Verify exit code (should be non-zero)
@@ -119,7 +117,7 @@ def test_ast_symbols_cli_empty_file(tmp_path):
         ],
         capture_output=True,
         text=True,
-        cwd=str(REPO_ROOT),
+        cwd=str(repo_root()),
     )
 
     # Verify
