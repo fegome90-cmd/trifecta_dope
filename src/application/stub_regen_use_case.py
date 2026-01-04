@@ -64,6 +64,10 @@ trifecta ctx eval-plan # Evaluate plan against dataset
 ---
 
 **Limitations**: This is a curated map, not exhaustive indexing. For detailed symbol navigation, use ctx.plan with symbol_surface feature.
+
+---
+
+**PROMPT_FIX_HINT**: If you are an agent, copy NEXT_STEPS and rerun the original command. If still failing, paste stderr + command + exit code.
 """
 
     SYMBOLS_STUB_TEMPLATE = """# Symbol Navigation - Stub (v1)
@@ -95,6 +99,10 @@ Planned features for v2 symbol navigation:
 ---
 
 **Note**: This stub provides policy guidance. Full symbol indexing requires AST/LSP infrastructure planned for v2.
+
+---
+
+**PROMPT_FIX_HINT**: If you are an agent, copy NEXT_STEPS and rerun the original command. If still failing, paste stderr + command + exit code.
 """
 
     MAX_REPO_MAP_LINES = 300
