@@ -81,7 +81,5 @@ class Err(Generic[E]):
 
 
 # Type alias for Result union (Python 3.12+ compatible)
-if TYPE_CHECKING:
-    Result: TypeAlias = Ok[T] | Err[E]
-else:
-    Result = Ok | Err
+# With __future__ annotations, this is only evaluated during type checking
+Result: TypeAlias = Ok[T] | Err[E]
