@@ -226,11 +226,15 @@ def real_segment() -> Path:
     """Use actual trifecta_dope segment for E2E test."""
     seg = Path("/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope")
     if not seg.exists():
-        pytest.skip("Real segment does not exist - test requires specific environment")
+        pytest.fail("Real segment does not exist - test requires specific environment")
     return seg
 
 
 @pytest.mark.slow
+@pytest.mark.skipif(
+    not Path("/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope").exists(),
+    reason="Requires local development environment",
+)
 def test_e2e_evidence_stop_real_cli(real_segment: Path):
     """E2E test with real CLI and telemetry validation."""
     ids = _search_for_ids(real_segment, "ContextService", limit=3)
@@ -284,6 +288,10 @@ def test_e2e_evidence_stop_real_cli(real_segment: Path):
 
 
 @pytest.mark.slow
+@pytest.mark.skipif(
+    not Path("/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope").exists(),
+    reason="Requires local development environment",
+)
 def test_e2e_evidence_stop_disabled_by_default(real_segment: Path):
     """Verify that evidence-stop is disabled by default (backward compat)."""
     ids = _search_for_ids(real_segment, "get", limit=2)
