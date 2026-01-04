@@ -11,7 +11,7 @@ Date: 2025-12-31
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Callable, Generic, TypeAlias, TypeVar
+from typing import Callable, Generic, TypeAlias, TypeVar
 
 T = TypeVar("T")  # Success type
 E = TypeVar("E")  # Error type
