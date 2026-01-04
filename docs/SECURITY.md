@@ -1,6 +1,28 @@
-# Security: PII in Telemetry
+# Security Policy
 
-## Overview
+## Reporting Security Vulnerabilities
+
+If you discover a security vulnerability in Trifecta, please report it responsibly:
+
+1. **Do NOT** open a public GitHub issue
+2. Email the maintainers at: security@trifecta-project.dev (or create a private security advisory on GitHub)
+3. Include:
+   - Description of the vulnerability
+   - Steps to reproduce
+   - Potential impact
+   - Suggested fix (if available)
+
+We will respond within 48 hours and work with you to address the issue.
+
+## Supported Versions
+
+| Version | Supported          |
+| ------- | ------------------ |
+| 0.1.x   | :white_check_mark: |
+
+## Security Features
+
+### PII Protection in Telemetry
 
 Trifecta telemetry sanitizes absolute paths by default to prevent PII leaks.
 

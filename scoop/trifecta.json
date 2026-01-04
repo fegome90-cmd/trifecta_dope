@@ -1,0 +1,43 @@
+{
+    "version": "0.1.0",
+    "description": "Trifecta - Programming Context Calling system for code agents",
+    "homepage": "https://github.com/fegome90-cmd/trifecta_dope",
+    "license": "MIT",
+    "architecture": {
+        "64bit": {
+            "url": "https://github.com/fegome90-cmd/trifecta_dope/archive/refs/tags/v0.1.0.zip",
+            "hash": "",
+            "extract_dir": "trifecta_dope-0.1.0"
+        }
+    },
+    "depends": [
+        "python",
+        "uv"
+    ],
+    "installer": {
+        "script": [
+            "Write-Host 'Installing trifecta dependencies...'",
+            "Push-Location \"$dir\"",
+            "uv sync",
+            "Pop-Location"
+        ]
+    },
+    "bin": [
+        [
+            "uv",
+            "trifecta",
+            "run trifecta"
+        ]
+    ],
+    "checkver": {
+        "github": "https://github.com/fegome90-cmd/trifecta_dope"
+    },
+    "autoupdate": {
+        "architecture": {
+            "64bit": {
+                "url": "https://github.com/fegome90-cmd/trifecta_dope/archive/refs/tags/v$version.zip",
+                "extract_dir": "trifecta_dope-$version"
+            }
+        }
+    }
+}
