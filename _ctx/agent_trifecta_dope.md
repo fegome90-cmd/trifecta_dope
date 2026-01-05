@@ -169,11 +169,12 @@ LSP_DAEMON_TTL_SEC=180  # Default
 | **Type** | `uv run pyrefly check` | Integridad de tipos |
 | **Context** | `make ctx-sync` | Sincronizar context pack |
 
-## Active Features (Verified 2026-01-04)
+## Active Features (Verified 2026-01-05)
 
 | Feature | Status | Verified | Commands |
 |---------|--------|----------|----------|
-| **AST Symbols M1** | ✅ PRODUCTION READY | 2026-01-03 | `trifecta ast symbols "sym://..."` |
+| **AST Symbols M1** | ✅ PRODUCTION READY | 2026-01-05 | `trifecta ast symbols "sym://..."` |
+| **AST Cache System v1** | ✅ PRODUCTION READY | 2026-01-05 | `trifecta ast symbols --persist-cache`, `trifecta ast cache-stats`, `trifecta ast clear-cache` |
 | **Telemetry System** | ✅ COMPLETE | 2025-12-31 | `trifecta telemetry report/chart/export` |
 | **LSP Daemon** | ✅ RELAXED READY | 2026-01-02 | Auto-invoked, 180s TTL, UNIX socket |
 | **Error Cards** | ✅ STABLE | 2026-01-02 | `SEGMENT_NOT_INITIALIZED` error type |
@@ -194,6 +195,9 @@ LSP_DAEMON_TTL_SEC=180  # Default
 | Tests Fallan | Revisar logs en `_ctx/telemetry/` |
 | CLI no funciona | `uv run trifecta --help` (no requiere activar entorno) |
 | Telemetry tools | `uv sync --extra telemetry` para jupyter/plotly |
+| Cache de AST crece sin límite | Usar `--persist-cache` con `InMemoryLRUCache` (efímero) o verificar `SQLiteCache` evicción LRU |
+| Cache hit rate bajo | Verificar que `SkeletonMapBuilder` usa misma instancia de `AstCache` entre componentes |
+| Telemetría de cache siempre muestra `cache_hit=false` | Usar `ParseResult` con `status="hit"`/`"miss"` en lugar de parámetro booleano |
 
 ## Integration Points
 
@@ -201,10 +205,18 @@ LSP_DAEMON_TTL_SEC=180  # Default
 - `pydantic` - Base de modelos de dominio
 - `typer` - Motor del CLI
 - `pyyaml` - Serialización de estados/config
+- `sqlite3` - Persistencia de cache de AST (std lib)
 
 **Downstream Consumers:**
 - Agentes de código que necesiten contexto estructurado
 - Autopilot pipelines
+
+**Cache Integration:**
+- `src/domain/ast_cache.py` - Protocol `AstCache` con implementaciones `InMemoryLRUCache`, `SQLiteCache`, `NullCache`
+- `src/application/ast_parser.py` - `SkeletonMapBuilder` usa `AstCache` vía DI
+- `src/application/telemetry_pr2.py` - `track_parse()` acepta `ParseResult` con `cache_status` y `cache_key`
+- `src/application/pr2_context_searcher.py` - Inyecta `AstCache` en componentes
+- `src/infrastructure/cli_ast.py` - CLI commands: `ast symbols --persist-cache`, `ast cache-stats`, `ast clear-cache`
 
 
 

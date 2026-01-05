@@ -1,6 +1,6 @@
 """Unit tests for SkeletonMapBuilder with real ast parsing."""
 
-from src.application.ast_parser import SkeletonMapBuilder
+from src.application.ast_parser import SkeletonMapBuilder, ParseResult
 
 
 def test_skeleton_builder_extracts_function(tmp_path):
@@ -9,12 +9,13 @@ def test_skeleton_builder_extracts_function(tmp_path):
     py_file.write_text("def foo():\n    pass\n")
 
     builder = SkeletonMapBuilder()
-    symbols = builder.build(py_file)
+    result = builder.build(py_file)
 
-    assert len(symbols) == 1
-    assert symbols[0].name == "foo"
-    assert symbols[0].kind == "function"
-    assert symbols[0].start_line == 1
+    assert isinstance(result, ParseResult)
+    assert len(result.symbols) == 1
+    assert result.symbols[0].name == "foo"
+    assert result.symbols[0].kind == "function"
+    assert result.symbols[0].start_line == 1
 
 
 def test_skeleton_builder_extracts_class(tmp_path):
@@ -23,11 +24,12 @@ def test_skeleton_builder_extracts_class(tmp_path):
     py_file.write_text("class Bar:\n    pass\n")
 
     builder = SkeletonMapBuilder()
-    symbols = builder.build(py_file)
+    result = builder.build(py_file)
 
-    assert len(symbols) == 1
-    assert symbols[0].name == "Bar"
-    assert symbols[0].kind == "class"
+    assert isinstance(result, ParseResult)
+    assert len(result.symbols) == 1
+    assert result.symbols[0].name == "Bar"
+    assert result.symbols[0].kind == "class"
 
 
 def test_skeleton_builder_extracts_mixed(tmp_path):
@@ -36,8 +38,9 @@ def test_skeleton_builder_extracts_mixed(tmp_path):
     py_file.write_text("def foo():\n    pass\n\nclass Bar:\n    pass\n")
 
     builder = SkeletonMapBuilder()
-    symbols = builder.build(py_file)
+    result = builder.build(py_file)
 
-    assert len(symbols) == 2
-    assert symbols[0].name == "foo"
-    assert symbols[1].name == "Bar"
+    assert isinstance(result, ParseResult)
+    assert len(result.symbols) == 2
+    assert result.symbols[0].name == "foo"
+    assert result.symbols[1].name == "Bar"

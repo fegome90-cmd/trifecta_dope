@@ -112,16 +112,17 @@ class InMemoryLRUCache:
         from dataclasses import asdict
         
         # Serialize value (handle lists of dataclass objects)
+        value_serialized: Any
         if isinstance(value, list) and value and hasattr(value[0], "to_dict"):
-            value_serialized: Any = [v.to_dict() for v in value]
+            value_serialized = [v.to_dict() for v in value]
         elif isinstance(value, list) and value and hasattr(value[0], "__dataclass_fields__"):
-            value_serialized: Any = [asdict(v) for v in value]
+            value_serialized = [asdict(v) for v in value]
         elif hasattr(value, "to_dict"):
-            value_serialized: Any = value.to_dict()
+            value_serialized = value.to_dict()
         elif hasattr(value, "__dataclass_fields__"):
-            value_serialized: Any = asdict(value)
+            value_serialized = asdict(value)
         else:
-            value_serialized: Any = value
+            value_serialized = value
         
         # Calculate size
         value_bytes = len(json.dumps(value_serialized).encode())

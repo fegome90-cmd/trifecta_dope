@@ -2454,11 +2454,6 @@ telemetry = [
     { name = "plotly" },
 ]
 
-[package.dev-dependencies]
-dev = [
-    { name = "pyrefly" },
-]
-
 [package.metadata]
 requires-dist = [
     { name = "bandit", extras = ["toml"], marker = "extra == 'dev'", specifier = ">=1.7.0" },
@@ -2483,9 +2478,6 @@ requires-dist = [
     { name = "typer", extras = ["all"], specifier = ">=0.9.0" },
 ]
 provides-extras = ["dev", "telemetry"]
-
-[package.metadata.requires-dev]
-dev = [{ name = "pyrefly", specifier = ">=0.46.3" }]
 
 [[package]]
 name = "typer"

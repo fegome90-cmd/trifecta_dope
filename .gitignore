@@ -43,6 +43,9 @@ _ctx/telemetry/
 tmp_*
 _ctx/generated/
 
+# Trifecta cache directory
+.trifecta/
+
 # Demo/testing workspaces
 tests/fixtures/demo_workspace/.trifecta/_ctx/telemetry/
 

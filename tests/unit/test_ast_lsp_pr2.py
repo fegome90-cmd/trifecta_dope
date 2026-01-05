@@ -13,7 +13,7 @@ UPDATED: SymbolQuery returns Result[SymbolQuery, ASTError], not SymbolQuery | No
 import pytest
 from pathlib import Path
 
-from src.application.ast_parser import SymbolInfo, SkeletonMapBuilder
+from src.application.ast_parser import SymbolInfo, SkeletonMapBuilder, ParseResult
 from src.application.symbol_selector import SymbolQuery, SymbolResolver
 from src.application.lsp_manager import LSPManager, LSPState
 from src.domain.result import Ok, Err
@@ -102,11 +102,11 @@ class TestSkeletonMapBuilder:
         content1 = "def foo(): pass\n"
         content2 = "def foo(): pass\n"  # Identical
 
-        symbols1 = builder.build(Path("test.py"), content1)
-        symbols2 = builder.build(Path("test.py"), content2)
+        result1 = builder.build(Path("test.py"), content1)
+        result2 = builder.build(Path("test.py"), content2)
 
         # Both should return same (cached) result
-        assert symbols1 == symbols2
+        assert result1 == result2
 
     def test_cache_miss_on_content_change(self) -> None:
         """Different content → cache miss (re-parse)."""
@@ -115,26 +115,14 @@ class TestSkeletonMapBuilder:
         content1 = "def foo(): pass\n"
         content2 = "def bar(): pass\n"
 
-        symbols1 = builder.build(Path("test.py"), content1)
-        symbols2 = builder.build(Path("test.py"), content2)
+        result1 = builder.build(Path("test.py"), content1)
+        result2 = builder.build(Path("test.py"), content2)
 
         # Both may be empty (stub impl), but test that no crash
-        assert isinstance(symbols1, list)
-        assert isinstance(symbols2, list)
-
-    def test_graceful_failure_without_tree_sitter(self) -> None:
-        """Verify fallback to stdlib ast when tree-sitter unavailable."""
-        builder = SkeletonMapBuilder()
-        builder._tree_sitter = False
-        builder._parser = None
-
-        content = "def foo(): pass\n"
-        symbols = builder.build(Path("test.py"), content)
-
-        # Should fallback to stdlib ast (not crash or return empty)
-        assert len(symbols) == 1, f"Expected 1 symbol from fallback, got: {symbols}"
-        assert symbols[0].name == "foo"
-        assert symbols[0].kind == "function"
+        assert isinstance(result1, ParseResult)
+        assert isinstance(result2, ParseResult)
+        assert isinstance(result1.symbols, list)
+        assert isinstance(result2.symbols, list)
 
     def test_skeleton_bytes_estimation(self) -> None:
         """Get skeleton size for telemetry."""

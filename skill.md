@@ -79,6 +79,7 @@ make gate-all            # Full test gate before commit
 - Validando integridad del context pack antes de cambios (ctx validate)
 - Trabajando con AST symbols M1 PRODUCTION (`trifecta ast symbols`)
 - Analizando telemetría del CLI (`trifecta telemetry report/chart/stats`)
+- Gestionando cache de AST persistente (`trifecta ast cache-stats/clear-cache`)
 
 **Triggers to activate:**
 - Entraste al workspace sin leer skill.md + prime + agent + session
@@ -86,6 +87,7 @@ make gate-all            # Full test gate before commit
 - `ctx validate` reporta stale pack
 - Necesitas buscar documentación sin RAG (solo PRIME index)
 - Quieres extraer símbolos de módulos Python sin tree-sitter
+- Necesitas verificar estadísticas de cache de AST o limpiar cache persistente
 
 **⚠️ NO usar (experimental/inmaduro):**
 - `trifecta obsidian` - Integración no aprobada, en desarrollo
@@ -114,6 +116,9 @@ make gate-all            # Full test gate before commit
 | **View telemetry** | `trifecta telemetry report -s . --last 30` |
 | **Generate plan** | `trifecta ctx plan --segment . --task "..."` |
 | **Extract symbols (M1)** | `trifecta ast symbols "sym://python/mod/path"` |
+| **Extract symbols (persist cache)** | `trifecta ast symbols "sym://python/mod/path" --persist-cache` |
+| **View cache stats** | `trifecta ast cache-stats --segment .` |
+| **Clear cache** | `trifecta ast clear-cache --segment .` |
 | **Chart telemetry** | `trifecta telemetry chart -s . --type hits` |
 | **Check git status** | `git status` (before each commit) |
 
@@ -129,6 +134,6 @@ make gate-all            # Full test gate before commit
 | Executing legacy ingestion scripts | Data corruption, duplication | Use `trifecta ctx sync` (official command) |
 
 
-
 ---
-**Profile**: `impl_patch` | **Updated**: 2026-01-05 | **Verified Against**: CLI v2.0, Makefile, session.md 2026-01-04
+
+**Profile**: `impl_patch` | **Updated**: 2026-01-05 | **Verified Against**: CLI v2.0, Makefile, session.md 2026-01-05, AST Cache System v1
