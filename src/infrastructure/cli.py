@@ -315,7 +315,7 @@ def search(
       TRIFECTA_LINT=0/1       Env var to enable/disable globally
       Default: DISABLED (conservative rollout)
 
-    Use --no-lint or TRIFECTA_LINT=1 to enable.
+    To ENABLE linting: omit --no-lint flag or set TRIFECTA_LINT=1
     """
     telemetry = _get_telemetry(segment, telemetry_level)
     start_time = time.time()
