@@ -1,0 +1,3 @@
+**Key:** No new sinks, no new APIs, all existing infrastructure reused. ✅
+
+---

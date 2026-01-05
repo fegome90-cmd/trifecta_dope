@@ -1,0 +1,1 @@
+## 1. Scoop Manifest

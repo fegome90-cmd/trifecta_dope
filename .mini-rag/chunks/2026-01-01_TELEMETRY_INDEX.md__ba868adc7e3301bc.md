@@ -1,0 +1,1 @@
+## 🎯 QUICK REFERENCE BY ROLE

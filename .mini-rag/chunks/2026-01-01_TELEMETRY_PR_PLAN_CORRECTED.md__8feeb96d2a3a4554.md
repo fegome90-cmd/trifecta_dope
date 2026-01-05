@@ -1,0 +1,36 @@
+```python
+    # NEW: AST summary
+    ast_summary = {
+        "ast_parse_count": self.metrics.get("ast_parse_count", 0),
+        "ast_cache_hit_count": self.metrics.get("ast_cache_hit_count", 0),
+        "ast_cache_miss_count": self.metrics.get("ast_cache_miss_count", 0),
+        "ast_cache_hit_rate": round(
+            self.metrics.get("ast_cache_hit_count", 0) /
+            max(self.metrics.get("ast_parse_count", 1), 1),
+            3
+        ),
+    }
+
+    # NEW: LSP summary
+    lsp_summary = {
+        "lsp_spawn_count": self.metrics.get("lsp_spawn_count", 0),
+        "lsp_warming_count": self.metrics.get("lsp_warming_count", 0),
+        "lsp_ready_count": self.metrics.get("lsp_ready_count", 0),
+        "lsp_failed_count": self.metrics.get("lsp_failed_count", 0),
+        "lsp_fallback_count": self.metrics.get("lsp_fallback_count", 0),
+        "lsp_ready_rate": round(
+            self.metrics.get("lsp_ready_count", 0) /
+            max(self.metrics.get("lsp_spawn_count", 1), 1),
+            3
+        ),
+        "lsp_fallback_rate": round(
+            self.metrics.get("lsp_fallback_count", 0) /
+            max(self.metrics.get("lsp_spawn_count", 1), 1),
+            3
+        ),
+    }
+
+    # NEW: File read summary by mode
+    file_read_summary = {
+        "skeleton_bytes": self.metrics.get("file_read_skeleton_bytes_total", 0),
+        "excerpt_bytes": self.metrics.get("file_read_

@@ -1,0 +1,1 @@
+q -r '.errors[0].code // "null"' /tmp/g3_ast.log); echo "G3_AST=$AST_RC"; echo "G3_STATUS=$STATUS"; echo "G3_CODE=$CODE"` | (1) `/tmp/g3_ast.log` (crudo), (2) `G3_AST` (cmd RC), (3) `G3_STATUS`, (4) `G3_CODE` | AP1: jq parse desde archivo (no pipe), AP6: stderr capturado, AP7: code≠FILE_NOT_FOUND=PASS |

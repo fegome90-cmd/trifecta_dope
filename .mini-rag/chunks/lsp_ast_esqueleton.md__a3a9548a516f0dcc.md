@@ -1,0 +1,7 @@
+xto. Segundo, diseñar una arquitectura de referencia que gestione los riesgos inherentes a estas tecnologías: latencia de arranque ("cold start"), consumo de memoria, inconsistencia de estado ("drift") y manejo de errores en código roto ("dirty trees").
+El análisis se basa en una revisión exhaustiva de especificaciones de protocolo, documentación de parsers, implementaciones de referencia en herramientas de vanguardia (como Aider, Lanser-CLI, y Multilspy) y literatura académica reciente sobre análisis de programas para asistencia de IA.
+2. Fundamentos Estructurales: AST y Parsing Incremental
+El Abstract Syntax Tree (AST) constituye la representación fundamental de la estructura del código. A diferencia del código fuente plano (texto), el AST revela la jerarquía lógica: clases que contienen métodos, métodos que contienen sentencias, y sentencias que contienen expresiones. Para un agente, el AST es el mapa topográfico del territorio sobre el que opera.
+2.1 La Supremacía de Tree-sitter en Entornos Lean
+La investigación identifica a Tree-sitter como el estándar de facto para el parsing en herramientas de agentes modernas, superando tanto a las expresiones regulares (frágiles e incapaces de manejar estructuras anidadas) como a los parsers nativos de cada lenguaje (difíciles de orquestar en entornos políglotas).1
+Tree-sitter ofrece tres ventajas críticas que lo hacen indispensable pa

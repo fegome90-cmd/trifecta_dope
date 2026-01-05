@@ -1,0 +1,2 @@
+### Location
+`.github/dependabot.yml`

@@ -1,0 +1,2 @@
+### Idea Original (Usuario)
+"Crear script que se ejecute via CLI cuando se actualice session. Este crea JSONL con entrada de session, con metadata relevante (fecha, hora, tema, tipo: debug/develop/document, paths de archivos usados detectados con post tool use). Script corre en background driven por el agente. Session.md puede crecer cuanto necesite y el CLI query los JSONL para inyectar contexto entregando logs estructurados, no texto."

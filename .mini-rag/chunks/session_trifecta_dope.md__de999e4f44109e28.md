@@ -1,0 +1,15 @@
+## 2026-01-02 17:15 UTC
+- **Summary**: Completed Ola 4.3 through Ola 5 Audit (Final Clean Check).
+- **Changes**:
+  - **Ola 4.3**: Fixed `selector_dsl` URI validation (strict scheme check).
+  - **Ola 4.4**: Fixed `naming_contract` integration test drift (CLI arg update).
+  - **Ola 4.5**: Fixed `t8_2_consistency` telemetry (flush schema + pack_state).
+  - **Ola 4.6**: Fixed `lsp_client_strict` & `repro_counters`:
+      - Formalized **Relaxed READY** contract (`docs/contracts/LSP_RELAXED_READY.md`) with tripwire.
+      - Fixed `test_repro_counters` schema mismatch (metrics_delta -> ast/lsp).
+  - **Ola 5**: Final Compliance Audit.
+      - **Global Status**: MVP Operable (PASS).
+      - **Gates**: Acceptance Default (33/33 PASS), Unit (PASS), Integration (PASS), Roadmap (Isolated).
+- **Evidence**: `docs/auditoria/TRIAGE_REPORT.md` updated.
+- **Next**: Merge fixes, release MVP Candidate.
+- **Pack SHA**: `ec673055b16e9433`

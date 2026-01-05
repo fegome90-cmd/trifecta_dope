@@ -1,0 +1,1 @@
+## Separación Semántica: Namespace Convention

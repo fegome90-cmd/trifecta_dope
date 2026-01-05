@@ -1,0 +1,1 @@
+## C) SSOT / Duplicaciones

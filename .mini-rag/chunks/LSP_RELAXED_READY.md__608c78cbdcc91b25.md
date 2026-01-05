@@ -1,0 +1,1 @@
+# LSP Relaxed READY Contract

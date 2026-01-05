@@ -1,0 +1,2 @@
+mantic Code Indexing with AST and Tree-sitter for AI Agents (Part — 1 of 3) - Medium, acceso: diciembre 31, 2025, https://medium.com/@email2dineshkuppan/semantic-code-indexing-with-ast-and-tree-sitter-for-ai-agents-part-1-of-3-eb5237ba687a
+Building a LSP Server Using Python | by Rahul V Ramesh - Medium, acceso: diciembre 31, 2025, https://rahulvramesh.medium.com/building-a-lsp-server-using-python-35c161dfafb4
