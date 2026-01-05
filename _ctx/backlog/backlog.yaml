@@ -1,3 +1,23 @@
 version: 1
 generated_at: "2026-01-05"
-epics: []
+x_curated_at: "2026-01-05T18:20:00Z"
+epics:
+  - id: E-0001
+    title: "Central telefónica / ContextRuntime"
+    priority: P0
+    outcome: "Zero-hit rate < 20% con evidencia reproducible (dataset + runner + reporte)"
+    owner: "you"
+    status: active
+    dependencies: []
+    risks:
+      - "Overengineering: convertir heurísticas simples en un motor complejo"
+      - "Tests frágiles basados en strings de salida"
+      - "Doble fuente de verdad para repo_root/segment_root"
+      - "Mezclar configs del linter con aliases del expander (_ctx vs configs)"
+    wo_queue:
+      - WO-0001
+      - WO-0002
+      - WO-0003
+      - WO-0004
+      - WO-0005
+      - WO-0006
