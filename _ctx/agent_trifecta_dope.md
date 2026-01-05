@@ -38,7 +38,7 @@ package_manager: uv
 - pytest>=7.0 (Testing Framework)
 - pytest-cov (Coverage)
 - ruff (Linting/Formatting)
-- mypy (Static Types)
+- pyrefly (Static Types - Migrated from Mypy)
 - pyright==1.1.407 (Type Checker)
 - bandit[toml]>=1.7.0 (Security Scanner)
 - safety>=2.0.0 (Dependency Vulnerability Scanner)
@@ -166,7 +166,7 @@ LSP_DAEMON_TTL_SEC=180  # Default
 | **Full Gate** | `make gate-all` | Unit + Integration + Acceptance (Fast) |
 | **Audit** | `make audit` | Gate completo + validación de skips |
 | **Lint** | `uv run ruff check .` | Calidad de código |
-| **Type** | `uv run mypy src/` | Integridad de tipos |
+| **Type** | `uv run pyrefly check` | Integridad de tipos |
 | **Context** | `make ctx-sync` | Sincronizar context pack |
 
 ## Active Features (Verified 2026-01-04)

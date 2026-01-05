@@ -42,3 +42,13 @@ skills/third_party/
 _ctx/telemetry/
 tmp_*
 _ctx/generated/
+
+# Demo/testing workspaces
+tests/fixtures/demo_workspace/.trifecta/_ctx/telemetry/
+
+# Packaging and distribution
+packaging/scoop/.venv/
+packaging/scoop/dist/
+
+# Debug scripts (already in scripts/)
+scripts/debug/.venv/

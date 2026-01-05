@@ -14,7 +14,7 @@ This implementation includes:
 ## 1. Scoop Manifest
 
 ### Location
-`scoop/trifecta.json`
+`packaging/scoop/trifecta.json`
 
 ### Purpose
 Provides a standardized way to install Trifecta on Windows systems using the Scoop package manager.

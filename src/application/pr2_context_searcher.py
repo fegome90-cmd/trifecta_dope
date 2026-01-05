@@ -7,7 +7,7 @@ This is the main entry point for CLI integration (ctx.search, ctx.get).
 import threading
 from pathlib import Path
 from time import perf_counter_ns
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 from src.infrastructure.telemetry import Telemetry
 from src.application.ast_parser import SkeletonMapBuilder
@@ -19,6 +19,9 @@ from src.application.telemetry_pr2 import (
     FileTelemetry,
     LSPTelemetry,
 )
+
+if TYPE_CHECKING:
+    from src.domain.ast_cache import AstCache
 
 __all__ = ["PR2ContextSearcher"]
 
@@ -40,6 +43,7 @@ class PR2ContextSearcher:
         workspace_root: Path,
         tel: Telemetry,
         lsp_enabled: bool = False,
+        cache: Optional["AstCache"] = None,
     ) -> None:
         """
         Initialize searcher.
@@ -48,12 +52,19 @@ class PR2ContextSearcher:
             workspace_root: Root directory of workspace
             tel: Telemetry instance (from PR#1)
             lsp_enabled: If True, spawn Pyright LSP in background
+            cache: Instancia de AstCache (opcional, usa InMemoryLRUCache por defecto)
         """
         self.workspace_root = workspace_root
         self.tel = tel
 
+        # Initialize cache (DI)
+        if cache is None:
+            from src.domain.ast_cache import InMemoryLRUCache
+            cache = InMemoryLRUCache(max_entries=10000, max_bytes=100 * 1024 * 1024)
+        self.cache = cache
+
         # Initialize components
-        self.ast_builder = SkeletonMapBuilder()
+        self.ast_builder = SkeletonMapBuilder(cache=self.cache, segment_id=str(workspace_root))
         self.selector = SymbolResolver(self.ast_builder)
         self.lsp_manager = LSPManager(workspace_root, enabled=lsp_enabled)
 
@@ -111,17 +122,26 @@ class PR2ContextSearcher:
         if isinstance(resolve_result, Err):
             return None
 
-        result = resolve_result.value
+        candidate = resolve_result.value
+        
+        # Convert Candidate to SymbolResolveResult for telemetry
+        from src.application.symbol_selector import SymbolResolveResult
+        result = SymbolResolveResult(
+            resolved=True,
+            file=candidate.file_rel,
+            start_line=candidate.start_line,
+            end_line=candidate.end_line,
+        )
         self.selector_tel.track_resolve(query, result)
 
-        if not hasattr(result, "file_rel") or not result.file_rel:
+        if not hasattr(candidate, "file_rel") or not candidate.file_rel:
             return None
 
-        # Get file and range from result
-        resolved_file = result.file_rel
+        # Get file and range from candidate
+        resolved_file = candidate.file_rel
 
-        start_line = result.start_line or 0
-        end_line = result.end_line or start_line
+        start_line = candidate.start_line or 0
+        end_line = candidate.end_line or start_line
 
         # Progressive disclosure: return based on mode
         output = {
@@ -172,16 +192,13 @@ class PR2ContextSearcher:
 
         try:
             content = file_path.read_text()
-            symbols = self.ast_builder.build(file_path, content)
-
-            # Register with selector
-            self.selector.add_skeleton(str(file_path), symbols)
+            parse_result = self.ast_builder.build(file_path, content)
 
             # Emit telemetry
             t_end = perf_counter_ns()
             timing_ms = (t_end - t_start) // 1_000_000
 
-            self.ast_tel.track_parse(file_path, content, symbols, cache_hit=False)
+            self.ast_tel.track_parse(file_path, parse_result, parse_ms=timing_ms)
             self.tel.observe("ast.parse", timing_ms)
 
         except Exception:

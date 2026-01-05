@@ -59,8 +59,3 @@ markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "roadmap: marks tests for unimplemented features (run with '-m roadmap')",
 ]
-
-[dependency-groups]
-dev = [
-    "pyrefly>=0.46.3",
-]

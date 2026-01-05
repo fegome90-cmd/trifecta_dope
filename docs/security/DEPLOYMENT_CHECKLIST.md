@@ -5,7 +5,7 @@ This checklist ensures all security improvements are properly deployed and funct
 ## Pre-Deployment Verification
 
 ### 1. Configuration Files
-- [x] Scoop manifest (`scoop/trifecta.json`) is valid JSON
+- [x] Scoop manifest (`packaging/scoop/trifecta.json`) is valid JSON
 - [x] Dependabot config (`.github/dependabot.yml`) is valid YAML
 - [x] CI workflow (`.github/workflows/ci.yml`) is valid YAML
 - [x] Security scan workflow (`.github/workflows/security-scan.yml`) is valid YAML
@@ -15,7 +15,7 @@ This checklist ensures all security improvements are properly deployed and funct
 - [x] `SECURITY.md` created at repository root
 - [x] `docs/SECURITY.md` updated with policy
 - [x] `docs/security/SECURITY_IMPROVEMENTS.md` created
-- [x] `scoop/README.md` created with installation instructions
+- [x] `packaging/scoop/README.md` created with installation instructions
 - [x] Main `README.md` updated with security section
 
 ### 3. Code Quality
@@ -73,7 +73,7 @@ This checklist ensures all security improvements are properly deployed and funct
 ### Local Testing
 ```bash
 # Validate configurations
-python -m json.tool scoop/trifecta.json
+python -m json.tool packaging/scoop/trifecta.json
 python -c "import yaml; yaml.safe_load(open('.github/dependabot.yml'))"
 
 # Run tests

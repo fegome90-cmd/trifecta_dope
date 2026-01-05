@@ -7,9 +7,10 @@ All extras go under payload["x"] namespace.
 
 from pathlib import Path
 from typing import Optional
+import json
 
 from src.infrastructure.telemetry import Telemetry
-from src.application.ast_parser import SkeletonMapBuilder, SymbolInfo
+from src.application.ast_parser import SkeletonMapBuilder, ParseResult
 from src.application.symbol_selector import SymbolQuery, SymbolResolveResult
 from src.application.lsp_manager import LSPState
 
@@ -32,46 +33,50 @@ class ASTTelemetry:
     def track_parse(
         self,
         file_path: Path,
-        content: str,
-        symbols: list[SymbolInfo],
-        cache_hit: bool,
+        parse_result: ParseResult,
+        parse_ms: int = 0,
     ) -> None:
         """
         Emit ast.parse event.
 
         Args:
             file_path: File being parsed (logged as relative path)
-            content: Source code
-            symbols: Extracted symbols
-            cache_hit: True if from cache
+            parse_result: Resultado del parseo (ParseResult)
+            parse_ms: Tiempo de parseo en milisegundos
         """
-        import hashlib
+        # Calcular metadatos (NO incluir contenido crudo)
+        symbols_count = len(parse_result.symbols)
+        cache_key = parse_result.cache_key
+        cache_status = parse_result.status
+        
+        # Calcular tamaño del skeleton usando to_dict()
+        skeleton_bytes = len(json.dumps([s.to_dict() for s in parse_result.symbols]))
 
-        content_hash = hashlib.sha256(content.encode()).hexdigest()[:8]
-        skeleton_bytes = self.ast_counter.get_skeleton_bytes(symbols)
-
-        # Emit event with extras under x
+        # Emit event con metadatos seguros
         self.tel.event(
             cmd="ast.parse",
             args={"file": str(file_path)},
             result={
                 "status": "ok",
-                "symbols_count": len(symbols),
+                "symbols_count": symbols_count,
             },
-            timing_ms=0,  # Caller should measure actual timing
-            # Extras under x namespace
+            timing_ms=parse_ms,
+            # Metadatos seguros (sin contenido crudo)
             file=str(file_path),
-            content_sha8=content_hash,
+            cache_key=cache_key,
+            cache_status=cache_status,
+            symbols_count=symbols_count,
             skeleton_bytes=skeleton_bytes,
-            cache_hit=cache_hit,
         )
 
         # Increment counters
         self.tel.incr("ast_parse_count", 1)
-        if cache_hit:
+        if cache_status == "hit":
             self.tel.incr("ast_cache_hit_count", 1)
-        else:
+        elif cache_status == "miss":
             self.tel.incr("ast_cache_miss_count", 1)
+        elif cache_status == "error":
+            self.tel.incr("ast_cache_error_count", 1)
 
 
 class SelectorTelemetry:
@@ -88,21 +93,26 @@ class SelectorTelemetry:
     ) -> None:
         """
         Emit selector.resolve event.
-
+        
         Args:
             query: Parsed sym:// query
             result: Resolution result
         """
+        # Build query string from SymbolQuery
+        query_str = f"sym://python/{query.path}"
+        if query.member:
+            query_str += f"#{query.member}"
+        
         self.tel.event(
             cmd="selector.resolve",
-            args={"query": query.raw},
+            args={"query": query_str},
             result={
                 "status": "ok" if result.resolved else "not_resolved",
                 "resolved": result.resolved,
             },
             timing_ms=0,  # Caller should measure
             # Extras under x
-            symbol_query=query.qualified_name,
+            symbol_query=query_str,
             resolved=result.resolved,
             matches=result.matches,
             ambiguous=result.ambiguous,
