@@ -17,7 +17,7 @@ dev = [
     "pytest>=7.0",
     "pytest-cov",
     "ruff",
-    "mypy",
+    "pyrefly",
     "pyright==1.1.407",
     "bandit[toml]>=1.7.0",  # Security scanner with TOML config support
     "safety>=2.0.0",  # Dependency vulnerability scanner
@@ -50,10 +50,6 @@ packages = ["src"]
 line-length = 100
 target-version = "py312"
 
-[tool.mypy]
-python_version = "3.12"
-strict = true
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "test_*.py"
@@ -62,4 +58,9 @@ addopts = "--ignore=tests/roadmap"
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "roadmap: marks tests for unimplemented features (run with '-m roadmap')",
+]
+
+[dependency-groups]
+dev = [
+    "pyrefly>=0.46.3",
 ]
