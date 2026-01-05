@@ -1,5 +1,25 @@
 import copy
+from typing import TypedDict
 from src.domain.anchor_extractor import extract_anchors
+
+
+class LinterChanges(TypedDict):
+    """Type for linter changes structure."""
+    added_strong: list[str]
+    added_weak: list[str]
+    reasons: list[str]
+
+
+class LinterPlan(TypedDict):
+    """Type for linter plan returned by lint_query."""
+    original_query: str
+    query_class: str
+    token_count: int
+    anchors_detected: dict
+    expanded_query: str
+    changed: bool
+    changes: LinterChanges
+
 
 def classify_query(query: str, anchors_cfg: dict, aliases_cfg: dict) -> dict:
     """
@@ -105,9 +125,19 @@ def expand_query(query: str, analysis: dict, anchors_cfg: dict) -> dict:
         "reasons": reasons
     }
 
-def lint_query(query: str, anchors_cfg: dict, aliases_cfg: dict) -> dict:
+def lint_query(query: str, anchors_cfg: dict, aliases_cfg: dict) -> LinterPlan:
     """
     Orquesta clasificación y expansión para producir un plan auditable.
+
+    Returns:
+        LinterPlan with structure:
+        - original_query: The original query string
+        - query_class: "vague" | "semi" | "guided"
+        - token_count: Number of tokens in query
+        - anchors_detected: Dict with strong/weak/aliases_matched lists
+        - expanded_query: Final query (may be expanded or original)
+        - changed: True if query was expanded
+        - changes: Dict with added_strong, added_weak, reasons lists
     """
     analysis = classify_query(query, anchors_cfg, aliases_cfg)
     
@@ -117,7 +147,7 @@ def lint_query(query: str, anchors_cfg: dict, aliases_cfg: dict) -> dict:
         expansion = expand_query(query, analysis, anchors_cfg)
         expanded_query = expansion["expanded_query"]
         changed = expanded_query != query
-        changes = {
+        changes: LinterChanges = {
             "added_strong": expansion["added_strong"],
             "added_weak": expansion["added_weak"],
             "reasons": expansion["reasons"]
@@ -125,7 +155,7 @@ def lint_query(query: str, anchors_cfg: dict, aliases_cfg: dict) -> dict:
     else:
         expanded_query = query
         changed = False
-        changes = {
+        changes: LinterChanges = {
             "added_strong": [],
             "added_weak": [],
             "reasons": []

@@ -6,6 +6,7 @@ from typing import Any, Literal, Optional
 
 from src.application.context_service import ContextService, GetResult
 from src.infrastructure.file_system import FileSystemAdapter
+from src.domain.query_linter import LinterPlan
 
 
 class SearchUseCase:
@@ -54,18 +55,23 @@ class SearchUseCase:
             anchors_cfg = ConfigLoader.load_anchors(repo_root)
             aliases_cfg = ConfigLoader.load_linter_aliases(repo_root)
 
-            lint_plan = lint_query(normalized_query, anchors_cfg, aliases_cfg)
+            lint_plan: LinterPlan = lint_query(normalized_query, anchors_cfg, aliases_cfg)
 
             # If config missing, force disabled state
             if anchors_cfg.get("_missing_config") or aliases_cfg.get("_missing_config"):
                 lint_plan["query_class"] = "disabled_missing_config"
                 lint_plan["changed"] = False
+                lint_plan["changes"] = {"added_strong": [], "added_weak": [], "reasons": []}
                 query_for_expander = normalized_query
             else:
                 query_for_expander = lint_plan["expanded_query"] if lint_plan["changed"] else normalized_query
         else:
-            lint_plan = {
+            lint_plan: LinterPlan = {
+                "original_query": normalized_query,
                 "query_class": "disabled",
+                "token_count": 0,
+                "anchors_detected": {"strong": [], "weak": [], "aliases_matched": []},
+                "expanded_query": normalized_query,
                 "changed": False,
                 "changes": {"added_strong": [], "added_weak": [], "reasons": []}
             }
@@ -105,9 +111,9 @@ class SearchUseCase:
         linter_meta = {
             "linter_query_class": lint_plan["query_class"],
             "linter_expanded": lint_plan["changed"],
-            "linter_added_strong_count": len(lint_plan.get("changes", {}).get("added_strong", [])),
-            "linter_added_weak_count": len(lint_plan.get("changes", {}).get("added_weak", [])),
-            "linter_reasons": lint_plan.get("changes", {}).get("reasons", [])[:3],  # Max 3 reasons
+            "linter_added_strong_count": len(lint_plan["changes"]["added_strong"]),
+            "linter_added_weak_count": len(lint_plan["changes"]["added_weak"]),
+            "linter_reasons": lint_plan["changes"]["reasons"][:3],  # Max 3 reasons
         }
 
         # Record telemetry
