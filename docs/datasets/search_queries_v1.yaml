@@ -1,0 +1,129 @@
+# Search Queries Dataset v1
+# Format: id, class (vague/semi/guided), query, notes
+
+queries:
+  # --- VAGUE (<=2 tokens, 0 anchors) ---
+  - id: q01
+    class: vague
+    query: "telemetry"
+    notes: "Single token, broad topic"
+  - id: q02
+    class: vague
+    query: "config"
+    notes: "Single token, ambiguous target"
+  - id: q03
+    class: vague
+    query: "search"
+    notes: "Core domain concept but vague intent"
+  - id: q04
+    class: vague
+    query: "error"
+    notes: "Could mean error handling or error logs"
+  - id: q05
+    class: vague
+    query: "test"
+    notes: "Broad scope (unit, integration, gate?)"
+  - id: q06
+    class: vague
+    query: "plan"
+    notes: "Could refer to ctx plan or project plan"
+  - id: q07
+    class: vague
+    query: "agent"
+    notes: "Ambiguous: agent.md or agent concept?"
+  - id: q08
+    class: vague
+    query: "stats"
+    notes: "StatsUseCase or telemetry stats?"
+  - id: q09
+    class: vague
+    query: "build"
+    notes: "Build process or build command?"
+  - id: q10
+    class: vague
+    query: "audit"
+    notes: "Audit report or audit process?"
+
+  # --- SEMI (3-5 tokens, 1 anchor) ---
+  - id: q11
+    class: semi
+    query: "telemetry configuration env"
+    notes: "Anchor: telemetry"
+  - id: q12
+    class: semi
+    query: "how to create segment"
+    notes: "Anchor: create segment"
+  - id: q13
+    class: semi
+    query: "search command logic"
+    notes: "Anchor: search command"
+  - id: q14
+    class: semi
+    query: "context pack validation"
+    notes: "Anchor: context pack"
+  - id: q15
+    class: semi
+    query: "legacy scan manifest"
+    notes: "Anchor: legacy scan"
+  - id: q16
+    class: semi
+    query: "session append log"
+    notes: "Anchor: session append"
+  - id: q17
+    class: semi
+    query: "lsp daemon status"
+    notes: "Anchor: lsp daemon"
+  - id: q18
+    class: semi
+    query: "prime file missing"
+    notes: "Anchor: prime file"
+  - id: q19
+    class: semi
+    query: "token budget estimate"
+    notes: "Anchor: token budget"
+  - id: q20
+    class: semi
+    query: "obsidian sync config"
+    notes: "Anchor: obsidian sync"
+
+  # --- GUIDED (5-10 tokens, >=2 anchors) ---
+  - id: q21
+    class: guided
+    query: "implement StatsUseCase in application layer"
+    notes: "Anchors: StatsUseCase, application"
+  - id: q22
+    class: guided
+    query: "fix SEGMENT_NOT_INITIALIZED error in cli.py"
+    notes: "Anchors: SEGMENT_NOT_INITIALIZED, cli.py"
+  - id: q23
+    class: guided
+    query: "validate context_pack.json schema version 1"
+    notes: "Anchors: context_pack.json, schema"
+  - id: q24
+    class: guided
+    query: "refactor QueryExpander in query_expander.py"
+    notes: "Anchors: QueryExpander, query_expander.py"
+  - id: q25
+    class: guided
+    query: "telemetry event schema in docs/telemetry_event_schema.md"
+    notes: "Anchors: telemetry event schema, docs"
+  - id: q26
+    class: guided
+    query: "run make gate-all for pre-commit verification"
+    notes: "Anchors: make gate-all, pre-commit"
+  - id: q27
+    class: guided
+    query: "check ContextService.search method in context_service.py"
+    notes: "Anchors: ContextService.search, context_service.py"
+  - id: q28
+    class: guided
+    query: "update aliases.yaml for router v1 support"
+    notes: "Anchors: aliases.yaml, router v1"
+  - id: q29
+    class: guided
+    query: "debug lsp_client.py connection timeout logic"
+    notes: "Anchors: lsp_client.py, timeout"
+  - id: q30
+    class: guided
+    query: "chart telemetry hits using telemetry_charts.py"
+    notes: "Anchors: telemetry hits, telemetry_charts.py"

@@ -1,0 +1,33 @@
+aliases:
+  - phrase: "session persistence"
+    add_anchors: ["session.md", "session append"]
+  - phrase: "ciclo search-get"
+    add_anchors: ["ctx search", "ctx get"]
+  - phrase: "persistencia de sesión"
+    add_anchors: ["session.md", "session append"]
+  - phrase: "cómo usar session"
+    add_anchors: ["session.md", "session append"]
+  - phrase: "documentación de session"
+    add_anchors: ["session.md", "doc"]
+  - phrase: "protocolo de sesión"
+    add_anchors: ["session.md", "protocolo"]
+  - phrase: "crear segmento"
+    add_anchors: ["trifecta create", "segment"]
+  - phrase: "validar contexto"
+    add_anchors: ["ctx validate", "context pack"]
+  - phrase: "reporte de telemetría"
+    add_anchors: ["telemetry report", "telemetry"]
+  - phrase: "error de inicialización"
+    add_anchors: ["segment_not_initialized", "error card"]
+  - phrase: "configurar obsidian"
+    add_anchors: ["obsidian config", "obsidian"]
+  - phrase: "sincronizar contexto"
+    add_anchors: ["ctx sync", "build"]
+  - phrase: "legacy scan"
+    add_anchors: ["legacy", "manifest"]
+  - phrase: "context pack format"
+    add_anchors: ["context_pack.json", "schema"]
+  - phrase: "token usage"
+    add_anchors: ["token budget", "usage"]
+  - phrase: "agregar evidencia"
+    add_anchors: ["session append", "evidence"]

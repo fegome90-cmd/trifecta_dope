@@ -1,0 +1,34 @@
+{
+  "timestamp": "2026-01-05T04:04:32.504659",
+  "total_queries": 30,
+  "overall": {
+    "hit_rate": 0.4666666666666667,
+    "zero_hits": 16
+  },
+  "by_type": {
+    "vaga": {
+      "count": 10,
+      "hit_rate": 0.2,
+      "zero_hits": 8,
+      "zero_hit_pct": 80.0,
+      "avg_top_k_diversity": 0.3,
+      "anchor_presence_rate": 0
+    },
+    "semi": {
+      "count": 10,
+      "hit_rate": 0.5,
+      "zero_hits": 5,
+      "zero_hit_pct": 50.0,
+      "avg_top_k_diversity": 1.1,
+      "anchor_presence_rate": 0.3
+    },
+    "guiada": {
+      "count": 10,
+      "hit_rate": 0.7,
+      "zero_hits": 3,
+      "zero_hit_pct": 30.0,
+      "avg_top_k_diversity": 0.9,
+      "anchor_presence_rate": 0.0
+    }
+  }
+}

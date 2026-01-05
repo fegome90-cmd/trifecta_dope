@@ -1,0 +1,23 @@
+{
+  "total": 30,
+  "by_class": {
+    "vague": {
+      "count": 10,
+      "hit_rate": 0.2,
+      "avg_hits": 0.3,
+      "unique_paths_avg": 0.3
+    },
+    "semi": {
+      "count": 10,
+      "hit_rate": 0.5,
+      "avg_hits": 1.1,
+      "unique_paths_avg": 1.0
+    },
+    "guided": {
+      "count": 10,
+      "hit_rate": 0.7,
+      "avg_hits": 0.9,
+      "unique_paths_avg": 0.8
+    }
+  }
+}
