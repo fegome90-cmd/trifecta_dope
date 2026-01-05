@@ -5,8 +5,6 @@ description: Use when working on Verification
 ## Overview
 Verification
 
-**Ubicación**: `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/`
-
 ## ⚠️ ONBOARDING OBLIGATORIO ⚠️
 
 1. **skill.md** (este archivo) - Reglas y roles
@@ -17,32 +15,80 @@ Verification
 > NO ejecutes código ni hagas cambios sin leer los 4 archivos.
 
 ## Core Rules
-1. **Sync First**: Valida `.env` antes de cambios
-2. **Test Locally**: Tests del segmento antes de commit
-3. **Read Before Write**: Lee código antes de modificar
-4. **Document**: Actualiza `session_..md`
 
-### Session Evidence Protocol
+1. **make install** - Siempre comienza con `make install` para sincronizar dependencias
 
-1. **Persist**: `trifecta session append --segment . --summary "<task>"`
-2. **Sync**: `trifecta ctx sync --segment .`
-3. **Execute**: `ctx search` → `ctx get`
-4. **Record**: `trifecta session append --segment . --summary "Completed <task>"`
+2. **Search → Get (Con Instrucciones, NO Keywords)**
+   
+   ❌ **MAL (keyword):**
+   ```bash
+   trifecta ctx search --segment . --query "telemetry" --limit 6
+   ```
+   
+   ✅ **BIEN (instrucción):**
+   ```bash
+   trifecta ctx search --segment . \
+     --query "Encuentra documentación sobre cómo implementar el sistema de telemetría con event schema y ejemplos de uso" \
+     --limit 6
+   ```
+   
+   Luego: `trifecta ctx get --segment . --ids "id1,id2" --mode excerpt --budget-token-est 900`
 
-> Ver [agent.md](./_ctx/agent_trifecta_dope.md) para comandos completos y protocolos detallados.
+3. **Log Evidence** - Registra en `session.md` vía `trifecta session append --segment . --summary "..."`
 
-Prohibido:
-- YAML de historial largo
-- rutas absolutas fuera del segmento
-- ejecutar scripts legacy de ingestion
-- "fallback silencioso"
-- continuar con pack stale
+4. **Test Gates** - Antes de commit: `make gate-all` (Unit + Integration + Acceptance fast)
+
+5. **No Silent Fallback** - Si `ctx validate` falla: STOP → `make ctx-sync` → re-validate
+
+> ⚠️ Violaciones críticas: YAML long history, rutas absolutas, scripts legacy, fallback silencioso, pack stale
+
+### Session Evidence Protocol (The 4-Step Cycle)
+
+```bash
+# 1. PERSIST intent
+trifecta session append --segment . --summary "<what you'll do>" \
+  --files "file1.py,file2.md" --commands "ctx search,ctx get"
+
+# 2. SEARCH with instruction (not keyword)
+trifecta ctx search --segment . \
+  --query "Find documentation about how to implement the session persistence protocol" \
+  --limit 6
+
+# 3. GET excerpt to confirm relevance
+trifecta ctx get --segment . --ids "id1,id2" --mode excerpt --budget-token-est 900
+
+# 4. RECORD result
+trifecta session append --segment . --summary "Completed: found and reviewed context"
+```
+
+Or use **Makefile shortcuts**:
+```bash
+make install              # Sync dependencies
+make ctx-search Q="instruction" SEGMENT=.
+make ctx-sync SEGMENT=.
+make gate-all            # Full test gate before commit
+```
 
 ## When to Use
 
-- Cuando necesites sincronizar o validar el contexto de un segmento.
-- Al realizar un handoff entre sesiones (registrar en `session.md`).
-- Para buscar información específica en el pack de contexto sin cargar archivos completos.
+**Use skill.md when:**
+- Necesitas sincronizar contexto de un segmento (vía Trifecta CLI)
+- Implementando cambios en código/docs del segmento
+- Realizando handoff entre sesiones (log en session.md)
+- Buscando info específica sin cargar archivos completos (ctx search → ctx get)
+- Validando integridad del context pack antes de cambios (ctx validate)
+- Trabajando con AST symbols M1 PRODUCTION (`trifecta ast symbols`)
+- Analizando telemetría del CLI (`trifecta telemetry report/chart/stats`)
+
+**Triggers to activate:**
+- Entraste al workspace sin leer skill.md + prime + agent + session
+- El CLI falla con "SEGMENT_NOT_INITIALIZED" Error Card
+- `ctx validate` reporta stale pack
+- Necesitas buscar documentación sin RAG (solo PRIME index)
+- Quieres extraer símbolos de módulos Python sin tree-sitter
+
+**⚠️ NO usar (experimental/inmaduro):**
+- `trifecta obsidian` - Integración no aprobada, en desarrollo
 
 ## Core Pattern
 
@@ -56,14 +102,33 @@ Prohibido:
 > [!IMPORTANT]
 > **Todo** cambio significativo o comando ejecutado **DEBE** ser registrado en `session.md` para mantener la continuidad del agente. Sin esto, el sistema Trifecta es solo un CLI; la persistencia es lo que permite la colaboración multi-agente funcional.
 
+## Quick Reference
+
+| Task | Command |
+|------|---------|
+| **Install deps** | `make install` |
+| **Search docs** | `make ctx-search Q="instruction" SEGMENT=.` |
+| **Sync context** | `make ctx-sync SEGMENT=.` |
+| **Run tests** | `make gate-all` |
+| **Full validation** | `trifecta ctx validate --segment .` |
+| **View telemetry** | `trifecta telemetry report -s . --last 30` |
+| **Generate plan** | `trifecta ctx plan --segment . --task "..."` |
+| **Extract symbols (M1)** | `trifecta ast symbols "sym://python/mod/path"` |
+| **Chart telemetry** | `trifecta telemetry chart -s . --type hits` |
+| **Check git status** | `git status` (before each commit) |
+
 ## Common Mistakes
 
-- **Indexar código**: El pack es para DOCS (`.md`). El código se accede vía prime links.
-- **Ignorar validaciones**: Continuar si `ctx validate` falla es una violación crítica.
-- **Presupuesto excedido**: Intentar cargar más de 1200 tokens en un solo turno degrada la atención del agente.
-- **Rutas absolutas**: Siempre usa rutas relativas al segmento o al repo root.
+| Mistake | Why Bad | Fix |
+|---------|---------|-----|
+| Using keywords instead of instructions | Produce noise/zero-hits | Use `--query "Find documentation about how to implement X"` |
+| Exceeding token budget in single ctx.get | Degrades agent attention | Use `--mode excerpt` + budget ~900 tokens max |
+| Absolute paths in commands | Not portable, breaks on different machines | Use relative paths or `SEGMENT=.` |
+| Ignoring ctx validate failures | Pack may be stale/corrupted | STOP → `make ctx-sync` → re-validate |
+| Skipping session.md logging | Lose continuity between agent runs | Always `trifecta session append` after significant work |
+| Executing legacy ingestion scripts | Data corruption, duplication | Use `trifecta ctx sync` (official command) |
 
 
 
 ---
-**Profile**: `impl_patch` | **Updated**: 2025-12-29
+**Profile**: `impl_patch` | **Updated**: 2026-01-05 | **Verified Against**: CLI v2.0, Makefile, session.md 2026-01-04
