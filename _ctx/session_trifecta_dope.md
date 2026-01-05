@@ -463,3 +463,14 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Commands**: make gate-all
 - **Pack SHA**: `7f7ca90fb803bf9e`
 
+## 2026-01-05 13:26 UTC
+- **Summary**: Injecting context about Trifecta CLI architecture and features using ctx search/get cycle
+- **Files**: skill.md, prime_trifecta_dope.md, agent_trifecta_dope.md
+- **Commands**: make install, trifecta session append
+- **Pack SHA**: `7f7ca90fb803bf9e`
+
+## 2026-01-05 13:26 UTC
+- **Summary**: Completed: LSP daemon architecture confirmed (UNIX socket IPC, 180s TTL), AST symbols M1 PRODUCTION ready, CLI workflow validated
+- **Commands**: make install, trifecta session append, trifecta ctx sync, trifecta ctx search, trifecta ctx get
+- **Pack SHA**: `f8c6d49dade52da7`
+
