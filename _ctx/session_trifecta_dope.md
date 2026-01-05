@@ -474,3 +474,60 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Commands**: make install, trifecta session append, trifecta ctx sync, trifecta ctx search, trifecta ctx get
 - **Pack SHA**: `f8c6d49dade52da7`
 
+
+## 2026-01-05 14:15 UTC - AST Cache Persist-Cache Fix COMPLETE
+- **Segment**: trifecta_dope
+- **Objective**: Fix critical P0 bug: `--persist-cache` crash (TypeError: SymbolInfo serialization)
+- **Plan**: SCOOP P0 investigation → Emergency fix → Audit-grade merge preparation
+- **Phase 1 - Fix Implementation**:
+  - Fixed SQLiteCache serialization (SymbolInfo → dict via to_dict())
+  - Fixed ast_parser rehydration (dict → SymbolInfo after cache.get())
+  - Collateral fix: _evict_if_needed None handling for empty DB
+  - Created 2 unit tests (test_ast_cache_persist_fix.py)
+- **Phase 2 - Audit & Merge Preparation**:
+  - SCOOP P0 documentation (scoop_ast_cache_serialization.md)
+  - Audit-grade report (merge_readiness_ast_cache_audit_grade.md)
+  - Privacy-first policy (<REDACTED> in docs, exact in logs)
+  - Bash-portable commands (no fish syntax)
+  - Zero-glob enforcement (globs only in find commands)
+- **Phase 3 - Evidence Freezing**:
+  - Created scripts/verify_audit_grade_report.sh (tripwire)
+  - Froze 7 logs in docs/reports/artifacts/ast_cache_persist/
+  - Checksums verified (SHA-256)
+  - Tripwire honesty proof (PASS + FAIL logs)
+- **Files Modified**:
+  - Code: src/domain/ast_cache.py, src/application/ast_parser.py (~32 LOC)
+  - Tests: tests/unit/test_ast_cache_persist_fix.py (NEW, 2 tests)
+  - Docs: 8 files (ADR, reports, tech debt, fixtures)
+  - Scripts: verify_audit_grade_report.sh (NEW, executable)
+- **Gates**: ✅ 428 tests passing, ✅ Tripwire PASS, ✅ Fixture correctly rejected
+- **Roadmap Position** (per docs/plans/2026-01-05-ast-cache-fixes-v2.md):
+  - Fase 1: ~70% complete (SQLiteCache ✅, InMemoryLRUCache ✅, NullCache pending)
+  - Problemas resueltos: #4 (LRU eviction) ✅, #5 (Pickle → SQLite) ✅
+  - Pendiente: Fase 1 (30%), Fases 2-4 (DI, telemetry, SkeletonMapBuilder refactor)
+- **Next Session**: Cerrar Fase 1 completa (NullCache + AstCache Protocol formal)
+- **Pack SHA**: a7bde3d (HEAD at session end)
+## 2026-01-05 17:23 UTC
+- **Summary**: Iniciar ciclo de contexto para conocer uso del CLI y flujo del segmento
+- **Files**: trifecta_dope/_ctx/session_trifecta_dope.md
+- **Commands**: ctx search, ctx get
+- **Pack SHA**: `4b5f12529dbe832a`
+
+## 2026-01-05 17:23 UTC
+- **Summary**: Completado ciclo de contexto para uso del CLI; evidencia [session:b51eee61f6]
+- **Files**: trifecta_dope/_ctx/session_trifecta_dope.md
+- **Commands**: ctx search, ctx get
+- **Pack SHA**: `4b5f12529dbe832a`
+
+## 2026-01-05 17:25 UTC
+- **Summary**: Analizar como los anchors afectan la eficiencia de busquedas en el CLI
+- **Files**: trifecta_dope/_ctx/session_trifecta_dope.md
+- **Commands**: ctx search, ctx get
+- **Pack SHA**: `4b5f12529dbe832a`
+
+## 2026-01-05 17:25 UTC
+- **Summary**: Revisado README sobre enfoque de contexto curado; evidencia [ref:trifecta_dope/README.md:c2d9ad0077]
+- **Files**: trifecta_dope/_ctx/session_trifecta_dope.md
+- **Commands**: ctx search, ctx get
+- **Pack SHA**: `4b5f12529dbe832a`
+
