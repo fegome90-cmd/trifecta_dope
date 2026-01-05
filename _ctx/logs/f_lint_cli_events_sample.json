@@ -1,0 +1,64 @@
+{
+  "ts": "2026-01-05T13:54:50-0300",
+  "run_id": "run_1767632090",
+  "segment_id": "6f25e381",
+  "cmd": "ctx.search",
+  "args": {
+    "query_preview": "context",
+    "query_hash": "ea7792a26f405e2a",
+    "query_len": 7,
+    "limit": 3,
+    "alias_expanded": false,
+    "alias_terms_count": 0,
+    "alias_keys_used": [],
+    "linter_query_class": "vague",
+    "linter_expanded": true,
+    "linter_added_strong_count": 2,
+    "linter_added_weak_count": 0,
+    "linter_reasons": [
+      "vague_default_boost"
+    ]
+  },
+  "result": {
+    "hits": 3,
+    "returned_ids": [
+      "agent:ef1f0500d6",
+      "session:71c3fe714b",
+      "ref:trifecta_dope/README.md:c2d9ad0077"
+    ]
+  },
+  "timing_ms": 1,
+  "warnings": [],
+  "x": {}
+}
+{
+  "ts": "2026-01-05T13:54:59-0300",
+  "run_id": "run_1767632099",
+  "segment_id": "6f25e381",
+  "cmd": "ctx.search",
+  "args": {
+    "query_preview": "context",
+    "query_hash": "ea7792a26f405e2a",
+    "query_len": 7,
+    "limit": 3,
+    "alias_expanded": false,
+    "alias_terms_count": 0,
+    "alias_keys_used": [],
+    "linter_query_class": "disabled",
+    "linter_expanded": false,
+    "linter_added_strong_count": 0,
+    "linter_added_weak_count": 0,
+    "linter_reasons": []
+  },
+  "result": {
+    "hits": 3,
+    "returned_ids": [
+      "agent:ef1f0500d6",
+      "session:71c3fe714b",
+      "ref:trifecta_dope/README.md:c2d9ad0077"
+    ]
+  },
+  "timing_ms": 1,
+  "warnings": [],
+  "x": {}
+}

@@ -81,7 +81,24 @@ def test_doc_intent_boost(anchors_cfg, aliases_cfg):
     # In anchors.yaml, "docs" is in weak.intent_terms.
     # My code checked: is_doc_intent = any(t in existing_weak for t in ["doc", "docs", ...])
     # So it should trigger doc_intent_boost
-    
+
     plan = lint_query(query, anchors_cfg, aliases_cfg)
     assert plan["query_class"] == "vague"
     assert "docs/" in plan["changes"]["added_strong"] or "readme.md" in plan["changes"]["added_strong"]
+
+def test_reasons_no_duplicates(anchors_cfg, aliases_cfg):
+    """Verify reasons list has no duplicates after dedupe fix."""
+    query = "help"
+    # VAGUE (1 token) -> should trigger vague_default_boost
+    # Before fix: reasons would be ["vague_default_boost", "vague_default_boost"] if both agent.md and prime.md added
+    # After fix: reasons should be ["vague_default_boost"] (only once)
+
+    plan = lint_query(query, anchors_cfg, aliases_cfg)
+
+    # Check that reasons has no duplicates
+    reasons = plan["changes"]["reasons"]
+    assert len(reasons) == len(set(reasons)), f"Reasons has duplicates: {reasons}"
+
+    # Verify that if vague_default_boost is present, it appears only once
+    if "vague_default_boost" in reasons:
+        assert reasons.count("vague_default_boost") == 1, "vague_default_boost should appear only once"

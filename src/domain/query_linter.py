@@ -97,12 +97,15 @@ def expand_query(query: str, analysis: dict, anchors_cfg: dict) -> dict:
     # pero el mandato dice "limitado".
     if len(added_strong) < 2:
         defaults = ["agent.md", "prime.md"]
+        added_any = False
         for cand in defaults:
             if cand not in existing_strong and cand not in added_strong and len(added_strong) < 2:
                 # Solo añadir si la query es REALMENTE vaga (token count muy bajo)
                 if analysis["token_count"] <= 2:
                     added_strong.append(cand)
-                    reasons.append("vague_default_boost")
+                    added_any = True
+        if added_any:
+            reasons.append("vague_default_boost")
 
     # Construir query expandida
     # Simplemente concatenamos los términos únicos
