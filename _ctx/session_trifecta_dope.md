@@ -567,3 +567,39 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Commands**: ctx search
 - **Pack SHA**: `a969d53df9e63959`
 
+## 2026-01-05 17:31 UTC
+- **Summary**: Usar LSP para buscar el reporte query_linter_cli_verification fuera del context pack
+- **Files**: docs/reports/query_linter_cli_verification.md, _ctx/session_trifecta_dope.md
+- **Commands**: lsp --help, lsp search
+- **Pack SHA**: `d090785154f5924e`
+
+## 2026-01-05 17:31 UTC
+- **Summary**: Inspeccionar comandos disponibles para buscar via LSP
+- **Files**: _ctx/session_trifecta_dope.md
+- **Commands**: trifecta --help
+- **Pack SHA**: `d090785154f5924e`
+
+## 2026-01-05 17:31 UTC
+- **Summary**: Inspeccionar comandos ast para posibles busquedas via LSP
+- **Files**: _ctx/session_trifecta_dope.md
+- **Commands**: trifecta ast --help
+- **Pack SHA**: `d090785154f5924e`
+
+## 2026-01-05 17:31 UTC
+- **Summary**: Inspeccionar comando load por opciones LSP
+- **Files**: _ctx/session_trifecta_dope.md
+- **Commands**: trifecta load --help
+- **Pack SHA**: `d090785154f5924e`
+
+## 2026-01-05 17:32 UTC
+- **Summary**: Inspeccionar ast snippet/hover para capacidades LSP
+- **Files**: _ctx/session_trifecta_dope.md
+- **Commands**: trifecta ast snippet --help, trifecta ast hover --help
+- **Pack SHA**: `d090785154f5924e`
+
+## 2026-01-05 17:32 UTC
+- **Summary**: Inspeccionar codigo LSP para encontrar comando de busqueda
+- **Files**: src/infrastructure/lsp_client.py, src/infrastructure/lsp_daemon.py, _ctx/session_trifecta_dope.md
+- **Commands**: rg lsp
+- **Pack SHA**: `d090785154f5924e`
+
