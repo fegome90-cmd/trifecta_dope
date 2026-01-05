@@ -69,6 +69,27 @@ def _get_telemetry(segment: str, level: str) -> Telemetry:
     return Telemetry(path, level=env_level)
 
 
+def _get_lint_enabled(no_lint_flag: bool) -> bool:
+    """Determine if linting should be enabled based on flag + env var.
+
+    Precedence:
+    1. --no-lint flag = True → disabled
+    2. TRIFECTA_LINT env var = "0" or "false" → disabled
+    3. TRIFECTA_LINT env var = "1" or "true" → enabled
+    4. Default: DISABLED (conservative rollout)
+
+    This allows gradual rollout without breaking existing workflows.
+    """
+    if no_lint_flag:
+        return False
+    env_val = os.environ.get("TRIFECTA_LINT", "").lower()
+    if env_val in ("0", "false", "no"):
+        return False
+    if env_val in ("1", "true", "yes"):
+        return True
+    return False  # Conservative default: OFF until explicitly enabled
+
+
 def _get_dependencies(
     segment: str, telemetry: Optional[Telemetry] = None
 ) -> Tuple[TemplateRenderer, FileSystemAdapter, Optional[Telemetry]]:
@@ -278,8 +299,24 @@ def search(
     segment: str = typer.Option(..., "--segment", "-s", help=HELP_SEGMENT),
     limit: int = typer.Option(5, "--limit", "-l", help="Max results"),
     telemetry_level: str = typer.Option("lite", "--telemetry", help=HELP_TELEMETRY),
+    no_lint: bool = typer.Option(False, "--no-lint", help="Disable query linting (anchor guidance expansion)"),
 ) -> None:
-    """Search for relevant chunks in the Context Pack."""
+    """Search for relevant chunks in the Context Pack.
+
+    Query Processing Pipeline:
+    1. Normalization: lowercase, strip, collapse whitespace
+    2. Linting (optional): anchor-based classification + expansion for vague queries
+    3. Tokenization: tokenize the FINAL query (post-linter)
+    4. Alias Expansion: synonym-based expansion using _ctx/aliases.yaml
+    5. Search: execute weighted search across all terms
+
+    Controls:
+      --no-lint              Disable linting for this search
+      TRIFECTA_LINT=0/1       Env var to enable/disable globally
+      Default: DISABLED (conservative rollout)
+
+    Use --no-lint or TRIFECTA_LINT=1 to enable.
+    """
     telemetry = _get_telemetry(segment, telemetry_level)
     start_time = time.time()
     _, file_system, _ = _get_dependencies(segment, telemetry)
@@ -287,7 +324,9 @@ def search(
     use_case = SearchUseCase(file_system, telemetry)
 
     try:
-        output = use_case.execute(Path(segment).resolve(), query, limit=limit)
+        # Determine if linting should be enabled (conservative default)
+        enable_lint = _get_lint_enabled(no_lint)
+        output = use_case.execute(Path(segment).resolve(), query, limit=limit, enable_lint=enable_lint)
         typer.echo(output)
         telemetry.observe("ctx.search", int((time.time() - start_time) * 1000))
     except Exception as e:
