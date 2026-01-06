@@ -8,37 +8,59 @@ owner: null
 
 scope:
   allow:
-    - "tests/soak/test_ast_cache_soak.py"
-    - "scripts/run_soak.sh"
+    - "eval/scripts/run_ast_cache_soak.sh"
+    - "eval/scripts/extract_ast_soak_metrics.py"
+    - "eval/scripts/gate_ast_soak.py"
+    - "_ctx/metrics/ast_soak_*.json"
+    - "_ctx/logs/wo_p3_0/*.log"
   deny:
     - "src/domain/**"
+    - "tests/soak/**" # No pytest based soak
 
 verify:
   commands:
-    - "bash scripts/run_soak.sh"
-    - "jq -s 'length > 100' _ctx/telemetry/events.jsonl"
+    - "bash eval/scripts/run_ast_cache_soak.sh"
+    - "python eval/scripts/gate_ast_soak.py"
 
 dod_id: DOD-DEFAULT
 
 x_objective: |
-  Obtener evidencia OPERATIVA real (no mock/contract) del AST Cache.
-
-  Metas:
-  - >200 operaciones en ambiente controlado (Soak Test)
-  - Capturar eventos reales: ast.cache.lock_wait > 0
-  - Verificar latencia p95 < 10ms
-  - Confirmar 0 corrupción tras carga
+  Obtener evidencia OPERATIVA real (no contractual) del AST Cache.
+  Foco: hit/miss progression, lock contention, y DB integrity bajo carga (200 ops).
+  Estrategia: Micro-tasks harnessing (no pytest).
 
 x_deliverables:
-  - "Soak test suite (tests/soak/)"
-  - "Telemetry samples (real logs extracted via jq)"
-  - "Performance report (p50/p95 latency)"
+  - "eval/scripts/run_ast_cache_soak.sh (Parametric Harness)"
+  - "eval/scripts/extract_ast_soak_metrics.py (Metrics Extractor)"
+  - "eval/scripts/gate_ast_soak.py (Deterministic Gate)"
+  - "Evidence artifacts (_ctx/metrics/*.json, _ctx/logs/wo_p3_0/*.log)"
 
 x_acceptance_criteria:
-  - "Soak run completa sin errores (exit code 0)"
-  - "Telemetry contiene eventos 'lock_wait' reales"
-  - "DB integrity check pasa post-run"
-  - "Reporte generado en docs/reports/ast_soak_run.md"
+  - "Integrity check == 'ok' post-run"
+  - "Ops completadas >= OPS param"
+  - "Warm hit rate > Cold hit rate (evidencia de cacheo)"
+  - "Lock timeouts <= 1 (tolerancia mínima)"
+  - "NO performance gates (p95 latency es informativo)"
+
+x_micro_tasks:
+  - name: "T1: Read & Anchor (Zero-Code)"
+    gate: "Evidence logs with code citations (grep/sed) for persist/events/paths"
+    commit: "None"
+  - name: "T2: Harness Mínimo"
+    gate: "exit 0 with OPS=10, logs created"
+    commit: "feat(eval): add ast cache soak harness (parametric)"
+  - name: "T3: Extractor Métricas"
+    gate: "JSON valid + counts/latency fields present"
+    commit: "feat(eval): add ast soak metrics extractor"
+  - name: "T4: Gate Determinista"
+    gate: "Script exits 0 (PASS) or 1 (FAIL) correctly based on limits"
+    commit: "test(eval): add deterministic soak gates"
+  - name: "T5: Live Run + Evidence"
+    gate: "gate_ast_soak.py PASS with OPS=200"
+    commit: "feat(eval): record ast soak run P3.0 evidence"
+  - name: "T6: Gobernanza"
+    gate: "git status clean, YAMLs updated"
+    commit: "docs(ast): close WO-P3.0 soak audit-grade"
 
 dependencies:
   - WO-P2.2
