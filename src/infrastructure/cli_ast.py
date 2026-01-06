@@ -7,7 +7,8 @@ from src.infrastructure.telemetry import Telemetry
 from src.domain.result import Ok, Err
 from src.application.symbol_selector import SymbolQuery
 from src.application.ast_parser import SkeletonMapBuilder, ParseResult
-from src.domain.ast_cache import AstCache, InMemoryLRUCache, SQLiteCache
+from src.domain.ast_cache import SQLiteCache
+from src.infrastructure.factories import get_ast_cache
 
 ast_app = typer.Typer(help="AST & Parsing Commands")
 
@@ -25,22 +26,7 @@ def _get_telemetry(level: str = "lite") -> Optional[Telemetry]:
 CACHE_DIR_NAME = ".trifecta"
 
 
-def _get_cache(
-    persist: bool = False,
-    segment_id: str = ".",
-    max_entries: int = 10000,
-    max_bytes: int = 100 * 1024 * 1024,
-) -> AstCache:
-    """Get cache instance based on persistence setting."""
-    if persist:
-        # Use SQLite cache for persistence
-        cache_dir = Path.cwd() / CACHE_DIR_NAME / "cache"
-        cache_dir.mkdir(parents=True, exist_ok=True)
-        db_path = cache_dir / f"ast_cache_{segment_id.replace('/', '_')}.db"
-        return SQLiteCache(db_path=db_path, max_entries=max_entries, max_bytes=max_bytes)
-    else:
-        # Use in-memory cache (ephemeral)
-        return InMemoryLRUCache(max_entries=max_entries, max_bytes=max_bytes)
+# removed local _get_cache in favor of factory
 
 
 @ast_app.command("symbols")
@@ -55,7 +41,7 @@ def symbols(
     """Return symbols from Python modules using AST parsing (M1)."""
     root = Path(segment).resolve()
     telemetry = _get_telemetry(telemetry_level)
-    cache = _get_cache(persist=persist_cache, segment_id=str(root))
+    cache = get_ast_cache(persist=persist_cache, segment_id=str(root))
 
     try:
         # 1. Parse URI

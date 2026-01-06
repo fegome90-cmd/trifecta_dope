@@ -835,3 +835,14 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 **Next Step (Green Plan)**:
 1. Integrar configuración global para habilitar persistencia por defecto (o por entorno).
 2. Validar locking en cargas paralelas (stress test).
+
+## 2026-01-06 15:05 UTC - WO-0005 P1 AST Persistence Wiring
+
+**Objetivo**: Wire 'works when injected' to 'operable via config'.
+
+**Ejecución**:
+- **Factory**: Implementada `get_ast_cache` en `src/infrastructure/factories.py` (Single Source of Truth).
+- **Wiring**: Actualizado `cli_ast.py` y `pr2_context_searcher.py` para usar factory.
+- **E2E Test**: `tests/integration/test_ast_cache_persist_cross_run_cli.py` ✅ PASS. Verifica que `TRIFECTA_AST_PERSIST=1` activa hits en segunda corrida.
+
+**Veredicto**: ✅ PASS.

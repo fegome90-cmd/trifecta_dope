@@ -59,8 +59,10 @@ class PR2ContextSearcher:
 
         # Initialize cache (DI)
         if cache is None:
-            from src.domain.ast_cache import InMemoryLRUCache
-            cache = InMemoryLRUCache(max_entries=10000, max_bytes=100 * 1024 * 1024)
+            # P1 Wiring: Use factory to respect env vars (TRIFECTA_AST_PERSIST)
+            from src.infrastructure.factories import get_ast_cache
+
+            cache = get_ast_cache(segment_id=str(workspace_root))
         self.cache = cache
 
         # Initialize components
@@ -123,9 +125,10 @@ class PR2ContextSearcher:
             return None
 
         candidate = resolve_result.value
-        
+
         # Convert Candidate to SymbolResolveResult for telemetry
         from src.application.symbol_selector import SymbolResolveResult
+
         result = SymbolResolveResult(
             resolved=True,
             file=candidate.file_rel,
