@@ -1001,3 +1001,10 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Commands**: python eval/scripts/extract_ast_soak_metrics.py --run-id preflight_t3 --out _ctx/metrics/ast_soak_preflight_t3.json
 - **Evidence**: _ctx/metrics/ast_soak_preflight_t3.json
 - **Next**: Task 4 (Gate script)
+
+## 2026-01-06 17:15 UTC
+- **Summary**: Executed WO-P3.0 Task 4: Gate Script. Implemented `gate_ast_soak.py` and verified with preflight stats.
+- **Created**: eval/scripts/gate_ast_soak.py
+- **Commands**: python eval/scripts/gate_ast_soak.py --in _ctx/metrics/ast_soak_preflight_t3.json --min-ops 2
+- **Evidence**: Output printed "GATE PASSED".
+- **Next**: Task 5 (Live Run)

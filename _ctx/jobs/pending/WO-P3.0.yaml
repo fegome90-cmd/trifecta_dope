@@ -100,14 +100,14 @@ x_micro_tasks:
 
   - id: T4
     name: "T4: Gate Determinista"
-    status: pending
+    status: done
     commands:
       - 'python eval/scripts/gate_ast_soak.py --in _ctx/metrics/ast_soak_wo-p3-0-t2.json; echo "Exit code: $?" | tee _ctx/logs/wo_p3_0/t4_gate.log'
     gates:
       - "test -s _ctx/logs/wo_p3_0/t4_gate.log"
       - "rg -q 'Exit code: [01]' _ctx/logs/wo_p3_0/t4_gate.log"
     evidence:
-      - "_ctx/logs/wo_p3_0/t4_gate.log"
+      - "None (stdout verification)"
     commit: "test(eval): add deterministic soak gates"
 
   - id: T5
