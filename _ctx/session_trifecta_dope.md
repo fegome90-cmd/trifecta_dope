@@ -705,3 +705,25 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Commands**: ctx search, ctx get
 - **Pack SHA**: `585a973055425ce8`
 
+
+## 2026-01-06 11:00-11:53 UTC - Legacy Backlog Migration + System Modernization
+- **Summary**: Migrated legacy _ctx/blacklog/ to new state-segregated _ctx/jobs/ structure. Closed WO-0008 and WO-0009 with CLI evidence. Updated documentation.
+- **Key Changes**:
+  - Migrated WO-0008/0009 from docs/backlog/legacy/ to _ctx/jobs/done/
+  - Created _ctx/jobs/{pending,running,done,failed}/ directories
+  - Updated work_order.schema.json (added evidence_logs, verified_at_sha)
+  - Prefixed legacy WO fields with x_ for schema compliance
+  - Created DOD-LINTER_AB.yaml (requires schema fix - validation pending)
+- **Documentation**:
+  - CLAUDE.md: Added "Backlog System" section
+  - skill.md: Added backlog quick reference
+  - Single epic registry: _ctx/backlog/backlog.yaml
+- **Commits**:
+  - 604d93c: Migrate WO-0008/0009 to _ctx/jobs/done/
+  - abccec0: Add evidence_logs/verified_at_sha to schema
+  - f0c314c: Update CLAUDE.md with backlog system
+  - ca83b7f: Update skill.md with backlog reference
+  - 1712802: Add DOD-LINTER_AB definition
+- **Validation**: ⚠️ PENDING (DoD schema mismatch - needs fix)
+- **Evidence**: migration_final_summary.md, backlog_analysis.md, epic_organization_analysis.md
+- **Status**: Migration complete, validation blocked on DoD schema compliance

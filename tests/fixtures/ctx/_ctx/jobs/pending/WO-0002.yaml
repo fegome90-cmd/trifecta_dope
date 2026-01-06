@@ -1,0 +1,18 @@
+version: 1
+id: WO-0002
+epic_id: E-0001
+title: "Legacy WO"
+priority: P1
+status: pending
+owner: null
+branch: null
+worktree: null
+scope:
+  allow:
+    - "src/**"
+  deny:
+    - ".env*"
+verify:
+  commands:
+    - "scripts/verify.sh"
+dod_id: DOD-LEGACY

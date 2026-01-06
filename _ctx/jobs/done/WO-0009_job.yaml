@@ -6,6 +6,7 @@ priority: P0
 status: done
 dod_id: DOD-REPRODUCIBILITY
 owner: null
+x_legacy: true
 x_branch: "job/WO-0009-sync-repo-content"
 x_worktree: "../wt-WO-0009"
 

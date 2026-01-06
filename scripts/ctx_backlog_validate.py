@@ -59,7 +59,7 @@ def iter_dod_files(root: Path):
     dod_dir = root / "_ctx" / "dod"
     if not dod_dir.exists():
         return []
-    return sorted(p for p in dod_dir.glob("*.yaml") if "legacy" not in p.parts)
+    return sorted(dod_dir.glob("*.yaml"))
 
 
 def load_schemas(root: Path):
@@ -89,17 +89,21 @@ def validate_dod(root: Path, schemas, strict: bool):
             raise FileNotFoundError("No DoD files found under _ctx/dod")
         return []
     dod_ids = []
+    legacy_dod_ids = set()
     for path in dod_paths:
         dod_data = load_yaml(path)
         if dod_data is None:
             raise FileNotFoundError(f"Missing DoD file: {path}")
         validate(instance=dod_data, schema=schemas["dod"])
         for entry in dod_data.get("dod", []):
-            dod_ids.append(entry.get("id"))
-    return dod_ids
+            dod_id = entry.get("id")
+            dod_ids.append(dod_id)
+            if entry.get("x_legacy") is True:
+                legacy_dod_ids.add(dod_id)
+    return dod_ids, legacy_dod_ids
 
 
-def validate_jobs(root: Path, schemas, epic_ids, dod_ids):
+def validate_jobs(root: Path, schemas, epic_ids, dod_ids, legacy_dod_ids, strict: bool, warnings):
     wo_ids = set()
     for job_path in iter_job_files(root):
         job = load_yaml(job_path)
@@ -108,11 +112,14 @@ def validate_jobs(root: Path, schemas, epic_ids, dod_ids):
         validate(instance=job, schema=schemas["work_order"])
         epic_id = job.get("epic_id")
         dod_id = job.get("dod_id")
+        is_legacy = job.get("x_legacy") is True
         wo_ids.add(job.get("id"))
         if epic_id not in epic_ids:
             raise ValueError(f"WO {job_path} references unknown epic_id {epic_id}")
         if dod_id not in dod_ids:
             raise ValueError(f"WO {job_path} references unknown dod_id {dod_id}")
+        if strict and not is_legacy and dod_id in legacy_dod_ids:
+            warnings.append(f"WARN P1: WO {job_path} uses legacy DoD {dod_id}")
         scope = job.get("scope", {})
         if not scope.get("allow") or scope.get("deny") is None:
             raise ValueError(f"WO {job_path} missing scope allow/deny")
@@ -138,13 +145,24 @@ def main():
         schemas = load_schemas(root)
         backlog = validate_backlog(root, schemas, args.strict)
         epic_ids = [e.get("id") for e in backlog.get("epics", [])] if backlog else []
-        dod_ids = validate_dod(root, schemas, args.strict)
-        wo_ids = validate_jobs(root, schemas, epic_ids, dod_ids)
+        dod_ids, legacy_dod_ids = validate_dod(root, schemas, args.strict)
+        warnings = []
+        wo_ids = validate_jobs(
+            root,
+            schemas,
+            epic_ids,
+            dod_ids,
+            legacy_dod_ids,
+            args.strict,
+            warnings,
+        )
         if backlog:
             for epic in backlog.get("epics", []):
                 for wo_id in epic.get("wo_queue", []):
                     if wo_id not in wo_ids:
                         raise ValueError(f"backlog.wo_queue references missing WO {wo_id}")
+        for warning in warnings:
+            print(warning)
     except Exception as exc:
         print(f"ERROR: {exc}")
         return 1

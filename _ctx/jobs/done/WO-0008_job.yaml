@@ -1,5 +1,6 @@
 version: 1
 id: WO-0008
+x_legacy: true
 epic_id: E-0001
 title: "A/B Linter Reproducibility (OFF=0, ON>0) en fixture sintético"
 priority: P1
