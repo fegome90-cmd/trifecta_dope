@@ -1,0 +1,542 @@
+[
+  {
+    "id": "FE2-001",
+    "bucket": "vague_1token",
+    "query": "testing",
+    "off": {"hits": 3, "returncode": 0},
+    "on": {
+      "hits": 7,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "abc001",
+        "linter_query_class": "vague",
+        "linter_expanded": true,
+        "linter_added_strong_count": 2,
+        "linter_added_weak_count": 0,
+        "hits": 7
+      }
+    }
+  },
+  {
+    "id": "FE2-002",
+    "bucket": "vague_1token",
+    "query": "sync",
+    "off": {"hits": 4, "returncode": 0},
+    "on": {
+      "hits": 9,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "abc002",
+        "linter_query_class": "vague",
+        "linter_expanded": true,
+        "linter_added_strong_count": 2,
+        "linter_added_weak_count": 0,
+        "hits": 9
+      }
+    }
+  },
+  {
+    "id": "FE2-003",
+    "bucket": "vague_1token",
+    "query": "build",
+    "off": {"hits": 5, "returncode": 0},
+    "on": {
+      "hits": 8,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "abc003",
+        "linter_query_class": "vague",
+        "linter_expanded": true,
+        "linter_added_strong_count": 1,
+        "linter_added_weak_count": 0,
+        "hits": 8
+      }
+    }
+  },
+  {
+    "id": "FE2-004",
+    "bucket": "vague_1token",
+    "query": "validate",
+    "off": {"hits": 6, "returncode": 0},
+    "on": {
+      "hits": 10,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "abc004",
+        "linter_query_class": "vague",
+        "linter_expanded": true,
+        "linter_added_strong_count": 2,
+        "linter_added_weak_count": 0,
+        "hits": 10
+      }
+    }
+  },
+  {
+    "id": "FE2-005",
+    "bucket": "vague_1token",
+    "query": "search",
+    "off": {"hits": 2, "returncode": 0},
+    "on": {
+      "hits": 6,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "abc005",
+        "linter_query_class": "vague",
+        "linter_expanded": true,
+        "linter_added_strong_count": 2,
+        "linter_added_weak_count": 0,
+        "hits": 6
+      }
+    }
+  },
+  {
+    "id": "FE2-006",
+    "bucket": "vague_1token",
+    "query": "error",
+    "off": {"hits": 1, "returncode": 0},
+    "on": {
+      "hits": 5,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "abc006",
+        "linter_query_class": "vague",
+        "linter_expanded": true,
+        "linter_added_strong_count": 2,
+        "linter_added_weak_count": 0,
+        "hits": 5
+      }
+    }
+  },
+  {
+    "id": "FE2-007",
+    "bucket": "vague_1token",
+    "query": "config",
+    "off": {"hits": 3, "returncode": 0},
+    "on": {
+      "hits": 7,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "abc007",
+        "linter_query_class": "vague",
+        "linter_expanded": true,
+        "linter_added_strong_count": 1,
+        "linter_added_weak_count": 0,
+        "hits": 7
+      }
+    }
+  },
+  {
+    "id": "FE2-008",
+    "bucket": "vague_1token",
+    "query": "index",
+    "off": {"hits": 4, "returncode": 0},
+    "on": {
+      "hits": 8,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "abc008",
+        "linter_query_class": "vague",
+        "linter_expanded": true,
+        "linter_added_strong_count": 2,
+        "linter_added_weak_count": 0,
+        "hits": 8
+      }
+    }
+  },
+  {
+    "id": "FE2-009",
+    "bucket": "vague_1token",
+    "query": "cache",
+    "off": {"hits": 2, "returncode": 0},
+    "on": {
+      "hits": 6,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "abc009",
+        "linter_query_class": "vague",
+        "linter_expanded": true,
+        "linter_added_strong_count": 2,
+        "linter_added_weak_count": 0,
+        "hits": 6
+      }
+    }
+  },
+  {
+    "id": "FE2-010",
+    "bucket": "vague_1token",
+    "query": "daemon",
+    "off": {"hits": 5, "returncode": 0},
+    "on": {
+      "hits": 9,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "abc010",
+        "linter_query_class": "vague",
+        "linter_expanded": true,
+        "linter_added_strong_count": 2,
+        "linter_added_weak_count": 0,
+        "hits": 9
+      }
+    }
+  },
+  {
+    "id": "FE2-011",
+    "bucket": "spanish_natural",
+    "query": "cómo funciona el linter de queries",
+    "off": {"hits": 0, "returncode": 0},
+    "on": {
+      "hits": 2,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "esp001",
+        "linter_query_class": "semi",
+        "linter_expanded": false,
+        "linter_added_strong_count": 0,
+        "linter_added_weak_count": 0,
+        "hits": 2
+      }
+    }
+  },
+  {
+    "id": "FE2-012",
+    "bucket": "spanish_natural",
+    "query": "qué hace el comando ctx sync",
+    "off": {"hits": 0, "returncode": 0},
+    "on": {
+      "hits": 3,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "esp002",
+        "linter_query_class": "semi",
+        "linter_expanded": false,
+        "linter_added_strong_count": 0,
+        "linter_added_weak_count": 0,
+        "hits": 3
+      }
+    }
+  },
+  {
+    "id": "FE2-013",
+    "bucket": "spanish_natural",
+    "query": "explicar arquitectura limpia",
+    "off": {"hits": 0, "returncode": 0},
+    "on": {
+      "hits": 1,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "esp003",
+        "linter_query_class": "vague",
+        "linter_expanded": true,
+        "linter_added_strong_count": 1,
+        "linter_added_weak_count": 0,
+        "hits": 1
+      }
+    }
+  },
+  {
+    "id": "FE2-014",
+    "bucket": "spanish_natural",
+    "query": "dónde están los tests de integración",
+    "off": {"hits": 0, "returncode": 0},
+    "on": {
+      "hits": 4,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "esp004",
+        "linter_query_class": "semi",
+        "linter_expanded": false,
+        "linter_added_strong_count": 0,
+        "linter_added_weak_count": 0,
+        "hits": 4
+      }
+    }
+  },
+  {
+    "id": "FE2-015",
+    "bucket": "spanish_natural",
+    "query": "cuál es el flujo de validación",
+    "off": {"hits": 0, "returncode": 0},
+    "on": {
+      "hits": 2,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "esp005",
+        "linter_query_class": "semi",
+        "linter_expanded": false,
+        "linter_added_strong_count": 0,
+        "linter_added_weak_count": 0,
+        "hits": 2
+      }
+    }
+  },
+  {
+    "id": "FE2-016",
+    "bucket": "spanish_natural",
+    "query": "cómo se genera el context pack",
+    "off": {"hits": 0, "returncode": 0},
+    "on": {
+      "hits": 3,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "esp006",
+        "linter_query_class": "semi",
+        "linter_expanded": false,
+        "linter_added_strong_count": 0,
+        "linter_added_weak_count": 0,
+        "hits": 3
+      }
+    }
+  },
+  {
+    "id": "FE2-017",
+    "bucket": "spanish_natural",
+    "query": "qué son los anchors del linter",
+    "off": {"hits": 0, "returncode": 0},
+    "on": {
+      "hits": 2,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "esp007",
+        "linter_query_class": "semi",
+        "linter_expanded": false,
+        "linter_added_strong_count": 0,
+        "linter_added_weak_count": 0,
+        "hits": 2
+      }
+    }
+  },
+  {
+    "id": "FE2-018",
+    "bucket": "spanish_natural",
+    "query": "explicar telemetría de eventos",
+    "off": {"hits": 0, "returncode": 0},
+    "on": {
+      "hits": 1,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "esp008",
+        "linter_query_class": "vague",
+        "linter_expanded": true,
+        "linter_added_strong_count": 1,
+        "linter_added_weak_count": 0,
+        "hits": 1
+      }
+    }
+  },
+  {
+    "id": "FE2-019",
+    "bucket": "spanish_natural",
+    "query": "cómo funciona el daemon LSP",
+    "off": {"hits": 0, "returncode": 0},
+    "on": {
+      "hits": 3,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "esp009",
+        "linter_query_class": "semi",
+        "linter_expanded": false,
+        "linter_added_strong_count": 0,
+        "linter_added_weak_count": 0,
+        "hits": 3
+      }
+    }
+  },
+  {
+    "id": "FE2-020",
+    "bucket": "spanish_natural",
+    "query": "dónde se configura el linter",
+    "off": {"hits": 0, "returncode": 0},
+    "on": {
+      "hits": 2,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "esp010",
+        "linter_query_class": "semi",
+        "linter_expanded": false,
+        "linter_added_strong_count": 0,
+        "linter_added_weak_count": 0,
+        "hits": 2
+      }
+    }
+  },
+  {
+    "id": "FE2-021",
+    "bucket": "navigation_2hop",
+    "query": "BuildContextPackUseCase dependencies and validation",
+    "off": {"hits": 8, "returncode": 0},
+    "on": {
+      "hits": 10,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "nav001",
+        "linter_query_class": "guided",
+        "linter_expanded": false,
+        "linter_added_strong_count": 0,
+        "linter_added_weak_count": 0,
+        "hits": 10
+      }
+    }
+  },
+  {
+    "id": "FE2-022",
+    "bucket": "navigation_2hop",
+    "query": "LSP daemon lifecycle and error handling",
+    "off": {"hits": 7, "returncode": 0},
+    "on": {
+      "hits": 10,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "nav002",
+        "linter_query_class": "guided",
+        "linter_expanded": false,
+        "linter_added_strong_count": 0,
+        "linter_added_weak_count": 0,
+        "hits": 10
+      }
+    }
+  },
+  {
+    "id": "FE2-023",
+    "bucket": "navigation_2hop",
+    "query": "query linter configuration and anchor expansion",
+    "off": {"hits": 9, "returncode": 0},
+    "on": {
+      "hits": 10,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "nav003",
+        "linter_query_class": "guided",
+        "linter_expanded": false,
+        "linter_added_strong_count": 0,
+        "linter_added_weak_count": 0,
+        "hits": 10
+      }
+    }
+  },
+  {
+    "id": "FE2-024",
+    "bucket": "navigation_2hop",
+    "query": "telemetry collection and event schema",
+    "off": {"hits": 6, "returncode": 0},
+    "on": {
+      "hits": 9,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "nav004",
+        "linter_query_class": "guided",
+        "linter_expanded": false,
+        "linter_added_strong_count": 0,
+        "linter_added_weak_count": 0,
+        "hits": 9
+      }
+    }
+  },
+  {
+    "id": "FE2-025",
+    "bucket": "navigation_2hop",
+    "query": "context pack validation and hash verification",
+    "off": {"hits": 10, "returncode": 0},
+    "on": {
+      "hits": 10,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "nav005",
+        "linter_query_class": "guided",
+        "linter_expanded": false,
+        "linter_added_strong_count": 0,
+        "linter_added_weak_count": 0,
+        "hits": 10
+      }
+    }
+  },
+  {
+    "id": "FE2-026",
+    "bucket": "navigation_2hop",
+    "query": "AST parsing and symbol extraction",
+    "off": {"hits": 8, "returncode": 0},
+    "on": {
+      "hits": 10,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "nav006",
+        "linter_query_class": "guided",
+        "linter_expanded": false,
+        "linter_added_strong_count": 0,
+        "linter_added_weak_count": 0,
+        "hits": 10
+      }
+    }
+  },
+  {
+    "id": "FE2-027",
+    "bucket": "navigation_2hop",
+    "query": "pre-commit hooks and context sync",
+    "off": {"hits": 7, "returncode": 0},
+    "on": {
+      "hits": 10,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "nav007",
+        "linter_query_class": "guided",
+        "linter_expanded": false,
+        "linter_added_strong_count": 0,
+        "linter_added_weak_count": 0,
+        "hits": 10
+      }
+    }
+  },
+  {
+    "id": "FE2-028",
+    "bucket": "navigation_2hop",
+    "query": "error cards and fail-closed patterns",
+    "off": {"hits": 6, "returncode": 0},
+    "on": {
+      "hits": 9,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "nav008",
+        "linter_query_class": "guided",
+        "linter_expanded": false,
+        "linter_added_strong_count": 0,
+        "linter_added_weak_count": 0,
+        "hits": 9
+      }
+    }
+  },
+  {
+    "id": "FE2-029",
+    "bucket": "navigation_2hop",
+    "query": "DI container and use case registration",
+    "off": {"hits": 5, "returncode": 0},
+    "on": {
+      "hits": 8,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "nav009",
+        "linter_query_class": "semi",
+        "linter_expanded": false,
+        "linter_added_strong_count": 0,
+        "linter_added_weak_count": 0,
+        "hits": 8
+      }
+    }
+  },
+  {
+    "id": "FE2-030",
+    "bucket": "navigation_2hop",
+    "query": "work order backlog and DoD validation",
+    "off": {"hits": 9, "returncode": 0},
+    "on": {
+      "hits": 10,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "nav010",
+        "linter_query_class": "guided",
+        "linter_expanded": false,
+        "linter_added_strong_count": 0,
+        "linter_added_weak_count": 0,
+        "hits": 10
+      }
+    }
+  }
+]

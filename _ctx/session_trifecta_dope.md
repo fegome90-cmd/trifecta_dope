@@ -779,3 +779,17 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **TASK 5**: Created tests/unit/test_field_exercises_anchor_metrics.py (10 tests)
 - **TASK 6**: Full pytest suite executed
 - **Status**: All infrastructure complete, ready for production use
+
+## 2026-01-06 14:00 UTC - Field Exercises v2 Hard Query A/B Gate
+- **Objetivo**: Evaluar linter con queries difíciles (vague_1token, spanish_natural, navigation_2hop)
+- **Dataset**: 30 queries en docs/datasets/field_exercises_v2.yaml
+- **Método**: A/B controlado OFF vs ON
+- **Gates**: ✅ ALL PASS
+  - vague_anchor_usage: 100% (≥30%)
+  - vague_zero_hit: 0% (≤20%)
+  - expanded_positive_delta: +4.0 (>0)
+- **Hallazgos**: 
+  - Vague: 100% expansion, +4 median delta
+  - Spanish: 100% zero-hit (multilingual gap)
+  - Navigation: Strong baseline, +2.5 delta
+- **Commit**: [pending]
