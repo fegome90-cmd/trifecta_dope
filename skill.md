@@ -42,6 +42,19 @@ Verification
 
 > ⚠️ Violaciones críticas: YAML long history, rutas absolutas, scripts legacy, fallback silencioso, pack stale
 
+---
+
+## Backlog System
+
+**Epic registry**: `_ctx/backlog/backlog.yaml`  
+**Work Orders**: `_ctx/jobs/{pending,running,done,failed}/*.yaml`  
+**Validate**: `python scripts/ctx_backlog_validate.py --strict`  
+**Schema**: `docs/backlog/schema/*.schema.json`
+
+Read `docs/backlog/README.md` for workflow details.
+
+---
+
 ### Session Evidence Protocol (The 4-Step Cycle)
 
 ```bash
