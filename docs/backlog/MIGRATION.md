@@ -8,7 +8,7 @@
 
 - Epic `E-0001` copied into `_ctx/backlog/backlog.yaml`
 - `generated_at` preserved, `curated_at` mapped to `x_curated_at`
-- `wo_queue` preserved (WO-0001..WO-0006)
+- `wo_queue` trimmed to existing WOs; full list preserved in `x_legacy_wo_queue`
 
 ## Notes
 

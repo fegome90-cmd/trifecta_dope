@@ -15,6 +15,9 @@ epics:
       - "Doble fuente de verdad para repo_root/segment_root"
       - "Mezclar configs del linter con aliases del expander (_ctx vs configs)"
     wo_queue:
+      - WO-0004
+      - WO-0005
+    x_legacy_wo_queue:
       - WO-0001
       - WO-0002
       - WO-0003

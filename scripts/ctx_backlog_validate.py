@@ -76,6 +76,7 @@ def validate_dod(root: Path, schemas, strict: bool):
 
 
 def validate_jobs(root: Path, schemas, epic_ids, dod_ids):
+    wo_ids = set()
     for job_path in iter_job_files(root):
         job = load_yaml(job_path)
         if job is None:
@@ -83,6 +84,7 @@ def validate_jobs(root: Path, schemas, epic_ids, dod_ids):
         validate(instance=job, schema=schemas["work_order"])
         epic_id = job.get("epic_id")
         dod_id = job.get("dod_id")
+        wo_ids.add(job.get("id"))
         if epic_id not in epic_ids:
             raise ValueError(f"WO {job_path} references unknown epic_id {epic_id}")
         if dod_id not in dod_ids:
@@ -94,6 +96,7 @@ def validate_jobs(root: Path, schemas, epic_ids, dod_ids):
         commands = verify.get("commands") if isinstance(verify, dict) else None
         if not commands:
             raise ValueError(f"WO {job_path} missing verify.commands")
+    return wo_ids
 
 
 def main():
@@ -112,7 +115,12 @@ def main():
         backlog = validate_backlog(root, schemas, args.strict)
         epic_ids = [e.get("id") for e in backlog.get("epics", [])] if backlog else []
         dod_ids = validate_dod(root, schemas, args.strict)
-        validate_jobs(root, schemas, epic_ids, dod_ids)
+        wo_ids = validate_jobs(root, schemas, epic_ids, dod_ids)
+        if backlog:
+            for epic in backlog.get("epics", []):
+                for wo_id in epic.get("wo_queue", []):
+                    if wo_id not in wo_ids:
+                        raise ValueError(f"backlog.wo_queue references missing WO {wo_id}")
     except Exception as exc:
         print(f"ERROR: {exc}")
         return 1

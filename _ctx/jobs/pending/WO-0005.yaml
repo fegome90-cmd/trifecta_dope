@@ -22,6 +22,7 @@ deliverables:
   - "/tmp/tf_gate_base.log (classification evidence)"
   - "_ctx/logs/gate_after_fix.log"
   - "_ctx/logs/gate_full_after_fix.log"
+  - "docs/reports/KNOWN_FAILS.md"
   - "tests/acceptance/test_pd_evidence_stop_e2e.py (FIXED)"
 verify:
   commands:
