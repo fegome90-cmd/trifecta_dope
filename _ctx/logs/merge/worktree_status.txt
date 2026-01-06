@@ -1,0 +1,3 @@
+M  _ctx/telemetry/events.jsonl
+M  _ctx/telemetry/last_run.json
+?? _ctx/logs/

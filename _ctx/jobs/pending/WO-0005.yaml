@@ -1,0 +1,40 @@
+version: 1
+id: WO-0005
+epic_id: E-0001
+title: "Evidence Gate global: suite completa pytest -q (Fase 5)"
+priority: P0
+status: pending
+owner: null
+branch: "job/WO-0005-evidence-gate"
+worktree: "../wt-WO-0005"
+scope:
+  allow:
+    - "tests/**"
+    - "docs/**"
+    - "scripts/**"
+    - "_ctx/logs/**"
+  deny:
+    - ".env*"
+    - "**/production.*"
+deliverables:
+  - "_ctx/logs/gate_fail_head.log"
+  - "_ctx/logs/gate_base_commit.txt"
+  - "/tmp/tf_gate_base.log (classification evidence)"
+  - "_ctx/logs/gate_after_fix.log"
+  - "_ctx/logs/gate_full_after_fix.log"
+  - "docs/reports/KNOWN_FAILS.md"
+  - "tests/acceptance/test_pd_evidence_stop_e2e.py (FIXED)"
+verify:
+  commands:
+    - "scripts/verify.sh"
+    - "uv run pytest -q"
+diff_budget:
+  max_files: 8
+  max_loc: 200
+stop_conditions:
+  max_iterations: 4
+  max_fail_verify: 2
+dod_id: DOD-DEFAULT
+trace:
+  ticket: null
+  related_wos: []

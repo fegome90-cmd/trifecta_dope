@@ -1,0 +1,13 @@
+version: 1
+id: WO-0008
+epic_id: E-0001
+title: "Test"
+priority: P0
+status: pending
+owner: "you"
+branch: null
+worktree: null
+verify:
+  commands: ["scripts/verify.sh"]
+dod_id: DOD-DEFAULT
+bad_field: "nope"

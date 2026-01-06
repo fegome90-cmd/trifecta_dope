@@ -1,0 +1,17 @@
+version: 1
+dod:
+  - id: DOD-DEFAULT
+    title: "DoD estándar"
+    required_artifacts:
+      - "tests.log"
+      - "lint.log"
+      - "diff.patch"
+      - "handoff.md"
+      - "verdict.json"
+    required_checks:
+      - name: "verify"
+        commands:
+          - "scripts/verify.sh"
+    rules:
+      - "Sin evidencia reproducible: FAIL"
+      - "Scope fuera de límites: FAIL"
