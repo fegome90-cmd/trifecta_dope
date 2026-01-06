@@ -1,0 +1,34 @@
+{
+  "off_mode": {
+    "total_queries": 241,
+    "total_hits": 292,
+    "avg_hits": 1.2116182572614107,
+    "zero_hit_count": 106
+  },
+  "on_mode": {
+    "total_queries": 295,
+    "total_hits": 1379,
+    "avg_hits": 4.6745762711864405,
+    "zero_hit_count": 72,
+    "zero_hit_rate": 24.40677966101695,
+    "anchor_usage_count": 70,
+    "anchor_usage_rate": 23.728813559322035,
+    "total_strong_anchors_added": 139,
+    "total_weak_anchors_added": 0,
+    "avg_strong_per_query": 0.4711864406779661,
+    "avg_weak_per_query": 0.0,
+    "query_class_distribution": {
+      "vague": 87,
+      "disabled": 157,
+      "semi": 42,
+      "disabled_missing_config": 1,
+      "guided": 8
+    },
+    "avg_hits_when_expanded": 2.8,
+    "avg_hits_when_not_expanded": 5.257777777777778,
+    "delta_hits_when_expanded": -2.4577777777777783
+  },
+  "total_search_events": 536,
+  "off_events_count": 241,
+  "on_events_count": 295
+}

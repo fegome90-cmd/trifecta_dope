@@ -757,3 +757,19 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Evidence**: _ctx/logs/field_ex_{off,on}.log
 - **Report**: docs/reports/field_exercises_v1_results.md
 - **Commit**: feat(eval): add Field Exercises v1 benchmark
+
+## 2026-01-06 13:36-14:00 UTC - WO-0010 Anchor Metrics from Telemetry
+- **Objetivo**: Extender Field Exercises v1 para reportar uso de anchors desde telemetría (no heurístico de stdout)
+- **Implementación**: 
+  - Extractor: eval/scripts/extract_anchor_metrics.py
+  - Lectura de _ctx/telemetry/events.jsonl
+  - Métricas desde args (linter_expanded, linter_added_strong_count, etc.)
+- **Resultados** (telemetría histórica aggregada, no solo FE v1):
+  - OFF: 241 queries, 1.21 avg hits
+  - ON: 295 queries, 4.67 avg hits
+  - Anchor usage: 70/295 (23.7%)
+  - Delta cuando expanded: -2.46 hits (expansión correlaciona con queries difíciles)
+- **Métricas JSON**: _ctx/metrics/field_exercises_v1_anchor_metrics.json
+- **Logs de ejecución**: _ctx/logs/wo0010_anchor_metrics/
+- **Nota**: Datos de telemetría histórica, incluye runs previos (no solo FE v1 limpio)
+- **Commit**: [pending]
