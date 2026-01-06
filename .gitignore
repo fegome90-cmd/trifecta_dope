@@ -57,3 +57,4 @@ packaging/scoop/dist/
 
 # Debug scripts (already in scripts/)
 scripts/debug/.venv/
+.envrc

@@ -1,0 +1,4 @@
+# Trifecta Development Environment
+# Copy this file to .envrc and run: direnv allow .
+
+export TRIFECTA_AST_PERSIST=1

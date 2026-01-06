@@ -1045,3 +1045,14 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Corrección**: Creado WO-0012.1 para activación real en dev CLI.
 - **Razón**: Claim de "dev default" era falso (solo test default).
 - **Próximo paso**: Implementar .envrc (direnv) o scripts/dev_env.sh.
+
+## 2026-01-06 18:02 UTC
+- **WO-0012.1 Evidence COMPLETE**
+- **Evidence ON (direnv)**: 
+  - Ran CLI con .envrc (source .envrc)
+  - DB creado: .trifecta/cache/ast_cache_*.db (16K)
+  - Telemetría: {"backend": "FileLockedAstCache", cache_status: "hit"}
+- **Evidence OFF (rollback)**:
+  - Ran CLI con TRIFECTA_AST_PERSIST=0
+  - Telemetría: {"backend": "InMemoryLRUCache", cache_status: "miss"}
+- **Conclusion**: Dev CLI default enablement VERIFIED.
