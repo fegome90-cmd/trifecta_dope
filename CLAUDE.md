@@ -106,7 +106,13 @@ See `docs/CONTRACTS.md` and architecture docs in `docs/adr/` for complete patter
 4. `trifecta ctx search --segment . --query "..."` - Search
 5. `trifecta ctx get --segment . --ids "..."` - Retrieve chunks
 
-#---
+### Environment & Ops
+- **Scope Separation**: `pyproject.toml` / `pytest-env` is for **Tests**. `.envrc` (direnv) is for **Dev CLI**.
+- **Default Enablement**: Must be verified via CLI *without* env var prefixes.
+- **Audit-Grade Gates**: `exit 0` is not enough. Verify internal state (telemetry backend, file creation).
+- **Rollback**: Must be verifiable in <5 minutes via env var override.
+
+---
 
 ## Backlog System
 
@@ -135,6 +141,7 @@ _ctx/
 - Legacy fields: prefix with `x_` (e.g., `x_objective`, `x_notes`)
 
 **Critical Rules**:
+- **Single Source of Truth**: A WO YAML must exist in exactly ONE state folder (`pending/`, `running/`, `done/`). Use `mv` to transition, never copy.
 - `verified_at_sha`: Use explicit commit SHA (e.g., `c2d0338`), never `"HEAD"`
 - `dependencies`: List prerequisite WO IDs (e.g., `[WO-P2.1]`)
 - `evidence_logs`: Relative paths to proof (logs gitignored but documented)
