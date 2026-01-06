@@ -1,0 +1,13 @@
+.coverage
+.github/workflows/ci.yml
+_ctx/context_pack.json
+_ctx/generated/repo_map.md
+_ctx/generated/symbols_stub.md
+_ctx/telemetry/events.jsonl
+_ctx/telemetry/last_run.json
+docs/CONTRACTS.md
+docs/reports/merge_readiness_ast_cache_audit_grade.md
+src/application/ast_parser.py
+src/domain/ast_cache.py
+src/infrastructure/cli_ast.py
+tests/acceptance/test_pd_evidence_stop_e2e.py

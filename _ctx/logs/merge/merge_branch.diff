@@ -1,0 +1,3508 @@
+diff --git a/_ctx/backlog/backlog.yaml b/_ctx/backlog/backlog.yaml
+new file mode 100644
+index 0000000..92ffa96
+--- /dev/null
++++ b/_ctx/backlog/backlog.yaml
+@@ -0,0 +1,26 @@
++version: 1
++generated_at: "2026-01-05"
++x_curated_at: "2026-01-05T18:20:00Z"
++epics:
++  - id: E-0001
++    title: "Central telefónica / ContextRuntime"
++    priority: P0
++    outcome: "Zero-hit rate < 20% con evidencia reproducible (dataset + runner + reporte)"
++    owner: "you"
++    status: active
++    dependencies: []
++    risks:
++      - "Overengineering: convertir heurísticas simples en un motor complejo"
++      - "Tests frágiles basados en strings de salida"
++      - "Doble fuente de verdad para repo_root/segment_root"
++      - "Mezclar configs del linter con aliases del expander (_ctx vs configs)"
++    wo_queue:
++      - WO-0004
++      - WO-0005
++    x_legacy_wo_queue:
++      - WO-0001
++      - WO-0002
++      - WO-0003
++      - WO-0004
++      - WO-0005
++      - WO-0006
+diff --git a/_ctx/blacklog/README.md b/_ctx/blacklog/README.md
+new file mode 100644
+index 0000000..47f7f8b
+--- /dev/null
++++ b/_ctx/blacklog/README.md
+@@ -0,0 +1,12 @@
++# DEPRECATED: Moved to _ctx/backlog
++
++This directory exists for backwards compatibility only.
++
++**All canonical backlog/WO/DoD data is now in:**
++- `_ctx/backlog/` - Main backlog YAML
++- `_ctx/jobs/{pending,running,done,failed}/` - Work orders by state
++- `_ctx/dod/` - Definition of Done files
++
++**This stub must not contain canonical data.**
++
++For migration details, see `docs/backlog/legacy/inputs/`
+diff --git a/_ctx/dod/dod-default.yaml b/_ctx/dod/dod-default.yaml
+new file mode 100644
+index 0000000..01be79f
+--- /dev/null
++++ b/_ctx/dod/dod-default.yaml
+@@ -0,0 +1,17 @@
++version: 1
++dod:
++  - id: DOD-DEFAULT
++    title: "DoD estándar"
++    required_artifacts:
++      - "tests.log"
++      - "lint.log"
++      - "diff.patch"
++      - "handoff.md"
++      - "verdict.json"
++    required_checks:
++      - name: "verify"
++        commands:
++          - "scripts/verify.sh"
++    rules:
++      - "Sin evidencia reproducible: FAIL"
++      - "Scope fuera de límites: FAIL"
+diff --git a/_ctx/jobs/pending/WO-0004.yaml b/_ctx/jobs/pending/WO-0004.yaml
+new file mode 100644
+index 0000000..062d8c0
+--- /dev/null
++++ b/_ctx/jobs/pending/WO-0004.yaml
+@@ -0,0 +1,43 @@
++version: 1
++id: WO-0004
++epic_id: E-0001
++title: "Integración CLI: flags + pipeline tokenize-after-lint + telemetry sanitizada (Fase 4)"
++priority: P0
++status: pending
++owner: null
++branch: "job/WO-0004-query-linter-cli"
++worktree: "../wt-WO-0004"
++scope:
++  allow:
++    - "src/application/**"
++    - "src/infrastructure/**"
++    - "tests/**"
++    - "docs/**"
++  deny:
++    - ".env*"
++    - "**/production.*"
++deliverables:
++  - "src/infrastructure/config_loader.py (configs/ unificados, missing_config marker)"
++  - "src/application/search_get_usecases.py (lint -> tokenize -> expander -> search)"
++  - "src/infrastructure/cli.py (--no-lint + TRIFECTA_LINT default OFF)"
++  - "tests/unit/test_search_usecase_linter.py"
++  - "tests/integration/test_ctx_search_linter.py (A/B con context_pack.json real JSON)"
++  - "tests/integration/test_ctx_search_linter_ab_controlled.py (A/B controlado: OFF=0, ON>0)"
++  - "docs/reports/query_linter_cli_verification.md (evidencia cruda + JSONL ON/OFF)"
++  - "_ctx/logs/ab_off.log + _ctx/logs/ab_on.log"
++verify:
++  commands:
++    - "scripts/verify.sh"
++    - "uv run pytest -q tests/unit/test_search_usecase_linter.py"
++    - "uv run pytest -q tests/integration/test_ctx_search_linter.py"
++    - "uv run pytest -q tests/integration/test_ctx_search_linter_ab_controlled.py"
++diff_budget:
++  max_files: 12
++  max_loc: 400
++stop_conditions:
++  max_iterations: 6
++  max_fail_verify: 2
++dod_id: DOD-DEFAULT
++trace:
++  ticket: null
++  related_wos: []
+diff --git a/_ctx/jobs/pending/WO-0005.yaml b/_ctx/jobs/pending/WO-0005.yaml
+new file mode 100644
+index 0000000..f9e6251
+--- /dev/null
++++ b/_ctx/jobs/pending/WO-0005.yaml
+@@ -0,0 +1,40 @@
++version: 1
++id: WO-0005
++epic_id: E-0001
++title: "Evidence Gate global: suite completa pytest -q (Fase 5)"
++priority: P0
++status: pending
++owner: null
++branch: "job/WO-0005-evidence-gate"
++worktree: "../wt-WO-0005"
++scope:
++  allow:
++    - "tests/**"
++    - "docs/**"
++    - "scripts/**"
++    - "_ctx/logs/**"
++  deny:
++    - ".env*"
++    - "**/production.*"
++deliverables:
++  - "_ctx/logs/gate_fail_head.log"
++  - "_ctx/logs/gate_base_commit.txt"
++  - "/tmp/tf_gate_base.log (classification evidence)"
++  - "_ctx/logs/gate_after_fix.log"
++  - "_ctx/logs/gate_full_after_fix.log"
++  - "docs/reports/KNOWN_FAILS.md"
++  - "tests/acceptance/test_pd_evidence_stop_e2e.py (FIXED)"
++verify:
++  commands:
++    - "scripts/verify.sh"
++    - "uv run pytest -q"
++diff_budget:
++  max_files: 8
++  max_loc: 200
++stop_conditions:
++  max_iterations: 4
++  max_fail_verify: 2
++dod_id: DOD-DEFAULT
++trace:
++  ticket: null
++  related_wos: []
+diff --git a/_ctx/logs/merge/worktree_status.txt b/_ctx/logs/merge/worktree_status.txt
+new file mode 100644
+index 0000000..5c58a54
+--- /dev/null
++++ b/_ctx/logs/merge/worktree_status.txt
+@@ -0,0 +1,3 @@
++M  _ctx/telemetry/events.jsonl
++M  _ctx/telemetry/last_run.json
++?? _ctx/logs/
+diff --git a/_ctx/metrics/wo_metrics.jsonl b/_ctx/metrics/wo_metrics.jsonl
+new file mode 100644
+index 0000000..e69de29
+diff --git a/docs/backlog/LESSONS.md b/docs/backlog/LESSONS.md
+new file mode 100644
+index 0000000..4c18898
+--- /dev/null
++++ b/docs/backlog/LESSONS.md
+@@ -0,0 +1,5 @@
++# Lessons Learned
++
++- Keep WO scopes small to reduce verification cost and rollback risk.
++- Fail-closed validation and reconcile tools prevent silent drift.
++- Avoid manual state edits; use the repair tool for consistency.
+diff --git a/docs/backlog/MIGRATION.md b/docs/backlog/MIGRATION.md
+new file mode 100644
+index 0000000..1a7423a
+--- /dev/null
++++ b/docs/backlog/MIGRATION.md
+@@ -0,0 +1,16 @@
++# Backlog Migration
++
++## Source
++
++- `docs/backlog/legacy/inputs/central_telefonica_v0.1.yaml`
++
++## Mapping
++
++- Epic `E-0001` copied into `_ctx/backlog/backlog.yaml`
++- `generated_at` preserved, `curated_at` mapped to `x_curated_at`
++- `wo_queue` trimmed to existing WOs; full list preserved in `x_legacy_wo_queue`
++
++## Notes
++
++- Source file remains read-only under legacy inputs.
++- Work orders are executed from `_ctx/jobs/{pending,running,done,failed}`.
+diff --git a/docs/backlog/README.md b/docs/backlog/README.md
+new file mode 100644
+index 0000000..d33bcd5
+--- /dev/null
++++ b/docs/backlog/README.md
+@@ -0,0 +1,22 @@
++# Backlog + Work Orders Pipeline
++
++## State machine
++
++Work orders move through these states:
++
++- `pending` -> `running` -> `done`
++- `pending` -> `running` -> `failed`
++
++A WO can only be `done` when its DoD artifacts are complete.
++
++## Traceability invariants
++
++- `backlog.yaml` is canonical for epics and WO queue.
++- Each WO in `_ctx/jobs/{pending,running,done,failed}` must reference a valid `epic_id` and `dod_id`.
++- Every WO must define `scope.allow` and `scope.deny` plus `verify.commands`.
++- Context pack sources live under `_ctx/`; legacy stubs such as `_ctx/blacklog/README.md` are non-canonical.
++
++## Rollback
++
++- All changes are additive; rollback is a git revert.
++- If state diverges (locks/worktrees), use `scripts/ctx_reconcile_state.py` to repair before any manual edits.
+diff --git a/docs/backlog/legacy/inputs/central_telefonica_v0.1.yaml b/docs/backlog/legacy/inputs/central_telefonica_v0.1.yaml
+new file mode 100644
+index 0000000..3a93ef3
+--- /dev/null
++++ b/docs/backlog/legacy/inputs/central_telefonica_v0.1.yaml
+@@ -0,0 +1,176 @@
++version: 1
++generated_at: 2026-01-05
++curated_at: 2026-01-05T18:20:00Z
++epics:
++  - id: E-0001
++    title: "Central telefónica / ContextRuntime"
++    priority: P0
++    outcome: "Zero-hit rate < 20% con evidencia reproducible (dataset + runner + reporte)"
++    owner: "you"
++    status: active
++    dependencies: []
++    risks:
++      - "Overengineering: convertir heurísticas simples en un motor complejo"
++      - "Tests frágiles basados en strings de salida"
++      - "Doble fuente de verdad para repo_root/segment_root"
++      - "Mezclar configs del linter con aliases del expander (_ctx vs configs)"
++    wo_queue:
++      - WO-0001
++      - WO-0002
++      - WO-0003
++      - WO-0004
++      - WO-0005
++      - WO-0006
++
++work_orders:
++  - id: WO-0001
++    title: "Baseline medible: dataset + runner + reporte (Fase 1)"
++    priority: P0
++    status: done
++    dod_id: DOD-BASELINE
++    dependencies: []
++    deliverables:
++      - "docs/datasets/search_queries_v1.yaml (>=30 queries: vague/semi/guided)"
++      - "scripts/run_search_dataset.sh + scripts/parse_search_logs.py"
++      - "docs/reports/search_guidance_baseline.md"
++      - "_ctx/metrics/search_dataset_v1_summary.json"
++    acceptance:
++      - "Runner produce logs por query y summary JSON canónico (total + by_class)"
++      - "Reporte contiene hit_rate/avg_hits/unique_paths_avg por clase"
++      - "Evidencia reproducible via comando único"
++    risks:
++      - "Logs/outputs sin copy-paste exacto"
++      - "Score usado indebidamente como gate"
++    notes:
++      - "Resultado observado: hit_rate vague=0.20, guided=0.70 (+50pp)"
++
++  - id: WO-0002
++    title: "Diccionario anchors+aliases + extractor puro (Fase 2)"
++    priority: P0
++    status: done
++    dod_id: DOD-DICTIONARY
++    dependencies:
++      - WO-0001
++    deliverables:
++      - "configs/anchors.yaml (strong/weak)"
++      - "configs/aliases.yaml (>=15 alias, >=5 ES)"
++      - "src/domain/anchor_extractor.py (pure core, no IO)"
++      - "tests/unit/test_anchor_extractor.py"
++      - "docs/reports/anchor_dictionary_v1.md"
++    acceptance:
++      - "uv run pytest -q tests/unit/test_anchor_extractor.py => PASS"
++      - "Alias NL ES detecta anchors y dedupe determinista"
++    risks:
++      - "Alias inconsistentes con nomenclatura real del repo"
++      - "Dedupe no determinista rompe auditabilidad"
++
++  - id: WO-0003
++    title: "Query Linter core: classify + expand + lint_plan (Fase 3)"
++    priority: P0
++    status: done
++    dod_id: DOD-LINTER_CORE
++    dependencies:
++      - WO-0002
++    deliverables:
++      - "src/domain/query_linter.py (core puro)"
++      - "tests/unit/test_query_linter.py"
++      - "docs/reports/query_linter_v1.md"
++    acceptance:
++      - "Guided no expande; vague expande (<=2 strong, <=2 weak); estabilidad =="
++      - "NL con alias clasifica semi/guided sin expansión innecesaria"
++    risks:
++      - "Expansión contamina precisión (anchors demasiado genéricos)"
++      - "Reglas de clasificación demasiado estrictas o laxas"
++
++  - id: WO-0004
++    title: "Integración CLI: flags + pipeline tokenize-after-lint + telemetry sanitizada (Fase 4)"
++    priority: P0
++    status: done
++    dod_id: DOD-CLI_INTEGRATION
++    dependencies:
++      - WO-0003
++    deliverables:
++      - "src/infrastructure/config_loader.py (configs/ unificados, missing_config marker)"
++      - "src/application/search_get_usecases.py (lint -> tokenize -> expander -> search)"
++      - "src/infrastructure/cli.py (--no-lint + TRIFECTA_LINT default OFF)"
++      - "tests/unit/test_search_usecase_linter.py"
++      - "tests/integration/test_ctx_search_linter.py (A/B con context_pack.json real JSON)"
++      - "tests/integration/test_ctx_search_linter_ab_controlled.py (A/B controlado: OFF=0, ON>0)"
++      - "docs/reports/query_linter_cli_verification.md (evidencia cruda + JSONL ON/OFF)"
++      - "_ctx/logs/ab_off.log + _ctx/logs/ab_on.log"
++    acceptance:
++      - "TRIFECTA_LINT=1 habilita, unset/0 deshabilita; --no-lint override"
++      - "Telemetry NO guarda query raw; incluye preview<=200 + hash + len + linter meta"
++      - "Missing config => linter_query_class=disabled_missing_config (auditable)"
++      - "Tests unit+integration PASS"
++      - "A/B controlado: query 'servicio' OFF=0 hits, ON>=1 hit (agent:abc123)"
++    risks:
++      - "Tokenize pre-lint (bug lógico) reintroducido por refactor"
++      - "Tests A/B dependen de strings frágiles"
++      - "Committing logs / fuga de datos"
++    notes:
++      - "Dedupe linter_reasons verificado; ON/OFF eventos extraídos determinísticamente"
++      - "A/B PASS: query 'servicio' (Spanish), OFF=0 hits, ON=1 hit (agent:abc123, score 1.00)"
++      - "Test file: tests/integration/test_ctx_search_linter_ab_controlled.py"
++    ab_test:
++      query: "servicio"
++      expected_off: 0
++      expected_on: 1
++      segment: "/tmp/tf_lint_ab_segment"
++      chunk_hit: "agent:abc123"
++
++  - id: WO-0005
++    title: "Evidence Gate global: suite completa pytest -q (Fase 5)"
++    priority: P0
++    status: done
++    dod_id: DOD-GATE_HARDENING
++    dependencies:
++      - WO-0004
++    deliverables:
++      - "_ctx/logs/gate_fail_head.log"
++      - "_ctx/logs/gate_base_commit.txt"
++      - "/tmp/tf_gate_base.log (classification evidence)"
++      - "_ctx/logs/gate_after_fix.log"
++      - "_ctx/logs/gate_full_after_fix.log"
++      - "tests/acceptance/test_pd_evidence_stop_e2e.py (FIXED)"
++    acceptance:
++      - "uv run pytest -q => 482 passed, 1 skipped, 0 failures"
++      - "test_e2e_evidence_stop_real_cli PASS"
++    risks:
++      - "Declarar 'unrelated' sin evidencia; erosiona disciplina fail-closed"
++      - "Tests acceptance dependientes de repos externos/estado no controlado"
++    notes:
++      - "test_e2e_evidence_stop_real_cli classified as TEST_BROKEN"
++      - "Root cause: hardcoded query 'ContextService' not in segment context_pack.json"
++      - "Test file added 2026-01-04 (8386f8d), AFTER base commit bd26190"
++      - "FIX: Changed query from 'ContextService' to 'context' (exists in segment)"
++      - "Full gate PASS: 482 passed, 1 skipped, 0 failures"
++    decision:
++      classification: test_broken
++      evidence:
++        - "_ctx/logs/gate_fail_head.log"
++        - "_ctx/logs/gate_base_commit.txt (BASE_COMMIT=bd26190)"
++        - "/tmp/tf_gate_base.log"
++        - "_ctx/logs/gate_after_fix.log"
++        - "_ctx/logs/gate_full_after_fix.log"
++      fix:
++        file: "tests/acceptance/test_pd_evidence_stop_e2e.py"
++        lines: "240, 259"
++        change: "query 'ContextService' -> 'context'"
++      verdict: "PASS (482 passed, 0 failures)"
++
++  - id: WO-0006
++    title: "Reporte final + cierre fase (Fase 6)"
++    priority: P1
++    status: paused
++    dependencies:
++      - WO-0005
++    deliverables:
++      - "docs/reports/central_telefonica_release_notes_v1.md"
++      - "Checklist de rollout: default OFF, enable strategy, troubleshooting"
++      - "Resumen métricas baseline vs post (si dataset v2 existe)"
++    acceptance:
++      - "Documento único con: qué cambió, cómo habilitar, cómo verificar, cómo revertir"
++    risks:
++      - "Cerrar sin una ruta clara de rollback"
++      - "No definir query-cases que realmente reduzcan zero-hits en producción"
+diff --git a/docs/backlog/schema/backlog.schema.json b/docs/backlog/schema/backlog.schema.json
+new file mode 100644
+index 0000000..2e54b52
+--- /dev/null
++++ b/docs/backlog/schema/backlog.schema.json
+@@ -0,0 +1,65 @@
++{
++  "$schema": "https://json-schema.org/draft/2020-12/schema",
++  "type": "object",
++  "additionalProperties": false,
++  "required": ["version", "generated_at", "epics"],
++  "properties": {
++    "version": {"type": "integer"},
++    "generated_at": {"type": "string"},
++    "epics": {
++      "type": "array",
++      "items": {
++        "type": "object",
++        "additionalProperties": false,
++        "required": [
++          "id",
++          "title",
++          "priority",
++          "outcome",
++          "owner",
++          "status",
++          "dependencies",
++          "risks",
++          "wo_queue"
++        ],
++        "properties": {
++          "id": {"type": "string", "pattern": "^E-[0-9]{4}$"},
++          "title": {"type": "string"},
++          "priority": {"type": "string", "pattern": "^P[0-3]$"},
++          "outcome": {"type": "string"},
++          "owner": {"type": ["string", "null"]},
++          "status": {"type": "string", "enum": ["active", "paused", "done"]},
++          "dependencies": {"type": "array", "items": {"type": "string"}},
++          "risks": {"type": "array", "items": {"type": "string"}},
++          "wo_queue": {
++            "type": "array",
++            "items": {"type": "string", "pattern": "^WO-[0-9]{4}$"}
++          }
++        },
++        "patternProperties": {
++          "^x_": {}
++        }
++      }
++    },
++    "work_orders": {
++      "type": "array",
++      "items": {
++        "type": "object",
++        "additionalProperties": false,
++        "required": ["id", "title", "priority", "status"],
++        "properties": {
++          "id": {"type": "string", "pattern": "^WO-[0-9]{4}$"},
++          "title": {"type": "string"},
++          "priority": {"type": "string", "pattern": "^P[0-3]$"},
++          "status": {"type": "string", "enum": ["pending", "running", "done", "failed"]}
++        },
++        "patternProperties": {
++          "^x_": {}
++        }
++      }
++    }
++  },
++  "patternProperties": {
++    "^x_": {}
++  }
++}
+diff --git a/docs/backlog/schema/dod.schema.json b/docs/backlog/schema/dod.schema.json
+new file mode 100644
+index 0000000..ba4cc82
+--- /dev/null
++++ b/docs/backlog/schema/dod.schema.json
+@@ -0,0 +1,40 @@
++{
++  "$schema": "https://json-schema.org/draft/2020-12/schema",
++  "type": "object",
++  "additionalProperties": false,
++  "required": ["version", "dod"],
++  "properties": {
++    "version": {"type": "integer"},
++    "dod": {
++      "type": "array",
++      "items": {
++        "type": "object",
++        "additionalProperties": false,
++        "required": ["id", "title", "required_artifacts", "required_checks", "rules"],
++        "properties": {
++          "id": {"type": "string"},
++          "title": {"type": "string"},
++          "required_artifacts": {"type": "array", "items": {"type": "string"}},
++          "required_checks": {
++            "type": "array",
++            "items": {
++              "type": "object",
++              "additionalProperties": false,
++              "required": ["name", "commands"],
++              "properties": {
++                "name": {"type": "string"},
++                "commands": {"type": "array", "items": {"type": "string"}}
++              },
++              "patternProperties": {"^x_": {}}
++            }
++          },
++          "rules": {"type": "array", "items": {"type": "string"}}
++        },
++        "patternProperties": {"^x_": {}}
++      }
++    }
++  },
++  "patternProperties": {
++    "^x_": {}
++  }
++}
+diff --git a/docs/backlog/schema/work_order.schema.json b/docs/backlog/schema/work_order.schema.json
+new file mode 100644
+index 0000000..9358fdc
+--- /dev/null
++++ b/docs/backlog/schema/work_order.schema.json
+@@ -0,0 +1,83 @@
++{
++  "$schema": "https://json-schema.org/draft/2020-12/schema",
++  "type": "object",
++  "additionalProperties": false,
++  "required": [
++    "version",
++    "id",
++    "epic_id",
++    "title",
++    "priority",
++    "status",
++    "owner",
++    "scope",
++    "verify",
++    "dod_id"
++  ],
++  "properties": {
++    "version": {"type": "integer"},
++    "id": {"type": "string", "pattern": "^WO-[0-9]{4}$"},
++    "epic_id": {"type": "string", "pattern": "^E-[0-9]{4}$"},
++    "title": {"type": "string"},
++    "priority": {"type": "string", "pattern": "^P[0-3]$"},
++    "status": {"type": "string", "enum": ["pending", "running", "done", "failed"]},
++    "owner": {"type": ["string", "null"]},
++    "branch": {"type": ["string", "null"]},
++    "worktree": {"type": ["string", "null"]},
++    "scope": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": ["allow", "deny"],
++      "properties": {
++        "allow": {"type": "array", "items": {"type": "string"}},
++        "deny": {"type": "array", "items": {"type": "string"}}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "deliverables": {"type": "array", "items": {"type": "string"}},
++    "verify": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": ["commands"],
++      "properties": {
++        "commands": {"type": "array", "items": {"type": "string"}}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "diff_budget": {
++      "type": "object",
++      "additionalProperties": false,
++      "properties": {
++        "max_files": {"type": "integer"},
++        "max_loc": {"type": "integer"}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "stop_conditions": {
++      "type": "object",
++      "additionalProperties": false,
++      "properties": {
++        "max_iterations": {"type": "integer"},
++        "max_fail_verify": {"type": "integer"}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "dod_id": {"type": "string"},
++    "trace": {
++      "type": "object",
++      "additionalProperties": false,
++      "properties": {
++        "ticket": {"type": ["string", "null"]},
++        "related_wos": {"type": "array", "items": {"type": "string"}}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "started_at": {"type": ["string", "null"]},
++    "finished_at": {"type": ["string", "null"]},
++    "result": {"type": ["string", "null"]},
++    "commit_sha": {"type": ["string", "null"]}
++  },
++  "patternProperties": {
++    "^x_": {}
++  }
++}
+diff --git a/pyproject.toml b/pyproject.toml
+index 70f1dbd..980bfb1 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -8,8 +8,10 @@ dependencies = [
+     "typer[all]>=0.9.0",
+     "pydantic>=2.0",
+     "pyyaml>=6.0",
++    "ruamel.yaml>=0.18.0",
+     "tree-sitter>=0.23.0",
+     "tree-sitter-python>=0.23.0",
++    "jsonschema>=4.0.0",
+ ]
+ 
+ [project.optional-dependencies]
+diff --git a/scripts/ctx_backlog_validate.py b/scripts/ctx_backlog_validate.py
+new file mode 100755
+index 0000000..3532426
+--- /dev/null
++++ b/scripts/ctx_backlog_validate.py
+@@ -0,0 +1,132 @@
++#!/usr/bin/env python3
++import argparse
++import json
++from pathlib import Path
++import sys
++import yaml
++from jsonschema import validate
++
++CANONICAL_JOB_STATES = ["pending", "running", "done", "failed"]
++
++
++def load_yaml(path: Path):
++    try:
++        return yaml.safe_load(path.read_text())
++    except FileNotFoundError:
++        return None
++
++
++def load_json(path: Path):
++    return json.loads(path.read_text())
++
++
++def iter_job_files(root: Path):
++    for state in CANONICAL_JOB_STATES:
++        job_dir = root / "_ctx" / "jobs" / state
++        if not job_dir.exists():
++            continue
++        for path in sorted(job_dir.glob("*.yaml")):
++            if "legacy" in path.parts:
++                continue
++            yield path
++
++
++def iter_dod_files(root: Path):
++    dod_dir = root / "_ctx" / "dod"
++    if not dod_dir.exists():
++        return []
++    return sorted(p for p in dod_dir.glob("*.yaml") if "legacy" not in p.parts)
++
++
++def load_schemas(root: Path):
++    schema_dir = root / "docs" / "backlog" / "schema"
++    return {
++        "backlog": load_json(schema_dir / "backlog.schema.json"),
++        "work_order": load_json(schema_dir / "work_order.schema.json"),
++        "dod": load_json(schema_dir / "dod.schema.json"),
++    }
++
++
++def validate_backlog(root: Path, schemas, strict: bool):
++    backlog_path = root / "_ctx" / "backlog" / "backlog.yaml"
++    backlog = load_yaml(backlog_path)
++    if backlog is None:
++        if strict:
++            raise FileNotFoundError(f"Missing backlog: {backlog_path}")
++        return None
++    validate(instance=backlog, schema=schemas["backlog"])
++    return backlog
++
++
++def validate_dod(root: Path, schemas, strict: bool):
++    dod_paths = iter_dod_files(root)
++    if not dod_paths:
++        if strict:
++            raise FileNotFoundError("No DoD files found under _ctx/dod")
++        return []
++    dod_ids = []
++    for path in dod_paths:
++        dod_data = load_yaml(path)
++        if dod_data is None:
++            raise FileNotFoundError(f"Missing DoD file: {path}")
++        validate(instance=dod_data, schema=schemas["dod"])
++        for entry in dod_data.get("dod", []):
++            dod_ids.append(entry.get("id"))
++    return dod_ids
++
++
++def validate_jobs(root: Path, schemas, epic_ids, dod_ids):
++    wo_ids = set()
++    for job_path in iter_job_files(root):
++        job = load_yaml(job_path)
++        if job is None:
++            raise FileNotFoundError(f"Missing WO: {job_path}")
++        validate(instance=job, schema=schemas["work_order"])
++        epic_id = job.get("epic_id")
++        dod_id = job.get("dod_id")
++        wo_ids.add(job.get("id"))
++        if epic_id not in epic_ids:
++            raise ValueError(f"WO {job_path} references unknown epic_id {epic_id}")
++        if dod_id not in dod_ids:
++            raise ValueError(f"WO {job_path} references unknown dod_id {dod_id}")
++        scope = job.get("scope", {})
++        if not scope.get("allow") or scope.get("deny") is None:
++            raise ValueError(f"WO {job_path} missing scope allow/deny")
++        verify = job.get("verify", {})
++        commands = verify.get("commands") if isinstance(verify, dict) else None
++        if not commands:
++            raise ValueError(f"WO {job_path} missing verify.commands")
++    return wo_ids
++
++
++def main():
++    parser = argparse.ArgumentParser(description="Validate backlog + work orders + DoD catalog")
++    parser.add_argument("--root", type=str, default=".", help="Repo root")
++    parser.add_argument("--fixtures", action="store_true", help="Use tests/fixtures/ctx as root")
++    parser.add_argument("--strict", action="store_true", help="Fail on missing canonical files")
++    args = parser.parse_args()
++
++    root = Path(args.root).resolve()
++    if args.fixtures:
++        root = (Path(__file__).resolve().parent.parent / "tests" / "fixtures" / "ctx").resolve()
++
++    try:
++        schemas = load_schemas(root)
++        backlog = validate_backlog(root, schemas, args.strict)
++        epic_ids = [e.get("id") for e in backlog.get("epics", [])] if backlog else []
++        dod_ids = validate_dod(root, schemas, args.strict)
++        wo_ids = validate_jobs(root, schemas, epic_ids, dod_ids)
++        if backlog:
++            for epic in backlog.get("epics", []):
++                for wo_id in epic.get("wo_queue", []):
++                    if wo_id not in wo_ids:
++                        raise ValueError(f"backlog.wo_queue references missing WO {wo_id}")
++    except Exception as exc:
++        print(f"ERROR: {exc}")
++        return 1
++
++    return 0
++
++
++if __name__ == "__main__":
++    sys.exit(main())
+diff --git a/scripts/ctx_handoff_pack.sh b/scripts/ctx_handoff_pack.sh
+new file mode 100755
+index 0000000..7e291f3
+--- /dev/null
++++ b/scripts/ctx_handoff_pack.sh
+@@ -0,0 +1,78 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++usage() {
++  cat <<'USAGE'
++Usage: scripts/ctx_handoff_pack.sh <WO-ID> [--root PATH]
++USAGE
++}
++
++if [[ ${1:-} == "--help" || ${1:-} == "-h" ]]; then
++  usage
++  exit 0
++fi
++
++if [[ $# -lt 1 ]]; then
++  usage
++  exit 2
++fi
++
++WO_ID="$1"
++ROOT="."
++if [[ ${2:-} == "--root" ]]; then
++  if [[ -z ${3:-} ]]; then
++    echo "ERROR: --root requires a path"
++    exit 2
++  fi
++  ROOT="$3"
++fi
++
++ROOT="$(cd "$ROOT" && pwd)"
++WO_PATH="$ROOT/_ctx/jobs/running/$WO_ID.yaml"
++if [[ ! -f "$WO_PATH" ]]; then
++  WO_PATH="$ROOT/_ctx/jobs/pending/$WO_ID.yaml"
++fi
++
++if [[ ! -f "$WO_PATH" ]]; then
++  echo "ERROR: missing WO $WO_PATH"
++  exit 1
++fi
++
++HANDOFF_DIR="$ROOT/_ctx/handoff/$WO_ID"
++mkdir -p "$HANDOFF_DIR"
++
++# Core git artifacts
++if git -C "$ROOT" rev-parse --git-dir >/dev/null 2>&1; then
++  git -C "$ROOT" diff > "$HANDOFF_DIR/diff.patch"
++  git -C "$ROOT" diff --stat > "$HANDOFF_DIR/diffstat.txt"
++  git -C "$ROOT" status --porcelain > "$HANDOFF_DIR/status.txt"
++fi
++
++python - <<'PY'
++import os
++from pathlib import Path
++import yaml
++
++wo_path = Path(os.environ["WO_PATH"])
++wo = yaml.safe_load(wo_path.read_text())
++
++handoff = Path(os.environ["HANDOFF_DIR"]) / "handoff.md"
++lines = [
++    f"# Handoff {wo.get('id')}",
++    "",
++    f"Epic: {wo.get('epic_id')}",
++    f"DoD: {wo.get('dod_id')}",
++    "",
++    "Deliverables:",
++]
++for item in wo.get("deliverables", []) or []:
++    lines.append(f"- {item}")
++
++handoff.write_text("\n".join(lines) + "\n")
++PY
++
++# Copy logs into handoff if present
++LOG_DIR="$ROOT/_ctx/logs/$WO_ID"
++if [[ -d "$LOG_DIR" ]]; then
++  cp -R "$LOG_DIR"/* "$HANDOFF_DIR"/ 2>/dev/null || true
++fi
+diff --git a/scripts/ctx_metrics_report.py b/scripts/ctx_metrics_report.py
+new file mode 100755
+index 0000000..23f1ee7
+--- /dev/null
++++ b/scripts/ctx_metrics_report.py
+@@ -0,0 +1,51 @@
++#!/usr/bin/env python3
++import argparse
++from collections import Counter
++from datetime import datetime
++import json
++from pathlib import Path
++
++
++def load_jsonl(path: Path):
++    entries = []
++    if not path.exists():
++        return entries
++    for line in path.read_text().splitlines():
++        if not line.strip():
++            continue
++        entries.append(json.loads(line))
++    return entries
++
++
++def main():
++    parser = argparse.ArgumentParser(description="Report WO metrics")
++    parser.add_argument("--root", default=".")
++    parser.add_argument("--since", default=None, help="ISO date filter")
++    args = parser.parse_args()
++
++    root = Path(args.root).resolve()
++    metrics_path = root / "_ctx" / "metrics" / "wo_metrics.jsonl"
++    entries = load_jsonl(metrics_path)
++
++    if args.since:
++        since = datetime.fromisoformat(args.since)
++        filtered = []
++        for entry in entries:
++            ts = entry.get("timestamp")
++            if ts and datetime.fromisoformat(ts) >= since:
++                filtered.append(entry)
++        entries = filtered
++
++    counts = Counter(e.get("result") for e in entries if e.get("result"))
++    total = sum(counts.values())
++
++    print("WO metrics report")
++    print(f"total: {total}")
++    for key, value in sorted(counts.items()):
++        print(f"{key}: {value}")
++
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/scripts/ctx_reconcile_state.py b/scripts/ctx_reconcile_state.py
+new file mode 100755
+index 0000000..600b729
+--- /dev/null
++++ b/scripts/ctx_reconcile_state.py
+@@ -0,0 +1,234 @@
++#!/usr/bin/env python3
++import argparse
++from dataclasses import dataclass
++from datetime import datetime, timezone
++from pathlib import Path
++import json
++import subprocess
++import sys
++import yaml
++from jsonschema import validate
++
++CANONICAL_STATES = ["pending", "running", "done", "failed"]
++
++
++@dataclass
++class Issue:
++    code: str
++    severity: str
++    wo_id: str | None
++    paths: list[str]
++
++
++def load_yaml(path: Path):
++    return yaml.safe_load(path.read_text())
++
++
++def load_schema(root: Path, name: str):
++    return json.loads((root / "docs" / "backlog" / "schema" / name).read_text())
++
++
++def iter_wo_files(root: Path):
++    for state in CANONICAL_STATES:
++        wo_dir = root / "_ctx" / "jobs" / state
++        if not wo_dir.exists():
++            continue
++        for path in sorted(wo_dir.glob("*.yaml")):
++            if "legacy" in path.parts:
++                continue
++            yield state, path
++
++
++def read_worktrees(root: Path, fixtures: Path | None):
++    if fixtures is not None:
++        wt_file = fixtures / "git_worktree_list.txt"
++        if wt_file.exists():
++            return wt_file.read_text()
++        return ""
++    result = subprocess.run(
++        ["git", "worktree", "list"],
++        cwd=root,
++        capture_output=True,
++        text=True,
++        check=True,
++    )
++    return result.stdout
++
++
++def parse_worktrees(text: str):
++    paths = set()
++    for line in text.splitlines():
++        if line.startswith("worktree "):
++            parts = line.split()
++            if len(parts) >= 2:
++                paths.add(parts[1])
++    return paths
++
++
++def add_issue(issues, code, severity, wo_id, paths):
++    issues.append(Issue(code=code, severity=severity, wo_id=wo_id, paths=paths))
++
++
++def load_wo_index(root: Path):
++    index = {}
++    for _, path in iter_wo_files(root):
++        try:
++            wo = load_yaml(path)
++        except Exception:
++            continue
++        wo_id = wo.get("id")
++        if not wo_id:
++            continue
++        index[wo_id] = wo
++    return index
++
++
++def write_reconcile_log(root: Path, issues, applied):
++    log_dir = root / "_ctx" / "logs" / "reconcile"
++    log_dir.mkdir(parents=True, exist_ok=True)
++    timestamp = datetime.now(timezone.utc).isoformat()
++    lines = [f"timestamp: {timestamp}", f"applied: {applied}", "issues:"]
++    for issue in issues:
++        lines.append(f"- {issue.code} {issue.wo_id} {issue.paths}")
++    (log_dir / "reconcile.log").write_text("\n".join(lines) + "\n")
++
++
++def maybe_record_patch(root: Path):
++    result = subprocess.run(
++        ["git", "-C", str(root), "status", "--porcelain"],
++        capture_output=True,
++        text=True,
++        check=True,
++    )
++    if result.stdout.strip():
++        patch_path = root / "_ctx" / "logs" / "reconcile" / "reconcile.patch"
++        diff = subprocess.check_output(
++            ["git", "-C", str(root), "diff"], text=True
++        )
++        patch_path.write_text(diff)
++        return False
++    subprocess.run(
++        ["git", "-C", str(root), "commit", "-am", "chore: reconcile state"],
++        check=False,
++    )
++    return True
++
++
++def main():
++    parser = argparse.ArgumentParser(description="Reconcile WO state vs locks and worktrees")
++    parser.add_argument("--root", default=".", help="Repo root")
++    parser.add_argument("--fixtures", default=None, help="Fixture name under tests/fixtures/reconcile")
++    parser.add_argument("--apply", action="store_true", help="Apply safe fixes")
++    parser.add_argument("--force", action="store_true", help="Allow unsafe fixes")
++    parser.add_argument("--json", dest="json_path", default=None, help="Write JSON report")
++    args = parser.parse_args()
++
++    root = Path(args.root).resolve()
++    fixtures_root = None
++    if args.fixtures:
++        fixtures_root = root / "tests" / "fixtures" / "reconcile" / args.fixtures
++        root = fixtures_root
++
++    worktree_text = read_worktrees(root, fixtures_root)
++    worktrees = parse_worktrees(worktree_text)
++
++    schema = load_schema(root, "work_order.schema.json")
++    issues = []
++    wo_by_id = {}
++
++    for state, path in iter_wo_files(root):
++        try:
++            wo = load_yaml(path)
++            validate(instance=wo, schema=schema)
++        except Exception:
++            add_issue(issues, "WO_INVALID_SCHEMA", "P0", None, [str(path)])
++            continue
++        wo_id = wo.get("id")
++        wo_by_id.setdefault(wo_id, []).append(path)
++
++        if state == "running":
++            lock_path = path.parent / f"{wo_id}.lock"
++            if not lock_path.exists():
++                add_issue(issues, "RUNNING_WITHOUT_LOCK", "P1", wo_id, [str(path)])
++            worktree = wo.get("worktree")
++            if worktree:
++                worktree_path = str((root / worktree).resolve())
++                if worktree_path not in worktrees:
++                    add_issue(issues, "RUNNING_WO_WITHOUT_WORKTREE", "P1", wo_id, [str(path)])
++
++    running_dir = root / "_ctx" / "jobs" / "running"
++    if running_dir.exists():
++        for lock_path in running_dir.glob("*.lock"):
++            wo_id = lock_path.stem
++            wo_path = running_dir / f"{wo_id}.yaml"
++            if not wo_path.exists():
++                add_issue(issues, "LOCK_WITHOUT_RUNNING_WO", "P1", wo_id, [str(lock_path)])
++
++    for wo_id, paths in wo_by_id.items():
++        if wo_id is None:
++            continue
++        if len(paths) > 1:
++            add_issue(issues, "DUPLICATE_WO_ID", "P0", wo_id, [str(p) for p in paths])
++
++    wo_index = load_wo_index(root)
++    for worktree in worktrees:
++        wo_id = None
++        for candidate_id, wo in wo_index.items():
++            wt = wo.get("worktree")
++            if wt and str((root / wt).resolve()) == worktree:
++                wo_id = candidate_id
++                break
++        if wo_id is None:
++            add_issue(issues, "WORKTREE_WITHOUT_RUNNING_WO", "P1", None, [worktree])
++        else:
++            wo_path = root / "_ctx" / "jobs" / "running" / f"{wo_id}.yaml"
++            if not wo_path.exists():
++                add_issue(issues, "WORKTREE_WITHOUT_RUNNING_WO", "P1", wo_id, [worktree])
++
++    apply_refused = any(issue.code == "WO_INVALID_SCHEMA" for issue in issues)
++    if args.apply and apply_refused:
++        print("apply refused: WO_INVALID_SCHEMA")
++        return 1
++
++    if args.apply:
++        for issue in issues:
++            if issue.code == "RUNNING_WITHOUT_LOCK":
++                lock_path = Path(issue.paths[0]).with_suffix(".lock")
++                lock_path.write_text(f"{issue.wo_id}\n")
++        write_reconcile_log(root, issues, applied=True)
++        maybe_record_patch(root)
++    else:
++        if any(issue.code == "RUNNING_WITHOUT_LOCK" for issue in issues):
++            print("would_create_lock")
++
++    report = {
++        "issues": [
++            {
++                "code": i.code,
++                "severity": i.severity,
++                "wo_id": i.wo_id,
++                "paths": i.paths,
++            }
++            for i in issues
++        ]
++    }
++
++    if args.json_path:
++        Path(args.json_path).write_text(json.dumps(report, indent=2))
++
++    if issues:
++        for issue in issues:
++            print(issue.code)
++        if any(issue.severity == "P0" for issue in issues):
++            return 1
++
++    if args.apply and any(issue.code == "RUNNING_WO_WITHOUT_WORKTREE" for issue in issues):
++        if not args.force:
++            print("requires --force")
++            return 2
++
++    return 0
++
++
++if __name__ == "__main__":
++    sys.exit(main())
+diff --git a/scripts/ctx_scope_lint.py b/scripts/ctx_scope_lint.py
+new file mode 100755
+index 0000000..4133917
+--- /dev/null
++++ b/scripts/ctx_scope_lint.py
+@@ -0,0 +1,77 @@
++#!/usr/bin/env python3
++import argparse
++from pathlib import Path
++import fnmatch
++import subprocess
++import sys
++import yaml
++
++
++def load_yaml(path: Path):
++    return yaml.safe_load(path.read_text())
++
++
++def list_changed_files(root: Path):
++    result = subprocess.run(
++        ["git", "status", "--porcelain"],
++        cwd=root,
++        capture_output=True,
++        text=True,
++        check=True,
++    )
++    changed = []
++    for line in result.stdout.splitlines():
++        if not line:
++            continue
++        path = line[3:]
++        if path:
++            changed.append(path)
++    return changed
++
++
++def is_allowed(path: str, allow, deny):
++    for pattern in deny:
++        if fnmatch.fnmatch(path, pattern):
++            return False
++    if not allow:
++        return False
++    for pattern in allow:
++        if fnmatch.fnmatch(path, pattern):
++            return True
++    return False
++
++
++def main():
++    parser = argparse.ArgumentParser(description="Scope linter for WO changes")
++    parser.add_argument("wo_id", help="Work order id, e.g. WO-0001")
++    parser.add_argument("--root", default=".", help="Repo root")
++    args = parser.parse_args()
++
++    root = Path(args.root).resolve()
++    wo_path = root / "_ctx" / "jobs" / "running" / f"{args.wo_id}.yaml"
++    if not wo_path.exists():
++        wo_path = root / "_ctx" / "jobs" / "pending" / f"{args.wo_id}.yaml"
++    if not wo_path.exists():
++        print(f"ERROR: missing WO {wo_path}")
++        return 1
++
++    wo = load_yaml(wo_path)
++    scope = wo.get("scope", {})
++    allow = scope.get("allow", [])
++    deny = scope.get("deny", [])
++
++    violations = []
++    for path in list_changed_files(root):
++        if not is_allowed(path, allow, deny):
++            violations.append(path)
++
++    if violations:
++        print("SCOPE_VIOLATIONS:")
++        for path in violations:
++            print(path)
++        return 1
++    return 0
++
++
++if __name__ == "__main__":
++    sys.exit(main())
+diff --git a/scripts/ctx_status.py b/scripts/ctx_status.py
+new file mode 100755
+index 0000000..a398006
+--- /dev/null
++++ b/scripts/ctx_status.py
+@@ -0,0 +1,63 @@
++#!/usr/bin/env python3
++import argparse
++from datetime import datetime, timezone
++from pathlib import Path
++import yaml
++
++
++def load_yaml(path: Path):
++    return yaml.safe_load(path.read_text())
++
++
++def parse_time(value: str):
++    if not value:
++        return None
++    try:
++        return datetime.fromisoformat(value)
++    except ValueError:
++        return None
++
++
++def iter_wos(root: Path):
++    states = ["pending", "running", "done", "failed"]
++    for state in states:
++        wo_dir = root / "_ctx" / "jobs" / state
++        if not wo_dir.exists():
++            continue
++        for path in sorted(wo_dir.glob("*.yaml")):
++            yield state, path
++
++
++def main():
++    parser = argparse.ArgumentParser(description="Show WO status summary")
++    parser.add_argument("--root", default=".", help="Repo root")
++    parser.add_argument("--stale-days", type=int, default=7)
++    args = parser.parse_args()
++
++    root = Path(args.root).resolve()
++    counts = {"pending": 0, "running": 0, "done": 0, "failed": 0}
++    stale = []
++    now = datetime.now(timezone.utc)
++
++    for state, path in iter_wos(root):
++        counts[state] += 1
++        if state == "running":
++            wo = load_yaml(path)
++            started = parse_time(wo.get("started_at"))
++            if started and (now - started).days >= args.stale_days:
++                stale.append(path.name)
++
++    print("WO status summary")
++    for key in ["pending", "running", "done", "failed"]:
++        print(f"{key}: {counts[key]}")
++
++    if stale:
++        print("stale:")
++        for wo in stale:
++            print(f"- {wo}")
++
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/scripts/ctx_verify_run.sh b/scripts/ctx_verify_run.sh
+new file mode 100755
+index 0000000..322f3d6
+--- /dev/null
++++ b/scripts/ctx_verify_run.sh
+@@ -0,0 +1,117 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++usage() {
++  cat <<'USAGE'
++Usage: scripts/ctx_verify_run.sh <WO-ID> [--root PATH]
++USAGE
++}
++
++if [[ ${1:-} == "--help" || ${1:-} == "-h" ]]; then
++  usage
++  exit 0
++fi
++
++if [[ $# -lt 1 ]]; then
++  usage
++  exit 2
++fi
++
++WO_ID="$1"
++ROOT="."
++if [[ ${2:-} == "--root" ]]; then
++  if [[ -z ${3:-} ]]; then
++    echo "ERROR: --root requires a path"
++    exit 2
++  fi
++  ROOT="$3"
++fi
++
++ROOT="$(cd "$ROOT" && pwd)"
++WO_PATH="$ROOT/_ctx/jobs/running/$WO_ID.yaml"
++if [[ ! -f "$WO_PATH" ]]; then
++  WO_PATH="$ROOT/_ctx/jobs/pending/$WO_ID.yaml"
++fi
++
++if [[ ! -f "$WO_PATH" ]]; then
++  echo "ERROR: missing WO $WO_PATH"
++  exit 1
++fi
++
++LOG_DIR="$ROOT/_ctx/logs/$WO_ID"
++mkdir -p "$LOG_DIR"
++
++COMMANDS=$(python - <<'PY'
++import json
++import os
++import sys
++from pathlib import Path
++import yaml
++
++wo_path = Path(os.environ["WO_PATH"])
++wo = yaml.safe_load(wo_path.read_text())
++commands = wo.get("verify", {}).get("commands", [])
++if not commands:
++    print("ERROR: verify.commands is empty")
++    sys.exit(1)
++print("\n".join(commands))
++PY
++)
++
++if [[ "$COMMANDS" == ERROR:* ]]; then
++  echo "$COMMANDS"
++  exit 1
++fi
++
++python "$ROOT/scripts/ctx_scope_lint.py" "$WO_ID" --root "$ROOT"
++
++STATUS="PASS"
++START=$(python - <<'PY'
++from datetime import datetime, timezone
++print(datetime.now(timezone.utc).isoformat())
++PY
++)
++
++INDEX=0
++while IFS= read -r CMD; do
++  if [[ -z "$CMD" ]]; then
++    continue
++  fi
++  INDEX=$((INDEX+1))
++  LOG_FILE="$LOG_DIR/command_${INDEX}.log"
++  if ! bash -lc "$CMD" >"$LOG_FILE" 2>&1; then
++    STATUS="FAIL"
++    break
++  fi
++done <<< "$COMMANDS"
++
++END=$(python - <<'PY'
++from datetime import datetime, timezone
++print(datetime.now(timezone.utc).isoformat())
++PY
++)
++
++GIT_SHA=$(git -C "$ROOT" rev-parse HEAD)
++python - <<PY
++import json
++import os
++from pathlib import Path
++import yaml
++
++wo = yaml.safe_load(Path("$WO_PATH").read_text())
++verdict = {
++    "wo_id": wo.get("id"),
++    "epic_id": wo.get("epic_id"),
++    "dod_id": wo.get("dod_id"),
++    "git_commit": "$GIT_SHA",
++    "status": "$STATUS",
++    "started_at": "$START",
++    "finished_at": "$END",
++    "commands": "$COMMANDS".split("\n"),
++}
++Path("$LOG_DIR/verdict.json").write_text(json.dumps(verdict, indent=2))
++PY
++
++if [[ "$STATUS" != "PASS" ]]; then
++  exit 1
++fi
+diff --git a/scripts/ctx_wo_finish.py b/scripts/ctx_wo_finish.py
+new file mode 100755
+index 0000000..14c816b
+--- /dev/null
++++ b/scripts/ctx_wo_finish.py
+@@ -0,0 +1,85 @@
++#!/usr/bin/env python3
++import argparse
++from datetime import datetime, timezone
++from pathlib import Path
++import subprocess
++import sys
++import yaml
++
++
++def load_yaml(path: Path):
++    return yaml.safe_load(path.read_text())
++
++
++def write_yaml(path: Path, data):
++    path.write_text(yaml.safe_dump(data, sort_keys=False))
++
++
++def load_dod_catalog(root: Path):
++    dod_dir = root / "_ctx" / "dod"
++    catalog = {}
++    for path in sorted(dod_dir.glob("*.yaml")):
++        dod_data = load_yaml(path)
++        for entry in dod_data.get("dod", []):
++            catalog[entry.get("id")] = entry
++    return catalog
++
++
++def main():
++    parser = argparse.ArgumentParser(description="Finish a work order")
++    parser.add_argument("wo_id", nargs="?", help="Work order id, e.g. WO-0001")
++    parser.add_argument("--root", default=".", help="Repo root")
++    parser.add_argument("--result", choices=["done", "failed"], default=None)
++    args = parser.parse_args()
++
++    if not args.wo_id:
++        parser.print_help()
++        return 0
++
++    root = Path(args.root).resolve()
++    running_path = root / "_ctx" / "jobs" / "running" / f"{args.wo_id}.yaml"
++    if not running_path.exists():
++        print(f"ERROR: missing WO {running_path}")
++        return 1
++
++    wo = load_yaml(running_path)
++    dod_catalog = load_dod_catalog(root)
++    dod = dod_catalog.get(wo.get("dod_id"))
++    if not dod:
++        print(f"ERROR: unknown dod_id {wo.get('dod_id')}")
++        return 1
++
++    required = dod.get("required_artifacts", [])
++    handoff_dir = root / "_ctx" / "handoff" / args.wo_id
++    missing = [name for name in required if not (handoff_dir / name).exists()]
++    if missing:
++        print("ERROR: missing artifacts:")
++        for name in missing:
++            print(name)
++        return 1
++
++    wo["result"] = args.result or "done"
++    wo["finished_at"] = datetime.now(timezone.utc).isoformat()
++    wo["commit_sha"] = subprocess.check_output([
++        "git",
++        "-C",
++        str(root),
++        "rev-parse",
++        "HEAD",
++    ], text=True).strip()
++
++    dest_dir = root / "_ctx" / "jobs" / wo["result"]
++    dest_dir.mkdir(parents=True, exist_ok=True)
++    dest_path = dest_dir / f"{args.wo_id}.yaml"
++    write_yaml(dest_path, wo)
++    running_path.unlink()
++
++    lock_path = root / "_ctx" / "jobs" / "running" / f"{args.wo_id}.lock"
++    if lock_path.exists():
++        lock_path.unlink()
++
++    return 0
++
++
++if __name__ == "__main__":
++    sys.exit(main())
+diff --git a/scripts/ctx_wo_take.py b/scripts/ctx_wo_take.py
+new file mode 100755
+index 0000000..e8f8abf
+--- /dev/null
++++ b/scripts/ctx_wo_take.py
+@@ -0,0 +1,86 @@
++#!/usr/bin/env python3
++import argparse
++from datetime import datetime, timezone
++import getpass
++import json
++from pathlib import Path
++import subprocess
++import sys
++import yaml
++from jsonschema import validate
++
++
++def load_yaml(path: Path):
++    return yaml.safe_load(path.read_text())
++
++
++def write_yaml(path: Path, data):
++    path.write_text(yaml.safe_dump(data, sort_keys=False))
++
++
++def load_schema(root: Path, name: str):
++    schema_path = root / "docs" / "backlog" / "schema" / name
++    return json.loads(schema_path.read_text())
++
++
++def ensure_worktree(root: Path, wo_id: str, branch: str, worktree: str):
++    if not branch or not worktree:
++        return
++    worktree_path = (root / worktree).resolve()
++    if worktree_path.exists():
++        return
++    subprocess.run(
++        ["git", "worktree", "add", "-b", branch, str(worktree_path)],
++        cwd=root,
++        check=True,
++    )
++
++
++def main():
++    parser = argparse.ArgumentParser(description="Take a work order and move it to running")
++    parser.add_argument("wo_id", nargs="?", help="Work order id, e.g. WO-0001")
++    parser.add_argument("--root", default=".", help="Repo root")
++    parser.add_argument("--owner", default=None, help="Owner name")
++    args = parser.parse_args()
++
++    if not args.wo_id:
++        parser.print_help()
++        return 0
++
++    root = Path(args.root).resolve()
++    job_path = root / "_ctx" / "jobs" / "pending" / f"{args.wo_id}.yaml"
++    if not job_path.exists():
++        print(f"ERROR: missing WO {job_path}")
++        return 1
++
++    wo = load_yaml(job_path)
++    schema = load_schema(root, "work_order.schema.json")
++    validate(instance=wo, schema=schema)
++
++    backlog = load_yaml(root / "_ctx" / "backlog" / "backlog.yaml")
++    epic_ids = {e.get("id") for e in backlog.get("epics", [])}
++    if wo.get("epic_id") not in epic_ids:
++        print(f"ERROR: unknown epic_id {wo.get('epic_id')}")
++        return 1
++
++    owner = args.owner or getpass.getuser()
++    wo["owner"] = owner
++    wo["status"] = "running"
++    wo["started_at"] = datetime.now(timezone.utc).isoformat()
++
++    ensure_worktree(root, args.wo_id, wo.get("branch"), wo.get("worktree"))
++
++    running_dir = root / "_ctx" / "jobs" / "running"
++    running_dir.mkdir(parents=True, exist_ok=True)
++    running_path = running_dir / f"{args.wo_id}.yaml"
++    write_yaml(running_path, wo)
++    job_path.unlink()
++
++    lock_path = running_dir / f"{args.wo_id}.lock"
++    lock_path.write_text(f"{args.wo_id}\n")
++
++    return 0
++
++
++if __name__ == "__main__":
++    sys.exit(main())
+diff --git a/tests/fixtures/ctx/_ctx/backlog/backlog.yaml b/tests/fixtures/ctx/_ctx/backlog/backlog.yaml
+new file mode 100644
+index 0000000..a511801
+--- /dev/null
++++ b/tests/fixtures/ctx/_ctx/backlog/backlog.yaml
+@@ -0,0 +1,13 @@
++version: 1
++generated_at: "2026-01-05"
++epics:
++  - id: E-0001
++    title: "Test Epic"
++    priority: P0
++    outcome: "Test outcome"
++    owner: "you"
++    status: active
++    dependencies: []
++    risks: []
++    wo_queue:
++      - WO-0001
+diff --git a/tests/fixtures/ctx/_ctx/dod/dod.yaml b/tests/fixtures/ctx/_ctx/dod/dod.yaml
+new file mode 100644
+index 0000000..3a5c444
+--- /dev/null
++++ b/tests/fixtures/ctx/_ctx/dod/dod.yaml
+@@ -0,0 +1,12 @@
++version: 1
++dod:
++  - id: DOD-DEFAULT
++    title: "DoD"
++    required_artifacts:
++      - "tests.log"
++    required_checks:
++      - name: "verify"
++        commands:
++          - "scripts/verify.sh"
++    rules:
++      - "No evidence, fail"
+diff --git a/tests/fixtures/ctx/_ctx/jobs/pending/WO-0001.yaml b/tests/fixtures/ctx/_ctx/jobs/pending/WO-0001.yaml
+new file mode 100644
+index 0000000..84b2cb5
+--- /dev/null
++++ b/tests/fixtures/ctx/_ctx/jobs/pending/WO-0001.yaml
+@@ -0,0 +1,18 @@
++version: 1
++id: WO-0001
++epic_id: E-0001
++title: "Test WO"
++priority: P0
++status: pending
++owner: null
++branch: null
++worktree: null
++scope:
++  allow:
++    - "src/**"
++  deny:
++    - ".env*"
++verify:
++  commands:
++    - "scripts/verify.sh"
++dod_id: DOD-DEFAULT
+diff --git a/tests/fixtures/ctx/docs/backlog/schema/backlog.schema.json b/tests/fixtures/ctx/docs/backlog/schema/backlog.schema.json
+new file mode 100644
+index 0000000..842bd5a
+--- /dev/null
++++ b/tests/fixtures/ctx/docs/backlog/schema/backlog.schema.json
+@@ -0,0 +1,59 @@
++{
++  "$schema": "https://json-schema.org/draft/2020-12/schema",
++  "type": "object",
++  "additionalProperties": false,
++  "required": ["version", "generated_at", "epics"],
++  "properties": {
++    "version": {"type": "integer"},
++    "generated_at": {"type": "string"},
++    "epics": {
++      "type": "array",
++      "items": {
++        "type": "object",
++        "additionalProperties": false,
++        "required": [
++          "id",
++          "title",
++          "priority",
++          "outcome",
++          "owner",
++          "status",
++          "dependencies",
++          "risks",
++          "wo_queue"
++        ],
++        "properties": {
++          "id": {"type": "string", "pattern": "^E-[0-9]{4}$"},
++          "title": {"type": "string"},
++          "priority": {"type": "string", "pattern": "^P[0-3]$"},
++          "outcome": {"type": "string"},
++          "owner": {"type": ["string", "null"]},
++          "status": {"type": "string", "enum": ["active", "paused", "done"]},
++          "dependencies": {"type": "array", "items": {"type": "string"}},
++          "risks": {"type": "array", "items": {"type": "string"}},
++          "wo_queue": {
++            "type": "array",
++            "items": {"type": "string", "pattern": "^WO-[0-9]{4}$"}
++          }
++        },
++        "patternProperties": {"^x_": {}}
++      }
++    },
++    "work_orders": {
++      "type": "array",
++      "items": {
++        "type": "object",
++        "additionalProperties": false,
++        "required": ["id", "title", "priority", "status"],
++        "properties": {
++          "id": {"type": "string", "pattern": "^WO-[0-9]{4}$"},
++          "title": {"type": "string"},
++          "priority": {"type": "string", "pattern": "^P[0-3]$"},
++          "status": {"type": "string", "enum": ["pending", "running", "done", "failed"]}
++        },
++        "patternProperties": {"^x_": {}}
++      }
++    }
++  },
++  "patternProperties": {"^x_": {}}
++}
+diff --git a/tests/fixtures/ctx/docs/backlog/schema/dod.schema.json b/tests/fixtures/ctx/docs/backlog/schema/dod.schema.json
+new file mode 100644
+index 0000000..a217e25
+--- /dev/null
++++ b/tests/fixtures/ctx/docs/backlog/schema/dod.schema.json
+@@ -0,0 +1,38 @@
++{
++  "$schema": "https://json-schema.org/draft/2020-12/schema",
++  "type": "object",
++  "additionalProperties": false,
++  "required": ["version", "dod"],
++  "properties": {
++    "version": {"type": "integer"},
++    "dod": {
++      "type": "array",
++      "items": {
++        "type": "object",
++        "additionalProperties": false,
++        "required": ["id", "title", "required_artifacts", "required_checks", "rules"],
++        "properties": {
++          "id": {"type": "string"},
++          "title": {"type": "string"},
++          "required_artifacts": {"type": "array", "items": {"type": "string"}},
++          "required_checks": {
++            "type": "array",
++            "items": {
++              "type": "object",
++              "additionalProperties": false,
++              "required": ["name", "commands"],
++              "properties": {
++                "name": {"type": "string"},
++                "commands": {"type": "array", "items": {"type": "string"}}
++              },
++              "patternProperties": {"^x_": {}}
++            }
++          },
++          "rules": {"type": "array", "items": {"type": "string"}}
++        },
++        "patternProperties": {"^x_": {}}
++      }
++    }
++  },
++  "patternProperties": {"^x_": {}}
++}
+diff --git a/tests/fixtures/ctx/docs/backlog/schema/work_order.schema.json b/tests/fixtures/ctx/docs/backlog/schema/work_order.schema.json
+new file mode 100644
+index 0000000..253fd5f
+--- /dev/null
++++ b/tests/fixtures/ctx/docs/backlog/schema/work_order.schema.json
+@@ -0,0 +1,81 @@
++{
++  "$schema": "https://json-schema.org/draft/2020-12/schema",
++  "type": "object",
++  "additionalProperties": false,
++  "required": [
++    "version",
++    "id",
++    "epic_id",
++    "title",
++    "priority",
++    "status",
++    "owner",
++    "scope",
++    "verify",
++    "dod_id"
++  ],
++  "properties": {
++    "version": {"type": "integer"},
++    "id": {"type": "string", "pattern": "^WO-[0-9]{4}$"},
++    "epic_id": {"type": "string", "pattern": "^E-[0-9]{4}$"},
++    "title": {"type": "string"},
++    "priority": {"type": "string", "pattern": "^P[0-3]$"},
++    "status": {"type": "string", "enum": ["pending", "running", "done", "failed"]},
++    "owner": {"type": ["string", "null"]},
++    "branch": {"type": ["string", "null"]},
++    "worktree": {"type": ["string", "null"]},
++    "scope": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": ["allow", "deny"],
++      "properties": {
++        "allow": {"type": "array", "items": {"type": "string"}},
++        "deny": {"type": "array", "items": {"type": "string"}}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "deliverables": {"type": "array", "items": {"type": "string"}},
++    "verify": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": ["commands"],
++      "properties": {
++        "commands": {"type": "array", "items": {"type": "string"}}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "diff_budget": {
++      "type": "object",
++      "additionalProperties": false,
++      "properties": {
++        "max_files": {"type": "integer"},
++        "max_loc": {"type": "integer"}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "stop_conditions": {
++      "type": "object",
++      "additionalProperties": false,
++      "properties": {
++        "max_iterations": {"type": "integer"},
++        "max_fail_verify": {"type": "integer"}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "dod_id": {"type": "string"},
++    "trace": {
++      "type": "object",
++      "additionalProperties": false,
++      "properties": {
++        "ticket": {"type": ["string", "null"]},
++        "related_wos": {"type": "array", "items": {"type": "string"}}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "started_at": {"type": ["string", "null"]},
++    "finished_at": {"type": ["string", "null"]},
++    "result": {"type": ["string", "null"]},
++    "commit_sha": {"type": ["string", "null"]}
++  },
++  "patternProperties": {"^x_": {}}
++}
+diff --git a/tests/fixtures/reconcile/duplicate_wo_id_across_states/_ctx/backlog/backlog.yaml b/tests/fixtures/reconcile/duplicate_wo_id_across_states/_ctx/backlog/backlog.yaml
+new file mode 100644
+index 0000000..dd1e279
+--- /dev/null
++++ b/tests/fixtures/reconcile/duplicate_wo_id_across_states/_ctx/backlog/backlog.yaml
+@@ -0,0 +1,13 @@
++version: 1
++generated_at: "2026-01-05"
++epics:
++  - id: E-0001
++    title: "Test Epic"
++    priority: P0
++    outcome: "Test"
++    owner: "you"
++    status: active
++    dependencies: []
++    risks: []
++    wo_queue:
++      - WO-0007
+diff --git a/tests/fixtures/reconcile/duplicate_wo_id_across_states/_ctx/dod/dod.yaml b/tests/fixtures/reconcile/duplicate_wo_id_across_states/_ctx/dod/dod.yaml
+new file mode 100644
+index 0000000..a15d5bb
+--- /dev/null
++++ b/tests/fixtures/reconcile/duplicate_wo_id_across_states/_ctx/dod/dod.yaml
+@@ -0,0 +1,9 @@
++version: 1
++dod:
++  - id: DOD-DEFAULT
++    title: "DoD"
++    required_artifacts: ["tests.log"]
++    required_checks:
++      - name: "verify"
++        commands: ["scripts/verify.sh"]
++    rules: ["rule"]
+diff --git a/tests/fixtures/reconcile/duplicate_wo_id_across_states/_ctx/jobs/done/WO-0007.yaml b/tests/fixtures/reconcile/duplicate_wo_id_across_states/_ctx/jobs/done/WO-0007.yaml
+new file mode 100644
+index 0000000..bea30ba
+--- /dev/null
++++ b/tests/fixtures/reconcile/duplicate_wo_id_across_states/_ctx/jobs/done/WO-0007.yaml
+@@ -0,0 +1,15 @@
++version: 1
++id: WO-0007
++epic_id: E-0001
++title: "Test done"
++priority: P0
++status: done
++owner: "you"
++branch: null
++worktree: null
++scope:
++  allow: ["src/**"]
++  deny: [".env*"]
++verify:
++  commands: ["scripts/verify.sh"]
++dod_id: DOD-DEFAULT
+diff --git a/tests/fixtures/reconcile/duplicate_wo_id_across_states/_ctx/jobs/pending/WO-0007.yaml b/tests/fixtures/reconcile/duplicate_wo_id_across_states/_ctx/jobs/pending/WO-0007.yaml
+new file mode 100644
+index 0000000..a7c21b6
+--- /dev/null
++++ b/tests/fixtures/reconcile/duplicate_wo_id_across_states/_ctx/jobs/pending/WO-0007.yaml
+@@ -0,0 +1,15 @@
++version: 1
++id: WO-0007
++epic_id: E-0001
++title: "Test"
++priority: P0
++status: pending
++owner: "you"
++branch: null
++worktree: null
++scope:
++  allow: ["src/**"]
++  deny: [".env*"]
++verify:
++  commands: ["scripts/verify.sh"]
++dod_id: DOD-DEFAULT
+diff --git a/tests/fixtures/reconcile/duplicate_wo_id_across_states/docs/backlog/schema/backlog.schema.json b/tests/fixtures/reconcile/duplicate_wo_id_across_states/docs/backlog/schema/backlog.schema.json
+new file mode 100644
+index 0000000..842bd5a
+--- /dev/null
++++ b/tests/fixtures/reconcile/duplicate_wo_id_across_states/docs/backlog/schema/backlog.schema.json
+@@ -0,0 +1,59 @@
++{
++  "$schema": "https://json-schema.org/draft/2020-12/schema",
++  "type": "object",
++  "additionalProperties": false,
++  "required": ["version", "generated_at", "epics"],
++  "properties": {
++    "version": {"type": "integer"},
++    "generated_at": {"type": "string"},
++    "epics": {
++      "type": "array",
++      "items": {
++        "type": "object",
++        "additionalProperties": false,
++        "required": [
++          "id",
++          "title",
++          "priority",
++          "outcome",
++          "owner",
++          "status",
++          "dependencies",
++          "risks",
++          "wo_queue"
++        ],
++        "properties": {
++          "id": {"type": "string", "pattern": "^E-[0-9]{4}$"},
++          "title": {"type": "string"},
++          "priority": {"type": "string", "pattern": "^P[0-3]$"},
++          "outcome": {"type": "string"},
++          "owner": {"type": ["string", "null"]},
++          "status": {"type": "string", "enum": ["active", "paused", "done"]},
++          "dependencies": {"type": "array", "items": {"type": "string"}},
++          "risks": {"type": "array", "items": {"type": "string"}},
++          "wo_queue": {
++            "type": "array",
++            "items": {"type": "string", "pattern": "^WO-[0-9]{4}$"}
++          }
++        },
++        "patternProperties": {"^x_": {}}
++      }
++    },
++    "work_orders": {
++      "type": "array",
++      "items": {
++        "type": "object",
++        "additionalProperties": false,
++        "required": ["id", "title", "priority", "status"],
++        "properties": {
++          "id": {"type": "string", "pattern": "^WO-[0-9]{4}$"},
++          "title": {"type": "string"},
++          "priority": {"type": "string", "pattern": "^P[0-3]$"},
++          "status": {"type": "string", "enum": ["pending", "running", "done", "failed"]}
++        },
++        "patternProperties": {"^x_": {}}
++      }
++    }
++  },
++  "patternProperties": {"^x_": {}}
++}
+diff --git a/tests/fixtures/reconcile/duplicate_wo_id_across_states/docs/backlog/schema/dod.schema.json b/tests/fixtures/reconcile/duplicate_wo_id_across_states/docs/backlog/schema/dod.schema.json
+new file mode 100644
+index 0000000..a217e25
+--- /dev/null
++++ b/tests/fixtures/reconcile/duplicate_wo_id_across_states/docs/backlog/schema/dod.schema.json
+@@ -0,0 +1,38 @@
++{
++  "$schema": "https://json-schema.org/draft/2020-12/schema",
++  "type": "object",
++  "additionalProperties": false,
++  "required": ["version", "dod"],
++  "properties": {
++    "version": {"type": "integer"},
++    "dod": {
++      "type": "array",
++      "items": {
++        "type": "object",
++        "additionalProperties": false,
++        "required": ["id", "title", "required_artifacts", "required_checks", "rules"],
++        "properties": {
++          "id": {"type": "string"},
++          "title": {"type": "string"},
++          "required_artifacts": {"type": "array", "items": {"type": "string"}},
++          "required_checks": {
++            "type": "array",
++            "items": {
++              "type": "object",
++              "additionalProperties": false,
++              "required": ["name", "commands"],
++              "properties": {
++                "name": {"type": "string"},
++                "commands": {"type": "array", "items": {"type": "string"}}
++              },
++              "patternProperties": {"^x_": {}}
++            }
++          },
++          "rules": {"type": "array", "items": {"type": "string"}}
++        },
++        "patternProperties": {"^x_": {}}
++      }
++    }
++  },
++  "patternProperties": {"^x_": {}}
++}
+diff --git a/tests/fixtures/reconcile/duplicate_wo_id_across_states/docs/backlog/schema/work_order.schema.json b/tests/fixtures/reconcile/duplicate_wo_id_across_states/docs/backlog/schema/work_order.schema.json
+new file mode 100644
+index 0000000..253fd5f
+--- /dev/null
++++ b/tests/fixtures/reconcile/duplicate_wo_id_across_states/docs/backlog/schema/work_order.schema.json
+@@ -0,0 +1,81 @@
++{
++  "$schema": "https://json-schema.org/draft/2020-12/schema",
++  "type": "object",
++  "additionalProperties": false,
++  "required": [
++    "version",
++    "id",
++    "epic_id",
++    "title",
++    "priority",
++    "status",
++    "owner",
++    "scope",
++    "verify",
++    "dod_id"
++  ],
++  "properties": {
++    "version": {"type": "integer"},
++    "id": {"type": "string", "pattern": "^WO-[0-9]{4}$"},
++    "epic_id": {"type": "string", "pattern": "^E-[0-9]{4}$"},
++    "title": {"type": "string"},
++    "priority": {"type": "string", "pattern": "^P[0-3]$"},
++    "status": {"type": "string", "enum": ["pending", "running", "done", "failed"]},
++    "owner": {"type": ["string", "null"]},
++    "branch": {"type": ["string", "null"]},
++    "worktree": {"type": ["string", "null"]},
++    "scope": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": ["allow", "deny"],
++      "properties": {
++        "allow": {"type": "array", "items": {"type": "string"}},
++        "deny": {"type": "array", "items": {"type": "string"}}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "deliverables": {"type": "array", "items": {"type": "string"}},
++    "verify": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": ["commands"],
++      "properties": {
++        "commands": {"type": "array", "items": {"type": "string"}}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "diff_budget": {
++      "type": "object",
++      "additionalProperties": false,
++      "properties": {
++        "max_files": {"type": "integer"},
++        "max_loc": {"type": "integer"}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "stop_conditions": {
++      "type": "object",
++      "additionalProperties": false,
++      "properties": {
++        "max_iterations": {"type": "integer"},
++        "max_fail_verify": {"type": "integer"}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "dod_id": {"type": "string"},
++    "trace": {
++      "type": "object",
++      "additionalProperties": false,
++      "properties": {
++        "ticket": {"type": ["string", "null"]},
++        "related_wos": {"type": "array", "items": {"type": "string"}}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "started_at": {"type": ["string", "null"]},
++    "finished_at": {"type": ["string", "null"]},
++    "result": {"type": ["string", "null"]},
++    "commit_sha": {"type": ["string", "null"]}
++  },
++  "patternProperties": {"^x_": {}}
++}
+diff --git a/tests/fixtures/reconcile/duplicate_wo_id_across_states/git_worktree_list.txt b/tests/fixtures/reconcile/duplicate_wo_id_across_states/git_worktree_list.txt
+new file mode 100644
+index 0000000..8df7d35
+--- /dev/null
++++ b/tests/fixtures/reconcile/duplicate_wo_id_across_states/git_worktree_list.txt
+@@ -0,0 +1,3 @@
++worktree /tmp/other
++HEAD 123456
++branch refs/heads/other
+diff --git a/tests/fixtures/reconcile/invalid_schema/_ctx/backlog/backlog.yaml b/tests/fixtures/reconcile/invalid_schema/_ctx/backlog/backlog.yaml
+new file mode 100644
+index 0000000..bdb4534
+--- /dev/null
++++ b/tests/fixtures/reconcile/invalid_schema/_ctx/backlog/backlog.yaml
+@@ -0,0 +1,13 @@
++version: 1
++generated_at: "2026-01-05"
++epics:
++  - id: E-0001
++    title: "Test Epic"
++    priority: P0
++    outcome: "Test"
++    owner: "you"
++    status: active
++    dependencies: []
++    risks: []
++    wo_queue:
++      - WO-0008
+diff --git a/tests/fixtures/reconcile/invalid_schema/_ctx/dod/dod.yaml b/tests/fixtures/reconcile/invalid_schema/_ctx/dod/dod.yaml
+new file mode 100644
+index 0000000..a15d5bb
+--- /dev/null
++++ b/tests/fixtures/reconcile/invalid_schema/_ctx/dod/dod.yaml
+@@ -0,0 +1,9 @@
++version: 1
++dod:
++  - id: DOD-DEFAULT
++    title: "DoD"
++    required_artifacts: ["tests.log"]
++    required_checks:
++      - name: "verify"
++        commands: ["scripts/verify.sh"]
++    rules: ["rule"]
+diff --git a/tests/fixtures/reconcile/invalid_schema/_ctx/jobs/pending/WO-0008.yaml b/tests/fixtures/reconcile/invalid_schema/_ctx/jobs/pending/WO-0008.yaml
+new file mode 100644
+index 0000000..e733b27
+--- /dev/null
++++ b/tests/fixtures/reconcile/invalid_schema/_ctx/jobs/pending/WO-0008.yaml
+@@ -0,0 +1,13 @@
++version: 1
++id: WO-0008
++epic_id: E-0001
++title: "Test"
++priority: P0
++status: pending
++owner: "you"
++branch: null
++worktree: null
++verify:
++  commands: ["scripts/verify.sh"]
++dod_id: DOD-DEFAULT
++bad_field: "nope"
+diff --git a/tests/fixtures/reconcile/invalid_schema/docs/backlog/schema/backlog.schema.json b/tests/fixtures/reconcile/invalid_schema/docs/backlog/schema/backlog.schema.json
+new file mode 100644
+index 0000000..842bd5a
+--- /dev/null
++++ b/tests/fixtures/reconcile/invalid_schema/docs/backlog/schema/backlog.schema.json
+@@ -0,0 +1,59 @@
++{
++  "$schema": "https://json-schema.org/draft/2020-12/schema",
++  "type": "object",
++  "additionalProperties": false,
++  "required": ["version", "generated_at", "epics"],
++  "properties": {
++    "version": {"type": "integer"},
++    "generated_at": {"type": "string"},
++    "epics": {
++      "type": "array",
++      "items": {
++        "type": "object",
++        "additionalProperties": false,
++        "required": [
++          "id",
++          "title",
++          "priority",
++          "outcome",
++          "owner",
++          "status",
++          "dependencies",
++          "risks",
++          "wo_queue"
++        ],
++        "properties": {
++          "id": {"type": "string", "pattern": "^E-[0-9]{4}$"},
++          "title": {"type": "string"},
++          "priority": {"type": "string", "pattern": "^P[0-3]$"},
++          "outcome": {"type": "string"},
++          "owner": {"type": ["string", "null"]},
++          "status": {"type": "string", "enum": ["active", "paused", "done"]},
++          "dependencies": {"type": "array", "items": {"type": "string"}},
++          "risks": {"type": "array", "items": {"type": "string"}},
++          "wo_queue": {
++            "type": "array",
++            "items": {"type": "string", "pattern": "^WO-[0-9]{4}$"}
++          }
++        },
++        "patternProperties": {"^x_": {}}
++      }
++    },
++    "work_orders": {
++      "type": "array",
++      "items": {
++        "type": "object",
++        "additionalProperties": false,
++        "required": ["id", "title", "priority", "status"],
++        "properties": {
++          "id": {"type": "string", "pattern": "^WO-[0-9]{4}$"},
++          "title": {"type": "string"},
++          "priority": {"type": "string", "pattern": "^P[0-3]$"},
++          "status": {"type": "string", "enum": ["pending", "running", "done", "failed"]}
++        },
++        "patternProperties": {"^x_": {}}
++      }
++    }
++  },
++  "patternProperties": {"^x_": {}}
++}
+diff --git a/tests/fixtures/reconcile/invalid_schema/docs/backlog/schema/dod.schema.json b/tests/fixtures/reconcile/invalid_schema/docs/backlog/schema/dod.schema.json
+new file mode 100644
+index 0000000..a217e25
+--- /dev/null
++++ b/tests/fixtures/reconcile/invalid_schema/docs/backlog/schema/dod.schema.json
+@@ -0,0 +1,38 @@
++{
++  "$schema": "https://json-schema.org/draft/2020-12/schema",
++  "type": "object",
++  "additionalProperties": false,
++  "required": ["version", "dod"],
++  "properties": {
++    "version": {"type": "integer"},
++    "dod": {
++      "type": "array",
++      "items": {
++        "type": "object",
++        "additionalProperties": false,
++        "required": ["id", "title", "required_artifacts", "required_checks", "rules"],
++        "properties": {
++          "id": {"type": "string"},
++          "title": {"type": "string"},
++          "required_artifacts": {"type": "array", "items": {"type": "string"}},
++          "required_checks": {
++            "type": "array",
++            "items": {
++              "type": "object",
++              "additionalProperties": false,
++              "required": ["name", "commands"],
++              "properties": {
++                "name": {"type": "string"},
++                "commands": {"type": "array", "items": {"type": "string"}}
++              },
++              "patternProperties": {"^x_": {}}
++            }
++          },
++          "rules": {"type": "array", "items": {"type": "string"}}
++        },
++        "patternProperties": {"^x_": {}}
++      }
++    }
++  },
++  "patternProperties": {"^x_": {}}
++}
+diff --git a/tests/fixtures/reconcile/invalid_schema/docs/backlog/schema/work_order.schema.json b/tests/fixtures/reconcile/invalid_schema/docs/backlog/schema/work_order.schema.json
+new file mode 100644
+index 0000000..253fd5f
+--- /dev/null
++++ b/tests/fixtures/reconcile/invalid_schema/docs/backlog/schema/work_order.schema.json
+@@ -0,0 +1,81 @@
++{
++  "$schema": "https://json-schema.org/draft/2020-12/schema",
++  "type": "object",
++  "additionalProperties": false,
++  "required": [
++    "version",
++    "id",
++    "epic_id",
++    "title",
++    "priority",
++    "status",
++    "owner",
++    "scope",
++    "verify",
++    "dod_id"
++  ],
++  "properties": {
++    "version": {"type": "integer"},
++    "id": {"type": "string", "pattern": "^WO-[0-9]{4}$"},
++    "epic_id": {"type": "string", "pattern": "^E-[0-9]{4}$"},
++    "title": {"type": "string"},
++    "priority": {"type": "string", "pattern": "^P[0-3]$"},
++    "status": {"type": "string", "enum": ["pending", "running", "done", "failed"]},
++    "owner": {"type": ["string", "null"]},
++    "branch": {"type": ["string", "null"]},
++    "worktree": {"type": ["string", "null"]},
++    "scope": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": ["allow", "deny"],
++      "properties": {
++        "allow": {"type": "array", "items": {"type": "string"}},
++        "deny": {"type": "array", "items": {"type": "string"}}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "deliverables": {"type": "array", "items": {"type": "string"}},
++    "verify": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": ["commands"],
++      "properties": {
++        "commands": {"type": "array", "items": {"type": "string"}}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "diff_budget": {
++      "type": "object",
++      "additionalProperties": false,
++      "properties": {
++        "max_files": {"type": "integer"},
++        "max_loc": {"type": "integer"}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "stop_conditions": {
++      "type": "object",
++      "additionalProperties": false,
++      "properties": {
++        "max_iterations": {"type": "integer"},
++        "max_fail_verify": {"type": "integer"}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "dod_id": {"type": "string"},
++    "trace": {
++      "type": "object",
++      "additionalProperties": false,
++      "properties": {
++        "ticket": {"type": ["string", "null"]},
++        "related_wos": {"type": "array", "items": {"type": "string"}}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "started_at": {"type": ["string", "null"]},
++    "finished_at": {"type": ["string", "null"]},
++    "result": {"type": ["string", "null"]},
++    "commit_sha": {"type": ["string", "null"]}
++  },
++  "patternProperties": {"^x_": {}}
++}
+diff --git a/tests/fixtures/reconcile/invalid_schema/git_worktree_list.txt b/tests/fixtures/reconcile/invalid_schema/git_worktree_list.txt
+new file mode 100644
+index 0000000..8df7d35
+--- /dev/null
++++ b/tests/fixtures/reconcile/invalid_schema/git_worktree_list.txt
+@@ -0,0 +1,3 @@
++worktree /tmp/other
++HEAD 123456
++branch refs/heads/other
+diff --git a/tests/fixtures/reconcile/lock_without_running_wo/_ctx/backlog/backlog.yaml b/tests/fixtures/reconcile/lock_without_running_wo/_ctx/backlog/backlog.yaml
+new file mode 100644
+index 0000000..6f703a7
+--- /dev/null
++++ b/tests/fixtures/reconcile/lock_without_running_wo/_ctx/backlog/backlog.yaml
+@@ -0,0 +1,12 @@
++version: 1
++generated_at: "2026-01-05"
++epics:
++  - id: E-0001
++    title: "Test Epic"
++    priority: P0
++    outcome: "Test"
++    owner: "you"
++    status: active
++    dependencies: []
++    risks: []
++    wo_queue: []
+diff --git a/tests/fixtures/reconcile/lock_without_running_wo/_ctx/dod/dod.yaml b/tests/fixtures/reconcile/lock_without_running_wo/_ctx/dod/dod.yaml
+new file mode 100644
+index 0000000..a15d5bb
+--- /dev/null
++++ b/tests/fixtures/reconcile/lock_without_running_wo/_ctx/dod/dod.yaml
+@@ -0,0 +1,9 @@
++version: 1
++dod:
++  - id: DOD-DEFAULT
++    title: "DoD"
++    required_artifacts: ["tests.log"]
++    required_checks:
++      - name: "verify"
++        commands: ["scripts/verify.sh"]
++    rules: ["rule"]
+diff --git a/tests/fixtures/reconcile/lock_without_running_wo/_ctx/jobs/running/WO-0002.lock b/tests/fixtures/reconcile/lock_without_running_wo/_ctx/jobs/running/WO-0002.lock
+new file mode 100644
+index 0000000..ddf31fb
+--- /dev/null
++++ b/tests/fixtures/reconcile/lock_without_running_wo/_ctx/jobs/running/WO-0002.lock
+@@ -0,0 +1 @@
++WO-0002
+diff --git a/tests/fixtures/reconcile/lock_without_running_wo/docs/backlog/schema/backlog.schema.json b/tests/fixtures/reconcile/lock_without_running_wo/docs/backlog/schema/backlog.schema.json
+new file mode 100644
+index 0000000..842bd5a
+--- /dev/null
++++ b/tests/fixtures/reconcile/lock_without_running_wo/docs/backlog/schema/backlog.schema.json
+@@ -0,0 +1,59 @@
++{
++  "$schema": "https://json-schema.org/draft/2020-12/schema",
++  "type": "object",
++  "additionalProperties": false,
++  "required": ["version", "generated_at", "epics"],
++  "properties": {
++    "version": {"type": "integer"},
++    "generated_at": {"type": "string"},
++    "epics": {
++      "type": "array",
++      "items": {
++        "type": "object",
++        "additionalProperties": false,
++        "required": [
++          "id",
++          "title",
++          "priority",
++          "outcome",
++          "owner",
++          "status",
++          "dependencies",
++          "risks",
++          "wo_queue"
++        ],
++        "properties": {
++          "id": {"type": "string", "pattern": "^E-[0-9]{4}$"},
++          "title": {"type": "string"},
++          "priority": {"type": "string", "pattern": "^P[0-3]$"},
++          "outcome": {"type": "string"},
++          "owner": {"type": ["string", "null"]},
++          "status": {"type": "string", "enum": ["active", "paused", "done"]},
++          "dependencies": {"type": "array", "items": {"type": "string"}},
++          "risks": {"type": "array", "items": {"type": "string"}},
++          "wo_queue": {
++            "type": "array",
++            "items": {"type": "string", "pattern": "^WO-[0-9]{4}$"}
++          }
++        },
++        "patternProperties": {"^x_": {}}
++      }
++    },
++    "work_orders": {
++      "type": "array",
++      "items": {
++        "type": "object",
++        "additionalProperties": false,
++        "required": ["id", "title", "priority", "status"],
++        "properties": {
++          "id": {"type": "string", "pattern": "^WO-[0-9]{4}$"},
++          "title": {"type": "string"},
++          "priority": {"type": "string", "pattern": "^P[0-3]$"},
++          "status": {"type": "string", "enum": ["pending", "running", "done", "failed"]}
++        },
++        "patternProperties": {"^x_": {}}
++      }
++    }
++  },
++  "patternProperties": {"^x_": {}}
++}
+diff --git a/tests/fixtures/reconcile/lock_without_running_wo/docs/backlog/schema/dod.schema.json b/tests/fixtures/reconcile/lock_without_running_wo/docs/backlog/schema/dod.schema.json
+new file mode 100644
+index 0000000..a217e25
+--- /dev/null
++++ b/tests/fixtures/reconcile/lock_without_running_wo/docs/backlog/schema/dod.schema.json
+@@ -0,0 +1,38 @@
++{
++  "$schema": "https://json-schema.org/draft/2020-12/schema",
++  "type": "object",
++  "additionalProperties": false,
++  "required": ["version", "dod"],
++  "properties": {
++    "version": {"type": "integer"},
++    "dod": {
++      "type": "array",
++      "items": {
++        "type": "object",
++        "additionalProperties": false,
++        "required": ["id", "title", "required_artifacts", "required_checks", "rules"],
++        "properties": {
++          "id": {"type": "string"},
++          "title": {"type": "string"},
++          "required_artifacts": {"type": "array", "items": {"type": "string"}},
++          "required_checks": {
++            "type": "array",
++            "items": {
++              "type": "object",
++              "additionalProperties": false,
++              "required": ["name", "commands"],
++              "properties": {
++                "name": {"type": "string"},
++                "commands": {"type": "array", "items": {"type": "string"}}
++              },
++              "patternProperties": {"^x_": {}}
++            }
++          },
++          "rules": {"type": "array", "items": {"type": "string"}}
++        },
++        "patternProperties": {"^x_": {}}
++      }
++    }
++  },
++  "patternProperties": {"^x_": {}}
++}
+diff --git a/tests/fixtures/reconcile/lock_without_running_wo/docs/backlog/schema/work_order.schema.json b/tests/fixtures/reconcile/lock_without_running_wo/docs/backlog/schema/work_order.schema.json
+new file mode 100644
+index 0000000..253fd5f
+--- /dev/null
++++ b/tests/fixtures/reconcile/lock_without_running_wo/docs/backlog/schema/work_order.schema.json
+@@ -0,0 +1,81 @@
++{
++  "$schema": "https://json-schema.org/draft/2020-12/schema",
++  "type": "object",
++  "additionalProperties": false,
++  "required": [
++    "version",
++    "id",
++    "epic_id",
++    "title",
++    "priority",
++    "status",
++    "owner",
++    "scope",
++    "verify",
++    "dod_id"
++  ],
++  "properties": {
++    "version": {"type": "integer"},
++    "id": {"type": "string", "pattern": "^WO-[0-9]{4}$"},
++    "epic_id": {"type": "string", "pattern": "^E-[0-9]{4}$"},
++    "title": {"type": "string"},
++    "priority": {"type": "string", "pattern": "^P[0-3]$"},
++    "status": {"type": "string", "enum": ["pending", "running", "done", "failed"]},
++    "owner": {"type": ["string", "null"]},
++    "branch": {"type": ["string", "null"]},
++    "worktree": {"type": ["string", "null"]},
++    "scope": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": ["allow", "deny"],
++      "properties": {
++        "allow": {"type": "array", "items": {"type": "string"}},
++        "deny": {"type": "array", "items": {"type": "string"}}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "deliverables": {"type": "array", "items": {"type": "string"}},
++    "verify": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": ["commands"],
++      "properties": {
++        "commands": {"type": "array", "items": {"type": "string"}}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "diff_budget": {
++      "type": "object",
++      "additionalProperties": false,
++      "properties": {
++        "max_files": {"type": "integer"},
++        "max_loc": {"type": "integer"}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "stop_conditions": {
++      "type": "object",
++      "additionalProperties": false,
++      "properties": {
++        "max_iterations": {"type": "integer"},
++        "max_fail_verify": {"type": "integer"}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "dod_id": {"type": "string"},
++    "trace": {
++      "type": "object",
++      "additionalProperties": false,
++      "properties": {
++        "ticket": {"type": ["string", "null"]},
++        "related_wos": {"type": "array", "items": {"type": "string"}}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "started_at": {"type": ["string", "null"]},
++    "finished_at": {"type": ["string", "null"]},
++    "result": {"type": ["string", "null"]},
++    "commit_sha": {"type": ["string", "null"]}
++  },
++  "patternProperties": {"^x_": {}}
++}
+diff --git a/tests/fixtures/reconcile/lock_without_running_wo/git_worktree_list.txt b/tests/fixtures/reconcile/lock_without_running_wo/git_worktree_list.txt
+new file mode 100644
+index 0000000..a65b3d0
+--- /dev/null
++++ b/tests/fixtures/reconcile/lock_without_running_wo/git_worktree_list.txt
+@@ -0,0 +1,3 @@
++worktree /tmp/wt-WO-0002
++HEAD 123456
++branch refs/heads/job/WO-0002
+diff --git a/tests/fixtures/reconcile/running_without_lock/_ctx/backlog/backlog.yaml b/tests/fixtures/reconcile/running_without_lock/_ctx/backlog/backlog.yaml
+new file mode 100644
+index 0000000..33f8aaf
+--- /dev/null
++++ b/tests/fixtures/reconcile/running_without_lock/_ctx/backlog/backlog.yaml
+@@ -0,0 +1,13 @@
++version: 1
++generated_at: "2026-01-05"
++epics:
++  - id: E-0001
++    title: "Test Epic"
++    priority: P0
++    outcome: "Test"
++    owner: "you"
++    status: active
++    dependencies: []
++    risks: []
++    wo_queue:
++      - WO-0001
+diff --git a/tests/fixtures/reconcile/running_without_lock/_ctx/dod/dod.yaml b/tests/fixtures/reconcile/running_without_lock/_ctx/dod/dod.yaml
+new file mode 100644
+index 0000000..a15d5bb
+--- /dev/null
++++ b/tests/fixtures/reconcile/running_without_lock/_ctx/dod/dod.yaml
+@@ -0,0 +1,9 @@
++version: 1
++dod:
++  - id: DOD-DEFAULT
++    title: "DoD"
++    required_artifacts: ["tests.log"]
++    required_checks:
++      - name: "verify"
++        commands: ["scripts/verify.sh"]
++    rules: ["rule"]
+diff --git a/tests/fixtures/reconcile/running_without_lock/_ctx/jobs/running/WO-0001.yaml b/tests/fixtures/reconcile/running_without_lock/_ctx/jobs/running/WO-0001.yaml
+new file mode 100644
+index 0000000..9636e91
+--- /dev/null
++++ b/tests/fixtures/reconcile/running_without_lock/_ctx/jobs/running/WO-0001.yaml
+@@ -0,0 +1,15 @@
++version: 1
++id: WO-0001
++epic_id: E-0001
++title: "Test"
++priority: P0
++status: running
++owner: "you"
++branch: null
++worktree: "../wt-WO-0001"
++scope:
++  allow: ["src/**"]
++  deny: [".env*"]
++verify:
++  commands: ["scripts/verify.sh"]
++dod_id: DOD-DEFAULT
+diff --git a/tests/fixtures/reconcile/running_without_lock/docs/backlog/schema/backlog.schema.json b/tests/fixtures/reconcile/running_without_lock/docs/backlog/schema/backlog.schema.json
+new file mode 100644
+index 0000000..842bd5a
+--- /dev/null
++++ b/tests/fixtures/reconcile/running_without_lock/docs/backlog/schema/backlog.schema.json
+@@ -0,0 +1,59 @@
++{
++  "$schema": "https://json-schema.org/draft/2020-12/schema",
++  "type": "object",
++  "additionalProperties": false,
++  "required": ["version", "generated_at", "epics"],
++  "properties": {
++    "version": {"type": "integer"},
++    "generated_at": {"type": "string"},
++    "epics": {
++      "type": "array",
++      "items": {
++        "type": "object",
++        "additionalProperties": false,
++        "required": [
++          "id",
++          "title",
++          "priority",
++          "outcome",
++          "owner",
++          "status",
++          "dependencies",
++          "risks",
++          "wo_queue"
++        ],
++        "properties": {
++          "id": {"type": "string", "pattern": "^E-[0-9]{4}$"},
++          "title": {"type": "string"},
++          "priority": {"type": "string", "pattern": "^P[0-3]$"},
++          "outcome": {"type": "string"},
++          "owner": {"type": ["string", "null"]},
++          "status": {"type": "string", "enum": ["active", "paused", "done"]},
++          "dependencies": {"type": "array", "items": {"type": "string"}},
++          "risks": {"type": "array", "items": {"type": "string"}},
++          "wo_queue": {
++            "type": "array",
++            "items": {"type": "string", "pattern": "^WO-[0-9]{4}$"}
++          }
++        },
++        "patternProperties": {"^x_": {}}
++      }
++    },
++    "work_orders": {
++      "type": "array",
++      "items": {
++        "type": "object",
++        "additionalProperties": false,
++        "required": ["id", "title", "priority", "status"],
++        "properties": {
++          "id": {"type": "string", "pattern": "^WO-[0-9]{4}$"},
++          "title": {"type": "string"},
++          "priority": {"type": "string", "pattern": "^P[0-3]$"},
++          "status": {"type": "string", "enum": ["pending", "running", "done", "failed"]}
++        },
++        "patternProperties": {"^x_": {}}
++      }
++    }
++  },
++  "patternProperties": {"^x_": {}}
++}
+diff --git a/tests/fixtures/reconcile/running_without_lock/docs/backlog/schema/dod.schema.json b/tests/fixtures/reconcile/running_without_lock/docs/backlog/schema/dod.schema.json
+new file mode 100644
+index 0000000..a217e25
+--- /dev/null
++++ b/tests/fixtures/reconcile/running_without_lock/docs/backlog/schema/dod.schema.json
+@@ -0,0 +1,38 @@
++{
++  "$schema": "https://json-schema.org/draft/2020-12/schema",
++  "type": "object",
++  "additionalProperties": false,
++  "required": ["version", "dod"],
++  "properties": {
++    "version": {"type": "integer"},
++    "dod": {
++      "type": "array",
++      "items": {
++        "type": "object",
++        "additionalProperties": false,
++        "required": ["id", "title", "required_artifacts", "required_checks", "rules"],
++        "properties": {
++          "id": {"type": "string"},
++          "title": {"type": "string"},
++          "required_artifacts": {"type": "array", "items": {"type": "string"}},
++          "required_checks": {
++            "type": "array",
++            "items": {
++              "type": "object",
++              "additionalProperties": false,
++              "required": ["name", "commands"],
++              "properties": {
++                "name": {"type": "string"},
++                "commands": {"type": "array", "items": {"type": "string"}}
++              },
++              "patternProperties": {"^x_": {}}
++            }
++          },
++          "rules": {"type": "array", "items": {"type": "string"}}
++        },
++        "patternProperties": {"^x_": {}}
++      }
++    }
++  },
++  "patternProperties": {"^x_": {}}
++}
+diff --git a/tests/fixtures/reconcile/running_without_lock/docs/backlog/schema/work_order.schema.json b/tests/fixtures/reconcile/running_without_lock/docs/backlog/schema/work_order.schema.json
+new file mode 100644
+index 0000000..253fd5f
+--- /dev/null
++++ b/tests/fixtures/reconcile/running_without_lock/docs/backlog/schema/work_order.schema.json
+@@ -0,0 +1,81 @@
++{
++  "$schema": "https://json-schema.org/draft/2020-12/schema",
++  "type": "object",
++  "additionalProperties": false,
++  "required": [
++    "version",
++    "id",
++    "epic_id",
++    "title",
++    "priority",
++    "status",
++    "owner",
++    "scope",
++    "verify",
++    "dod_id"
++  ],
++  "properties": {
++    "version": {"type": "integer"},
++    "id": {"type": "string", "pattern": "^WO-[0-9]{4}$"},
++    "epic_id": {"type": "string", "pattern": "^E-[0-9]{4}$"},
++    "title": {"type": "string"},
++    "priority": {"type": "string", "pattern": "^P[0-3]$"},
++    "status": {"type": "string", "enum": ["pending", "running", "done", "failed"]},
++    "owner": {"type": ["string", "null"]},
++    "branch": {"type": ["string", "null"]},
++    "worktree": {"type": ["string", "null"]},
++    "scope": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": ["allow", "deny"],
++      "properties": {
++        "allow": {"type": "array", "items": {"type": "string"}},
++        "deny": {"type": "array", "items": {"type": "string"}}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "deliverables": {"type": "array", "items": {"type": "string"}},
++    "verify": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": ["commands"],
++      "properties": {
++        "commands": {"type": "array", "items": {"type": "string"}}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "diff_budget": {
++      "type": "object",
++      "additionalProperties": false,
++      "properties": {
++        "max_files": {"type": "integer"},
++        "max_loc": {"type": "integer"}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "stop_conditions": {
++      "type": "object",
++      "additionalProperties": false,
++      "properties": {
++        "max_iterations": {"type": "integer"},
++        "max_fail_verify": {"type": "integer"}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "dod_id": {"type": "string"},
++    "trace": {
++      "type": "object",
++      "additionalProperties": false,
++      "properties": {
++        "ticket": {"type": ["string", "null"]},
++        "related_wos": {"type": "array", "items": {"type": "string"}}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "started_at": {"type": ["string", "null"]},
++    "finished_at": {"type": ["string", "null"]},
++    "result": {"type": ["string", "null"]},
++    "commit_sha": {"type": ["string", "null"]}
++  },
++  "patternProperties": {"^x_": {}}
++}
+diff --git a/tests/fixtures/reconcile/running_without_lock/git_worktree_list.txt b/tests/fixtures/reconcile/running_without_lock/git_worktree_list.txt
+new file mode 100644
+index 0000000..fa6df68
+--- /dev/null
++++ b/tests/fixtures/reconcile/running_without_lock/git_worktree_list.txt
+@@ -0,0 +1,3 @@
++worktree /tmp/wt-WO-0001
++HEAD 123456
++branch refs/heads/job/WO-0001
+diff --git a/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/backlog/backlog.yaml b/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/backlog/backlog.yaml
+new file mode 100644
+index 0000000..def8ab5
+--- /dev/null
++++ b/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/backlog/backlog.yaml
+@@ -0,0 +1,13 @@
++version: 1
++generated_at: "2026-01-05"
++epics:
++  - id: E-0001
++    title: "Test Epic"
++    priority: P0
++    outcome: "Test"
++    owner: "you"
++    status: active
++    dependencies: []
++    risks: []
++    wo_queue:
++      - WO-0003
+diff --git a/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/dod/dod.yaml b/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/dod/dod.yaml
+new file mode 100644
+index 0000000..a15d5bb
+--- /dev/null
++++ b/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/dod/dod.yaml
+@@ -0,0 +1,9 @@
++version: 1
++dod:
++  - id: DOD-DEFAULT
++    title: "DoD"
++    required_artifacts: ["tests.log"]
++    required_checks:
++      - name: "verify"
++        commands: ["scripts/verify.sh"]
++    rules: ["rule"]
+diff --git a/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/jobs/running/WO-0003.lock b/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/jobs/running/WO-0003.lock
+new file mode 100644
+index 0000000..562b0e7
+--- /dev/null
++++ b/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/jobs/running/WO-0003.lock
+@@ -0,0 +1 @@
++WO-0003
+diff --git a/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/jobs/running/WO-0003.yaml b/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/jobs/running/WO-0003.yaml
+new file mode 100644
+index 0000000..369c689
+--- /dev/null
++++ b/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/jobs/running/WO-0003.yaml
+@@ -0,0 +1,15 @@
++version: 1
++id: WO-0003
++epic_id: E-0001
++title: "Test"
++priority: P0
++status: running
++owner: "you"
++branch: "job/WO-0003"
++worktree: "../wt-WO-0003"
++scope:
++  allow: ["src/**"]
++  deny: [".env*"]
++verify:
++  commands: ["scripts/verify.sh"]
++dod_id: DOD-DEFAULT
+diff --git a/tests/fixtures/reconcile/running_wo_without_worktree/docs/backlog/schema/backlog.schema.json b/tests/fixtures/reconcile/running_wo_without_worktree/docs/backlog/schema/backlog.schema.json
+new file mode 100644
+index 0000000..842bd5a
+--- /dev/null
++++ b/tests/fixtures/reconcile/running_wo_without_worktree/docs/backlog/schema/backlog.schema.json
+@@ -0,0 +1,59 @@
++{
++  "$schema": "https://json-schema.org/draft/2020-12/schema",
++  "type": "object",
++  "additionalProperties": false,
++  "required": ["version", "generated_at", "epics"],
++  "properties": {
++    "version": {"type": "integer"},
++    "generated_at": {"type": "string"},
++    "epics": {
++      "type": "array",
++      "items": {
++        "type": "object",
++        "additionalProperties": false,
++        "required": [
++          "id",
++          "title",
++          "priority",
++          "outcome",
++          "owner",
++          "status",
++          "dependencies",
++          "risks",
++          "wo_queue"
++        ],
++        "properties": {
++          "id": {"type": "string", "pattern": "^E-[0-9]{4}$"},
++          "title": {"type": "string"},
++          "priority": {"type": "string", "pattern": "^P[0-3]$"},
++          "outcome": {"type": "string"},
++          "owner": {"type": ["string", "null"]},
++          "status": {"type": "string", "enum": ["active", "paused", "done"]},
++          "dependencies": {"type": "array", "items": {"type": "string"}},
++          "risks": {"type": "array", "items": {"type": "string"}},
++          "wo_queue": {
++            "type": "array",
++            "items": {"type": "string", "pattern": "^WO-[0-9]{4}$"}
++          }
++        },
++        "patternProperties": {"^x_": {}}
++      }
++    },
++    "work_orders": {
++      "type": "array",
++      "items": {
++        "type": "object",
++        "additionalProperties": false,
++        "required": ["id", "title", "priority", "status"],
++        "properties": {
++          "id": {"type": "string", "pattern": "^WO-[0-9]{4}$"},
++          "title": {"type": "string"},
++          "priority": {"type": "string", "pattern": "^P[0-3]$"},
++          "status": {"type": "string", "enum": ["pending", "running", "done", "failed"]}
++        },
++        "patternProperties": {"^x_": {}}
++      }
++    }
++  },
++  "patternProperties": {"^x_": {}}
++}
+diff --git a/tests/fixtures/reconcile/running_wo_without_worktree/docs/backlog/schema/dod.schema.json b/tests/fixtures/reconcile/running_wo_without_worktree/docs/backlog/schema/dod.schema.json
+new file mode 100644
+index 0000000..a217e25
+--- /dev/null
++++ b/tests/fixtures/reconcile/running_wo_without_worktree/docs/backlog/schema/dod.schema.json
+@@ -0,0 +1,38 @@
++{
++  "$schema": "https://json-schema.org/draft/2020-12/schema",
++  "type": "object",
++  "additionalProperties": false,
++  "required": ["version", "dod"],
++  "properties": {
++    "version": {"type": "integer"},
++    "dod": {
++      "type": "array",
++      "items": {
++        "type": "object",
++        "additionalProperties": false,
++        "required": ["id", "title", "required_artifacts", "required_checks", "rules"],
++        "properties": {
++          "id": {"type": "string"},
++          "title": {"type": "string"},
++          "required_artifacts": {"type": "array", "items": {"type": "string"}},
++          "required_checks": {
++            "type": "array",
++            "items": {
++              "type": "object",
++              "additionalProperties": false,
++              "required": ["name", "commands"],
++              "properties": {
++                "name": {"type": "string"},
++                "commands": {"type": "array", "items": {"type": "string"}}
++              },
++              "patternProperties": {"^x_": {}}
++            }
++          },
++          "rules": {"type": "array", "items": {"type": "string"}}
++        },
++        "patternProperties": {"^x_": {}}
++      }
++    }
++  },
++  "patternProperties": {"^x_": {}}
++}
+diff --git a/tests/fixtures/reconcile/running_wo_without_worktree/docs/backlog/schema/work_order.schema.json b/tests/fixtures/reconcile/running_wo_without_worktree/docs/backlog/schema/work_order.schema.json
+new file mode 100644
+index 0000000..253fd5f
+--- /dev/null
++++ b/tests/fixtures/reconcile/running_wo_without_worktree/docs/backlog/schema/work_order.schema.json
+@@ -0,0 +1,81 @@
++{
++  "$schema": "https://json-schema.org/draft/2020-12/schema",
++  "type": "object",
++  "additionalProperties": false,
++  "required": [
++    "version",
++    "id",
++    "epic_id",
++    "title",
++    "priority",
++    "status",
++    "owner",
++    "scope",
++    "verify",
++    "dod_id"
++  ],
++  "properties": {
++    "version": {"type": "integer"},
++    "id": {"type": "string", "pattern": "^WO-[0-9]{4}$"},
++    "epic_id": {"type": "string", "pattern": "^E-[0-9]{4}$"},
++    "title": {"type": "string"},
++    "priority": {"type": "string", "pattern": "^P[0-3]$"},
++    "status": {"type": "string", "enum": ["pending", "running", "done", "failed"]},
++    "owner": {"type": ["string", "null"]},
++    "branch": {"type": ["string", "null"]},
++    "worktree": {"type": ["string", "null"]},
++    "scope": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": ["allow", "deny"],
++      "properties": {
++        "allow": {"type": "array", "items": {"type": "string"}},
++        "deny": {"type": "array", "items": {"type": "string"}}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "deliverables": {"type": "array", "items": {"type": "string"}},
++    "verify": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": ["commands"],
++      "properties": {
++        "commands": {"type": "array", "items": {"type": "string"}}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "diff_budget": {
++      "type": "object",
++      "additionalProperties": false,
++      "properties": {
++        "max_files": {"type": "integer"},
++        "max_loc": {"type": "integer"}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "stop_conditions": {
++      "type": "object",
++      "additionalProperties": false,
++      "properties": {
++        "max_iterations": {"type": "integer"},
++        "max_fail_verify": {"type": "integer"}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "dod_id": {"type": "string"},
++    "trace": {
++      "type": "object",
++      "additionalProperties": false,
++      "properties": {
++        "ticket": {"type": ["string", "null"]},
++        "related_wos": {"type": "array", "items": {"type": "string"}}
++      },
++      "patternProperties": {"^x_": {}}
++    },
++    "started_at": {"type": ["string", "null"]},
++    "finished_at": {"type": ["string", "null"]},
++    "result": {"type": ["string", "null"]},
++    "commit_sha": {"type": ["string", "null"]}
++  },
++  "patternProperties": {"^x_": {}}
++}
+diff --git a/tests/fixtures/reconcile/running_wo_without_worktree/git_worktree_list.txt b/tests/fixtures/reconcile/running_wo_without_worktree/git_worktree_list.txt
+new file mode 100644
+index 0000000..8df7d35
+--- /dev/null
++++ b/tests/fixtures/reconcile/running_wo_without_worktree/git_worktree_list.txt
+@@ -0,0 +1,3 @@
++worktree /tmp/other
++HEAD 123456
++branch refs/heads/other
+diff --git a/tests/unit/test_ctx_backlog_layout.py b/tests/unit/test_ctx_backlog_layout.py
+new file mode 100644
+index 0000000..30be2a0
+--- /dev/null
++++ b/tests/unit/test_ctx_backlog_layout.py
+@@ -0,0 +1,11 @@
++from pathlib import Path
++
++
++def test_backlog_layout():
++    assert Path("_ctx/backlog").exists()
++    legacy = Path("_ctx/blacklog")
++    if legacy.exists():
++        assert legacy.is_dir()
++        assert (legacy / "README.md").exists()
++        extra = {p.name for p in legacy.iterdir()} - {"README.md"}
++        assert not extra
+diff --git a/tests/unit/test_ctx_backlog_migration.py b/tests/unit/test_ctx_backlog_migration.py
+new file mode 100644
+index 0000000..83f88df
+--- /dev/null
++++ b/tests/unit/test_ctx_backlog_migration.py
+@@ -0,0 +1,5 @@
++from pathlib import Path
++
++
++def test_backlog_yaml_exists():
++    assert Path("_ctx/backlog/backlog.yaml").exists()
+diff --git a/tests/unit/test_ctx_backlog_readme.py b/tests/unit/test_ctx_backlog_readme.py
+new file mode 100644
+index 0000000..96bc641
+--- /dev/null
++++ b/tests/unit/test_ctx_backlog_readme.py
+@@ -0,0 +1,5 @@
++from pathlib import Path
++
++
++def test_backlog_readme_exists():
++    assert Path("docs/backlog/README.md").exists()
+diff --git a/tests/unit/test_ctx_backlog_validate.py b/tests/unit/test_ctx_backlog_validate.py
+new file mode 100644
+index 0000000..810facf
+--- /dev/null
++++ b/tests/unit/test_ctx_backlog_validate.py
+@@ -0,0 +1,11 @@
++import subprocess
++
++
++def test_ctx_backlog_validate_ok():
++    result = subprocess.run(
++        ["python", "scripts/ctx_backlog_validate.py", "--fixtures"],
++        capture_output=True,
++        text=True,
++        check=False,
++    )
++    assert result.returncode == 0
+diff --git a/tests/unit/test_ctx_dependencies.py b/tests/unit/test_ctx_dependencies.py
+new file mode 100644
+index 0000000..2594541
+--- /dev/null
++++ b/tests/unit/test_ctx_dependencies.py
+@@ -0,0 +1,6 @@
++from importlib import import_module
++
++
++def test_ctx_dependencies_import():
++    for module in ("ruamel.yaml", "yaml", "jsonschema"):
++        import_module(module)
+diff --git a/tests/unit/test_ctx_handoff_pack.py b/tests/unit/test_ctx_handoff_pack.py
+new file mode 100644
+index 0000000..240b242
+--- /dev/null
++++ b/tests/unit/test_ctx_handoff_pack.py
+@@ -0,0 +1,10 @@
++import subprocess
++
++
++def test_handoff_pack_help():
++    result = subprocess.run(
++        ["bash", "scripts/ctx_handoff_pack.sh", "--help"],
++        capture_output=True,
++        text=True,
++    )
++    assert result.returncode == 0
+diff --git a/tests/unit/test_ctx_metrics_report.py b/tests/unit/test_ctx_metrics_report.py
+new file mode 100644
+index 0000000..27b1bf0
+--- /dev/null
++++ b/tests/unit/test_ctx_metrics_report.py
+@@ -0,0 +1,10 @@
++import subprocess
++
++
++def test_ctx_metrics_help():
++    result = subprocess.run(
++        ["python", "scripts/ctx_metrics_report.py", "--help"],
++        capture_output=True,
++        text=True,
++    )
++    assert result.returncode == 0
+diff --git a/tests/unit/test_ctx_pending_wos.py b/tests/unit/test_ctx_pending_wos.py
+new file mode 100644
+index 0000000..9bcdaae
+--- /dev/null
++++ b/tests/unit/test_ctx_pending_wos.py
+@@ -0,0 +1,6 @@
++from pathlib import Path
++
++
++def test_pending_wos_exist():
++    assert Path("_ctx/jobs/pending/WO-0004.yaml").exists()
++    assert Path("_ctx/jobs/pending/WO-0005.yaml").exists()
+diff --git a/tests/unit/test_ctx_reconcile_state.py b/tests/unit/test_ctx_reconcile_state.py
+new file mode 100644
+index 0000000..bcf0420
+--- /dev/null
++++ b/tests/unit/test_ctx_reconcile_state.py
+@@ -0,0 +1,87 @@
++import subprocess
++
++
++def test_reconcile_detects_running_without_lock():
++    result = subprocess.run(
++        ["python", "scripts/ctx_reconcile_state.py", "--fixtures", "running_without_lock"],
++        capture_output=True,
++        text=True,
++        check=False,
++    )
++    assert result.returncode == 0
++    assert "RUNNING_WITHOUT_LOCK" in result.stdout
++
++
++def test_reconcile_detects_lock_without_running_wo():
++    result = subprocess.run(
++        ["python", "scripts/ctx_reconcile_state.py", "--fixtures", "lock_without_running_wo"],
++        capture_output=True,
++        text=True,
++        check=False,
++    )
++    assert result.returncode == 0
++    assert "LOCK_WITHOUT_RUNNING_WO" in result.stdout
++
++
++def test_reconcile_detects_running_wo_without_worktree():
++    result = subprocess.run(
++        ["python", "scripts/ctx_reconcile_state.py", "--fixtures", "running_wo_without_worktree"],
++        capture_output=True,
++        text=True,
++        check=False,
++    )
++    assert result.returncode == 0
++    assert "RUNNING_WO_WITHOUT_WORKTREE" in result.stdout
++
++
++def test_reconcile_apply_regenerates_lock_only_with_apply_flag():
++    result = subprocess.run(
++        ["python", "scripts/ctx_reconcile_state.py", "--fixtures", "running_without_lock"],
++        capture_output=True,
++        text=True,
++        check=False,
++    )
++    assert result.returncode == 0
++    assert "would_create_lock" in result.stdout
++
++
++def test_reconcile_never_moves_states_without_force():
++    result = subprocess.run(
++        ["python", "scripts/ctx_reconcile_state.py", "--fixtures", "running_wo_without_worktree", "--apply"],
++        capture_output=True,
++        text=True,
++        check=False,
++    )
++    assert result.returncode == 2
++    assert "requires --force" in result.stdout
++
++
++def test_reconcile_detects_duplicate_wo_id_across_states():
++    result = subprocess.run(
++        ["python", "scripts/ctx_reconcile_state.py", "--fixtures", "duplicate_wo_id_across_states"],
++        capture_output=True,
++        text=True,
++        check=False,
++    )
++    assert result.returncode != 0
++    assert "DUPLICATE_WO_ID" in result.stdout
++
++
++def test_reconcile_detects_invalid_schema_and_refuses_apply():
++    result = subprocess.run(
++        ["python", "scripts/ctx_reconcile_state.py", "--fixtures", "invalid_schema"],
++        capture_output=True,
++        text=True,
++        check=False,
++    )
++    assert result.returncode != 0
++    assert "WO_INVALID_SCHEMA" in result.stdout
++
++    result_apply = subprocess.run(
++        ["python", "scripts/ctx_reconcile_state.py", "--fixtures", "invalid_schema", "--apply"],
++        capture_output=True,
++        text=True,
++        check=False,
++    )
++    assert result_apply.returncode != 0
++    assert "apply refused" in result_apply.stdout
+diff --git a/tests/unit/test_ctx_schemas.py b/tests/unit/test_ctx_schemas.py
+new file mode 100644
+index 0000000..701bb4e
+--- /dev/null
++++ b/tests/unit/test_ctx_schemas.py
+@@ -0,0 +1,13 @@
++from pathlib import Path
++import json
++import yaml
++from jsonschema import validate
++
++BACKLOG = Path("_ctx/backlog/backlog.yaml")
++SCHEMA = Path("docs/backlog/schema/backlog.schema.json")
++
++
++def test_backlog_schema():
++    data = yaml.safe_load(BACKLOG.read_text())
++    schema = json.loads(SCHEMA.read_text())
++    validate(instance=data, schema=schema)
+diff --git a/tests/unit/test_ctx_status.py b/tests/unit/test_ctx_status.py
+new file mode 100644
+index 0000000..0fa6b53
+--- /dev/null
++++ b/tests/unit/test_ctx_status.py
+@@ -0,0 +1,10 @@
++import subprocess
++
++
++def test_ctx_status_help():
++    result = subprocess.run(
++        ["python", "scripts/ctx_status.py", "--help"],
++        capture_output=True,
++        text=True,
++    )
++    assert result.returncode == 0
+diff --git a/tests/unit/test_ctx_verify_run.py b/tests/unit/test_ctx_verify_run.py
+new file mode 100644
+index 0000000..f46f63f
+--- /dev/null
++++ b/tests/unit/test_ctx_verify_run.py
+@@ -0,0 +1,10 @@
++import subprocess
++
++
++def test_verify_run_help():
++    result = subprocess.run(
++        ["bash", "scripts/ctx_verify_run.sh", "--help"],
++        capture_output=True,
++        text=True,
++    )
++    assert result.returncode == 0
+diff --git a/tests/unit/test_ctx_wo_finish.py b/tests/unit/test_ctx_wo_finish.py
+new file mode 100644
+index 0000000..a4d6887
+--- /dev/null
++++ b/tests/unit/test_ctx_wo_finish.py
+@@ -0,0 +1,10 @@
++import subprocess
++
++
++def test_wo_finish_help():
++    result = subprocess.run(
++        ["python", "scripts/ctx_wo_finish.py", "--help"],
++        capture_output=True,
++        text=True,
++    )
++    assert result.returncode == 0
+diff --git a/tests/unit/test_ctx_wo_take.py b/tests/unit/test_ctx_wo_take.py
+new file mode 100644
+index 0000000..a3b3281
+--- /dev/null
++++ b/tests/unit/test_ctx_wo_take.py
+@@ -0,0 +1,10 @@
++import subprocess
++
++
++def test_wo_take_help():
++    result = subprocess.run(
++        ["python", "scripts/ctx_wo_take.py", "--help"],
++        capture_output=True,
++        text=True,
++    )
++    assert result.returncode == 0
+diff --git a/uv.lock b/uv.lock
+index b47d9a4..90eae59 100644
+--- a/uv.lock
++++ b/uv.lock
+@@ -2426,8 +2426,10 @@ name = "trifecta"
+ version = "0.1.0"
+ source = { editable = "." }
+ dependencies = [
++    { name = "jsonschema" },
+     { name = "pydantic" },
+     { name = "pyyaml" },
++    { name = "ruamel-yaml" },
+     { name = "tree-sitter" },
+     { name = "tree-sitter-python" },
+     { name = "typer" },
+@@ -2457,6 +2459,7 @@ telemetry = [
+ [package.metadata]
+ requires-dist = [
+     { name = "bandit", extras = ["toml"], marker = "extra == 'dev'", specifier = ">=1.7.0" },
++    { name = "jsonschema", specifier = ">=4.0.0" },
+     { name = "jupyter", marker = "extra == 'dev'", specifier = ">=1.0.0" },
+     { name = "jupyter", marker = "extra == 'telemetry'", specifier = ">=1.0.0" },
+     { name = "kaleido", marker = "extra == 'dev'", specifier = ">=0.2.0" },
+@@ -2471,6 +2474,7 @@ requires-dist = [
+     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0" },
+     { name = "pytest-cov", marker = "extra == 'dev'" },
+     { name = "pyyaml", specifier = ">=6.0" },
++    { name = "ruamel-yaml", specifier = ">=0.18.0" },
+     { name = "ruff", marker = "extra == 'dev'" },
+     { name = "safety", marker = "extra == 'dev'", specifier = ">=2.0.0" },
+     { name = "tree-sitter", specifier = ">=0.23.0" },
