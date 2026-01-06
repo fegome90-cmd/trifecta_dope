@@ -773,3 +773,9 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Logs de ejecución**: _ctx/logs/wo0010_anchor_metrics/
 - **Nota**: Datos de telemetría histórica, incluye runs previos (no solo FE v1 limpio)
 - **Commit**: [pending]
+
+## 2026-01-06 14:00 UTC - WO-0010 Tasks 4-6 Complete
+- **TASK 4**: Updated field_exercises_v1_results.md with telemetry metrics section
+- **TASK 5**: Created tests/unit/test_field_exercises_anchor_metrics.py (10 tests)
+- **TASK 6**: Full pytest suite executed
+- **Status**: All infrastructure complete, ready for production use

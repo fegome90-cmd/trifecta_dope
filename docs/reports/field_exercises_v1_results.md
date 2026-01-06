@@ -30,6 +30,34 @@
 
 **Anchor Expansion**: 2/20 queries (10.0%) detected expansion patterns
 
+### Telemetry-Based Metrics (Historical Data)
+
+**Source**: `_ctx/metrics/field_exercises_v1_anchor_metrics.json`  
+**Note**: Metrics from aggregated telemetry (includes runs beyond FE v1)
+
+| Metric | OFF Mode | ON Mode | Delta |
+|--------|----------|---------|-------|
+| Total queries | 241 | 295 | +54 |
+| Avg hits | 1.21 | 4.67 | +3.46 |
+| Zero-hit count | 106 | 72 | -34 |
+| Anchor expansion | N/A | 70/295 (23.7%) | - |
+
+**Anchor Usage Breakdown (ON mode)**:
+- Strong anchors added: 139 total (0.47 per query)
+- Weak anchors added: 0 total
+- Query class distribution:
+  - Vague: 87 queries (29.5%)
+  - Semi-guided: 42 queries (14.2%)
+  - Guided: 8 queries (2.7%)
+  - Disabled: 157 queries (53.2%)
+
+**Performance Impact**:
+- Avg hits when expanded: 2.80
+- Avg hits when NOT expanded: 5.26
+- **Delta**: -2.46 hits when expanded
+
+**Interpretation**: Negative delta indicates anchor expansion activates for harder queries (vague/exploratory) that naturally have lower hit rates. Expansion is a response to difficulty, not a cause of lower performance.
+
 ---
 
 ## Query Breakdown
