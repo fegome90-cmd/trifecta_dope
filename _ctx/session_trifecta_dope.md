@@ -745,3 +745,15 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Report**: docs/reports/pack_validation_newline_normalization.md
 - **Verification**: Integration tests 21/21 PASS
 - **Commit**: test(pack): lock newline normalization contract for build/validate
+
+## 2026-01-06 13:22-13:28 UTC - WO-0010 Field Exercises v1 Evaluation
+- **Objective**: Quantitative benchmark with 20 real-world queries
+- **Dataset**: 6 technical, 6 conceptual, 8 discovery queries
+- **A/B Results**:
+  - OFF (no linter): zero_hit_rate=0.0%, avg_hits=9.30
+  - ON (linter): zero_hit_rate=0.0%, avg_hits=9.40
+  - Delta: +0.10 hits per query (linter improves slightly)
+- **Gate**: zero_hit_rate_on=0.0% < 30% → ✅ PASS
+- **Evidence**: _ctx/logs/field_ex_{off,on}.log
+- **Report**: docs/reports/field_exercises_v1_results.md
+- **Commit**: feat(eval): add Field Exercises v1 benchmark

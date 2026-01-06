@@ -1,0 +1,129 @@
+version: 1
+description: "Real-world queries for Trifecta search quality evaluation"
+created_at: "2026-01-06T13:21:00Z"
+
+# Query Mix: 6 technical, 6 conceptual, 8 discovery
+
+queries:
+  # TECHNICAL QUERIES (6) - Specific implementation details
+  - id: FE-001
+    type: technical
+    query: "How does ValidateContextPackUseCase verify file hashes?"
+    expected_min_hits: 2
+    rationale: "Tests technical code discovery - specific class method"
+
+  - id: FE-002
+    type: technical
+    query: "What is the LSP daemon lifecycle and shutdown sequence?"
+    expected_min_hits: 2
+    rationale: "Tests technical documentation about LSP implementation"
+
+  - id: FE-003
+    type: technical
+    query: "How is BuildContextPackUseCase normalizing newlines?"
+    expected_min_hits: 2
+    rationale: "Tests recent fix documentation discovery"
+
+  - id: FE-004
+    type: technical
+    query: "What schema validation does ctx_backlog_validate.py perform?"
+    expected_min_hits: 2
+    rationale: "Tests script-specific technical details"
+
+  - id: FE-005
+    type: technical
+    query: "How does the query linter expand aliases and anchors?"
+    expected_min_hits: 2
+    rationale: "Tests linter implementation details"
+
+  - id: FE-006
+    type: technical
+    query: "What telemetry events are tracked in context pack operations?"
+    expected_min_hits: 2
+    rationale: "Tests telemetry system documentation"
+
+  # CONCEPTUAL QUERIES (6) - How things work, architecture
+  - id: FE-007
+    type: conceptual
+    query: "Explain the context pack build and validation workflow"
+    expected_min_hits: 3
+    rationale: "Tests high-level workflow understanding"
+
+  - id: FE-008
+    type: conceptual
+    query: "What is the difference between prime, agent, and skill files?"
+    expected_min_hits: 2
+    rationale: "Tests conceptual metadata organization"
+
+  - id: FE-009
+    type: conceptual
+    query: "How does the backlog system organize work orders by state?"
+    expected_min_hits: 2
+    rationale: "Tests backlog architecture understanding"
+
+  - id: FE-010
+    type: conceptual
+    query: "What is the purpose of the AST cache and persistence?"
+    expected_min_hits: 2
+    rationale: "Tests AST feature conceptual understanding"
+
+  - id: FE-011
+    type: conceptual
+    query: "How do Definition of Done files relate to work orders?"
+    expected_min_hits: 2
+    rationale: "Tests DoD system conceptual model"
+
+  - id: FE-012
+    type: conceptual
+    query: "What are the fail-closed principles in the testing strategy?"
+    expected_min_hits: 2
+    rationale: "Tests development philosophy understanding"
+
+  # DISCOVERY QUERIES (8) - Vague, exploratory, multi-concept
+  - id: FE-013
+    type: discovery
+    query: "testing"
+    expected_min_hits: 3
+    rationale: "Vague 1-word discovery - should find test docs/code"
+
+  - id: FE-014
+    type: discovery
+    query: "validation errors"
+    expected_min_hits: 2
+    rationale: "2-word phrase - should find validation error handling"
+
+  - id: FE-015
+    type: discovery
+    query: "how to create a new segment"
+    expected_min_hits: 2
+    rationale: "User task discovery - docs/tutorials"
+
+  - id: FE-016
+    type: discovery
+    query: "linter configuration"
+    expected_min_hits: 2
+    rationale: "Config-related discovery"
+
+  - id: FE-017
+    type: discovery
+    query: "debugging hash mismatch problems"
+    expected_min_hits: 2
+    rationale: "Troubleshooting discovery - should find recent fixes"
+
+  - id: FE-018
+    type: discovery
+    query: "session logging and handoffs"
+    expected_min_hits: 2
+    rationale: "Multi-concept discovery"
+
+  - id: FE-019
+    type: discovery
+    query: "clean architecture dependencies"
+    expected_min_hits: 2
+    rationale: "Architectural pattern discovery"
+
+  - id: FE-020
+    type: discovery
+    query: "sync"
+    expected_min_hits: 3
+    rationale: "Very vague 1-word - should still find ctx sync docs"
