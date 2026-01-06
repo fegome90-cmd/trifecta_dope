@@ -1,48 +1,58 @@
-# Code Review: scripts/debug/debug_client.py
+# Code Review Report: scripts/debug (Deep Analysis)
 
 **Reviewer:** Antigravity (Simulated Code Review Agent)
 **Date:** 2026-01-06
-**Target:** `scripts/debug/debug_client.py`
+**Scope:** `scripts/debug` (All files)
 
-## Strengths
-- **Simple Purpose**: Clearly demonstrates how to instantiate `LSPClient` manually.
-- **Logging**: Configures debug logging upfront which is useful for debugging.
+## Executive Summary
+The folder contains loose utility scripts. While useful for ad-hoc debugging, they lack robustness, error handling, and environmental stability. **Rule 1 Violation**: These should be formalized into CLI commands or standard test harnesses.
 
-## Issues
+---
+
+## File: `debug_client.py`
 
 ### Critical (Must Fix)
+1.  **Race Condition / Busy Wait** (Line 46): The `range(10)` loop spins instantly. It **will fail** to detect a valid startup sequence unless the machine is infinitely fast.
+    *   *Fix*: Add `time.sleep(0.5)`.
+2.  **Resource Leak** (Line 34): No `try/finally` for `client.stop()`. Crash = Zombie Process.
 
-1.  **Race Condition / Busy Wait**
-    - **File:** `scripts/debug/debug_client.py:46-51`
-    - **Issue:** The `for _ in range(10)` loop executes without any delay. It will complete almost instantly. Since `client.start()` is asynchronous (threaded/subprocess), the client effectively never has time to become `READY` before the loop exits.
-    - **Fix:** Add `import time` and `time.sleep(1)` inside the loop.
+### Important
+1.  **Hardcoded Path**: `root / "src/infrastructure/cli.py"` makes the script fragile to refactoring.
 
-2.  **Resource Leak Risk**
-    - **File:** `scripts/debug/debug_client.py:34-53`
-    - **Issue:** `client.stop()` is called at the end. If an exception occurs (e.g., file not found, crash in loop), `client.stop()` is never reached, potentially leaving orphan LSP processes or open ports.
-    - **Fix:** Wrap execution in a `try...finally` block.
+---
 
-### Important (Should Fix)
+## File: `debug_status.py`
 
-1.  **Fragile Path Logic**
-    - **File:** `scripts/debug/debug_client.py:9-13`
-    - **Issue:** `sys.path.insert` hack relies on file location relative to root. breaks if script is moved or symlinked.
-    - **Fix:** Run as a module `uv run python -m scripts.debug.debug_client` and remove path hacks.
+### Critical (Must Fix)
+1.  **Unnamed Exception Handling**: `client.send()` involves socket IO. If the daemon is not running, this line likely raises `ConnectionRefused` or `FileNotFoundError` (socket). Code has no `try/catch`, so it crashes instead of reporting "Daemon DOWN".
+    *   *Fix*: Wrap in `try: ... except Exception: print("Daemon not running")`.
 
-2.  **Hardcoded Test Target**
-    - **File:** `scripts/debug/debug_client.py:41`
-    - **Issue:** Hardcoded path to `src/infrastructure/cli.py`. If this file is refactored/moved, the debug script breaks silently (or noisy error).
-    - **Fix:** Use `__file__` (self) or accept argument via `sys.argv`.
+### Important
+1.  **Context Ambiguity**: `resolve_segment_root()` depends entirely on CWD. Running this script from `/tmp` vs `project_root` yields different behavior without user feedback.
+    *   *Fix*: Print `root` immediately (it does, good) but allow passing root via arg.
 
-### Minor (Nice to Have)
+---
 
-1.  **Telemetry Suppression**
-    - **File:** `scripts/debug/debug_client.py:37`
-    - **Issue:** Passing `telemetry=None`. While fine for debug, it differs from prod.
-    - **Fix:** Consider passing a `MockTelemetry` or allowing telemetry to see debug events.
+## File: `debug_ts.py`
+
+### Important
+1.  **API Fragility**: Tree-sitter bindings change frequently. This script uses `Language(ptr)` and `Parser(lang)`.
+    *   *Risk*: If `tree-sitter` pypi package is upgraded, this script validates *nothing* relevant to the actual `src` code if the `src` uses a different abstraction or wrapper.
+    *   *Recommendation*: Import the parser factory used in `src/infrastructure/ast` instead of rewriting raw instantiation logic.
+
+---
+
+## Global Issues (All Files)
+
+1.  **Sys.Path Hacks (Rule 1)**
+    *   `debug_client.py` and `debug_status.py` manipulate `sys.path`. This guarantees that `import src...` works differently here than in production CLI.
+    *   *Fix*: Run as modules (`python -m scripts.debug.client`) or formalize into `src/cli/debug.py`.
 
 ## Assessment
 
-**Ready to merge? No.**
+**Verdict: 🔴 NOT PRODUCTION READY**
 
-**Reasoning:** The **Busy Wait** bug renders the script functionally broken for its intended purpose (waiting for startup), as it exits too fast. The lack of `try/finally` creates cleanup risks.
+**Recommendation:**
+1.  Fix the Busy Wait in `debug_client.py` immediately (blocker for use).
+2.  Wrap connection logic in `debug_status.py` to handle "Daemon Down" gracefully.
+3.  Migrate all scripts to a proper entry point or move to `eval/manual/`.
