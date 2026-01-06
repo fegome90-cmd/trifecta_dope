@@ -1,0 +1,222 @@
+version: 1
+generated_at: 2026-01-05
+curated_at: 2026-01-05T18:20:00Z
+epics:
+  - id: E-0001
+    title: "Central telefónica / ContextRuntime"
+    priority: P0
+    outcome: "Zero-hit rate < 20% con evidencia reproducible (dataset + runner + reporte)"
+    owner: "you"
+    status: active
+    dependencies: []
+    risks:
+      - "Overengineering: convertir heurísticas simples en un motor complejo"
+      - "Tests frágiles basados en strings de salida"
+      - "Doble fuente de verdad para repo_root/segment_root"
+      - "Mezclar configs del linter con aliases del expander (_ctx vs configs)"
+    wo_queue:
+      - WO-0001
+      - WO-0002
+      - WO-0003
+      - WO-0004
+      - WO-0005
+      - WO-0006
+      - WO-0007
+      - WO-0008
+
+work_orders:
+  - id: WO-0001
+    title: "Baseline medible: dataset + runner + reporte (Fase 1)"
+    priority: P0
+    status: done
+    dod_id: DOD-BASELINE
+    dependencies: []
+    deliverables:
+      - "docs/datasets/search_queries_v1.yaml (>=30 queries: vague/semi/guided)"
+      - "scripts/run_search_dataset.sh + scripts/parse_search_logs.py"
+      - "docs/reports/search_guidance_baseline.md"
+      - "_ctx/metrics/search_dataset_v1_summary.json"
+    acceptance:
+      - "Runner produce logs por query y summary JSON canónico (total + by_class)"
+      - "Reporte contiene hit_rate/avg_hits/unique_paths_avg por clase"
+      - "Evidencia reproducible via comando único"
+    risks:
+      - "Logs/outputs sin copy-paste exacto"
+      - "Score usado indebidamente como gate"
+    notes:
+      - "Resultado observado: hit_rate vague=0.20, guided=0.70 (+50pp)"
+
+  - id: WO-0002
+    title: "Diccionario anchors+aliases + extractor puro (Fase 2)"
+    priority: P0
+    status: done
+    dod_id: DOD-DICTIONARY
+    dependencies:
+      - WO-0001
+    deliverables:
+      - "configs/anchors.yaml (strong/weak)"
+      - "configs/aliases.yaml (>=15 alias, >=5 ES)"
+      - "src/domain/anchor_extractor.py (pure core, no IO)"
+      - "tests/unit/test_anchor_extractor.py"
+      - "docs/reports/anchor_dictionary_v1.md"
+    acceptance:
+      - "uv run pytest -q tests/unit/test_anchor_extractor.py => PASS"
+      - "Alias NL ES detecta anchors y dedupe determinista"
+    risks:
+      - "Alias inconsistentes con nomenclatura real del repo"
+      - "Dedupe no determinista rompe auditabilidad"
+
+  - id: WO-0003
+    title: "Query Linter core: classify + expand + lint_plan (Fase 3)"
+    priority: P0
+    status: done
+    dod_id: DOD-LINTER_CORE
+    dependencies:
+      - WO-0002
+    deliverables:
+      - "src/domain/query_linter.py (core puro)"
+      - "tests/unit/test_query_linter.py"
+      - "docs/reports/query_linter_v1.md"
+    acceptance:
+      - "Guided no expande; vague expande (<=2 strong, <=2 weak); estabilidad =="
+      - "NL con alias clasifica semi/guided sin expansión innecesaria"
+    risks:
+      - "Expansión contamina precisión (anchors demasiado genéricos)"
+      - "Reglas de clasificación demasiado estrictas o laxas"
+
+  - id: WO-0004
+    title: "Integración CLI: flags + pipeline tokenize-after-lint + telemetry sanitizada (Fase 4)"
+    priority: P0
+    status: done
+    dod_id: DOD-CLI_INTEGRATION
+    dependencies:
+      - WO-0003
+    deliverables:
+      - "src/infrastructure/config_loader.py (configs/ unificados, missing_config marker)"
+      - "src/application/search_get_usecases.py (lint -> tokenize -> expander -> search)"
+      - "src/infrastructure/cli.py (--no-lint + TRIFECTA_LINT default OFF)"
+      - "tests/unit/test_search_usecase_linter.py"
+      - "tests/integration/test_ctx_search_linter.py (A/B con context_pack.json real JSON)"
+      - "tests/integration/test_ctx_search_linter_ab_controlled.py (A/B controlado: OFF=0, ON>0)"
+      - "docs/reports/query_linter_cli_verification.md (evidencia cruda + JSONL ON/OFF)"
+      - "_ctx/logs/ab_off.log + _ctx/logs/ab_on.log"
+    acceptance:
+      - "TRIFECTA_LINT=1 habilita, unset/0 deshabilita; --no-lint override"
+      - "Telemetry NO guarda query raw; incluye preview<=200 + hash + len + linter meta"
+      - "Missing config => linter_query_class=disabled_missing_config (auditable)"
+      - "Tests unit+integration PASS"
+      - "A/B controlado: query 'servicio' OFF=0 hits, ON>=1 hit (agent:abc123)"
+    risks:
+      - "Tokenize pre-lint (bug lógico) reintroducido por refactor"
+      - "Tests A/B dependen de strings frágiles"
+      - "Committing logs / fuga de datos"
+    notes:
+      - "Dedupe linter_reasons verificado; ON/OFF eventos extraídos determinísticamente"
+      - "A/B PASS: query 'servicio' (Spanish), OFF=0 hits, ON=1 hit (agent:abc123, score 1.00)"
+      - "Test file: tests/integration/test_ctx_search_linter_ab_controlled.py"
+    ab_test:
+      query: "servicio"
+      expected_off: 0
+      expected_on: 1
+      segment: "/tmp/tf_lint_ab_segment"
+      chunk_hit: "agent:abc123"
+
+  - id: WO-0005
+    title: "Evidence Gate global: suite completa pytest -q (Fase 5)"
+    priority: P0
+    status: done
+    dod_id: DOD-GATE_HARDENING
+    dependencies:
+      - WO-0004
+    deliverables:
+      - "_ctx/logs/gate_fail_head.log"
+      - "_ctx/logs/gate_base_commit.txt"
+      - "/tmp/tf_gate_base.log (classification evidence)"
+      - "_ctx/logs/gate_after_fix.log"
+      - "_ctx/logs/gate_full_after_fix.log"
+      - "tests/acceptance/test_pd_evidence_stop_e2e.py (FIXED)"
+    acceptance:
+      - "uv run pytest -q => 482 passed, 1 skipped, 0 failures"
+      - "test_e2e_evidence_stop_real_cli PASS"
+    risks:
+      - "Declarar 'unrelated' sin evidencia; erosiona disciplina fail-closed"
+      - "Tests acceptance dependientes de repos externos/estado no controlado"
+    notes:
+      - "test_e2e_evidence_stop_real_cli classified as TEST_BROKEN"
+      - "Root cause: hardcoded query 'ContextService' not in segment context_pack.json"
+      - "Test file added 2026-01-04 (8386f8d), AFTER base commit bd26190"
+      - "FIX: Changed query from 'ContextService' to 'context' (exists in segment)"
+      - "Full gate PASS: 482 passed, 1 skipped, 0 failures"
+    decision:
+      classification: test_broken
+      evidence:
+        - "_ctx/logs/gate_fail_head.log"
+        - "_ctx/logs/gate_base_commit.txt (BASE_COMMIT=bd26190)"
+        - "/tmp/tf_gate_base.log"
+        - "_ctx/logs/gate_after_fix.log"
+        - "_ctx/logs/gate_full_after_fix.log"
+      fix:
+        file: "tests/acceptance/test_pd_evidence_stop_e2e.py"
+        lines: "240, 259"
+        change: "query 'ContextService' -> 'context'"
+      verdict: "PASS (482 passed, 0 failures)"
+
+  - id: WO-0006
+    title: "Reporte final + cierre fase (Fase 6)"
+    priority: P1
+    status: paused
+    dependencies:
+      - WO-0005
+    deliverables:
+      - "docs/reports/central_telefonica_release_notes_v1.md"
+      - "Checklist de rollout: default OFF, enable strategy, troubleshooting"
+      - "Resumen métricas baseline vs post (si dataset v2 existe)"
+    acceptance:
+      - "Documento único con: qué cambió, cómo habilitar, cómo verificar, cómo revertir"
+    risks:
+      - "Cerrar sin una ruta clara de rollback"
+
+  - id: WO-0007
+    title: "Clean Boot Reproducibility (Bootstrap Pipeline)"
+    priority: P0
+    status: done
+    dod_id: DOD-REPRODUCIBILITY
+    dependencies:
+      - WO-0006
+    deliverables:
+      - "tests/integration/test_repro_clean_sync_then_search.py (bootstrap validation)"
+      - "scripts/gate_clean_worktree_repro.sh (CI-ready gate)"
+      - "docs/reports/repro_clean_boot_v1.md (evidence)"
+      - "docs/reports/wo0007_findings.md (deep analysis)"
+    acceptance:
+      - "Test validates SEGMENT_NOT_INITIALIZED error without trifecta create"
+      - "Test validates create → sync → pack creation pipeline"
+      - "Gate PASS in clean worktree (2/2 tests, SHA 903c6e8)"
+    verified_at_sha: 903c6e86983d415d48bbd40d9e8f3ae291b77142
+    risks:
+      - "Gate requires pytest installation (adds ~4s overhead)"
+    notes:
+      - "Simplified from original scope: removed A/B linter (moved to WO-0008)"
+      - "Pack created: 11.3KB, validating ctx sync functional"
+      - "Bootstrap command confirmed: trifecta create IS needed"
+
+  - id: WO-0008
+    title: "A/B Linter Reproducibility (OFF=0, ON>0)"
+    priority: P1
+    status: pending
+    dod_id: DOD-LINTER_AB
+    dependencies:
+      - WO-0007
+    deliverables:
+      - "tests/integration/test_ctx_search_linter_ab_synthetic.py"
+      - "docs/reports/linter_ab_reproducibility.md"
+    acceptance:
+      - "OFF (--no-lint): query vaga retorna 0 hits"
+      - "ON (TRIFECTA_LINT=1): misma query retorna >0 hits"
+      - "Test pasa en fixture sintético sin deps del repo principal"
+    verified_at_sha: null
+    risks:
+      - "Config de linter podría no disparar expansión"
+    notes:
+      - "Splitteado de WO-0007 para aislar linter A/B de bootstrap validation"
+      - "No definir query-cases que realmente reduzcan zero-hits en producción"
