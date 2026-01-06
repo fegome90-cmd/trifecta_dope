@@ -1068,3 +1068,18 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Lógica**: Verifica en telemetría que `TRIFECTA_AST_PERSIST=1` → `FileLockedAstCache` y `0` → `InMemoryLRUCache`.
 - **Direnv**: Añadido `.envrc.example` con instrucciones y script de verificación.
 - **Estado**: WO-0012.1 cerrado con evidencia audit-grade.
+
+## 2026-01-06 18:28 UTC
+- **SPRINT CLOSE (Fail-Closed)**
+- **Closed WOs**: 
+  - WO-P3.0 (Soak Harness & Evidence) SHA: 2ad1b09
+  - WO-0012.1 (Dev CLI Persistence) SHA: 7a61eef
+- **Partial WOs**:
+  - WO-0012 (Test Persistence) -> Downgraded to partial (scope fix)
+- **Gates Executed**:
+  - Backend Deterministic Gate: PASS (FileLocked vs InMemory verified)
+  - Regression Suite (Telemetry/Locks/CrossRun): 9/9 PASS
+- **Artifacts**:
+  - .envrc.example (tracked)
+  - gate_ast_persist_backend.sh (tracked)
+- **Status**: AST Persistence is LIVE in Dev defaults (direnv) and Test defaults (pytest-env).
