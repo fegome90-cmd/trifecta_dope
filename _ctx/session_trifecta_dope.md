@@ -987,3 +987,10 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - Control explícito daemon+CLI
 
 **Veredicto**: ✅ WO-P2.2 COMPLETE
+
+## 2026-01-06 17:15 UTC
+- **Summary**: Executed WO-P3.0 Task 2: Harness Mínimo (Parametric Soak Script). Verified execution with TRIFECTA_AST_PERSIST=1, OPS=10, WORKERS=2. Captured 194 log lines.
+- **Created**: eval/scripts/run_ast_cache_soak.sh
+- **Commands**: TRIFECTA_AST_PERSIST=1 OPS=10 WORKERS=2 RUN_ID=wo-p3-0-t2 bash eval/scripts/run_ast_cache_soak.sh | tee _ctx/logs/wo_p3_0/t2_ops10.log
+- **Evidence**: _ctx/logs/wo_p3_0/t2_ops10.log
+- **Next**: Task 3 (Metrics Extractor)
