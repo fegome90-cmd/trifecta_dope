@@ -1056,3 +1056,15 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
   - Ran CLI con TRIFECTA_AST_PERSIST=0
   - Telemetría: {"backend": "InMemoryLRUCache", cache_status: "miss"}
 - **Conclusion**: Dev CLI default enablement VERIFIED.
+
+## 2026-01-06 18:05 UTC
+- **Commit Final**: chore(governance): stage WO-0012.1 deletion from pending
+- **SHA**: a0a326b
+- **Status**: WO-0012 (partial), WO-0012.1 (done)
+- **Backlog actualizado**: .envrc.example trackeado, .envrc gitignored
+
+## 2026-01-06 18:14 UTC
+- **Gate Hardening**: Implementado `gate_ast_persist_backend.sh`.
+- **Lógica**: Verifica en telemetría que `TRIFECTA_AST_PERSIST=1` → `FileLockedAstCache` y `0` → `InMemoryLRUCache`.
+- **Direnv**: Añadido `.envrc.example` con instrucciones y script de verificación.
+- **Estado**: WO-0012.1 cerrado con evidencia audit-grade.
