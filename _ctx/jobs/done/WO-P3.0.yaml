@@ -3,10 +3,10 @@ id: WO-P3.0
 epic_id: E-0001
 title: "AST Cache Soak Run (Real Telemetry)"
 priority: P1
-status: active
+status: done
 owner: null
-verified_at_sha: null
-closed_at: null
+verified_at_sha: 3abbc30d97ed6b9467e68a37610fafcc27132c0e
+closed_at: "2026-01-06T17:20:00-03:00"
 run_ids:
   - wo-p3-0-t2
   - wo-p3-0
@@ -131,7 +131,7 @@ x_micro_tasks:
 
   - id: T6
     name: "T6: Gobernanza"
-    status: pending
+    status: done
     commands:
       - "git status --short | tee _ctx/logs/wo_p3_0/t6_status.log"
       - "git rev-parse HEAD | tee _ctx/logs/wo_p3_0/t6_sha.log"
