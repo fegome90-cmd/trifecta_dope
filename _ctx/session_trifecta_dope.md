@@ -727,3 +727,21 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Validation**: ⚠️ PENDING (DoD schema mismatch - needs fix)
 - **Evidence**: migration_final_summary.md, backlog_analysis.md, epic_organization_analysis.md
 - **Status**: Migration complete, validation blocked on DoD schema compliance
+
+## 2026-01-06 12:30-12:40 UTC - Hash Mismatch Debug (Fail-Closed)
+- **Objective**: Break build→validate→fail cycle without bypass
+- **Root Cause**: Build normalizes content (adds newline), validation reads raw bytes → hash mismatch
+- **Files affected**: t9_3_6_clamp_calibration.md (7580b vs 7346-7348b), AST_CACHE_DEEP_DIVE_ANALYSIS.md (0b vs 1b), cli/__init__.py (0b vs 1b)
+- **Fix**: Applied newline normalization in ValidateContextPackUseCase (lines 721-727) to match BuildContextPackUseCase
+- **Evidence**: _ctx/logs/hash_mismatch_fail.log, _ctx/logs/hash_mismatch_debug_report.md
+- **Validation**: ctx sync PASS, acceptance tests 45/45 PASS
+- **Commit**: fix(validation): normalize content like build to prevent hash mismatch loop
+
+## 2026-01-06 13:13 UTC - Regression Test for Newline Normalization Contract
+- **Objective**: Lock build/validate normalization contract with regression test
+- **Test**: tests/integration/test_pack_validation_normalizes_newline.py
+- **Coverage**: Creates file without trailing newline, runs create→sync, asserts PASS
+- **Results**: 2/2 tests PASS
+- **Report**: docs/reports/pack_validation_newline_normalization.md
+- **Verification**: Integration tests 21/21 PASS
+- **Commit**: test(pack): lock newline normalization contract for build/validate

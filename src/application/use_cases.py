@@ -718,10 +718,13 @@ class ValidateContextPackUseCase:
                         )
                         continue
 
-                # Deep verification
-                content = src_abs_path.read_bytes()
+                # Deep verification - use same normalization as build
+                content_str = src_abs_path.read_text()
+                if not content_str.endswith("\n"):
+                    content_str += "\n"
+                content = content_str.encode()
                 current_sha = hashlib.sha256(content).hexdigest()
-                current_chars = len(content.decode(errors="ignore"))
+                current_chars = len(content_str)
                 current_mtime = src_abs_path.stat().st_mtime
 
                 if current_sha != src["sha256"]:
