@@ -900,3 +900,28 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 **WO**: \`_ctx/jobs/pending/WO-P2.1.yaml\`
 
 **Status**: READY TO EXECUTE
+
+## 2026-01-06 15:45 UTC - WO-P2.1 AST Cache Telemetry (COMPLETE)
+
+**Objetivo**: Audit-grade telemetry para cada operación de cache.
+
+**Implementación**:
+1. ✅ Created TelemetryAstCache wrapper (src/infrastructure/telemetry_cache.py)
+2. ✅ Updated factory to accept telemetry param
+3. ✅ Wired CLI + PR2 consumers
+4. ✅ E2E test (3/3 PASSED)
+
+**Tests**:
+- \`test_ast_cache_telemetry_events\`: miss → hit verified ✅
+- \`test_ast_cache_event_schema\`: Schema validated ✅
+- \`test_ast_cache_telemetry_with_persistence_off\`: InMemory backend verified ✅
+- Regression: P1 tests still pass (4/4) ✅
+
+**Events Emitted**:
+- \`ast.cache.hit\`: Value found
+- \`ast.cache.miss\`: Value not found
+- \`ast.cache.write\`: New value written
+
+**Veredicto**: ✅ WO-P2.1 PASS
+
+**Next**: WO-P2.2 (File Locks)

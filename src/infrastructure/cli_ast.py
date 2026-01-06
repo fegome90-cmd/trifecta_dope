@@ -41,7 +41,7 @@ def symbols(
     """Return symbols from Python modules using AST parsing (M1)."""
     root = Path(segment).resolve()
     telemetry = _get_telemetry(telemetry_level)
-    cache = get_ast_cache(persist=persist_cache, segment_id=str(root))
+    cache = get_ast_cache(persist=persist_cache, segment_id=str(root), telemetry=telemetry)
 
     try:
         # 1. Parse URI

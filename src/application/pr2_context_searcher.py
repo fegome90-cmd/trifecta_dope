@@ -62,7 +62,7 @@ class PR2ContextSearcher:
             # P1 Wiring: Use factory to respect env vars (TRIFECTA_AST_PERSIST)
             from src.infrastructure.factories import get_ast_cache
 
-            cache = get_ast_cache(segment_id=str(workspace_root))
+            cache = get_ast_cache(segment_id=str(workspace_root), telemetry=tel)
         self.cache = cache
 
         # Initialize components

@@ -1,7 +1,11 @@
 import os
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING
+
 from src.domain.ast_cache import AstCache, InMemoryLRUCache, SQLiteCache
+
+if TYPE_CHECKING:
+    from src.infrastructure.telemetry import Telemetry
 
 CACHE_DIR_NAME = ".trifecta"
 
@@ -9,6 +13,7 @@ CACHE_DIR_NAME = ".trifecta"
 def get_ast_cache(
     persist: bool = False,
     segment_id: str = ".",
+    telemetry: "Telemetry | None" = None,
     max_entries: int = 10000,
     max_bytes: int = 100 * 1024 * 1024,
 ) -> AstCache:
@@ -23,11 +28,12 @@ def get_ast_cache(
     Args:
         persist: Override manual para forzar persistencia
         segment_id: ID del segmento (usado para nombrar el archivo DB)
+        telemetry: Optional telemetry instance for event emission
         max_entries: Límite de entradas LRU
         max_bytes: Límite de bytes
 
     Returns:
-        Instancia de AstCache (SQLite o InMemory)
+        Instancia de AstCache (SQLite o InMemory), potentially wrapped with telemetry
     """
     should_persist = persist or os.environ.get("TRIFECTA_AST_PERSIST", "0") == "1"
 
@@ -47,7 +53,15 @@ def get_ast_cache(
         db_path = cache_dir / f"ast_cache_{safe_id}.db"
 
         # Wire: Return persistent cache
-        return SQLiteCache(db_path=db_path, max_entries=max_entries, max_bytes=max_bytes)
+        cache: AstCache = SQLiteCache(db_path=db_path, max_entries=max_entries, max_bytes=max_bytes)
+    else:
+        # Wire: Return ephemeral cache
+        cache = InMemoryLRUCache(max_entries=max_entries, max_bytes=max_bytes)
 
-    # Wire: Return ephemeral cache
-    return InMemoryLRUCache(max_entries=max_entries, max_bytes=max_bytes)
+    # Wrap with telemetry if available
+    if telemetry is not None:
+        from src.infrastructure.telemetry_cache import TelemetryAstCache
+
+        return TelemetryAstCache(cache, telemetry, segment_id)
+
+    return cache
