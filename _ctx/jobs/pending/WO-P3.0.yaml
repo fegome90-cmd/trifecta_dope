@@ -1,0 +1,44 @@
+version: 1
+id: WO-P3.0
+epic_id: E-0001
+title: "AST Cache Soak Run (Real Telemetry)"
+priority: P1
+status: pending
+owner: null
+
+scope:
+  allow:
+    - "tests/soak/test_ast_cache_soak.py"
+    - "scripts/run_soak.sh"
+  deny:
+    - "src/domain/**"
+
+verify:
+  commands:
+    - "bash scripts/run_soak.sh"
+    - "jq -s 'length > 100' _ctx/telemetry/events.jsonl"
+
+dod_id: DOD-DEFAULT
+
+x_objective: |
+  Obtener evidencia OPERATIVA real (no mock/contract) del AST Cache.
+
+  Metas:
+  - >200 operaciones en ambiente controlado (Soak Test)
+  - Capturar eventos reales: ast.cache.lock_wait > 0
+  - Verificar latencia p95 < 10ms
+  - Confirmar 0 corrupción tras carga
+
+x_deliverables:
+  - "Soak test suite (tests/soak/)"
+  - "Telemetry samples (real logs extracted via jq)"
+  - "Performance report (p50/p95 latency)"
+
+x_acceptance_criteria:
+  - "Soak run completa sin errores (exit code 0)"
+  - "Telemetry contiene eventos 'lock_wait' reales"
+  - "DB integrity check pasa post-run"
+  - "Reporte generado en docs/reports/ast_soak_run.md"
+
+dependencies:
+  - WO-P2.2
