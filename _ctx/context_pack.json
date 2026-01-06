@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "segment": "trifecta_dope",
-  "created_at": "2026-01-06T13:23:58.785241",
+  "created_at": "2026-01-06T13:27:50.244376",
   "digest": "",
   "source_files": [
     {
@@ -1074,9 +1074,9 @@
     },
     {
       "path": "docs/reports/field_exercises_v1_results.md",
-      "sha256": "5de10248914988f5a9aba11d860e2196da44ec747360a9e0f7aca2c239a7fc2e",
-      "mtime": 1767716612.3458376,
-      "chars": 1267
+      "sha256": "92b9a15046e793f176127f14d52baa62ce2db01e5ca1086eddbaf36e2858c3b2",
+      "mtime": 1767716862.936768,
+      "chars": 1414
     },
     {
       "path": "docs/reports/wo0008_ab_linter_reproducibility.md",
@@ -3685,14 +3685,14 @@
       "chunking_method": "whole_file"
     },
     {
-      "id": "repo:docs/reports/field_exercises_v1_results.md:d25ad17486",
+      "id": "repo:docs/reports/field_exercises_v1_results.md:4855e9652c",
       "doc": "repo:docs/reports/field_exercises_v1_results.md",
       "title_path": [
         "field_exercises_v1_results.md"
       ],
-      "text": "# Field Exercises v1 - Evaluation Results\n\n**Date**: 2026-01-06  \n**Dataset**: 20 real-world queries  \n**Modes**: OFF (--no-lint) vs ON (TRIFECTA_LINT=1)\n\n---\n\n## Metrics\n\n| Metric | OFF | ON | Delta |\n|--------|-----|----|----- |\n| Zero-hit rate | 0.0% | 0.0% | +0.0% |\n| Avg hits per query | 9.30 | 9.40 | +0.10 |\n| Total hits | 186 | 188 | +2 |\n| Queries with 0 hits | 0/20 | 0/20 | +0 |\n\n---\n\n## Gate Status\n\n**Zero-hit rate ON**: 0.0%  \n**Threshold**: < 30%  \n**Status**: ✅ PASS\n\n---\n\n## Query Breakdown\n\n### Queries with 0 hits (ON mode)\n\n✅ No queries with 0 hits!\n\n\n### Top Performers (ON mode)\n\n- **FE-001** (technical): \"How does ValidateContextPackUseCase verify file hashes?\" → 10 hits\n- **FE-002** (technical): \"What is the LSP daemon lifecycle and shutdown sequence?\" → 10 hits\n- **FE-004** (technical): \"What schema validation does ctx_backlog_validate.py perform?\" → 10 hits\n- **FE-005** (technical): \"How does the query linter expand aliases and anchors?\" → 10 hits\n- **FE-006** (technical): \"What telemetry events are tracked in context pack operations?\" → 10 hits\n\n---\n\n## Recommendations\n\n✅ Search quality meets threshold. System is performing well on real-world queries.\n\n✅ Linter improves search: +0.10 avg hits per query\n\n---\n\n**END OF REPORT**\n",
-      "char_count": 1267,
-      "token_est": 316,
+      "text": "# Field Exercises v1 - Evaluation Results\n\n**Date**: 2026-01-06  \n**Dataset**: 20 real-world queries  \n**Modes**: OFF (--no-lint) vs ON (TRIFECTA_LINT=1)\n\n---\n\n## Metrics\n\n| Metric | OFF | ON | Delta |\n|--------|-----|----|----- |\n| Zero-hit rate | 0.0% | 0.0% | +0.0% |\n| Avg hits per query | 9.30 | 9.40 | +0.10 |\n| Total hits | 186 | 188 | +2 |\n| Queries with 0 hits | 0/20 | 0/20 | +0 |\n| **Anchor usage** | N/A | **2/20 (10.0%)** | - |\n\n---\n\n## Gate Status\n\n**Zero-hit rate ON**: 0.0%  \n**Threshold**: < 30%  \n**Status**: ✅ PASS\n\n---\n\n## Linter Analysis\n\n**Anchor Expansion**: 2/20 queries (10.0%) detected expansion patterns\n\n---\n\n## Query Breakdown\n\n### Queries with 0 hits (ON mode)\n\n✅ No queries with 0 hits!\n\n\n### Top Performers (ON mode)\n\n- **FE-001** (technical): \"How does ValidateContextPackUseCase verify file hashes?\" → 10 hits\n- **FE-002** (technical): \"What is the LSP daemon lifecycle and shutdown sequence?\" → 10 hits\n- **FE-004** (technical): \"What schema validation does ctx_backlog_validate.py perform?\" → 10 hits\n- **FE-005** (technical): \"How does the query linter expand aliases and anchors?\" → 10 hits\n- **FE-006** (technical): \"What telemetry events are tracked in context pack operations?\" → 10 hits\n\n---\n\n## Recommendations\n\n✅ Search quality meets threshold. System is performing well on real-world queries.\n\n✅ Linter improves search: +0.10 avg hits per query\n\n---\n\n**END OF REPORT**\n",
+      "char_count": 1414,
+      "token_est": 353,
       "source_path": "field_exercises_v1_results.md",
       "chunking_method": "whole_file"
     },
@@ -5703,10 +5703,10 @@
       "token_est": 643
     },
     {
-      "id": "repo:docs/reports/field_exercises_v1_results.md:d25ad17486",
+      "id": "repo:docs/reports/field_exercises_v1_results.md:4855e9652c",
       "title_path_norm": "field_exercises_v1_results.md",
       "preview": "# Field Exercises v1 - Evaluation Results\n\n**Date**: 2026-01-06  \n**Dataset**: 20 real-world queries  \n**Modes**: OFF (--no-lint) vs ON (TRIFECTA_LINT=1)\n\n---\n\n## Metrics\n\n| Metric | OFF | ON | Delta...",
-      "token_est": 316
+      "token_est": 353
     },
     {
       "id": "repo:docs/reports/wo0008_ab_linter_reproducibility.md:fb205e2c69",

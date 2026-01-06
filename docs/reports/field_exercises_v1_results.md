@@ -14,6 +14,7 @@
 | Avg hits per query | 9.30 | 9.40 | +0.10 |
 | Total hits | 186 | 188 | +2 |
 | Queries with 0 hits | 0/20 | 0/20 | +0 |
+| **Anchor usage** | N/A | **2/20 (10.0%)** | - |
 
 ---
 
@@ -22,6 +23,12 @@
 **Zero-hit rate ON**: 0.0%  
 **Threshold**: < 30%  
 **Status**: ✅ PASS
+
+---
+
+## Linter Analysis
+
+**Anchor Expansion**: 2/20 queries (10.0%) detected expansion patterns
 
 ---
 

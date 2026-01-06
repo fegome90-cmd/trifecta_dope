@@ -41,6 +41,7 @@ skills/third_party/
 # Trifecta Telemetry
 _ctx/telemetry/
 _ctx/logs/
+!_ctx/logs/reconcile_real_testing.json
 tmp_*
 _ctx/generated/
 

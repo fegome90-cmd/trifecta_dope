@@ -55,8 +55,8 @@ repo_root: /workspaces/trifecta_dope
 last_verified: 2026-01-05
 default_profile: impl_...
 
-6. [session:289c98bede] session_trifecta_dope.md
-   Score: 0.50 | Tokens: ~9647
+6. [session:d91bbe6c48] session_trifecta_dope.md
+   Score: 0.50 | Tokens: ~9796
    Preview: # session.md - Trifecta Context Runbook
 
 segment: trifecta-dope
@@ -751,19 +751,20 @@ The Error→Prompt system generates actionable recovery prompts when CLI command
 ```
 ┌─────────────────────────────...
 
-9. [repo:docs/reports/merge_conflicts.md:ae638c42aa] merge_conflicts.md
+9. [repo:docs/prompts/wo0010_field_exercises_v1.md:16c8a51de2] wo0010_field_exercises_v1.md
+   Score: 1.00 | Tokens: ~1403
+   Preview: # Agent Prompt: WO-0010 Field Exercises v1
+
+## Context
+You are executing WO-0010 to establish a quantitative benchmark f...
+
+10. [repo:docs/reports/merge_conflicts.md:ae638c42aa] merge_conflicts.md
    Score: 1.00 | Tokens: ~332
    Preview: # Merge Conflict Decisions
 
 ## Context
 
 This report lists the dirty files in `/Users/felipe_gonzalez/Developer/agent_h/t...
-
-10. [repo:docs/research/futuro/Advance context enhance 2 (1).md:cdd1776c3a] Advance context enhance 2 (1).md
-   Score: 1.00 | Tokens: ~3733
-   Preview: # Advanced Context Use: Context as Invokable Tools
-
-Large language models can now handle massive context windows—200K to...
 
 
 STDERR:
@@ -981,7 +982,14 @@ The `--pd-report` flag on `trifecta ctx get` emits a parseable metrics line for 
 - Keep WO scopes small to reduce verification cost and rollback risk.
 - Fail-closed validation and re...
 
-3. [ref:trifecta_dope/docs/bugs/create_cwd_bug.md:f44b047fdd] create_cwd_bug.md
+3. [repo:docs/prompts/wo0010_field_exercises_v1.md:16c8a51de2] wo0010_field_exercises_v1.md
+   Score: 1.50 | Tokens: ~1403
+   Preview: # Agent Prompt: WO-0010 Field Exercises v1
+
+## Context
+You are executing WO-0010 to establish a quantitative benchmark f...
+
+4. [ref:trifecta_dope/docs/bugs/create_cwd_bug.md:f44b047fdd] create_cwd_bug.md
    Score: 1.00 | Tokens: ~395
    Preview: # BUG: `trifecta create -s <target>` writes to CLI cwd, not target directory
 
@@ -990,13 +998,13 @@ The `--pd-report` flag on `trifecta ctx get` emits a parseable metrics line for 
 
 ## Descr...
 
-4. [repo:docs/CONTRACTS.md:35f85385a0] CONTRACTS.md
+5. [repo:docs/CONTRACTS.md:35f85385a0] CONTRACTS.md
    Score: 1.00 | Tokens: ~809
    Preview: # Telemetry Environment Contracts
 
 This document defines the behavior of the Telemetry system regarding environment vari...
 
-5. [repo:docs/ERROR_PROMPTS.md:bc3d75f2b8] ERROR_PROMPTS.md
+6. [repo:docs/ERROR_PROMPTS.md:bc3d75f2b8] ERROR_PROMPTS.md
    Score: 1.00 | Tokens: ~1088
    Preview: # Error→Prompt System
 
@@ -1004,7 +1012,7 @@ This document defines the behavior of the Telemetry system regarding environment
 
 The Error→Prompt system generates actionable recovery prompts when CLI commands fail...
 
-6. [repo:docs/query-linter-integration.md:0498e83259] query-linter-integration.md
+7. [repo:docs/query-linter-integration.md:0498e83259] query-linter-integration.md
    Score: 1.00 | Tokens: ~1075
    Preview: # Query Linter Integration Guide
 
@@ -1012,30 +1020,24 @@ The Error→Prompt system generates actionable recovery prompts when CLI command
 
 The Query Linter enhances `ctx search` by applying semantic classificatio...
 
-7. [repo:docs/plans/t9_plan_eval_report.md:53b56c8a26] t9_plan_eval_report.md
+8. [repo:docs/plans/t9_plan_eval_report.md:53b56c8a26] t9_plan_eval_report.md
    Score: 1.00 | Tokens: ~1789
    Preview: # T9.2 Evaluation Report: ctx.plan 3-Level Matching
 
 **Date**: 2025-12-31
 **Task**: Reduce plan_miss < 20% without conve...
 
-8. [repo:docs/plans/2026-01-03-ast-symbol-resolver-fix.md:a151d5efb4] 2026-01-03-ast-symbol-resolver-fix.md
+9. [repo:docs/plans/2026-01-03-ast-symbol-resolver-fix.md:a151d5efb4] 2026-01-03-ast-symbol-resolver-fix.md
    Score: 1.00 | Tokens: ~1330
    Preview: # AST/LSP Symbol Resolver Fix Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans...
 
-9. [repo:docs/plans/2025-12-30-fp-installer-unification.md:86555bcf64] 2025-12-30-fp-installer-unification.md
+10. [repo:docs/plans/2025-12-30-fp-installer-unification.md:86555bcf64] 2025-12-30-fp-installer-unification.md
    Score: 1.00 | Tokens: ~1240
    Preview: # FP Installer Unification Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to...
-
-10. [repo:docs/security/SECURITY_IMPROVEMENTS.md:8d4866cbad] SECURITY_IMPROVEMENTS.md
-   Score: 1.00 | Tokens: ~1470
-   Preview: # Security Improvements and Dependabot Integration
-
-This document outlines the security improvements implemented for the...
 
 
 STDERR:
@@ -1247,8 +1249,8 @@ repo_root: /workspaces/trifecta_dope
 last_verified: 2026-01-05
 default_profile: impl_...
 
-7. [session:289c98bede] session_trifecta_dope.md
-   Score: 0.50 | Tokens: ~9647
+7. [session:d91bbe6c48] session_trifecta_dope.md
+   Score: 0.50 | Tokens: ~9796
    Preview: # session.md - Trifecta Context Runbook
 
 segment: trifecta-dope
@@ -1485,8 +1487,8 @@ Search Results (10 hits):
 **Fecha Inicio**: 2026-01-04
 **Fecha Última Act...
 
-2. [session:289c98bede] session_trifecta_dope.md
-   Score: 1.50 | Tokens: ~9647
+2. [session:d91bbe6c48] session_trifecta_dope.md
+   Score: 1.50 | Tokens: ~9796
    Preview: # session.md - Trifecta Context Runbook
 
 segment: trifecta-dope

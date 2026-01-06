@@ -82,8 +82,16 @@ def run_query_cli(query: str, mode: str, segment: Path) -> dict[str, Any]:
     if found_match:
         hits = int(found_match.group(1))
 
+    # Detect anchor expansion (check if linter modified query)
+    anchor_used = False
+    if mode == "on":
+        # Heuristic: if output mentions expanded terms or anchors
+        if "expanded" in result.stdout.lower() or "anchor" in result.stdout.lower():
+            anchor_used = True
+
     return {
         "hits": hits,
+        "anchor_used": anchor_used,
         "stdout": result.stdout,
         "stderr": result.stderr,
         "returncode": result.returncode,
@@ -116,6 +124,7 @@ def run_evaluation(
             "hits": cli_result["hits"],
             "expected_min_hits": q["expected_min_hits"],
             "returncode": cli_result["returncode"],
+            "anchor_used": cli_result.get("anchor_used", False),
         }
         results.append(result)
 
@@ -144,12 +153,17 @@ def calculate_metrics(results: list[dict]) -> dict[str, Any]:
     zero_hits = sum(1 for r in results if r["hits"] == 0)
     total_hits = sum(r["hits"] for r in results)
 
+    # Anchor usage (only relevant for ON mode)
+    anchor_count = sum(1 for r in results if r.get("anchor_used", False))
+
     return {
         "total_queries": total,
         "zero_hit_count": zero_hits,
         "zero_hit_rate": (zero_hits / total) * 100 if total > 0 else 0,
         "avg_hits": total_hits / total if total > 0 else 0,
         "total_hits": total_hits,
+        "anchor_usage_count": anchor_count,
+        "anchor_usage_rate": (anchor_count / total) * 100 if total > 0 else 0,
     }
 
 
@@ -185,6 +199,7 @@ def generate_report(results_off: list[dict], results_on: list[dict], report_path
 | Avg hits per query | {metrics_off["avg_hits"]:.2f} | {metrics_on["avg_hits"]:.2f} | {delta_avg_hits:+.2f} |
 | Total hits | {metrics_off["total_hits"]} | {metrics_on["total_hits"]} | {metrics_on["total_hits"] - metrics_off["total_hits"]:+d} |
 | Queries with 0 hits | {metrics_off["zero_hit_count"]}/20 | {metrics_on["zero_hit_count"]}/20 | {metrics_on["zero_hit_count"] - metrics_off["zero_hit_count"]:+d} |
+| **Anchor usage** | N/A | **{metrics_on.get("anchor_usage_count", 0)}/20 ({metrics_on.get("anchor_usage_rate", 0):.1f}%)** | - |
 
 ---
 
@@ -193,6 +208,12 @@ def generate_report(results_off: list[dict], results_on: list[dict], report_path
 **Zero-hit rate ON**: {metrics_on["zero_hit_rate"]:.1f}%  
 **Threshold**: < 30%  
 **Status**: {gate_status}
+
+---
+
+## Linter Analysis
+
+**Anchor Expansion**: {metrics_on.get("anchor_usage_count", 0)}/20 queries ({metrics_on.get("anchor_usage_rate", 0):.1f}%) detected expansion patterns
 
 ---
 

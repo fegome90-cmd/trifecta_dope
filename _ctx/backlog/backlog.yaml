@@ -17,6 +17,7 @@ epics:
     wo_queue:
       - WO-0004
       - WO-0005
+      - WO-0010
     x_legacy_wo_queue:
       - WO-0001
       - WO-0002
