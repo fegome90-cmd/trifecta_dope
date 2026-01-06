@@ -16,7 +16,17 @@ verify:
   commands:
     - "uv run pytest -q tests/integration/test_ast_cache_file_locks.py"
     - "uv run pytest -q tests/integration/test_ast_cache_telemetry.py"
-  verified_at_sha: "HEAD"
+  verified_at_sha: "c2d0338"
+
+dependencies:
+  - WO-P2.1 # Requires telemetry infrastructure
+
+evidence_logs:
+  - "_ctx/logs/wo_p2_2/02_contractual_tests.log"
+  - "_ctx/logs/wo_p2_2/03_regression.log"
+  - "_ctx/logs/wo_p2_2/audit_timeout_evidence.log"
+  - "_ctx/logs/wo_p2_2/audit_concurrent_evidence.log"
+  - "_ctx/logs/wo_p2_2/audit_telemetry_samples.jsonl"
 
 dod_id: DOD-DEFAULT
 
