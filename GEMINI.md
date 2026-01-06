@@ -1,3 +1,10 @@
+# Gemini Agent Memory
+
+## Learned Patterns (Optimization)
+- **Feature Flag Scope**: `pytest-env` configures **Tests** only. Use `.envrc` (direnv) for **Dev CLI** defaults. Verify `uv run` has no side effects from `pyproject.toml`.
+- **Governance Rigor**: WOs must exist in **exactly one** state folder (`pending/`, `running/`, `done/`). Use `git mv` to transition.
+- **Audit-Grade Gates**: `exit 0` is insufficient. verification scripts must asserts internal state (e.g. `backend == FileLockedAstCache` in telemetry).
+
 - history:
     - user_prompt_summary: "Refine AGENTS.md Gate Hardening and Prepare Legacy Burn-Down Sprint"
       agent_response_summary: "Hardened AGENTS.md gate and BuildContextPackUseCase with deterministic fail-closed logic for config/files. Implemented Legacy Burn-Down system (Manifest, UseCase, CLI). Verified with strict TDD and 100% tests passing."
