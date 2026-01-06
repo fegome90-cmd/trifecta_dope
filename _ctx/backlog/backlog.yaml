@@ -1,27 +1,45 @@
 version: 1
-generated_at: "2026-01-05"
-x_curated_at: "2026-01-05T18:20:00Z"
 epics:
   - id: E-0001
-    title: "Central telefónica / ContextRuntime"
+    title: "AST Cache Operability"
+    description: |
+      Make AST cache operational via configuration (flags/env vars) with full observability.
+
+      Goal: Transition from "works when injected" to production-ready persistence
+      with telemetry, deterministic locking, and fail-closed testing.
+
+    status: complete
     priority: P0
-    outcome: "Zero-hit rate < 20% con evidencia reproducible (dataset + runner + reporte)"
-    owner: "you"
-    status: active
-    dependencies: []
-    risks:
-      - "Overengineering: convertir heurísticas simples en un motor complejo"
-      - "Tests frágiles basados en strings de salida"
-      - "Doble fuente de verdad para repo_root/segment_root"
-      - "Mezclar configs del linter con aliases del expander (_ctx vs configs)"
+
     wo_queue:
-      - WO-0004
-      - WO-0005
-      - WO-0010
+      - WO-P2.1 # Telemetry Integration (done)
+      - WO-P2.2 # File Locks via Wrapper (done)
+
     x_legacy_wo_queue:
-      - WO-0001
-      - WO-0002
-      - WO-0003
-      - WO-0004
-      - WO-0005
-      - WO-0006
+      - WO-P0 # Inventory (done - SHA b0ab32f)
+      - WO-P1 # Wiring (done - SHA 354afb6, verified e7956fd)
+      - WO-P2.1 # Telemetry (done - SHA e323433)
+      - WO-P2.2 # File Locks (done - SHA c2d0338)
+
+    x_phases:
+      - name: "P0: Inventory"
+        status: complete
+        sha: "b0ab32f"
+      - name: "P1: Factory Wiring"
+        status: complete
+        sha: "354afb6"
+        verified_sha: "e7956fd"
+      - name: "P2.1: Telemetry"
+        status: complete
+        sha: "e323433"
+      - name: "P2.2: File Locks"
+        status: complete
+        sha: "c2d0338"
+
+    x_deferred:
+      - "P2.3: Corruption Detection & Recovery"
+      - "P2.4: Resource Monitoring"
+      - "P2.5: TTL & Eviction"
+
+    generated_at: "2026-01-06T16:10:00-03:00"
+    x_curated_at: "2026-01-06T16:10:00-03:00"
