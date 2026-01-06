@@ -71,7 +71,7 @@ notes: |
 
   Missing: user content from docs/, src/, etc.
 
-verified_at_sha: a4bef6d44b5d48b0a25e6b6ed12d5f755caa47bb
+verified_at_sha: 1d80a878b486177e94491fda068028287eddd1d8
 evidence_logs:
   - "_ctx/logs/wo0009/00_sha.txt"
   - "_ctx/logs/wo0009/01_locate_sync.log"
