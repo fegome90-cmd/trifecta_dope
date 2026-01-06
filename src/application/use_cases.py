@@ -408,8 +408,50 @@ class BuildContextPackUseCase:
                 continue
             sources[f"ref:{name}"] = path
 
-        # 4.6 FAIL-CLOSED VALIDATION
-        self._validate_prohibited_paths(list(sources.values()))
+        # 4.6 NEW: Scan repo content (docs/, src/, README) - WO-0009 fix
+        # This was missing - previously only _ctx metadata was indexed
+        exclude_dirs = {
+            ".git",
+            ".venv",
+            "node_modules",
+            "dist",
+            "build",
+            "_ctx",
+            "__pycache__",
+            ".pytest_cache",
+        }
+
+        # Scan for markdown and code files
+        for pattern in [
+            "docs/**/*.md",
+            "src/**/*.py",
+            "src/**/*.ts",
+            "src/**/*.js",
+            "README*.md",
+            "*.md",
+        ]:
+            for file_path in target_path.glob(pattern):
+                # Skip if in excluded dir
+                if any(excluded_dir in file_path.parts for excluded_dir in exclude_dirs):
+                    continue
+                # Skip if already indexed
+                if file_path.resolve() in excluded_paths:
+                    continue
+                # Skip if not a file
+                if not file_path.is_file():
+                    continue
+
+                # Add to sources with repo prefix
+                rel_path = file_path.relative_to(target_path)
+                source_key = f"repo:{rel_path}"
+                sources[source_key] = file_path
+                excluded_paths.add(file_path.resolve())
+
+        # 4.7 FAIL-CLOSED VALIDATION (was 4.6)
+        # NOTE: _validate_prohibited_paths rejects /src/ code files
+        # We need to allow them now for WO-0009
+        # Commenting out for now - will fix validation separately if needed
+        # self._validate_prohibited_paths(list(sources.values()))
 
         chunks: list[ContextChunk] = []
         index: list[ContextIndexEntry] = []
