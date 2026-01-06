@@ -3,7 +3,9 @@
 **Authors**: Trifecta Development Team  
 **Date**: January 6, 2026  
 **Study Type**: Controlled A/B Evaluation  
-**Dataset**: 20 Real-World Queries
+**Dataset**: 20 Real-World Queries  
+**Version**: Run 1 (v1) - Baseline  
+**Changelog**: See [field_exercises_changelog.md](./field_exercises_changelog.md) for update history
 
 ---
 

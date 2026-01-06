@@ -1,7 +1,7 @@
 {
-  "run_id": "run_1767716852",
+  "run_id": "run_1767716870",
   "segment_id": "6f25e381",
-  "ts": "2026-01-06 13:27:32",
+  "ts": "2026-01-06 13:27:50",
   "ast": {
     "ast_parse_count": 0,
     "ast_cache_hit_count": 0,
@@ -15,13 +15,5 @@
   },
   "telemetry_drops": {
     "drop_rate": 0.0
-  },
-  "latencies": {
-    "ctx.search": {
-      "count": 1,
-      "p50_ms": 28,
-      "p95_ms": 28,
-      "max_ms": 28
-    }
   }
 }

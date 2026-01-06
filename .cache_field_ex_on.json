@@ -1,0 +1,182 @@
+[
+  {
+    "id": "FE-001",
+    "type": "technical",
+    "query": "How does ValidateContextPackUseCase verify file hashes?",
+    "hits": 10,
+    "expected_min_hits": 2,
+    "returncode": 0,
+    "anchor_used": false
+  },
+  {
+    "id": "FE-002",
+    "type": "technical",
+    "query": "What is the LSP daemon lifecycle and shutdown sequence?",
+    "hits": 10,
+    "expected_min_hits": 2,
+    "returncode": 0,
+    "anchor_used": false
+  },
+  {
+    "id": "FE-003",
+    "type": "technical",
+    "query": "How is BuildContextPackUseCase normalizing newlines?",
+    "hits": 2,
+    "expected_min_hits": 2,
+    "returncode": 0,
+    "anchor_used": false
+  },
+  {
+    "id": "FE-004",
+    "type": "technical",
+    "query": "What schema validation does ctx_backlog_validate.py perform?",
+    "hits": 10,
+    "expected_min_hits": 2,
+    "returncode": 0,
+    "anchor_used": false
+  },
+  {
+    "id": "FE-005",
+    "type": "technical",
+    "query": "How does the query linter expand aliases and anchors?",
+    "hits": 10,
+    "expected_min_hits": 2,
+    "returncode": 0,
+    "anchor_used": true
+  },
+  {
+    "id": "FE-006",
+    "type": "technical",
+    "query": "What telemetry events are tracked in context pack operations?",
+    "hits": 10,
+    "expected_min_hits": 2,
+    "returncode": 0,
+    "anchor_used": false
+  },
+  {
+    "id": "FE-007",
+    "type": "conceptual",
+    "query": "Explain the context pack build and validation workflow",
+    "hits": 10,
+    "expected_min_hits": 3,
+    "returncode": 0,
+    "anchor_used": false
+  },
+  {
+    "id": "FE-008",
+    "type": "conceptual",
+    "query": "What is the difference between prime, agent, and skill files?",
+    "hits": 10,
+    "expected_min_hits": 2,
+    "returncode": 0,
+    "anchor_used": false
+  },
+  {
+    "id": "FE-009",
+    "type": "conceptual",
+    "query": "How does the backlog system organize work orders by state?",
+    "hits": 10,
+    "expected_min_hits": 2,
+    "returncode": 0,
+    "anchor_used": false
+  },
+  {
+    "id": "FE-010",
+    "type": "conceptual",
+    "query": "What is the purpose of the AST cache and persistence?",
+    "hits": 10,
+    "expected_min_hits": 2,
+    "returncode": 0,
+    "anchor_used": false
+  },
+  {
+    "id": "FE-011",
+    "type": "conceptual",
+    "query": "How do Definition of Done files relate to work orders?",
+    "hits": 10,
+    "expected_min_hits": 2,
+    "returncode": 0,
+    "anchor_used": false
+  },
+  {
+    "id": "FE-012",
+    "type": "conceptual",
+    "query": "What are the fail-closed principles in the testing strategy?",
+    "hits": 10,
+    "expected_min_hits": 2,
+    "returncode": 0,
+    "anchor_used": false
+  },
+  {
+    "id": "FE-013",
+    "type": "discovery",
+    "query": "testing",
+    "hits": 6,
+    "expected_min_hits": 3,
+    "returncode": 0,
+    "anchor_used": false
+  },
+  {
+    "id": "FE-014",
+    "type": "discovery",
+    "query": "validation errors",
+    "hits": 10,
+    "expected_min_hits": 2,
+    "returncode": 0,
+    "anchor_used": false
+  },
+  {
+    "id": "FE-015",
+    "type": "discovery",
+    "query": "how to create a new segment",
+    "hits": 10,
+    "expected_min_hits": 2,
+    "returncode": 0,
+    "anchor_used": false
+  },
+  {
+    "id": "FE-016",
+    "type": "discovery",
+    "query": "linter configuration",
+    "hits": 10,
+    "expected_min_hits": 2,
+    "returncode": 0,
+    "anchor_used": true
+  },
+  {
+    "id": "FE-017",
+    "type": "discovery",
+    "query": "debugging hash mismatch problems",
+    "hits": 10,
+    "expected_min_hits": 2,
+    "returncode": 0,
+    "anchor_used": false
+  },
+  {
+    "id": "FE-018",
+    "type": "discovery",
+    "query": "session logging and handoffs",
+    "hits": 10,
+    "expected_min_hits": 2,
+    "returncode": 0,
+    "anchor_used": false
+  },
+  {
+    "id": "FE-019",
+    "type": "discovery",
+    "query": "clean architecture dependencies",
+    "hits": 10,
+    "expected_min_hits": 2,
+    "returncode": 0,
+    "anchor_used": false
+  },
+  {
+    "id": "FE-020",
+    "type": "discovery",
+    "query": "sync",
+    "hits": 10,
+    "expected_min_hits": 3,
+    "returncode": 0,
+    "anchor_used": false
+  }
+]
