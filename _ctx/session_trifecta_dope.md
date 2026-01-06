@@ -811,3 +811,12 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
   - Expanded Delta: +1.0 (Median)
 - **Correction**: Replaced stdout scraping with events.jsonl parsing to fix missing expansion data.
 - **SHA**: [pending]
+
+## 2026-01-06 14:35 UTC - WO-0011 Audit Hardening (v2.1)
+- **Status**: ✅ ALL GATES PASSED (Live Index, Pure Spanish)
+- **Changes**: Added 3 pure Spanish queries (no English terms). Added `enrich_ab_with_telemetry.py` to pipeline. Added Evidence Header & Integrity Checks to report generator.
+- **Metrics**:
+  - Queries: 33 (was 30)
+  - Spanish Zero-Hit: 0% (Confirmed multilingual support)
+  - Vague Anchor Usage: 100%
+- **Evidence**: `_ctx/logs/wo0011_live/`, `docs/reports/field_exercises_v2_results.md`

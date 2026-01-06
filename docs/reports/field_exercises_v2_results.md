@@ -1,16 +1,20 @@
-# Field Exercises v2 - Hard Query A/B Results
+# Field Exercises v2.1 - Hard Query A/B Results (Audit Grade)
 
-**Date**: 2026-01-06  
-**Dataset**: 30 hard queries (vague_1token, spanish_natural, navigation_2hop)  
-**Method**: Live Index Execution (CLI)  
-**Source**: `_ctx/metrics/field_exercises_v2_summary.json`  
-**Evidence**: `_ctx/logs/wo0011_live/`
+## Evidence Header
+- **SHA**: `d5679bd969fab450b0e2f136ef1c5616fd7d1700`
+- **Run ID**: `run_1767720650`
+- **Date**: 2026-01-06
+- **Method**: Live Index Execution (CLI)
+- **Dataset**: `field_exercises_v2.yaml` (v2.1, 33 queries)
+- **Source**: `_ctx/metrics/field_exercises_v2_summary.json`
+- **Logs**: `_ctx/logs/wo0011_live/`
 
 ---
 
 ## Executive Summary
 
-Field Exercises v2 tested system resilience with intentionally difficult queries on a LIVE index.
+Field Exercises v2.1 validates system resilience with 33 hard queries on a LIVE index.
+Includes pure Spanish queries to verify multilingual support.
 
 **Overall Verdict**: ✅ **ALL GATES PASSED**
 
@@ -19,7 +23,7 @@ Field Exercises v2 tested system resilience with intentionally difficult queries
 | Bucket | Queries | Anchor Usage (ON) | Zero-Hit Rate (ON) | Median Hits (ON) |
 |--------|---------|-------------------|--------------------|------------------|
 | vague_1token | 10 | 100.0% | 0.0% | 8.5 |
-| spanish_natural | 10 | 0.0% | 0.0% | 10.0 |
+| spanish_natural | 13 | 0.0% | 0.0% | 10 |
 | navigation_2hop | 10 | 0.0% | 0.0% | 10.0 |
 
 ---
@@ -48,15 +52,14 @@ Field Exercises v2 tested system resilience with intentionally difficult queries
 | Group | Count | Median Δ | Notes |
 |-------|-------|----------|-------|
 | Expanded=true | 10 | +1.0 | Linter active |
-| Expanded=false | 20 | +0.0 | Baseline/Fallback |
+| Expanded=false | 23 | +0 | Baseline/Fallback |
 
 ---
 
 ## Detailed Observations (Live Run)
 
-1. **Vague Queries**: 100.0% expansion rate. Median hits: 8.5.
-2. **Spanish Queries**: 0.0% zero-hit rate. Median hits: 10.0.
-   *(Note: Previous mocks predicted high failure, but live index performed well)*.
+1. **Vague Queries**: 100.0% expansion. Median hits: 8.5.
+2. **Spanish Queries**: 0.0% zero-hit rate. Median hits: 10.
 3. **Navigation Queries**: 0.0% expansion. Median hits: 10.0.
 
 ---

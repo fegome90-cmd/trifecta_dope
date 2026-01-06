@@ -13,7 +13,6 @@
       "telemetry": {
         "query_hash": "cf80cd8aed482d5d",
         "linter_expanded": true,
-        "linter_added_strong_count": 0,
         "hits": 6,
         "linter_query_class": "vague",
         "linter_reasons": [
@@ -36,7 +35,6 @@
       "telemetry": {
         "query_hash": "75c75efe327a8ef3",
         "linter_expanded": true,
-        "linter_added_strong_count": 0,
         "hits": 10,
         "linter_query_class": "vague",
         "linter_reasons": [
@@ -59,7 +57,6 @@
       "telemetry": {
         "query_hash": "44575cf5b28512d7",
         "linter_expanded": true,
-        "linter_added_strong_count": 0,
         "hits": 6,
         "linter_query_class": "vague",
         "linter_reasons": [
@@ -82,7 +79,6 @@
       "telemetry": {
         "query_hash": "133c8eb86cf81347",
         "linter_expanded": true,
-        "linter_added_strong_count": 0,
         "hits": 6,
         "linter_query_class": "vague",
         "linter_reasons": [
@@ -105,7 +101,6 @@
       "telemetry": {
         "query_hash": "2419329067823cab",
         "linter_expanded": true,
-        "linter_added_strong_count": 0,
         "hits": 10,
         "linter_query_class": "vague",
         "linter_reasons": [
@@ -128,7 +123,6 @@
       "telemetry": {
         "query_hash": "ca00fccfb408989e",
         "linter_expanded": true,
-        "linter_added_strong_count": 0,
         "hits": 10,
         "linter_query_class": "vague",
         "linter_reasons": [
@@ -151,7 +145,6 @@
       "telemetry": {
         "query_hash": "b79606fb3afea5bd",
         "linter_expanded": true,
-        "linter_added_strong_count": 2,
         "hits": 8,
         "linter_query_class": "vague",
         "linter_reasons": [
@@ -165,17 +158,16 @@
     "bucket": "vague_1token",
     "query": "index",
     "off": {
-      "hits": 6,
+      "hits": 7,
       "returncode": 0
     },
     "on": {
-      "hits": 7,
+      "hits": 8,
       "returncode": 0,
       "telemetry": {
         "query_hash": "1bc04b5291c26a46",
         "linter_expanded": true,
-        "linter_added_strong_count": 0,
-        "hits": 7,
+        "hits": 8,
         "linter_query_class": "vague",
         "linter_reasons": [
           "vague_default_boost"
@@ -197,7 +189,6 @@
       "telemetry": {
         "query_hash": "5e1ecee06a7fc06f",
         "linter_expanded": true,
-        "linter_added_strong_count": 0,
         "hits": 10,
         "linter_query_class": "vague",
         "linter_reasons": [
@@ -220,7 +211,6 @@
       "telemetry": {
         "query_hash": "f77b12a53ece5f6b",
         "linter_expanded": true,
-        "linter_added_strong_count": 0,
         "hits": 9,
         "linter_query_class": "vague",
         "linter_reasons": [
@@ -243,7 +233,6 @@
       "telemetry": {
         "query_hash": "3a2d309e36789965",
         "linter_expanded": false,
-        "linter_added_strong_count": 2,
         "hits": 10,
         "linter_query_class": "semi",
         "linter_reasons": []
@@ -264,7 +253,6 @@
       "telemetry": {
         "query_hash": "b177c812132f1c54",
         "linter_expanded": false,
-        "linter_added_strong_count": 0,
         "hits": 10,
         "linter_query_class": "vague",
         "linter_reasons": []
@@ -285,7 +273,6 @@
       "telemetry": {
         "query_hash": "a8340fadd8e87c47",
         "linter_expanded": false,
-        "linter_added_strong_count": 0,
         "hits": 8,
         "linter_query_class": "vague",
         "linter_reasons": []
@@ -306,7 +293,6 @@
       "telemetry": {
         "query_hash": "22265cba95668b2b",
         "linter_expanded": false,
-        "linter_added_strong_count": 0,
         "hits": 10,
         "linter_query_class": "semi",
         "linter_reasons": []
@@ -327,7 +313,6 @@
       "telemetry": {
         "query_hash": "de1415a8de318cb6",
         "linter_expanded": false,
-        "linter_added_strong_count": 0,
         "hits": 2,
         "linter_query_class": "vague",
         "linter_reasons": []
@@ -348,7 +333,6 @@
       "telemetry": {
         "query_hash": "f5c94126c126aa12",
         "linter_expanded": false,
-        "linter_added_strong_count": 0,
         "hits": 10,
         "linter_query_class": "semi",
         "linter_reasons": []
@@ -369,7 +353,6 @@
       "telemetry": {
         "query_hash": "16cd406f9b50cf21",
         "linter_expanded": false,
-        "linter_added_strong_count": 2,
         "hits": 10,
         "linter_query_class": "vague",
         "linter_reasons": []
@@ -390,7 +373,6 @@
       "telemetry": {
         "query_hash": "d72c9d0b9b95e967",
         "linter_expanded": false,
-        "linter_added_strong_count": 0,
         "hits": 5,
         "linter_query_class": "vague",
         "linter_reasons": []
@@ -411,7 +393,6 @@
       "telemetry": {
         "query_hash": "fc3ac7fcd34f57ee",
         "linter_expanded": false,
-        "linter_added_strong_count": 0,
         "hits": 10,
         "linter_query_class": "semi",
         "linter_reasons": []
@@ -432,9 +413,68 @@
       "telemetry": {
         "query_hash": "79d37438ad8ec77d",
         "linter_expanded": false,
-        "linter_added_strong_count": 2,
         "hits": 10,
         "linter_query_class": "semi",
+        "linter_reasons": []
+      }
+    }
+  },
+  {
+    "id": "FE2-031",
+    "bucket": "spanish_natural",
+    "query": "bit\u00e1cora de auditor\u00eda",
+    "off": {
+      "hits": 6,
+      "returncode": 0
+    },
+    "on": {
+      "hits": 6,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "215b49eb25999456",
+        "linter_expanded": false,
+        "hits": 6,
+        "linter_query_class": "vague",
+        "linter_reasons": []
+      }
+    }
+  },
+  {
+    "id": "FE2-032",
+    "bucket": "spanish_natural",
+    "query": "paquete de contexto",
+    "off": {
+      "hits": 3,
+      "returncode": 0
+    },
+    "on": {
+      "hits": 3,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "00889ce67ec435bf",
+        "linter_expanded": false,
+        "hits": 3,
+        "linter_query_class": "vague",
+        "linter_reasons": []
+      }
+    }
+  },
+  {
+    "id": "FE2-033",
+    "bucket": "spanish_natural",
+    "query": "registro de sesi\u00f3n",
+    "off": {
+      "hits": 1,
+      "returncode": 0
+    },
+    "on": {
+      "hits": 1,
+      "returncode": 0,
+      "telemetry": {
+        "query_hash": "5737fbf1798d5f20",
+        "linter_expanded": false,
+        "hits": 1,
+        "linter_query_class": "vague",
         "linter_reasons": []
       }
     }
@@ -453,7 +493,6 @@
       "telemetry": {
         "query_hash": "cf01cdd9e17336d6",
         "linter_expanded": false,
-        "linter_added_strong_count": 0,
         "hits": 10,
         "linter_query_class": "vague",
         "linter_reasons": []
@@ -474,7 +513,6 @@
       "telemetry": {
         "query_hash": "45b28d2b4feb66ed",
         "linter_expanded": false,
-        "linter_added_strong_count": 0,
         "hits": 10,
         "linter_query_class": "vague",
         "linter_reasons": []
@@ -495,7 +533,6 @@
       "telemetry": {
         "query_hash": "32b0aa016d4a5698",
         "linter_expanded": false,
-        "linter_added_strong_count": 2,
         "hits": 10,
         "linter_query_class": "vague",
         "linter_reasons": []
@@ -516,7 +553,6 @@
       "telemetry": {
         "query_hash": "2fd6c14ea4ebb487",
         "linter_expanded": false,
-        "linter_added_strong_count": 0,
         "hits": 10,
         "linter_query_class": "vague",
         "linter_reasons": []
@@ -537,7 +573,6 @@
       "telemetry": {
         "query_hash": "29320562af0bc31b",
         "linter_expanded": false,
-        "linter_added_strong_count": 0,
         "hits": 10,
         "linter_query_class": "vague",
         "linter_reasons": []
@@ -558,7 +593,6 @@
       "telemetry": {
         "query_hash": "fabd556a87d3eb31",
         "linter_expanded": false,
-        "linter_added_strong_count": 0,
         "hits": 10,
         "linter_query_class": "vague",
         "linter_reasons": []
@@ -579,7 +613,6 @@
       "telemetry": {
         "query_hash": "65791789a2e1a433",
         "linter_expanded": false,
-        "linter_added_strong_count": 0,
         "hits": 10,
         "linter_query_class": "vague",
         "linter_reasons": []
@@ -600,7 +633,6 @@
       "telemetry": {
         "query_hash": "a646c2e66277151c",
         "linter_expanded": false,
-        "linter_added_strong_count": 0,
         "hits": 10,
         "linter_query_class": "vague",
         "linter_reasons": []
@@ -621,7 +653,6 @@
       "telemetry": {
         "query_hash": "35e5c949b77b7cbf",
         "linter_expanded": false,
-        "linter_added_strong_count": 0,
         "hits": 10,
         "linter_query_class": "vague",
         "linter_reasons": []
@@ -642,7 +673,6 @@
       "telemetry": {
         "query_hash": "0d8bc5aa7b897716",
         "linter_expanded": false,
-        "linter_added_strong_count": 0,
         "hits": 10,
         "linter_query_class": "vague",
         "linter_reasons": []

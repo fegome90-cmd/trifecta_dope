@@ -3,7 +3,7 @@
 version: 2
 description: "Controlled A/B evaluation with intentionally difficult queries to stress-test linter expansion"
 date: 2026-01-06
-total_queries: 30
+total_queries: 33
 
 buckets:
   - name: vague_1token
@@ -11,7 +11,7 @@ buckets:
     count: 10
   - name: spanish_natural
     description: "Natural language Spanish queries (tests multilingual handling)"
-    count: 10
+    count: 13
   - name: navigation_2hop
     description: "Multi-concept navigation queries requiring 2-hop inference"
     count: 10
@@ -118,6 +118,21 @@ queries:
     bucket: spanish_natural
     text: "dónde se configura el linter"
     rationale: "Linter configuration location in Spanish"
+
+  - id: FE2-031
+    bucket: spanish_natural
+    text: "bitácora de auditoría"
+    rationale: "Pure Spanish for audit logs (no 'logs' keyword)"
+
+  - id: FE2-032
+    bucket: spanish_natural
+    text: "paquete de contexto"
+    rationale: "Pure Spanish for context pack (no 'pack' keyword)"
+
+  - id: FE2-033
+    bucket: spanish_natural
+    text: "registro de sesión"
+    rationale: "Pure Spanish for session log (no 'session' keyword)"
 
   # Bucket 3: navigation_2hop (10 queries)
   - id: FE2-021
