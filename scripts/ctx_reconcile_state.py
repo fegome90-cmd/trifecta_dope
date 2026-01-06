@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 import json
 import subprocess
@@ -68,6 +69,51 @@ def add_issue(issues, code, severity, wo_id, paths):
     issues.append(Issue(code=code, severity=severity, wo_id=wo_id, paths=paths))
 
 
+def load_wo_index(root: Path):
+    index = {}
+    for _, path in iter_wo_files(root):
+        try:
+            wo = load_yaml(path)
+        except Exception:
+            continue
+        wo_id = wo.get("id")
+        if not wo_id:
+            continue
+        index[wo_id] = wo
+    return index
+
+
+def write_reconcile_log(root: Path, issues, applied):
+    log_dir = root / "_ctx" / "logs" / "reconcile"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now(timezone.utc).isoformat()
+    lines = [f"timestamp: {timestamp}", f"applied: {applied}", "issues:"]
+    for issue in issues:
+        lines.append(f"- {issue.code} {issue.wo_id} {issue.paths}")
+    (log_dir / "reconcile.log").write_text("\n".join(lines) + "\n")
+
+
+def maybe_record_patch(root: Path):
+    result = subprocess.run(
+        ["git", "-C", str(root), "status", "--porcelain"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    if result.stdout.strip():
+        patch_path = root / "_ctx" / "logs" / "reconcile" / "reconcile.patch"
+        diff = subprocess.check_output(
+            ["git", "-C", str(root), "diff"], text=True
+        )
+        patch_path.write_text(diff)
+        return False
+    subprocess.run(
+        ["git", "-C", str(root), "commit", "-am", "chore: reconcile state"],
+        check=False,
+    )
+    return True
+
+
 def main():
     parser = argparse.ArgumentParser(description="Reconcile WO state vs locks and worktrees")
     parser.add_argument("--root", default=".", help="Repo root")
@@ -124,6 +170,21 @@ def main():
         if len(paths) > 1:
             add_issue(issues, "DUPLICATE_WO_ID", "P0", wo_id, [str(p) for p in paths])
 
+    wo_index = load_wo_index(root)
+    for worktree in worktrees:
+        wo_id = None
+        for candidate_id, wo in wo_index.items():
+            wt = wo.get("worktree")
+            if wt and str((root / wt).resolve()) == worktree:
+                wo_id = candidate_id
+                break
+        if wo_id is None:
+            add_issue(issues, "WORKTREE_WITHOUT_RUNNING_WO", "P1", None, [worktree])
+        else:
+            wo_path = root / "_ctx" / "jobs" / "running" / f"{wo_id}.yaml"
+            if not wo_path.exists():
+                add_issue(issues, "WORKTREE_WITHOUT_RUNNING_WO", "P1", wo_id, [worktree])
+
     apply_refused = any(issue.code == "WO_INVALID_SCHEMA" for issue in issues)
     if args.apply and apply_refused:
         print("apply refused: WO_INVALID_SCHEMA")
@@ -134,6 +195,8 @@ def main():
             if issue.code == "RUNNING_WITHOUT_LOCK":
                 lock_path = Path(issue.paths[0]).with_suffix(".lock")
                 lock_path.write_text(f"{issue.wo_id}\n")
+        write_reconcile_log(root, issues, applied=True)
+        maybe_record_patch(root)
     else:
         if any(issue.code == "RUNNING_WITHOUT_LOCK" for issue in issues):
             print("would_create_lock")
