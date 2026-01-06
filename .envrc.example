@@ -1,4 +1,28 @@
 # Trifecta Development Environment
-# Copy this file to .envrc and run: direnv allow .
+# 
+# This file provides default environment variables for local development.
+# It is designed to work with direnv (https://direnv.net/), which automatically
+# loads/unloads environment variables when entering/leaving this directory.
+#
+# ## Setup (Automatic - Recommended)
+# 1. Install direnv: brew install direnv (macOS) or apt install direnv (Linux)
+# 2. Add direnv hook to your shell (~/.bashrc, ~/.zshrc, or ~/.config/fish/config.fish)
+# 3. Copy this file: cp .envrc.example .envrc
+# 4. Allow direnv to load it: direnv allow .
+# 5. Verify: echo $TRIFECTA_AST_PERSIST (should print "1")
+#
+# ## Setup (Manual - Fallback)
+# If direnv is not available, manually source before each session:
+#   source .envrc
+#
+# ## Verification
+# Run any trifecta ast command and check the cache backend:
+#   uv run trifecta ast symbols sym://python/mod/src.domain.models --segment . --telemetry full
+#   # Look for: "cache_status": "hit" or "miss" (persistence enabled)
+#   # Backend should be: FileLockedAstCache
+#
+# To disable persistence (rollback test):
+#   TRIFECTA_AST_PERSIST=0 uv run trifecta ast symbols ...
+#   # Backend should be: InMemoryLRUCache
 
 export TRIFECTA_AST_PERSIST=1
