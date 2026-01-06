@@ -23,7 +23,7 @@ Field Exercises v2 tested system resilience with intentionally difficult queries
 | Bucket | Queries | Anchor Usage (ON) | Zero-Hit Rate (ON) | Gate Status |
 |--------|---------|-------------------|--------------------|----|
 | vague_1token | 10 | **100.0%** | **0.0%** | ✅ PASS |
-| spanish_natural | 10 | 20.0% | **100.0%** | N/A (no gate) |
+| spanish_natural | 10 | 20.0% | **0.0%** | N/A (no gate) |
 | navigation_2hop | 10 | 0.0% | 0.0% | N/A (no gate) |
 
 ---
@@ -175,3 +175,6 @@ Field Exercises v2 validates linter effectiveness on hard queries:
 **Report Generated**: 2026-01-06  
 **Evidence**: `_ctx/metrics/field_exercises_v2_ab.json`, `_ctx/metrics/field_exercises_v2_summary.json`  
 **Work Order**: WO-0011
+
+
+**Update (Live Run)**: Metrics updated with production index execution.
