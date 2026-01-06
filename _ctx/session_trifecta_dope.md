@@ -944,3 +944,23 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 **WO**: \`_ctx/jobs/pending/WO-P2.2.yaml\`
 
 **Status**: READY TO EXECUTE
+
+## 2026-01-06 15:56 UTC - WO-P2.2 AST Cache File Locks (CANCELLED)
+
+**Objetivo**: File locking para concurrencia CLI+daemon.
+
+**Ejecución**:
+- ✅ RED test creado (\`test_ast_cache_concurrency.py\`)
+- ✅ Test PASÓ sin locks (SQLite WAL mode ya protege)
+- ❌ Implementación lock context manager: complejidad no justifica beneficio
+
+**Decisión**: CANCELAR WO-P2.2.
+
+**Rationale**:
+1. SQLite ya maneja concurrencia correctamente (40 writes concurrentes sin corrupción)
+2. File locks son "nice-to-have", no bloqueante
+3. WO-P2.1 (Telemetry) ya entrega observabilidad crítica
+
+**Recommendation**: Monitorear telemetría en producción. Si aparece contención real, reevaluar locks.
+
+**Status**: WO-P2.1 ✅ COMPLETE | WO-P2.2 ❌ CANCELLED

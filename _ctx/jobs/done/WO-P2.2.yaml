@@ -1,0 +1,34 @@
+version: 1
+id: WO-P2.2
+epic_id: E-0001
+title: "AST Cache File Locks & Concurrency Safety"
+priority: P0
+status: cancelled
+owner: null
+
+scope:
+  allow:
+    - "src/domain/ast_cache.py"
+    - "tests/integration/test_ast_cache_concurrency.py"
+
+verify:
+  commands: []
+  verified_at_sha: null
+
+dod_id: DOD-DEFAULT
+
+x_objective: |
+  Implementar file locking en SQLiteCache.
+
+x_notes: |
+  CANCELLED 2026-01-06.
+
+  Rationale:
+  - SQLite ya maneja concurrencia básica correctamente (WAL mode)
+  - RED test pasó sin locks (40 entries concurrentes sin corrupción)
+  - Complejidad de implementación (indentación/wrapping) no justifica beneficio marginal
+  - File locks son "nice-to-have", no bloqueante para producción
+
+  WO-P2.1 (Telemetry) ya entrega observabilidad crítica.
+
+  Recommendation: Reevaluar locks si telemetría muestra contención real en producción.
