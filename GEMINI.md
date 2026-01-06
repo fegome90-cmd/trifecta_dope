@@ -20,6 +20,15 @@ Commits MUST run pre-commit hooks. Do NOT use `--no-verify` unless managing a WI
 **Rule 5: Superpowers**  
 If `superpowers` are mentioned, check `skill.md` or global superpowers, specifically `~/.claude/skills/superpowers`.
 
+**Rule 6: Delivery Dynamics (Superpower Chain)**
+All work must follow this strict sequence of Superpower invocation:
+1. `writing-plans` (Design)
+2. `test-driven-development` (Implementation)
+3. `requesting-code-review` (Pre-merge)
+4. `code-review-checklist` (Self-Audit)
+5. `requesting-code-review` (Final Approval)
+6. `systematic-debugging` (If issues arise)
+
 ---
 
 ## ⚡️ Trifecta CLI Protocol (See [skill.md](file:///Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/skill.md))
