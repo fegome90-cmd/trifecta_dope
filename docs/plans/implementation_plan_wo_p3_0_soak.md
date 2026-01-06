@@ -1,57 +1,59 @@
-# Implementation Plan: WO-P3.0 AST Cache Soak Run
+# Implementation Plan: WO-P3.0 AST Cache Soak Run (Micro-Tasks)
 
 ## Goal
-Verify operational readiness of AST Cache Persistence (`SQLiteCache`) through a rigorous "Soak Run" simulating realistic high-load usage, validating telemetry, concurrency, and data integrity.
+Obtain **real field evidence** (not contractual) of AST Cache operability under load.
+Validate: hit/miss progression available, lock_wait presence, and DB integrity.
 
-## Prerequisites
-- WO-P2.2 (File Locks) complete & verified.
-- `TRIFECTA_AST_PERSIST=1` support enabled.
+## Strict Constraints
+- **NO Pytest** for soak harness.
+- **NO Performance Gates** (e.g. p95 < 10ms is flaky).
+- **Separate Commits** per micro-task.
+- **Parametric Harness** (OPS, WORKERS).
 
-## Strategy
-Execute `scripts/run_soak.sh`, a bash harness that:
-1. Enables persistence.
-2. Runs concurrent generic queries + symbol extractions (200+ operations).
-3. Injects interference (locks via `flock`).
-4. Verifies post-run database integrity.
-5. Extracts "Real" telemetry samples.
+## Micro-Tasks Strategy
 
-## Deliverables
+### TASK 1: Read & Anchor (Zero-Code)
+- **Goal**: Quote exact lines for telemetry emission, DB path compilation, and persistence activation.
+- **Gate**: 6-10 lines of verified code evidence.
+- **Commit**: None (just validation).
 
-### 1. Soak Harness (`scripts/run_soak.sh`)
-Bash script orchestrating:
-- Clean start (fresh persistence DB).
-- Parallel execution of `trifecta ast symbols` and `trifecta ctx search`.
-- Monitoring of cache file growth.
-- Final integrity check via `sqlite3`.
+### TASK 2: Harness Mínimo (`eval/scripts/run_ast_cache_soak.sh`)
+- **Goal**: Parametric bash script (OPS, WORKERS).
+- **Logic**: 
+  - Clean `_ctx/telemetry/events.jsonl` (or isolate run).
+  - Clean DB (deterministic path).
+  - Run `trifecta ast symbols` in parallel.
+- **Gate**: Script exits 0 with OPS=10.
+- **Commit**: `feat(eval): add ast cache soak harness (parametric)`
 
-### 2. Soak Test Suite (`tests/soak/test_ast_cache_soak.py`)
-Python integration test driving the soak logic (reusable, verified by pytest).
-- Validates 200+ writes/hits.
-- Asserts P95 latency < 10ms.
-- Asserts lock_wait events present.
+### TASK 3: Metrics Extractor (`eval/scripts/extract_ast_soak_metrics.py`)
+- **Goal**: Parse JSONL telemetry and output `_ctx/metrics/ast_soak_run.json`.
+- **Metrics**: 
+  - Counts: hit/miss/write, lock_wait, lock_timeout.
+  - Latency: p50, p95 (informational only).
+- **Gate**: Valid JSON output from real log.
+- **Commit**: `feat(eval): add ast soak metrics extractor`
 
-### 3. Audit Report (`docs/reports/ast_soak_run.md`)
-Evidence of:
-- Cache hit rate improvement (cold vs warm).
-- Lock contention handling (telemetry events).
-- Zero corruption (integrity_check=ok).
+### TASK 4: Deterministic Gate (`eval/scripts/gate_ast_soak.py`)
+- **Goal**: Verify Pass/Fail based on STABLE criteria.
+- **Criteria**:
+  - `integrity_check == "ok"`
+  - `ops_total >= OPS`
+  - `cache_hits_warm > 0`
+  - `lock_timeout <= 1` (tolerance for rare race)
+- **Gate**: Validates success/failure correctly.
+- **Commit**: `test(eval): add deterministic soak gates`
 
-## Tasks
+### TASK 5: Real Run (200 ops) + Evidence
+- **Exec**: `TRIFECTA_AST_PERSIST=1 OPS=200 WORKERS=4 bash eval/scripts/run_ast_cache_soak.sh`
+- **Output**:
+  - `_ctx/logs/wo_p3_0/soak_run.log`
+  - `_ctx/metrics/ast_soak_run.json`
+- **Commit**: `feat(eval): record ast soak run P3.0 evidence`
 
-### Phase 1: Harness & Test
-- [ ] Create `tests/soak/test_ast_cache_soak.py` (heavy load logic).
-- [ ] Create `scripts/run_soak.sh` (orchestration wrapper).
-
-### Phase 2: Execution (Soak)
-- [ ] Run `bash scripts/run_soak.sh` (duration ~5 min).
-- [ ] Tail `_ctx/telemetry/events.jsonl` for anomalies.
-
-### Phase 3: Analysis & Report
-- [ ] Extract `ast.cache.lock_wait` events using `jq`.
-- [ ] Calculate latency stats.
-- [ ] Generated `docs/reports/ast_soak_run.md`.
-
-## Verification
-- `bash scripts/run_soak.sh` exit code 0.
-- Telemetry shows `lock_wait` > 0 if contention occurred.
-- `sqlite3 .trifecta/cache/ast_cache_*.db "PRAGMA integrity_check"` returns "ok".
+### TASK 6: Governance
+- **Actions**:
+  - Update `_ctx/session_trifecta_dope.md`
+  - Close `WO-P3.0.yaml` (status: done, verified_at_sha: <SHA>, evidence_logs: [...])
+  - Update `backlog.yaml` (if applicable)
+- **Commit**: `docs(ast): close WO-P3.0 soak audit-grade`
