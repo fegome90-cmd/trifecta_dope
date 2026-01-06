@@ -106,7 +106,39 @@ See `docs/CONTRACTS.md` and architecture docs in `docs/adr/` for complete patter
 4. `trifecta ctx search --segment . --query "..."` - Search
 5. `trifecta ctx get --segment . --ids "..."` - Retrieve chunks
 
-### Telemetry
+#---
+
+## Backlog System
+
+**Structure**: State-segregated Work Orders (WO) + Epic registry
+
+```
+_ctx/
+├── backlog/backlog.yaml        # Epic registry (single source)
+├── jobs/
+│   ├── pending/*.yaml          # WO awaiting work
+│   ├── running/*.yaml          # WO in progress
+│   ├── done/*.yaml             # WO completed
+│   └── failed/*.yaml           # WO failed
+└── dod/*.yaml                  # Definition of Done catalog
+```
+
+**Key Files**:
+- **Epic organization**: `_ctx/backlog/backlog.yaml`
+- **Schema validation**: `docs/backlog/schema/*.schema.json`
+- **Validator**: `python scripts/ctx_backlog_validate.py --strict`
+- **Migration guide**: `docs/backlog/MIGRATION.md`
+
+**WO Fields**:
+- Required: `id`, `epic_id`, `title`, `priority`, `status`, `scope`, `verify`, `dod_id`
+- Done WOs: add `verified_at_sha`, `evidence_logs`
+- Legacy fields: prefix with `x_` (e.g., `x_objective`, `x_notes`)
+
+**Cross-references**: Every WO must reference valid `epic_id` (E-XXXX) and `dod_id`.
+
+---
+
+## Telemetry
 - **Production**: Events logged to `_ctx/telemetry/events.jsonl`
 - **Testing**: Use `TRIFECTA_NO_TELEMETRY=1` for zero side-effects
 - **Pre-commit**: Auto-redirects telemetry via `TRIFECTA_TELEMETRY_DIR`
