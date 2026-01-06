@@ -11,10 +11,14 @@
       "hits": 6,
       "returncode": 0,
       "telemetry": {
-        "query_hash": "live_001",
-        "linter_expanded": false,
+        "query_hash": "cf80cd8aed482d5d",
+        "linter_expanded": true,
         "linter_added_strong_count": 0,
-        "hits": 6
+        "hits": 6,
+        "linter_query_class": "vague",
+        "linter_reasons": [
+          "vague_default_boost"
+        ]
       }
     }
   },
@@ -30,10 +34,14 @@
       "hits": 10,
       "returncode": 0,
       "telemetry": {
-        "query_hash": "live_002",
-        "linter_expanded": false,
+        "query_hash": "75c75efe327a8ef3",
+        "linter_expanded": true,
         "linter_added_strong_count": 0,
-        "hits": 10
+        "hits": 10,
+        "linter_query_class": "vague",
+        "linter_reasons": [
+          "vague_default_boost"
+        ]
       }
     }
   },
@@ -49,10 +57,14 @@
       "hits": 6,
       "returncode": 0,
       "telemetry": {
-        "query_hash": "live_003",
-        "linter_expanded": false,
+        "query_hash": "44575cf5b28512d7",
+        "linter_expanded": true,
         "linter_added_strong_count": 0,
-        "hits": 6
+        "hits": 6,
+        "linter_query_class": "vague",
+        "linter_reasons": [
+          "vague_default_boost"
+        ]
       }
     }
   },
@@ -68,10 +80,14 @@
       "hits": 6,
       "returncode": 0,
       "telemetry": {
-        "query_hash": "live_004",
-        "linter_expanded": false,
+        "query_hash": "133c8eb86cf81347",
+        "linter_expanded": true,
         "linter_added_strong_count": 0,
-        "hits": 6
+        "hits": 6,
+        "linter_query_class": "vague",
+        "linter_reasons": [
+          "vague_default_boost"
+        ]
       }
     }
   },
@@ -87,10 +103,14 @@
       "hits": 10,
       "returncode": 0,
       "telemetry": {
-        "query_hash": "live_005",
-        "linter_expanded": false,
+        "query_hash": "2419329067823cab",
+        "linter_expanded": true,
         "linter_added_strong_count": 0,
-        "hits": 10
+        "hits": 10,
+        "linter_query_class": "vague",
+        "linter_reasons": [
+          "vague_default_boost"
+        ]
       }
     }
   },
@@ -106,10 +126,14 @@
       "hits": 10,
       "returncode": 0,
       "telemetry": {
-        "query_hash": "live_006",
-        "linter_expanded": false,
+        "query_hash": "ca00fccfb408989e",
+        "linter_expanded": true,
         "linter_added_strong_count": 0,
-        "hits": 10
+        "hits": 10,
+        "linter_query_class": "vague",
+        "linter_reasons": [
+          "vague_default_boost"
+        ]
       }
     }
   },
@@ -125,10 +149,14 @@
       "hits": 8,
       "returncode": 0,
       "telemetry": {
-        "query_hash": "live_007",
+        "query_hash": "b79606fb3afea5bd",
         "linter_expanded": true,
         "linter_added_strong_count": 2,
-        "hits": 8
+        "hits": 8,
+        "linter_query_class": "vague",
+        "linter_reasons": [
+          "vague_default_boost"
+        ]
       }
     }
   },
@@ -144,10 +172,14 @@
       "hits": 7,
       "returncode": 0,
       "telemetry": {
-        "query_hash": "live_008",
-        "linter_expanded": false,
+        "query_hash": "1bc04b5291c26a46",
+        "linter_expanded": true,
         "linter_added_strong_count": 0,
-        "hits": 7
+        "hits": 7,
+        "linter_query_class": "vague",
+        "linter_reasons": [
+          "vague_default_boost"
+        ]
       }
     }
   },
@@ -163,10 +195,14 @@
       "hits": 10,
       "returncode": 0,
       "telemetry": {
-        "query_hash": "live_009",
-        "linter_expanded": false,
+        "query_hash": "5e1ecee06a7fc06f",
+        "linter_expanded": true,
         "linter_added_strong_count": 0,
-        "hits": 10
+        "hits": 10,
+        "linter_query_class": "vague",
+        "linter_reasons": [
+          "vague_default_boost"
+        ]
       }
     }
   },
@@ -182,10 +218,14 @@
       "hits": 9,
       "returncode": 0,
       "telemetry": {
-        "query_hash": "live_010",
-        "linter_expanded": false,
+        "query_hash": "f77b12a53ece5f6b",
+        "linter_expanded": true,
         "linter_added_strong_count": 0,
-        "hits": 9
+        "hits": 9,
+        "linter_query_class": "vague",
+        "linter_reasons": [
+          "vague_default_boost"
+        ]
       }
     }
   },
@@ -201,10 +241,12 @@
       "hits": 10,
       "returncode": 0,
       "telemetry": {
-        "query_hash": "live_011",
-        "linter_expanded": true,
+        "query_hash": "3a2d309e36789965",
+        "linter_expanded": false,
         "linter_added_strong_count": 2,
-        "hits": 10
+        "hits": 10,
+        "linter_query_class": "semi",
+        "linter_reasons": []
       }
     }
   },
@@ -220,10 +262,12 @@
       "hits": 10,
       "returncode": 0,
       "telemetry": {
-        "query_hash": "live_012",
+        "query_hash": "b177c812132f1c54",
         "linter_expanded": false,
         "linter_added_strong_count": 0,
-        "hits": 10
+        "hits": 10,
+        "linter_query_class": "vague",
+        "linter_reasons": []
       }
     }
   },
@@ -239,10 +283,12 @@
       "hits": 8,
       "returncode": 0,
       "telemetry": {
-        "query_hash": "live_013",
+        "query_hash": "a8340fadd8e87c47",
         "linter_expanded": false,
         "linter_added_strong_count": 0,
-        "hits": 8
+        "hits": 8,
+        "linter_query_class": "vague",
+        "linter_reasons": []
       }
     }
   },
@@ -258,10 +304,12 @@
       "hits": 10,
       "returncode": 0,
       "telemetry": {
-        "query_hash": "live_014",
+        "query_hash": "22265cba95668b2b",
         "linter_expanded": false,
         "linter_added_strong_count": 0,
-        "hits": 10
+        "hits": 10,
+        "linter_query_class": "semi",
+        "linter_reasons": []
       }
     }
   },
@@ -277,10 +325,12 @@
       "hits": 2,
       "returncode": 0,
       "telemetry": {
-        "query_hash": "live_015",
+        "query_hash": "de1415a8de318cb6",
         "linter_expanded": false,
         "linter_added_strong_count": 0,
-        "hits": 2
+        "hits": 2,
+        "linter_query_class": "vague",
+        "linter_reasons": []
       }
     }
   },
@@ -296,10 +346,12 @@
       "hits": 10,
       "returncode": 0,
       "telemetry": {
-        "query_hash": "live_016",
+        "query_hash": "f5c94126c126aa12",
         "linter_expanded": false,
         "linter_added_strong_count": 0,
-        "hits": 10
+        "hits": 10,
+        "linter_query_class": "semi",
+        "linter_reasons": []
       }
     }
   },
@@ -315,10 +367,12 @@
       "hits": 10,
       "returncode": 0,
       "telemetry": {
-        "query_hash": "live_017",
-        "linter_expanded": true,
+        "query_hash": "16cd406f9b50cf21",
+        "linter_expanded": false,
         "linter_added_strong_count": 2,
-        "hits": 10
+        "hits": 10,
+        "linter_query_class": "vague",
+        "linter_reasons": []
       }
     }
   },
@@ -334,10 +388,12 @@
       "hits": 5,
       "returncode": 0,
       "telemetry": {
-        "query_hash": "live_018",
+        "query_hash": "d72c9d0b9b95e967",
         "linter_expanded": false,
         "linter_added_strong_count": 0,
-        "hits": 5
+        "hits": 5,
+        "linter_query_class": "vague",
+        "linter_reasons": []
       }
     }
   },
@@ -353,10 +409,12 @@
       "hits": 10,
       "returncode": 0,
       "telemetry": {
-        "query_hash": "live_019",
+        "query_hash": "fc3ac7fcd34f57ee",
         "linter_expanded": false,
         "linter_added_strong_count": 0,
-        "hits": 10
+        "hits": 10,
+        "linter_query_class": "semi",
+        "linter_reasons": []
       }
     }
   },
@@ -372,10 +430,12 @@
       "hits": 10,
       "returncode": 0,
       "telemetry": {
-        "query_hash": "live_020",
-        "linter_expanded": true,
+        "query_hash": "79d37438ad8ec77d",
+        "linter_expanded": false,
         "linter_added_strong_count": 2,
-        "hits": 10
+        "hits": 10,
+        "linter_query_class": "semi",
+        "linter_reasons": []
       }
     }
   },
@@ -391,10 +451,12 @@
       "hits": 10,
       "returncode": 0,
       "telemetry": {
-        "query_hash": "live_021",
+        "query_hash": "cf01cdd9e17336d6",
         "linter_expanded": false,
         "linter_added_strong_count": 0,
-        "hits": 10
+        "hits": 10,
+        "linter_query_class": "vague",
+        "linter_reasons": []
       }
     }
   },
@@ -410,10 +472,12 @@
       "hits": 10,
       "returncode": 0,
       "telemetry": {
-        "query_hash": "live_022",
+        "query_hash": "45b28d2b4feb66ed",
         "linter_expanded": false,
         "linter_added_strong_count": 0,
-        "hits": 10
+        "hits": 10,
+        "linter_query_class": "vague",
+        "linter_reasons": []
       }
     }
   },
@@ -429,10 +493,12 @@
       "hits": 10,
       "returncode": 0,
       "telemetry": {
-        "query_hash": "live_023",
-        "linter_expanded": true,
+        "query_hash": "32b0aa016d4a5698",
+        "linter_expanded": false,
         "linter_added_strong_count": 2,
-        "hits": 10
+        "hits": 10,
+        "linter_query_class": "vague",
+        "linter_reasons": []
       }
     }
   },
@@ -448,10 +514,12 @@
       "hits": 10,
       "returncode": 0,
       "telemetry": {
-        "query_hash": "live_024",
+        "query_hash": "2fd6c14ea4ebb487",
         "linter_expanded": false,
         "linter_added_strong_count": 0,
-        "hits": 10
+        "hits": 10,
+        "linter_query_class": "vague",
+        "linter_reasons": []
       }
     }
   },
@@ -467,10 +535,12 @@
       "hits": 10,
       "returncode": 0,
       "telemetry": {
-        "query_hash": "live_025",
+        "query_hash": "29320562af0bc31b",
         "linter_expanded": false,
         "linter_added_strong_count": 0,
-        "hits": 10
+        "hits": 10,
+        "linter_query_class": "vague",
+        "linter_reasons": []
       }
     }
   },
@@ -486,10 +556,12 @@
       "hits": 10,
       "returncode": 0,
       "telemetry": {
-        "query_hash": "live_026",
+        "query_hash": "fabd556a87d3eb31",
         "linter_expanded": false,
         "linter_added_strong_count": 0,
-        "hits": 10
+        "hits": 10,
+        "linter_query_class": "vague",
+        "linter_reasons": []
       }
     }
   },
@@ -505,10 +577,12 @@
       "hits": 10,
       "returncode": 0,
       "telemetry": {
-        "query_hash": "live_027",
+        "query_hash": "65791789a2e1a433",
         "linter_expanded": false,
         "linter_added_strong_count": 0,
-        "hits": 10
+        "hits": 10,
+        "linter_query_class": "vague",
+        "linter_reasons": []
       }
     }
   },
@@ -524,10 +598,12 @@
       "hits": 10,
       "returncode": 0,
       "telemetry": {
-        "query_hash": "live_028",
+        "query_hash": "a646c2e66277151c",
         "linter_expanded": false,
         "linter_added_strong_count": 0,
-        "hits": 10
+        "hits": 10,
+        "linter_query_class": "vague",
+        "linter_reasons": []
       }
     }
   },
@@ -543,10 +619,12 @@
       "hits": 10,
       "returncode": 0,
       "telemetry": {
-        "query_hash": "live_029",
+        "query_hash": "35e5c949b77b7cbf",
         "linter_expanded": false,
         "linter_added_strong_count": 0,
-        "hits": 10
+        "hits": 10,
+        "linter_query_class": "vague",
+        "linter_reasons": []
       }
     }
   },
@@ -562,10 +640,12 @@
       "hits": 10,
       "returncode": 0,
       "telemetry": {
-        "query_hash": "live_030",
+        "query_hash": "0d8bc5aa7b897716",
         "linter_expanded": false,
         "linter_added_strong_count": 0,
-        "hits": 10
+        "hits": 10,
+        "linter_query_class": "vague",
+        "linter_reasons": []
       }
     }
   }

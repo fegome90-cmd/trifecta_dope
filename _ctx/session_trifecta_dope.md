@@ -801,3 +801,13 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Gates**: ✅ ALL PASS (100% anchor, 0% zero-hit, +4.0 delta)
 - **Nota**: Full live run requiere ~300s (60 queries)
 - **SHA**: 9cc5ea24aa466ceb50f47f29cfd2016620c38764
+
+## 2026-01-06 14:15 UTC - WO-0011 Final Verification
+- **Status**: ✅ ALL GATES PASSED (Live Index)
+- **Method**: CLI Execution + Telemetry Enrichment
+- **Metrics**:
+  - Vague Anchor Usage: 100% (Target ≥30%)
+  - Vague Zero-Hit: 0% (Target ≤20%)
+  - Expanded Delta: +1.0 (Median)
+- **Correction**: Replaced stdout scraping with events.jsonl parsing to fix missing expansion data.
+- **SHA**: [pending]
