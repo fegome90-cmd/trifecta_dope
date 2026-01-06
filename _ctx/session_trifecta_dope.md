@@ -994,3 +994,10 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Commands**: TRIFECTA_AST_PERSIST=1 OPS=10 WORKERS=2 RUN_ID=wo-p3-0-t2 bash eval/scripts/run_ast_cache_soak.sh | tee _ctx/logs/wo_p3_0/t2_ops10.log
 - **Evidence**: _ctx/logs/wo_p3_0/t2_ops10.log
 - **Next**: Task 3 (Metrics Extractor)
+
+## 2026-01-06 17:15 UTC
+- **Summary**: Executed WO-P3.0 Task 3: Metrics Extractor. Implemented `extract_ast_soak_metrics.py` and verified with preflight run.
+- **Created**: eval/scripts/extract_ast_soak_metrics.py
+- **Commands**: python eval/scripts/extract_ast_soak_metrics.py --run-id preflight_t3 --out _ctx/metrics/ast_soak_preflight_t3.json
+- **Evidence**: _ctx/metrics/ast_soak_preflight_t3.json
+- **Next**: Task 4 (Gate script)

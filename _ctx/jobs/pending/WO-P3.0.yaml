@@ -85,7 +85,7 @@ x_micro_tasks:
 
   - id: T3
     name: "T3: Extractor Métricas"
-    status: pending
+    status: done
     commands:
       - "python eval/scripts/extract_ast_soak_metrics.py --run-id wo-p3-0-t2 --out _ctx/metrics/ast_soak_wo-p3-0-t2.json"
       - "cat _ctx/metrics/ast_soak_wo-p3-0-t2.json | jq 'keys' | tee _ctx/logs/wo_p3_0/t3_validate.log"
@@ -94,7 +94,7 @@ x_micro_tasks:
       - "jq -e '.counts' _ctx/metrics/ast_soak_wo-p3-0-t2.json >/dev/null"
       - "jq -e '.latency_ms' _ctx/metrics/ast_soak_wo-p3-0-t2.json >/dev/null"
     evidence:
-      - "_ctx/metrics/ast_soak_wo-p3-0-t2.json"
+      - "_ctx/metrics/ast_soak_preflight_t3.json"
       - "_ctx/logs/wo_p3_0/t3_validate.log"
     commit: "feat(eval): add ast soak metrics extractor"
 
