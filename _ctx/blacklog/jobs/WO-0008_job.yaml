@@ -3,7 +3,11 @@ id: WO-0008
 epic_id: E-0001
 title: "A/B Linter Reproducibility (OFF=0, ON>0) en fixture sintético"
 priority: P1
-status: pending
+verified_at_sha: f2c16d761834bf00b60a5ed86a37f90d76853f9f
+status: done
+evidence_logs:
+  - "_ctx/logs/wo0008_ab_test_execution.log"
+final_report: "docs/reports/wo0008_ab_linter_reproducibility.md"
 dod_id: DOD-LINTER_AB
 owner: null
 branch: "job/WO-0008-ab-linter-synthetic"
@@ -63,5 +67,3 @@ notes: |
 
   WO-0007 valida: create -> sync -> pack creation (sin linter).
   WO-0008 valida: linter OFF=0 ON>0 en fixture.
-
-verified_at_sha: null # Completar al pasar tests
