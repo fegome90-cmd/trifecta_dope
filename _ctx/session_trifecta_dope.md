@@ -864,3 +864,20 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 **Veredicto**: ✅ P1 PASS (Verified at HEAD a63452f).
 
 **Next**: Crear walkthrough retrospectivo.
+
+## 2026-01-06 15:38 UTC - P2 AST Persistence Hardening (Planning)
+
+**Objetivo**: Documentar roadmap P2 (observabilidad + safety) basado en gaps de P1.
+
+**P2 Scope**:
+1. **Telemetry**: cache_hit/miss events en events.jsonl
+2. **File Locks**: fcntl para CLI+daemon concurrente
+3. **Corruption Recovery**: integrity_check + fallback
+4. **Monitoring**: DB size warnings
+5. **TTL**: Eviction por file_mtime
+
+**Execution Order**: Sprint 1 (Observability) → Sprint 2 (Safety) → Sprint 3 (Optimization)
+
+**Plan**: \`docs/plans/implementation_plan_ast_persist_p2.md\`
+
+**Status**: BACKLOG (not executing yet)
