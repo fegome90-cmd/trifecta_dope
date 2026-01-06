@@ -603,3 +603,105 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Commands**: rg lsp
 - **Pack SHA**: `d090785154f5924e`
 
+## 2026-01-05 17:32 UTC
+- **Summary**: Revisar lsp_daemon y lsp_client para entender interfaz LSP
+- **Files**: src/infrastructure/lsp_daemon.py, src/infrastructure/lsp_client.py, _ctx/session_trifecta_dope.md
+- **Commands**: sed
+- **Pack SHA**: `585a973055425ce8`
+
+## 2026-01-05 17:33 UTC
+- **Summary**: Revisar cli_ast para entender comandos LSP
+- **Files**: src/infrastructure/cli_ast.py, _ctx/session_trifecta_dope.md
+- **Commands**: sed
+- **Pack SHA**: `585a973055425ce8`
+
+## 2026-01-05 17:36 UTC
+- **Summary**: Usar --help para identificar comandos LSP disponibles
+- **Files**: _ctx/session_trifecta_dope.md
+- **Commands**: trifecta ast --help
+- **Pack SHA**: `585a973055425ce8`
+
+## 2026-01-05 17:36 UTC
+- **Summary**: --help confirma comandos AST/LSP disponibles (symbols, hover WIP)
+- **Files**: _ctx/session_trifecta_dope.md
+- **Commands**: trifecta ast --help
+- **Pack SHA**: `585a973055425ce8`
+
+## 2026-01-05 17:38 UTC
+- **Summary**: Descubrir el repo usando el CLI: identificar docs base, arquitectura y entradas principales
+- **Files**: _ctx/session_trifecta_dope.md
+- **Commands**: ctx search, ctx get
+- **Pack SHA**: `585a973055425ce8`
+
+## 2026-01-05 17:38 UTC
+- **Summary**: Descubierto: README define PCC y artefactos base (prime/agent/session/skill) para orientar exploracion; evidencia [ref:trifecta_dope/README.md:c2d9ad0077]
+- **Files**: _ctx/session_trifecta_dope.md
+- **Commands**: ctx search, ctx get
+- **Pack SHA**: `585a973055425ce8`
+
+## 2026-01-05 17:39 UTC
+- **Summary**: Descubrir puntos de entrada principales usando prime del segmento
+- **Files**: _ctx/prime_trifecta_dope.md, _ctx/session_trifecta_dope.md
+- **Commands**: ctx search, ctx get
+- **Pack SHA**: `585a973055425ce8`
+
+## 2026-01-05 17:39 UTC
+- **Summary**: Prime identifica puntos de entrada: lsp_daemon.py, cli.py, lsp_client.py, telemetry.py, use_cases.py, cli_ast.py, etc.; evidencia [prime:5d535ae4c0]
+- **Files**: _ctx/prime_trifecta_dope.md, _ctx/session_trifecta_dope.md
+- **Commands**: ctx search, ctx get
+- **Pack SHA**: `585a973055425ce8`
+
+## 2026-01-05 17:40 UTC
+- **Summary**: Usar ast symbols para profundizar en comandos del CLI (src.infrastructure.cli)
+- **Files**: src/infrastructure/cli.py, _ctx/session_trifecta_dope.md
+- **Commands**: ast symbols
+- **Pack SHA**: `585a973055425ce8`
+
+## 2026-01-05 17:40 UTC
+- **Summary**: ast symbols fallo por URI invalida; reintentar con kind=mod
+- **Files**: src/infrastructure/cli.py, _ctx/session_trifecta_dope.md
+- **Commands**: ast symbols
+- **Pack SHA**: `585a973055425ce8`
+
+## 2026-01-05 17:40 UTC
+- **Summary**: AST symbols en cli.py: lista de comandos principales y utilidades (search/get/validate/sync/create/load/session/telemetry/etc.)
+- **Files**: src/infrastructure/cli.py, _ctx/session_trifecta_dope.md
+- **Commands**: ast symbols
+- **Pack SHA**: `585a973055425ce8`
+
+## 2026-01-05 17:41 UTC
+- **Summary**: Extraer symbols de cli_ast y telemetry para documentar uso de comandos
+- **Files**: src/infrastructure/cli_ast.py, src/infrastructure/telemetry.py, _ctx/session_trifecta_dope.md
+- **Commands**: ast symbols
+- **Pack SHA**: `585a973055425ce8`
+
+## 2026-01-05 17:41 UTC
+- **Summary**: AST symbols: cli_ast define commands symbols/snippet/hover/clear-cache/cache-stats; telemetry expone clase Telemetry y sanitizacion
+- **Files**: src/infrastructure/cli_ast.py, src/infrastructure/telemetry.py, _ctx/session_trifecta_dope.md
+- **Commands**: ast symbols
+- **Pack SHA**: `585a973055425ce8`
+
+## 2026-01-05 17:41 UTC
+- **Summary**: Leer docstrings/flags de cli_ast y telemetry para documentar uso
+- **Files**: src/infrastructure/cli_ast.py, src/infrastructure/telemetry.py, _ctx/session_trifecta_dope.md
+- **Commands**: ctx search, ctx get
+- **Pack SHA**: `585a973055425ce8`
+
+## 2026-01-05 17:42 UTC
+- **Summary**: Ctx search no encontro docstrings en cli_ast/telemetry; obtuvo runbook de session como referencia de comandos base; evidencia [session:c420c4f09f]
+- **Files**: src/infrastructure/cli_ast.py, src/infrastructure/telemetry.py, _ctx/session_trifecta_dope.md
+- **Commands**: ctx search, ctx get
+- **Pack SHA**: `585a973055425ce8`
+
+## 2026-01-05 17:42 UTC
+- **Summary**: Identificar patron de busqueda positiva con CLI y AST
+- **Files**: _ctx/session_trifecta_dope.md
+- **Commands**: ctx search, ctx get
+- **Pack SHA**: `585a973055425ce8`
+
+## 2026-01-05 17:42 UTC
+- **Summary**: Patron: follow runbook (segment '.', search->get), use existing terms, and use ast symbols with sym://python/mod/<module>
+- **Files**: _ctx/session_trifecta_dope.md
+- **Commands**: ctx search, ctx get
+- **Pack SHA**: `585a973055425ce8`
+
