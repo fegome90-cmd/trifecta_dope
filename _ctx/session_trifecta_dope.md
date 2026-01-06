@@ -846,3 +846,21 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **E2E Test**: `tests/integration/test_ast_cache_persist_cross_run_cli.py` ✅ PASS. Verifica que `TRIFECTA_AST_PERSIST=1` activa hits en segunda corrida.
 
 **Veredicto**: ✅ PASS.
+
+## 2026-01-06 15:35 UTC - P1 AST Persistence Verification (Hard Gates)
+
+**Objetivo**: Verificar que SHA 354afb6 (P1 Wiring) sigue operativo en condiciones duras.
+
+**Gates Ejecutados**:
+1. **Gate 1 (Main Repo)**: \`uv run pytest -q test_ast_cache_persist_cross_run_cli.py\` → ✅ 2/2 PASSED
+2. **Gate 2 (Clean Worktree /tmp)**: Fresh install + pytest → ✅ 2/2 PASSED (1.41s)
+3. **Gate 3 (Evidence Signals)**:
+   - ✅ Factory \`get_ast_cache()\` usado en 2 sitios (cli_ast, pr2_context_searcher)
+   - ✅ Cross-run hit verificado: status1='miss', status2='hit'
+   - ✅ SQLite creado en \`.trifecta/cache/*.db\`
+
+**Logs**: \`_ctx/logs/p1_verify_ast_cache_cross_run.log\`, \`/tmp/tf_p1_verify_pytest_v2.log\`
+
+**Veredicto**: ✅ P1 PASS (Verified at HEAD a63452f).
+
+**Next**: Crear walkthrough retrospectivo.
