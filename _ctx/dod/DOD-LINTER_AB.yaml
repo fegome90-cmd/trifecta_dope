@@ -1,0 +1,48 @@
+version: 1
+dod:
+  - id: DOD-LINTER_AB
+    description: "Definition of Done for A/B Linter reproducibility tests"
+    required_artifacts:
+      - path: "tests/integration/test_ctx_search_linter_ab_*.py"
+        description: "Integration test validating OFF=0, ON>0 behavior"
+        validator: "pytest passes"
+
+      - path: "docs/reports/linter_ab_reproducibility.md"
+        description: "Report with CLI evidence and test results"
+        validator: "contains CLI commands + output logs"
+
+      - path: "_ctx/logs/ab_*.log"
+        description: "Evidence logs (OFF vs ON)"
+        validator: "OFF log shows 0 hits, ON log shows >0 hits"
+
+    required_checks:
+      - name: "test_off_zero_hits"
+        description: "Query with --no-lint returns 0 hits"
+        commands:
+          - "uv run pytest -xvs tests/integration/test_ctx_search_linter_ab_controlled.py::TestQueryLinterABControlled::test_vague_spanish_query_off_zero_hits"
+        must_pass: true
+
+      - name: "test_on_expansion"
+        description: "Same query with TRIFECTA_LINT=1 returns >0 hits via anchor expansion"
+        commands:
+          - "uv run pytest -xvs tests/integration/test_ctx_search_linter_ab_controlled.py::TestQueryLinterABControlled::test_vague_spanish_query_on_hits_via_expansion"
+        must_pass: true
+
+      - name: "test_delta_positive"
+        description: "Delta (ON - OFF) is positive"
+        commands:
+          - "uv run pytest -xvs tests/integration/test_ctx_search_linter_ab_controlled.py::TestQueryLinterABControlled::test_ab_delta_positive"
+        must_pass: true
+
+    gates:
+      - name: "reproducible_in_clean_worktree"
+        condition: "Test passes in clean worktree without pre-existing _ctx state"
+
+      - name: "deterministic_results"
+        condition: "Re-running test produces same OFF=0, ON>0 results"
+
+    success_criteria:
+      - "OFF test: 0 hits (no linter expansion)"
+      - "ON test: >0 hits (linter expands query with anchors)"
+      - "Delta test: ON > OFF (linter adds value)"
+      - "All 3 tests pass in < 5 seconds"
