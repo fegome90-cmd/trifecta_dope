@@ -1,12 +1,36 @@
 #!/usr/bin/env python3
 import argparse
+import importlib
 import json
+import os
 from pathlib import Path
 import sys
-import yaml
-from jsonschema import validate
 
 CANONICAL_JOB_STATES = ["pending", "running", "done", "failed"]
+
+def _ensure_deps():
+    for module in ("yaml", "jsonschema"):
+        try:
+            importlib.import_module(module)
+        except ModuleNotFoundError:
+            if os.environ.get("CTX_PY_REEXEC") == "1":
+                raise
+            repo_root = Path(__file__).resolve().parent.parent
+            venv_python = repo_root / ".venv" / "bin" / "python"
+            if venv_python.exists():
+                env = os.environ.copy()
+                env["CTX_PY_REEXEC"] = "1"
+                os.execve(
+                    str(venv_python),
+                    [str(venv_python), __file__, *sys.argv[1:]],
+                    env,
+                )
+            raise
+
+
+_ensure_deps()
+yaml = importlib.import_module("yaml")
+validate = importlib.import_module("jsonschema").validate
 
 
 def load_yaml(path: Path):

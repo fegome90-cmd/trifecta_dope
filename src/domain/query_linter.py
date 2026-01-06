@@ -82,7 +82,15 @@ def expand_query(query: str, analysis: dict, anchors_cfg: dict) -> dict:
     existing_strong = analysis["anchors"]["strong"]
     
     is_doc_intent = any(t in existing_weak for t in ["doc", "docs", "documentación", "guía", "manual", "uso", "cómo", "how", "howto"])
-    
+
+    # If strong anchors were detected via aliases, surface them in the expanded query.
+    # This keeps vague queries from staying empty when aliases are the only signal.
+    for cand in existing_strong:
+        if cand not in query.split() and cand not in added_strong and len(added_strong) < 2:
+            added_strong.append(cand)
+    if added_strong and "vague_alias_boost" not in reasons:
+        reasons.append("vague_alias_boost")
+
     # Regla: preferir strong.dirs + strong.exts cuando el usuario pida documentación
     if is_doc_intent:
         # Intentar añadir docs/ y readme.md si no están presentes

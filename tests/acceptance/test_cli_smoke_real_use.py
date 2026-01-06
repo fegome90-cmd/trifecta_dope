@@ -11,11 +11,13 @@ import subprocess
 from pathlib import Path
 import pytest
 
+TRIFECTA_ROOT = Path(__file__).resolve().parents[2]
+
 
 def run_trifecta(*args: str, cwd: Path) -> subprocess.CompletedProcess[str]:
     """Execute trifecta CLI and capture output."""
     return subprocess.run(
-        ["uv", "run", "trifecta", *args],
+        ["uv", "--directory", str(TRIFECTA_ROOT), "run", "trifecta", *args],
         cwd=cwd,
         capture_output=True,
         text=True,

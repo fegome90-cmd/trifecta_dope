@@ -131,7 +131,7 @@ mindmap
 
 - **Fecha ultima actualizacion**: {config.last_verified}
 - **Mantenedor**: <!-- Agregar si aplica -->
-- **Ver tambien**: [skill.md](../skill.md) | [agent.md](./agent.md)
+- **Ver tambien**: [skill.md](skill.md) | [_ctx/agent_{config.segment}.md](_ctx/agent_{config.segment}.md)
 """
 
     def render_agent(self, config: TrifectaConfig) -> str:

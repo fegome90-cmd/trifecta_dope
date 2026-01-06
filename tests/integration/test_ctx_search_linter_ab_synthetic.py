@@ -15,6 +15,7 @@ import re
 
 import pytest
 
+TRIFECTA_ROOT = Path(__file__).resolve().parents[2]
 
 @pytest.fixture
 def mini_repo_with_linter_config(tmp_path: Path) -> Path:
@@ -22,17 +23,21 @@ def mini_repo_with_linter_config(tmp_path: Path) -> Path:
     repo = tmp_path / "mini_repo_ab"
     repo.mkdir()
 
+    (repo / "pyproject.toml").write_text("[project]\nname='mini-repo'\nversion='0.0.1'\n")
+
     # Create docs with searchable content
     docs_dir = repo / "docs"
     docs_dir.mkdir()
-    (docs_dir / "servicio.md").write_text(
-        "# Servicio\n\n"
-        "Este documento describe el servicio principal.\n"
-        "El SERVICIO_ANCHOR_TOKEN gestiona las operaciones core.\n"
+    (docs_dir / "ops.md").write_text(
+        "# Operaciones\n\n"
+        "Documento base de operaciones del sistema.\n"
+        "Sin menciones al termino objetivo de la query.\n"
     )
 
     # Noise file
     (repo / "README.md").write_text("# Mini Repo\n\nTest fixture for A/B linter.\n")
+    (repo / "agent.md").write_text("Agent config placeholder.\n")
+    (repo / "prime.md").write_text("Prime placeholder.\n")
 
     # Create linter configs for expansion
     configs_dir = repo / "configs"
@@ -42,7 +47,7 @@ def mini_repo_with_linter_config(tmp_path: Path) -> Path:
     (configs_dir / "anchors.yaml").write_text("""
 anchors:
   strong:
-    files: ["servicio.md"]
+    files: ["agent.md", "prime.md", "ops.md"]
     dirs: ["docs/"]
     exts: []
     symbols_terms: []
@@ -55,7 +60,7 @@ anchors:
     (configs_dir / "aliases.yaml").write_text("""
 aliases:
   - phrase: "servicio"
-    add_anchors: ["servicio.md", "docs/"]
+    add_anchors: ["agent.md", "prime.md"]
 """)
 
     return repo
@@ -67,7 +72,7 @@ def test_ab_linter_off_zero_on_nonzero(mini_repo_with_linter_config: Path):
 
     # Bootstrap: create → sync
     create_result = subprocess.run(
-        ["uv", "run", "trifecta", "create", "--segment", str(mini_repo)],
+        ["uv", "--directory", str(TRIFECTA_ROOT), "run", "trifecta", "create", "--segment", str(mini_repo)],
         capture_output=True,
         text=True,
         cwd=mini_repo.parent,
@@ -75,7 +80,7 @@ def test_ab_linter_off_zero_on_nonzero(mini_repo_with_linter_config: Path):
     assert create_result.returncode == 0, f"create failed:\n{create_result.stderr}"
 
     sync_result = subprocess.run(
-        ["uv", "run", "trifecta", "ctx", "sync", "--segment", str(mini_repo)],
+        ["uv", "--directory", str(TRIFECTA_ROOT), "run", "trifecta", "ctx", "sync", "--segment", str(mini_repo)],
         capture_output=True,
         text=True,
         cwd=mini_repo.parent,
@@ -86,6 +91,8 @@ def test_ab_linter_off_zero_on_nonzero(mini_repo_with_linter_config: Path):
     result_off = subprocess.run(
         [
             "uv",
+            "--directory",
+            str(TRIFECTA_ROOT),
             "run",
             "trifecta",
             "ctx",
@@ -107,6 +114,8 @@ def test_ab_linter_off_zero_on_nonzero(mini_repo_with_linter_config: Path):
     result_on = subprocess.run(
         [
             "uv",
+            "--directory",
+            str(TRIFECTA_ROOT),
             "run",
             "trifecta",
             "ctx",
@@ -124,11 +133,17 @@ def test_ab_linter_off_zero_on_nonzero(mini_repo_with_linter_config: Path):
         cwd=mini_repo.parent,
     )
 
-    # Parse chunk IDs from output (format: "prime:<digest>:chunk-<N>")
-    id_pattern = re.compile(r"prime:\w+:chunk-\d+")
+    def parse_hit_count(output: str) -> int:
+        if "No results found" in output:
+            return 0
+        match = re.search(r"Search Results \((\d+) hits?\)", output)
+        return int(match.group(1)) if match else 0
 
+    id_pattern = re.compile(r"\[([^\]]+)\]")
     ids_off = id_pattern.findall(result_off.stdout)
     ids_on = id_pattern.findall(result_on.stdout)
+    hits_off = parse_hit_count(result_off.stdout + result_off.stderr)
+    hits_on = parse_hit_count(result_on.stdout + result_on.stderr)
 
     # Save logs for evidence
     logs_dir = Path("_ctx/logs")
@@ -137,22 +152,24 @@ def test_ab_linter_off_zero_on_nonzero(mini_repo_with_linter_config: Path):
         f"Query: 'servicio' (--no-lint)\n\n"
         f"STDOUT:\n{result_off.stdout}\n\n"
         f"STDERR:\n{result_off.stderr}\n\n"
+        f"Hits found: {hits_off}\n"
         f"IDs found: {ids_off}\n"
     )
     (logs_dir / "ab_on.log").write_text(
         f"Query: 'servicio' (TRIFECTA_LINT=1)\n\n"
         f"STDOUT:\n{result_on.stdout}\n\n"
         f"STDERR:\n{result_on.stderr}\n\n"
+        f"Hits found: {hits_on}\n"
         f"IDs found: {ids_on}\n"
     )
 
     # A/B assertions
-    assert len(ids_off) == 0, (
-        f"OFF should return 0 hits (no expansion), got {len(ids_off)}: {ids_off}\n"
+    assert hits_off == 0, (
+        f"OFF should return 0 hits (no expansion), got {hits_off}: {ids_off}\n"
         f"Output: {result_off.stdout}"
     )
-    assert len(ids_on) > 0, (
-        f"ON should return >0 hits (with expansion), got {len(ids_on)}\nOutput: {result_on.stdout}"
+    assert hits_on > 0, (
+        f"ON should return >0 hits (with expansion), got {hits_on}\nOutput: {result_on.stdout}"
     )
 
     # Verify hit corresponds to servicio.md (optional but good)

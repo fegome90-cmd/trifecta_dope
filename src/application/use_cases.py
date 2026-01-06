@@ -463,8 +463,6 @@ class BuildContextPackUseCase:
                 continue
 
             content = file_path.read_text()
-            if not content.endswith("\n"):
-                content += "\n"
             # Simple token estimation: 4 chars per token
             token_est = len(content) // 4
 

@@ -8,11 +8,13 @@ Tests verify Error Card classification is STRICT (only for prime file missing).
 import subprocess
 from pathlib import Path
 
+TRIFECTA_ROOT = Path(__file__).resolve().parents[2]
+
 
 def run_trifecta(*args: str, cwd: Path) -> subprocess.CompletedProcess[str]:
     """Execute trifecta CLI and capture output."""
     return subprocess.run(
-        ["uv", "run", "--active", "trifecta", *args],
+        ["uv", "--directory", str(TRIFECTA_ROOT), "run", "trifecta", *args],
         capture_output=True,
         text=True,
         cwd=cwd,
