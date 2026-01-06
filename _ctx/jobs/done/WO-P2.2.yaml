@@ -1,34 +1,38 @@
 version: 1
 id: WO-P2.2
 epic_id: E-0001
-title: "AST Cache File Locks & Concurrency Safety"
+title: "AST Cache File Locks (Wrapper Pattern)"
 priority: P0
-status: cancelled
+status: done
 owner: null
 
 scope:
   allow:
-    - "src/domain/ast_cache.py"
-    - "tests/integration/test_ast_cache_concurrency.py"
+    - "src/infrastructure/file_locked_cache.py"
+    - "src/infrastructure/factories.py"
+    - "tests/integration/test_ast_cache_file_locks.py"
 
 verify:
-  commands: []
-  verified_at_sha: null
+  commands:
+    - "uv run pytest -q tests/integration/test_ast_cache_file_locks.py"
+    - "uv run pytest -q tests/integration/test_ast_cache_telemetry.py"
+  verified_at_sha: "HEAD"
 
 dod_id: DOD-DEFAULT
 
 x_objective: |
-  Implementar file locking en SQLiteCache.
+  Wrapper pattern para file locking sin tocar SQLiteCache.
+
+x_deliverables:
+  - "FileLockedAstCache wrapper (115 lines)"
+  - "Factory integration (5 lines added)"
+  - "Contractual tests (4/4 PASSED)"
+  - "Events: ast.cache.lock_timeout, ast.cache.lock_wait"
 
 x_notes: |
-  CANCELLED 2026-01-06.
+  Completed 2026-01-06.
 
-  Rationale:
-  - SQLite ya maneja concurrencia básica correctamente (WAL mode)
-  - RED test pasó sin locks (40 entries concurrentes sin corrupción)
-  - Complejidad de implementación (indentación/wrapping) no justifica beneficio marginal
-  - File locks son "nice-to-have", no bloqueante para producción
+  Wrapper approach (vs modifying SQLiteCache) keeps OS concerns in infrastructure.
+  No changes to domain layer.
 
-  WO-P2.1 (Telemetry) ya entrega observabilidad crítica.
-
-  Recommendation: Reevaluar locks si telemetría muestra contención real en producción.
+  Tests: 4 contractual + 5 regression = 9/9 PASSED

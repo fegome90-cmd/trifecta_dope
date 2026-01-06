@@ -131,7 +131,8 @@ def test_ast_cache_event_schema(fresh_cli_workspace):
 
     assert "result" in event
     assert "backend" in event["result"]
-    assert event["result"]["backend"] in ("SQLiteCache", "InMemoryLRUCache")
+    # Backend can be wrapper (FileLockedAstCache) or direct cache
+    assert event["result"]["backend"] in ("SQLiteCache", "InMemoryLRUCache", "FileLockedAstCache")
 
     assert "segment_id" in event["result"]
     assert isinstance(event["result"]["segment_id"], str)

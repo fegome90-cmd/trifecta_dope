@@ -52,8 +52,14 @@ def get_ast_cache(
 
         db_path = cache_dir / f"ast_cache_{safe_id}.db"
 
-        # Wire: Return persistent cache
+        # Wire: Create persistent cache
         cache: AstCache = SQLiteCache(db_path=db_path, max_entries=max_entries, max_bytes=max_bytes)
+
+        # Wrap with file lock for deterministic timeout + telemetry
+        from src.infrastructure.file_locked_cache import FileLockedAstCache
+
+        lock_path = db_path.with_suffix(".lock")
+        cache = FileLockedAstCache(inner=cache, lock_path=lock_path, telemetry=telemetry)
     else:
         # Wire: Return ephemeral cache
         cache = InMemoryLRUCache(max_entries=max_entries, max_bytes=max_bytes)

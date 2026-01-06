@@ -964,3 +964,26 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 **Recommendation**: Monitorear telemetría en producción. Si aparece contención real, reevaluar locks.
 
 **Status**: WO-P2.1 ✅ COMPLETE | WO-P2.2 ❌ CANCELLED
+
+## 2026-01-06 16:05 UTC - WO-P2.2 AST Cache File Locks (COMPLETE - Wrapper)
+
+**Objetivo**: File locking con timeout determinista + telemetría de contención.
+
+**Approach**: Wrapper pattern (FileLockedAstCache) sin tocar SQLiteCache.
+
+**Implementación**:
+1. ✅ Created \`FileLockedAstCache\` wrapper (src/infrastructure/file_locked_cache.py)
+2. ✅ Wired in factory (wraps SQLiteCache when persist=True)
+3. ✅ Contractual tests (4/4 PASSED):
+   - test_lock_timeout_contract: Timeout determinista ✅
+   - test_lock_contention_telemetry: Observabilidad ✅
+   - test_lock_success_fast_path: Fast path ✅
+   - test_lock_concurrent_writes_deterministic: 20 concurrent writes ✅
+4. ✅ Regression tests: P1 + P2.1 still pass (5/5)
+
+**Value Delivered**:
+- Timeout determinista (no random OperationalError)
+- Telemetry: \`ast.cache.lock_timeout\` + \`ast.cache.lock_wait\`
+- Control explícito daemon+CLI
+
+**Veredicto**: ✅ WO-P2.2 COMPLETE
