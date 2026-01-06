@@ -14,6 +14,7 @@ epics:
     wo_queue:
       - WO-P2.1 # Telemetry Integration (done)
       - WO-P2.2 # File Locks via Wrapper (done)
+      - WO-P3.0 # Soak Harness & Evidence (done)
 
     x_legacy_wo_queue:
       - WO-P0 # Inventory (done - SHA b0ab32f)
