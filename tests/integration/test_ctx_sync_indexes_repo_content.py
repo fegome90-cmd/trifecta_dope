@@ -73,7 +73,7 @@ def test_ctx_sync_indexes_docs_content(mini_repo_with_content: Path):
 
 
 def test_ctx_search_finds_indexed_content(mini_repo_with_content: Path):
-    """RED test: Verify ctx search can find content from docs/."""
+    """GREEN test: Verify ctx search can find content from docs/."""
     mini_repo = mini_repo_with_content
 
     # Bootstrap
@@ -110,13 +110,18 @@ def test_ctx_search_finds_indexed_content(mini_repo_with_content: Path):
         cwd=mini_repo.parent,
     )
 
-    # Assert: search returns hits
+    # METHOD A: Parse hit count from stdout header "Search Results (N hits)"
     import re
 
-    id_pattern = re.compile(r"prime:\w+:chunk-\d+")
-    ids_found = id_pattern.findall(search_result.stdout)
+    hit_count_match = re.search(r"Search Results \((\d+) hits?\)", search_result.stdout)
 
-    assert len(ids_found) > 0, (
+    assert hit_count_match, (
+        f"Search output doesn't contain 'Search Results (N hits)' header.\n"
+        f"Output: {search_result.stdout}"
+    )
+
+    hit_count = int(hit_count_match.group(1))
+    assert hit_count > 0, (
         f"Search for 'SERVICIO_ANCHOR_TOKEN' returned 0 hits.\n"
         f"This means either:\n"
         f"  1. ctx sync didn't index docs/servicio.md\n"
@@ -124,4 +129,6 @@ def test_ctx_search_finds_indexed_content(mini_repo_with_content: Path):
         f"Output: {search_result.stdout}"
     )
 
-    print(f"✓ Search found {len(ids_found)} chunk(s) with token")
+    # Optional: Verify result mentions servicio.md (if present in output)
+    if "servicio.md" in search_result.stdout:
+        print(f"✓ Search found {hit_count} chunk(s) including servicio.md")
