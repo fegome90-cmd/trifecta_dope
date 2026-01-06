@@ -1,0 +1,60 @@
+version: 1
+id: WO-P2.1
+epic_id: E-0001
+title: "AST Cache Telemetry Integration (Audit Grade)"
+priority: P0
+status: active
+owner: null
+
+scope:
+  allow:
+    - "src/domain/ast_cache.py"
+    - "src/infrastructure/factories.py"
+    - "src/infrastructure/cli_ast.py"
+    - "src/application/pr2_context_searcher.py"
+    - "tests/integration/test_ast_cache_telemetry.py"
+  deny:
+    - ".env*"
+
+verify:
+  commands:
+    - "uv run pytest -q tests/integration/test_ast_cache_telemetry.py"
+    - "uv run pytest -q tests/integration/test_ast_cache_persist_cross_run_cli.py"
+
+dod_id: DOD-DEFAULT
+
+x_objective: |
+  Integrar telemetría audit-grade en AST cache para rastrear:
+  - cache_backend (memory/sqlite)
+  - cache_status (hit/miss/write)
+  - cache_db_path (redactado si aplica)
+  - segment_id
+  - timings básicos
+
+  Gate: E2E cross-run debe mostrar miss → hit con eventos en events.jsonl.
+
+x_deliverables:
+  - "Telemetry wiring en AstCache (Protocol modificado o wrapper)"
+  - "Factory pass telemetry instance to cache"
+  - "Event schema documented"
+  - "E2E test verifying events appear"
+
+x_acceptance_criteria:
+  - "SQLiteCache.get() emite ast.cache.hit o ast.cache.miss"
+  - "InMemoryLRUCache.get() emite ast.cache.hit o ast.cache.miss"
+  - "Eventos incluyen: backend, status, segment_id, cache_key, timing_ms"
+  - "E2E test cross-run verifica eventos en _ctx/telemetry/events.jsonl"
+  - "No degradación de performance (telemetry overhead < 5ms)"
+
+diff_budget:
+  max_files: 8
+  max_loc: 300
+
+x_risks:
+  - "Telemetry DI puede romper cache protocol (usar wrapper, no modificar Protocol)"
+  - "Performance overhead si telemetry sincrono (usar async emit o no-op fallback)"
+  - "Path leakage en logs (redactar paths sensibles)"
+
+x_notes: |
+  Approach: Wrapper pattern alrededor de AstCache. No modificar el Protocol existente.
+  Factory crea wrapper si telemetry disponible.

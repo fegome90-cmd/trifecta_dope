@@ -881,3 +881,22 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 **Plan**: \`docs/plans/implementation_plan_ast_persist_p2.md\`
 
 **Status**: BACKLOG (not executing yet)
+
+## 2026-01-06 15:40 UTC - WO-P2.1 AST Cache Telemetry (PLANNING)
+
+**Objetivo**: Audit-grade telemetry para cada operación de cache (hit/miss/write).
+
+**Approach**: Wrapper pattern (TelemetryAstCache) para no romper Protocol.
+
+**Tasks**:
+1. Create TelemetryAstCache wrapper
+2. Update factory (accept telemetry param)
+3. Wire CLI + PR2
+4. E2E test (verify events in events.jsonl)
+
+**Gate**: miss → hit visible en telemetría.
+
+**Plan**: \`docs/plans/implementation_plan_wo_p2_1_telemetry.md\`
+**WO**: \`_ctx/jobs/pending/WO-P2.1.yaml\`
+
+**Status**: READY TO EXECUTE
