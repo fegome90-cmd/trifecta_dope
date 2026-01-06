@@ -17,6 +17,7 @@ epics:
       - WO-P3.0 # Soak Harness & Evidence (done)
       - WO-0012 # Persistence Feature Flag (partial - test env only)
       - WO-0012.1 # Dev CLI Persistence Default (done)
+      - WO-0013 # AST Persist Adoption Observability (pending)
 
     x_legacy_wo_queue:
       - WO-P0 # Inventory (done - SHA b0ab32f)
