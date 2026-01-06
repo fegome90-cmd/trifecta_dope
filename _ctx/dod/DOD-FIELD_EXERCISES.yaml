@@ -1,0 +1,23 @@
+version: 1
+dod:
+  - id: DOD-FIELD_EXERCISES
+    title: "DoD for Field Exercises Evaluation"
+    required_artifacts:
+      - "eval/field_exercises_v1.yaml"
+      - "eval/scripts/run_field_exercises_ab.py"
+      - "docs/reports/field_exercises_v1_results.md"
+      - "_ctx/logs/field_ex_off.log"
+      - "_ctx/logs/field_ex_on.log"
+    required_checks:
+      - name: "validate_dataset"
+        commands:
+          - "uv run python eval/scripts/run_field_exercises_ab.py --validate"
+      - name: "run_ab_evaluation"
+        commands:
+          - "uv run python eval/scripts/run_field_exercises_ab.py --mode off --output _ctx/logs/field_ex_off.log"
+          - "uv run python eval/scripts/run_field_exercises_ab.py --mode on --output _ctx/logs/field_ex_on.log"
+    rules:
+      - "Dataset must have exactly 20 queries with expected_min_hits"
+      - "Report must include: zero_hit_rate_off, zero_hit_rate_on, avg_hits, delta"
+      - "Gate: zero_hit_rate_on < 30% (documented in report)"
+      - "Evidence logs must be committed to _ctx/logs/"
