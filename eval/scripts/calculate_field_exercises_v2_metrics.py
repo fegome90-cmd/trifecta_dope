@@ -28,25 +28,38 @@ def calculate_causal_metrics(results: list[dict[str, Any]]) -> dict[str, Any]:
 
     # Calculate per-bucket metrics
     bucket_metrics = {}
-    for bucket_name, queries in buckets.items():
-        total = len(queries)
+    for bucket_name, items in buckets.items():
+        total = len(items)
+        if total == 0:
+            continue
 
-        # Anchor usage rate (ON mode)
-        anchor_used_count = sum(
-            1 for q in queries if q["on"]["telemetry"].get("linter_expanded", False)
+        # Metrics - Strict calculation from data
+        hits_on = [item["on"]["hits"] for item in items if item["on"]["returncode"] == 0]
+        # Zero hit count: count of queries where hits == 0
+        zero_hit_count = sum(1 for h in hits_on if h == 0)
+
+        # Anchor usage: Check telemetry
+        # Note: telemetry dict might be missing if run failed, default to False
+        anchor_count = sum(
+            1 for item in items if item["on"].get("telemetry", {}).get("linter_expanded", False)
         )
-        anchor_usage_rate = (anchor_used_count / total) * 100 if total > 0 else 0
 
-        # Zero-hit rate (ON mode)
-        zero_hit_count = sum(1 for q in queries if q["on"]["hits"] == 0)
-        zero_hit_rate = (zero_hit_count / total) * 100 if total > 0 else 0
+        # Invariant checks
+        median_hits = statistics.median(hits_on) if hits_on else 0
+        if zero_hit_count == total and median_hits > 0:
+            # This should be mathematically impossible if all are 0
+            raise ValueError(
+                f"Invariant Violation in bucket '{bucket_name}': 100% zero-hits but median is {median_hits}"
+            )
 
         bucket_metrics[bucket_name] = {
             "total_queries": total,
-            "anchor_usage_count": anchor_used_count,
-            "anchor_usage_rate": anchor_usage_rate,
+            "anchor_usage_count": anchor_count,
+            "anchor_usage_rate": round((anchor_count / total) * 100, 1),
             "zero_hit_count": zero_hit_count,
-            "zero_hit_rate": zero_hit_rate,
+            "zero_hit_rate": round((zero_hit_count / total) * 100, 1),
+            "median_hits_on": median_hits,
+            "mean_hits_on": statistics.mean(hits_on) if hits_on else 0,
         }
 
     # Calculate delta_hits
