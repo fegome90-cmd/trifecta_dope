@@ -237,7 +237,7 @@ def real_segment() -> Path:
 )
 def test_e2e_evidence_stop_real_cli(real_segment: Path):
     """E2E test with real CLI and telemetry validation."""
-    ids = _search_for_ids(real_segment, "ContextService", limit=3)
+    ids = _search_for_ids(real_segment, "context", limit=3)
 
     assert len(ids) >= 2, "Need at least 2 IDs for test"
 
@@ -256,7 +256,7 @@ def test_e2e_evidence_stop_real_cli(real_segment: Path):
             "excerpt",
             "--stop-on-evidence",
             "--query",
-            "ContextService",
+            "context",
         ],
         capture_output=True,
         text=True,

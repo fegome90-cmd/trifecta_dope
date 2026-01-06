@@ -45,23 +45,23 @@ uv run pytest -q tests/unit/test_ast_cache_persist_fix.py 2>&1 | tee /tmp/tf_pyt
 
 ### E2: Run #1 (miss→write)
 
-**Command**:
+**Command** (bash):
 ```bash
-uv run trifecta ast symbols "sym://python/mod/src.domain.result" --segment . --persist-cache
+uv run trifecta ast symbols "sym://python/mod/src.domain.result" --segment . --persist-cache 2>&1 | tee /tmp/tf_post_fix_run1.log
 ```
 
-**Output** (from `/tmp/tf_post_fix_run1.log`, last 14 lines):
+**Output** (from `/tmp/tf_post_fix_run1_tail20.log`, extract):
 ```json
 {
   "status": "ok",
-  "segment_root": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope",
+  "segment_root": "<REDACTED_PATH>/trifecta_dope",
   "file_rel": "src/domain/result.py",
   "symbols": [
     {"kind": "class", "name": "Ok", "line": 22},
     {"kind": "class", "name": "Err", "line": 53}
   ],
   "cache_status": "miss",
-  "cache_key": "..."
+  "cache_key": "<REDACTED_PATH>/trifecta_dope:..."
 }
 ```
 
@@ -71,9 +71,9 @@ uv run trifecta ast symbols "sym://python/mod/src.domain.result" --segment . --p
 
 ### E3: Cache Write Verification
 
-**Command**:
+**Command** (bash):
 ```bash
-set DB (find . -maxdepth 8 -name "ast_cache_*.db" | head -n 1)
+DB=$(find . -maxdepth 8 -name "ast_cache_*.db" | head -n 1)
 echo "$DB" | tee /tmp/tf_db_path_exact.log
 ls -la "$DB" | tee /tmp/tf_db_ls.log
 sqlite3 "$DB" "select count(*) from cache;" | tee /tmp/tf_cache_rowcount.log
@@ -81,12 +81,14 @@ sqlite3 "$DB" "select count(*) from cache;" | tee /tmp/tf_cache_rowcount.log
 
 **DB Path** (from `/tmp/tf_db_path_exact.log`):
 ```
-./.trifecta/cache/ast_cache__Users_felipe_gonzalez_Developer_agent_h_trifecta_dope.db
+./.trifecta/cache/ast_cache__Users_<REDACTED>_trifecta_dope.db
 ```
+
+_Note: Exact path with user details available in `/tmp/tf_db_path_exact.log` for reproducibility._
 
 **DB Metadata** (from `/tmp/tf_db_ls.log`):
 ```
--rw-r--r-- 1 felipe_gonzalez staff 16384 Jan  5 12:50 ./.trifecta/cache/ast_cache__Users_felipe_gonzalez_Developer_agent_h_trifecta_dope.db
+-rw-r--r-- 1 <user> staff 16384 Jan 5 13:14 ./.trifecta/cache/ast_cache__Users_<REDACTED>_trifecta_dope.db
 ```
 
 **Row Count** (from `/tmp/tf_cache_rowcount.log`):
@@ -94,26 +96,29 @@ sqlite3 "$DB" "select count(*) from cache;" | tee /tmp/tf_cache_rowcount.log
 1
 ```
 
-**Anchor**: EXACT path (no glob), 1 row written, 16KB DB file created at 12:50
+**Anchor**: EXACT path in log (privacy-redacted in doc), 1 row written, 16KB DB file
 
 ---
 
 ### E4: Run #2 (hit→read)
 
-**Command**: (same as E2)
+**Command** (bash - same trifecta command as E2):
+```bash
+uv run trifecta ast symbols "sym://python/mod/src.domain.result" --segment . --persist-cache 2>&1 | tee /tmp/tf_post_fix_run2.log
+```
 
-**Output** (from `/tmp/tf_post_fix_run2.log`, last 14 lines):
+**Output** (from `/tmp/tf_post_fix_run2_tail20.log`, extract):
 ```json
 {
   "status": "ok",
-  "segment_root": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope",
+  "segment_root": "<REDACTED_PATH>/trifecta_dope",
   "file_rel": "src/domain/result.py",
   "symbols": [
     {"kind": "class", "name": "Ok", "line": 22},
     {"kind": "class", "name": "Err", "line": 53}
   ],
   "cache_status": "hit",
-  "cache_key": "..."
+  "cache_key": "<REDACTED_PATH>/trifecta_dope:..."
 }
 ```
 
@@ -134,15 +139,15 @@ rg -n "AttributeError|Traceback" /tmp/tf_post_fix_run2.log
 make gate-all 2>&1 | tee /tmp/tf_gate_all.log
 ```
 
-**Output** (from `/tmp/tf_gate_summary.log`, last 11 lines):
+**Output** (from `/tmp/tf_gate_all_tail20.log`, last 11 lines):
 ```
-349 passed in 0.93s
+349 passed in 0.91s
 uv run pytest -q tests/integration
 ...................................s...                                  [100%]
 38 passed, 1 skipped in 5.01s
 uv run pytest -q tests/acceptance -m "not slow"
 .........................................                                [100%]
-41 passed, 4 deselected in 6.00s
+41 passed, 4 deselected in 6.10s
 ✅ GATE PASSED: Unit + Integration + Acceptance (Fast)
 ```
 
@@ -290,16 +295,19 @@ ADR: docs/adr/ADR-005-ast-cache-roundtrip.md
 | Evidence | Log Path | Anchor |
 |----------|----------|--------|
 | Unit Tests | `/tmp/tf_pytest_ast_cache_fix.log` | `2 passed` |
-| Run #1 | `/tmp/tf_post_fix_run1.log` | `cache_status: miss` |
-| DB Path | `/tmp/tf_db_path_exact.log` | `./.trifecta/cache/ast_cache_*.db` |
-| DB Meta | `/tmp/tf_db_ls.log` | `16384 bytes, Jan 5 12:50` |
+| Run #1 Full | `/tmp/tf_post_fix_run1.log` | `cache_status: miss` |
+| Run #1 Extract | `/tmp/tf_post_fix_run1_tail20.log` | Last 20 lines |
+| DB Path | `/tmp/tf_db_path_exact.log` | `./.trifecta/cache/ast_cache__Users_<REDACTED>_trifecta_dope.db` |
+| DB Meta | `/tmp/tf_db_ls.log` | `16384 bytes, Jan 5 13:14` |
 | Row Count | `/tmp/tf_cache_rowcount.log` | `1` |
-| Run #2 | `/tmp/tf_post_fix_run2.log` | `cache_status: hit` |
-| Gate All | `/tmp/tf_gate_summary.log` | `428 tests passing` |
+| Run #2 Full | `/tmp/tf_post_fix_run2.log` | `cache_status: hit` |
+| Run #2 Extract | `/tmp/tf_post_fix_run2_tail20.log` | Last 20 lines |
+| Gate All | `/tmp/tf_gate_all.log` | `428 tests passing` |
+| Gate Summary | `/tmp/tf_gate_all_tail20.log` | Last 20 lines extract |
 | Evict Call | `/tmp/tf_evict_callsite.log` | `Line 295` |
 | Evict Context | `/tmp/tf_evict_context.log` | `set() → _evict_if_needed()` |
 
-**All claims anchored to reproducible evidence. Zero globs in final report.**
+**All claims anchored to reproducible bash commands. Zero globs in evidence anchors. Privacy-redacted paths in doc, exact paths in logs.**
 
 ---
 
