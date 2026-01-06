@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "segment": "trifecta_dope",
-  "created_at": "2026-01-06T16:03:09.706876",
+  "created_at": "2026-01-06T16:07:33.568751",
   "digest": "",
   "source_files": [
     {
@@ -555,12 +555,6 @@
       "sha256": "6c1b53fd8cc1d16e6241eb1f1e242c685cdab5b8e3b14ee582b0ed4bedfc8863",
       "mtime": 1767618950.1937013,
       "chars": 4394
-    },
-    {
-      "path": "docs/backlog/ast_persistence_p2_summary.md",
-      "sha256": "1f4d052291ab668c3d85ea0ad2df5c89c5521390b6f8797ca17b294086d4b01d",
-      "mtime": 1767725989.1233537,
-      "chars": 2840
     },
     {
       "path": "docs/backlog/MIGRATION.md",
@@ -2734,18 +2728,6 @@
       "char_count": 4394,
       "token_est": 1098,
       "source_path": "DEPLOYMENT_CHECKLIST.md",
-      "chunking_method": "whole_file"
-    },
-    {
-      "id": "repo:docs/backlog/ast_persistence_p2_summary.md:7f441cc157",
-      "doc": "repo:docs/backlog/ast_persistence_p2_summary.md",
-      "title_path": [
-        "ast_persistence_p2_summary.md"
-      ],
-      "text": "# AST Persistence P2 Summary\n\n**Date**: 2026-01-06  \n**Epic**: E-0001 (AST Cache Operability)\n\n---\n\n## Completed Work Orders\n\n### WO-P2.1: Telemetry Integration ✅ COMPLETE\n**SHA**: `e323433`  \n**Status**: Production Ready\n\n**Deliverables**:\n- `TelemetryAstCache` wrapper (decorator pattern)\n- Factory wiring (`get_ast_cache(telemetry=...)`)\n- CLI + PR2 integration\n- E2E tests (3/3 PASSED)\n\n**Events Emitted**:\n```json\n{\n  \"cmd\": \"ast.cache.hit|miss|write\",\n  \"args\": {\"cache_key\": \"...\"},\n  \"result\": {\"backend\": \"SQLiteCache|InMemoryLRUCache\", \"segment_id\": \"...\"},\n  \"timing_ms\": 2\n}\n```\n\n**Impact**: Observability operacional para debugging y análisis de performance.\n\n---\n\n### WO-P2.2: File Locks ❌ CANCELLED\n**SHA**: `ab4beea`  \n**Status**: Not Needed\n\n**Rationale**:\n- SQLite WAL mode ya maneja concurrencia correctamente\n- RED test (40 concurrent writes) pasó sin corruption\n- Implementación complexity >> benefit\n- WO-P2.1 (telemetry) entrega observabilidad crítica\n\n**Recommendation**: Monitorear telemetría en producción. Reevaluar locks solo si aparece contención real.\n\n---\n\n## Roadmap Remaining (P2 Original Plan)\n\n### P2.3: Corruption Detection & Recovery (BACKLOG)\n**Priority**: P2  \n**Status**: Deferred\n\n**Scope**:\n- `PRAGMA integrity_check` on DB load\n- Auto-recovery (delete corrupted DB, rebuild)\n- Telemetry: `ast.cache.corruption_detected`\n\n**Trigger**: Producción reports corruption incidents\n\n---\n\n### P2.4: Resource Monitoring (BACKLOG)\n**Priority**: P3  \n**Status**: Deferred\n\n**Scope**:\n- DB size warnings (> 500MB)\n- Entry count/age stats\n- Telemetry: `ast.cache.size_warning`\n\n**Trigger**: Telemetría muestra DBs > 100MB en wild\n\n---\n\n### P2.5: TTL & Eviction (BACKLOG)\n**Priority**: P3  \n**Status**: Deferred\n\n**Scope**:\n- `file_mtime` column para invalidación automática\n- Cleanup periódico (entries > 7 days)\n\n**Trigger**: Cache pollution detectado en producción\n\n---\n\n## Production Readiness\n\n**Current State**: ✅ PRODUCTION READY\n\n- [x] P0: Inventory complete\n- [x] P1: Factory wiring + env var control\n- [x] P2.1: Audit-grade telemetry\n- [x] E2E tests (10/10 PASSED)\n- [x] Walkthrough con evidencia\n\n**Enable Global**:\n```bash\nexport TRIFECTA_AST_PERSIST=1\n```\n\n**Monitor**:\n```bash\njq 'select(.cmd | startswith(\"ast.cache\"))' _ctx/telemetry/events.jsonl\n```\n\n---\n\n## Success Metrics (Target)\n\nAfter 30 days in production:\n\n- [ ] Cache hit rate > 60%\n- [ ] Zero corruption incidents\n- [ ] DB size < 100MB per segment\n- [ ] P95 latency < 10ms (get operations)\n\n---\n\n## Lessons Learned\n\n1. **TDD RED-first caught premature optimization**: SQLite ya protege concurrencia.\n2. **Telemetry > Locks**: Observabilidad es más valiosa que control explícito.\n3. **Context managers > nested functions**: Simpler pattern para wrapping.\n4. **Fail-closed tests**: E2E cross-process tests son críticos para persistence.\n",
-      "char_count": 2840,
-      "token_est": 710,
-      "source_path": "ast_persistence_p2_summary.md",
       "chunking_method": "whole_file"
     },
     {
@@ -5437,12 +5419,6 @@
       "title_path_norm": "DEPLOYMENT_CHECKLIST.md",
       "preview": "# Security Deployment Checklist\n\nThis checklist ensures all security improvements are properly deployed and functional.\n\n## Pre-Deployment Verification\n\n### 1. Configuration Files\n- [x] Scoop manifest...",
       "token_est": 1098
-    },
-    {
-      "id": "repo:docs/backlog/ast_persistence_p2_summary.md:7f441cc157",
-      "title_path_norm": "ast_persistence_p2_summary.md",
-      "preview": "# AST Persistence P2 Summary\n\n**Date**: 2026-01-06  \n**Epic**: E-0001 (AST Cache Operability)\n\n---\n\n## Completed Work Orders\n\n### WO-P2.1: Telemetry Integration ✅ COMPLETE\n**SHA**: `e323433`  \n**Statu...",
-      "token_est": 710
     },
     {
       "id": "repo:docs/backlog/MIGRATION.md:f90fdf7627",
