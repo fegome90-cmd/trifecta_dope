@@ -1,0 +1,35 @@
+version: 1
+id: WO-0001
+epic_id: E-0001
+title: "ContextRuntime skeleton + contrato"
+priority: P0
+status: pending # pending|running|done|failed
+owner: null
+branch: "job/WO-0001-context-runtime"
+worktree: "../wt-WO-0001"
+scope:
+  allow:
+    - "src/application/context_runtime.py"
+    - "src/application/**"
+    - "tests/**"
+    - "docs/**"
+  deny:
+    - ".env*"
+    - "**/production.*"
+deliverables:
+  - "Nuevo módulo context_runtime.py con contratos mínimos"
+  - "Tests unitarios para contrato"
+verify:
+  commands:
+    - "scripts/verify.sh"
+    - "uv run pytest -q tests/unit/test_context_runtime.py"
+diff_budget:
+  max_files: 12
+  max_loc: 400
+stop_conditions:
+  max_iterations: 6
+  max_fail_verify: 2
+dod_id: DOD-DEFAULT
+trace:
+  ticket: null
+  related_wos: []

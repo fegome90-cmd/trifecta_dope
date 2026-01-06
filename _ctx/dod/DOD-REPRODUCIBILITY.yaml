@@ -1,0 +1,71 @@
+version: 1
+id: DOD-REPRODUCIBILITY
+description: "Definition of Done para trabajos de reproducibilidad y gates de worktree limpio"
+
+required_artifacts:
+  - path: "tests.log"
+    description: "Test execution output from acceptance tests"
+    validator: "non-empty file"
+
+  - path: "gate.log"
+    description: "Gate script execution output (clean worktree validation)"
+    validator: "exit code 0"
+
+  - path: "fixture_sha256.txt"
+    description: "SHA256 checksums of synthetic fixture files"
+    validator: "idempotent (consistent across re-runs)"
+
+  - path: "handoff.md"
+    description: "Human-readable summary + reproducibility evidence"
+    validator: "contains gate pass/fail verdict"
+
+  - path: "verdict.json"
+    description: "Machine-readable pass/fail verdict"
+    validator: "valid JSON with required fields"
+
+required_checks:
+  - name: "fixture_generation"
+    description: "Synthetic fixture generates without errors"
+    commands:
+      - "bash scripts/generate_synthetic_fixture.sh"
+    must_pass: true
+
+  - name: "gate_clean_worktree"
+    description: "Gate passes in clean worktree without pre-existing _ctx"
+    commands:
+      - "bash scripts/gate_clean_worktree.sh"
+    must_pass: true
+
+  - name: "acceptance_tests"
+    description: "End-to-end reproducibility tests pass"
+    commands:
+      - "uv run pytest tests/acceptance/test_clean_worktree_reproducibility.py -v"
+    must_pass: true
+
+  - name: "idempotence"
+    description: "Re-running fixture generation produces identical SHA256 hashes"
+    commands:
+      - "bash scripts/verify_fixture_idempotence.sh"
+    must_pass: true
+
+gates:
+  - name: "no_context_pack_dependency"
+    condition: "Gate must pass without pre-existing _ctx/context_pack.json"
+
+  - name: "deterministic_output"
+    condition: "Fixture SHA256 hashes match across runs"
+
+  - name: "error_messages_actionable"
+    condition: "If gate fails, error message includes Next Steps for user"
+
+additional_requirements:
+  - "Gate script must be CI-ready (no interactive prompts)"
+  - "Fixture must work on macOS and Linux"
+  - "Documentation must explain HOW to use fixture in tests"
+  - "Clean worktree must be automatically cleaned up (no tmp pollution)"
+
+success_criteria:
+  - "ctx sync creates context_pack.json in clean worktree"
+  - "ctx search returns >0 results without 'Context pack not found' error"
+  - "Gate exit code 0 = reproducible, exit code 1 = blocked"
+  - "Fixture can be regenerated deterministically"

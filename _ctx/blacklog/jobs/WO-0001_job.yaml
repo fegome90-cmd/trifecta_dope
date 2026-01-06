@@ -1,0 +1,41 @@
+version: 1
+id: WO-0001
+epic_id: E-0001
+title: "Baseline medible: dataset + runner + reporte"
+priority: P0
+status: done
+dod_id: DOD-BASELINE
+owner: null
+branch: "job/WO-0001-baseline"
+worktree: "../wt-WO-0001"
+scope:
+  allow:
+    - "docs/datasets/**"
+    - "docs/reports/search_guidance_baseline.md"
+    - "scripts/run_search_dataset.sh"
+    - "scripts/parse_search_logs.py"
+    - "_ctx/metrics/**"
+  deny:
+    - ".env*"
+    - "src/**"
+deliverables:
+  - "_ctx/metrics/search_dataset_v1_summary.json"
+verify:
+  commands:
+    - "test -f _ctx/metrics/search_dataset_v1_summary.json"
+    - "jq '.total_queries' _ctx/metrics/search_dataset_v1_summary.json"
+diff_budget:
+  max_files: 2
+  max_loc: 50
+stop_conditions:
+  max_iterations: 2
+  max_fail_verify: 1
+trace:
+  ticket: null
+  related_wos: []
+pass_criteria:
+  - "_ctx/metrics/search_dataset_v1_summary.json exists"
+  - "JSON contains total_queries, vague, semi, guided metrics"
+no_pass_criteria:
+  - "File missing after generation"
+  - "JSON invalid or missing required fields"

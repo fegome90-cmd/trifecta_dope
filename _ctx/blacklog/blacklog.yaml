@@ -1,0 +1,15 @@
+version: 1
+generated_at: 2026-01-05
+epics:
+  - id: E-0001
+    title: "Central telefónica / ContextRuntime"
+    priority: P0
+    outcome: "Zero-hit rate < 20% con evidencia reproducible"
+    owner: "you"
+    status: active # active|paused|done
+    dependencies: []
+    risks:
+      - "Overengineering de orquestación"
+    wo_queue:
+      - WO-0001
+      - WO-0002

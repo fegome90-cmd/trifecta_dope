@@ -1,0 +1,10 @@
+# Strong anchors for context expansion
+strong:
+  - agent.md
+  - prime_trifecta_dope.md
+  - session_trifecta_dope.md
+
+# Weak anchors for secondary context
+weak:
+  - README.md
+  - skill.md

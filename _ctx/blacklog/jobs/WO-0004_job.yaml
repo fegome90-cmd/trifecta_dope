@@ -1,0 +1,57 @@
+version: 1
+id: WO-0004
+epic_id: E-0001
+title: "Integración CLI: flags + pipeline tokenize-after-lint + telemetry sanitizada"
+priority: P0
+status: done
+dod_id: DOD-CLI_INTEGRATION
+owner: null
+branch: "job/WO-0004-cli-linter-integration"
+worktree: "../wt-WO-0004"
+scope:
+  allow:
+    - "src/infrastructure/cli.py"
+    - "src/infrastructure/config_loader.py"
+    - "src/application/search_get_usecases.py"
+    - "src/domain/query_linter.py"
+    - "configs/**"
+    - "tests/unit/test_search_usecase_linter.py"
+    - "tests/integration/test_ctx_search_linter*.py"
+    - "docs/reports/query_linter*.md"
+    - "_ctx/logs/ab_*.log"
+  deny:
+    - ".env*"
+    - "**/production.*"
+    - "_ctx/telemetry/events.jsonl"
+deliverables:
+  - "Integration test A/B controlled (OFF=0, ON>0)"
+  - "src/infrastructure/config_loader.py (missing_config marker)"
+  - "Telemetry sanitizada (no query raw)"
+  - "_ctx/logs/ab_off.log + ab_on.log"
+verify:
+  commands:
+    - "uv run pytest -q tests/integration/test_ctx_search_linter_ab_controlled.py"
+    - "grep -q 'Search Results (1 hits)' _ctx/logs/ab_on.log"
+    - "grep -q 'No results found' _ctx/logs/ab_off.log"
+diff_budget:
+  max_files: 15
+  max_loc: 600
+stop_conditions:
+  max_iterations: 6
+  max_fail_verify: 2
+ab_test:
+  query: "servicio"
+  expected_off: 0
+  expected_on: 1
+  chunk_id: "agent:abc123"
+trace:
+  ticket: null
+  related_wos:
+    - WO-0003
+pass_criteria:
+  - "uv run pytest -q tests/integration/test_ctx_search_linter_ab_controlled.py => PASS"
+  - "A/B delta > 0 (ON hits > OFF hits)"
+  - "Telemetry no guarda query raw"
+no_pass_criteria:
+  - "A/B test fails after 2 config adjustments"
+  - "Tests unit/integration FAIL"
