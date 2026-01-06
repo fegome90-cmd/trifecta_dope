@@ -820,3 +820,18 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
   - Spanish Zero-Hit: 0% (Confirmed multilingual support)
   - Vague Anchor Usage: 100%
 - **Evidence**: `_ctx/logs/wo0011_live/`, `docs/reports/field_exercises_v2_results.md`
+
+## 2026-01-06 14:55 UTC - WO-0005 P0 AST Persistence Audit
+
+**Objetivo**: Convertir 'SQLiteCache existe' en contrato ejecutable.
+
+**Ejecución**:
+- **Inventario**: `docs/reports/wo0005_p0_ast_inventory.md` (SQLiteCache implementado pero inactivo por default).
+- **Reproducción**: `_ctx/logs/wo0005_p0_ast/` (A/B testing con `trifecta ast symbols`).
+- **Contratos (RED)**: `tests/integration/test_ast_sqlite_cache_roundtrip.py` PASSED (!). El código ya funciona correctamente cuando se inyecta SQLiteCache, la brecha es solo de configuración default.
+
+**Veredicto**: ✅ PASS (Contract verified, implementation exists).
+
+**Next Step (Green Plan)**:
+1. Integrar configuración global para habilitar persistencia por defecto (o por entorno).
+2. Validar locking en cargas paralelas (stress test).
