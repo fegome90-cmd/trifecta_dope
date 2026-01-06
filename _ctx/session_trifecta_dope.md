@@ -925,3 +925,22 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 **Veredicto**: ✅ WO-P2.1 PASS
 
 **Next**: WO-P2.2 (File Locks)
+
+## 2026-01-06 15:47 UTC - WO-P2.2 AST Cache File Locks (PLANNING)
+
+**Objetivo**: Prevenir corrupción SQLite por acceso CLI+daemon concurrente.
+
+**Approach**: Advisory file locks vía \`filelock\` library.
+
+**Strategy**: Fail-closed (lock timeout → error + telemetry, NO fallback silencioso).
+
+**Tasks**:
+1. Add filelock dependency
+2. Modify SQLiteCache with _with_lock() wrapper
+3. Wire telemetry for lock_timeout events
+4. E2E concurrency test (2 workers)
+
+**Plan**: \`docs/plans/implementation_plan_wo_p2_2_locks.md\`
+**WO**: \`_ctx/jobs/pending/WO-P2.2.yaml\`
+
+**Status**: READY TO EXECUTE
