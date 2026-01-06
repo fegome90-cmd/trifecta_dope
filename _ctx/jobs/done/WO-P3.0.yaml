@@ -5,6 +5,7 @@ title: "AST Cache Soak Run (Real Telemetry)"
 priority: P1
 status: done
 owner: null
+verified_at_sha: 189cbcb04368568262e090ff2917a452cb16d26d
 
 scope:
   allow:
@@ -67,7 +68,6 @@ x_micro_tasks:
       - "rg -q 'def persist' _ctx/logs/wo_p3_0/t1_anchor.log"
       - "rg -q 'event.*type' _ctx/logs/wo_p3_0/t1_anchor.log"
     evidence:
-verified_at_sha: 189cbcb04368568262e090ff2917a452cb16d26d
       - "_ctx/logs/wo_p3_0/t1_anchor.log"
     commit: "None"
 

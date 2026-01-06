@@ -4,7 +4,7 @@ import logging
 import sys
 from collections import defaultdict
 from pathlib import Path
-from statistics import quantiles
+from typing import Any, Dict
 
 
 def setup_logging():
@@ -43,7 +43,7 @@ def main():
 
     logging.info(f"Scanning {telemetry_path} for run_id={args.run_id}...")
 
-    metrics = {
+    metrics: Dict[str, Any] = {
         "run_id": args.run_id,
         "counts": defaultdict(int),
         "latencies": defaultdict(list),
