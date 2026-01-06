@@ -6,13 +6,19 @@
 You must use the `trifecta` CLI for all agentic workflows. Do not run loose scripts unless constructing a specific harness.
 
 **Rule 2: Audit-Grade Logging**  
-Upon completing a task, you MUST append a session summary to the [History File](file:///Users/felipe_gonzalez/.gemini/HISTORY.md).  
-Format: YAML with mandatory fields (`rules.json`).
+Upon completing a task, you MUST append a session summary to the `_ctx/session_trifecta_dope.md` file (Project-local).
+Also append audit-grade summary to `HISTORY.md` in global logic when appropriate.
 
+**Rule 3: Work Order Governance**
+Update the relevant WO YAML (`_ctx/jobs/...`) and `_ctx/backlog/backlog.yaml` immediately upon task completion. 
+- Status: `pending` -> `running` -> `done`
+- SHA: `verified_at_sha` (explicit commit)
 
+**Rule 4: Commit Discipline**
+Commits MUST run pre-commit hooks. Do NOT use `--no-verify` unless managing a WIP or emergency hotfix.
 
-**Rule 3: Superpowers**  
-If `superpowers` are mentioned, check `~/.claude/skills/superpowers`.
+**Rule 5: Superpowers**  
+If `superpowers` are mentioned, check `skill.md` or global superpowers, specifically `~/.claude/skills/superpowers`.
 
 ---
 

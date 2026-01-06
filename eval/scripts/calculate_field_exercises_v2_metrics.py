@@ -135,7 +135,7 @@ def check_gates(metrics: dict[str, Any]) -> dict[str, Any]:
 
 def main() -> int:
     """Main metrics calculator."""
-    repo_root = Path(__file__).resolve().parents[3]
+    repo_root = Path(__file__).resolve().parents[2]
     input_path = repo_root / "_ctx" / "metrics" / "field_exercises_v2_ab.json"
     output_path = repo_root / "_ctx" / "metrics" / "field_exercises_v2_summary.json"
 
