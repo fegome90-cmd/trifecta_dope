@@ -1,0 +1,15 @@
+version: 1
+id: WO-0003
+epic_id: E-0001
+title: "Test"
+priority: P0
+status: running
+owner: "you"
+branch: "job/WO-0003"
+worktree: "../wt-WO-0003"
+scope:
+  allow: ["src/**"]
+  deny: [".env*"]
+verify:
+  commands: ["scripts/verify.sh"]
+dod_id: DOD-DEFAULT

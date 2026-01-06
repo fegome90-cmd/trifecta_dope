@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "generated_at", "epics"],
+  "properties": {
+    "version": {"type": "integer"},
+    "generated_at": {"type": "string"},
+    "epics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "title",
+          "priority",
+          "outcome",
+          "owner",
+          "status",
+          "dependencies",
+          "risks",
+          "wo_queue"
+        ],
+        "properties": {
+          "id": {"type": "string", "pattern": "^E-[0-9]{4}$"},
+          "title": {"type": "string"},
+          "priority": {"type": "string", "pattern": "^P[0-3]$"},
+          "outcome": {"type": "string"},
+          "owner": {"type": ["string", "null"]},
+          "status": {"type": "string", "enum": ["active", "paused", "done"]},
+          "dependencies": {"type": "array", "items": {"type": "string"}},
+          "risks": {"type": "array", "items": {"type": "string"}},
+          "wo_queue": {
+            "type": "array",
+            "items": {"type": "string", "pattern": "^WO-[0-9]{4}$"}
+          }
+        },
+        "patternProperties": {"^x_": {}}
+      }
+    },
+    "work_orders": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "title", "priority", "status"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^WO-[0-9]{4}$"},
+          "title": {"type": "string"},
+          "priority": {"type": "string", "pattern": "^P[0-3]$"},
+          "status": {"type": "string", "enum": ["pending", "running", "done", "failed"]}
+        },
+        "patternProperties": {"^x_": {}}
+      }
+    }
+  },
+  "patternProperties": {"^x_": {}}
+}
