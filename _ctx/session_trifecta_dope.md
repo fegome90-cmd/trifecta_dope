@@ -1014,3 +1014,34 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Commands**: TRIFECTA_AST_PERSIST=1 OPS=200 WORKERS=4 RUN_ID=wo-p3-0 bash eval/scripts/run_ast_cache_soak.sh
 - **Evidence**: _ctx/metrics/ast_soak_wo-p3-0.json (200 ops, 199 hits, 3 lock waits, 0 timeouts)
 - **Next**: Task 6 (Governance/Close)
+
+## 2026-01-06 17:27 UTC
+- **Summary**: Started WO-0012 (Enable Persistence). Completed Task 1: Baseline (Ephemeral).
+- **Metric**: 100 ops, 99 hits (memory cache), 1 miss. Latency p50=12ms.
+- **Evidence**: _ctx/metrics/wo_0012_baseline.json
+- **Next**: Task 2 (Enable Flag in Config)
+
+## 2026-01-06 17:30 UTC
+- **Summary**: WO-0012 Task 2: Enabled Persistence Flag. Installed `pytest-env` and configured `TRIFECTA_AST_PERSIST=1` in `pyproject.toml`.
+- **Changes**: pyproject.toml
+- **Evidence**: uv add pytest-env
+- **Next**: Task 3 (Real Workload Verification)
+
+## 2026-01-06 17:28 UTC
+- **Summary**: WO-0012 Task 3: Real Workload Verification COMPLETE.
+- **Metric**: 200 ops, 199 hits, 1 miss. Latency p50=13ms. 0 timeouts.
+- **Evidence**: _ctx/metrics/wo_0012_active.json
+- **Next**: Task 4 (Rollback Drill)
+
+## 2026-01-06 17:29 UTC
+- **Summary**: WO-0012 Task 4: Rollback Drill COMPLETE.
+- **Verification**: Ran with TRIFECTA_AST_PERSIST=0. Metrics show 10 ops, 9 hits (memory), 1 miss. No lock contention (memory cache has no file locks).
+- **Evidence**: _ctx/metrics/wo_0012_rollback.json
+- **Next**: Task 5 (Governance & Close)
+
+## 2026-01-06 17:50 UTC
+- **RECTIFICACIÓN CRÍTICA**: WO-0012 downgraded to PARTIAL.
+- **Scope Error**: pytest-env solo afecta tests, NO dev CLI.
+- **Corrección**: Creado WO-0012.1 para activación real en dev CLI.
+- **Razón**: Claim de "dev default" era falso (solo test default).
+- **Próximo paso**: Implementar .envrc (direnv) o scripts/dev_env.sh.
