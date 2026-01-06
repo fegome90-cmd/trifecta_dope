@@ -1008,3 +1008,9 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Commands**: python eval/scripts/gate_ast_soak.py --in _ctx/metrics/ast_soak_preflight_t3.json --min-ops 2
 - **Evidence**: Output printed "GATE PASSED".
 - **Next**: Task 5 (Live Run)
+
+## 2026-01-06 17:16 UTC
+- **Summary**: Executed WO-P3.0 Task 5: Live Soak Run. Ran 200 ops with 4 workers. Captured metrics and verified gate pass (0 timeouts, 199 hits, 1 miss).
+- **Commands**: TRIFECTA_AST_PERSIST=1 OPS=200 WORKERS=4 RUN_ID=wo-p3-0 bash eval/scripts/run_ast_cache_soak.sh
+- **Evidence**: _ctx/metrics/ast_soak_wo-p3-0.json (200 ops, 199 hits, 3 lock waits, 0 timeouts)
+- **Next**: Task 6 (Governance/Close)

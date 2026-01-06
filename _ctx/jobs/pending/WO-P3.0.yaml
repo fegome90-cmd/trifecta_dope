@@ -112,7 +112,7 @@ x_micro_tasks:
 
   - id: T5
     name: "T5: Live Run + Evidence"
-    status: pending
+    status: done
     commands:
       - "TRIFECTA_AST_PERSIST=1 OPS=200 WORKERS=4 RUN_ID=wo-p3-0 bash eval/scripts/run_ast_cache_soak.sh | tee _ctx/logs/wo_p3_0/t5_run.log"
       - "python eval/scripts/extract_ast_soak_metrics.py --run-id wo-p3-0 --out _ctx/metrics/ast_soak_wo-p3-0.json"
