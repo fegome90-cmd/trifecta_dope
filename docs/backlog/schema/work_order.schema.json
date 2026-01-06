@@ -75,7 +75,9 @@
     "started_at": {"type": ["string", "null"]},
     "finished_at": {"type": ["string", "null"]},
     "result": {"type": ["string", "null"]},
-    "commit_sha": {"type": ["string", "null"]}
+    "commit_sha": {"type": ["string", "null"]},
+    "verified_at_sha": {"type": ["string", "null"]},
+    "evidence_logs": {"type": "array", "items": {"type": "string"}}
   },
   "patternProperties": {
     "^x_": {}
