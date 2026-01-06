@@ -7,6 +7,9 @@ WORKERS=${WORKERS:-2}
 RUN_ID=${RUN_ID:-"soak_$(date +%s)"}
 TARGET_SEGMENT=${SEGMENT:-"."}
 
+# Export for telemetry correlation
+export TRIFECTA_RUN_ID="$RUN_ID"
+
 # Paths
 LOG_DIR="_ctx/logs/wo_p3_0"
 mkdir -p "$LOG_DIR"
@@ -44,7 +47,7 @@ run_worker() {
         # We assume the env var is set globally, but adding flag is safer if supported.
         # Checking skill.md: trifecta ast symbols "sym..." --persist-cache
         
-        uv run trifecta ast symbols "$TARGET_URI" --segment "$TARGET_SEGMENT" --persist-cache >> "$log_file" 2>&1
+        uv run trifecta ast symbols "$TARGET_URI" --segment "$TARGET_SEGMENT" --telemetry full --persist-cache >> "$log_file" 2>&1
         local rc=$?
         
         if [ $rc -ne 0 ]; then
