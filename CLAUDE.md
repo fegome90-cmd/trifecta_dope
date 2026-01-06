@@ -114,7 +114,7 @@ See `docs/CONTRACTS.md` and architecture docs in `docs/adr/` for complete patter
 
 ```
 _ctx/
-├── backlog/backlog.yaml        # Epic registry (single source)
+├── backlog/backlog.yaml        # Epic registry (YAML only, no .md)
 ├── jobs/
 │   ├── pending/*.yaml          # WO awaiting work
 │   ├── running/*.yaml          # WO in progress
@@ -131,8 +131,15 @@ _ctx/
 
 **WO Fields**:
 - Required: `id`, `epic_id`, `title`, `priority`, `status`, `scope`, `verify`, `dod_id`
-- Done WOs: add `verified_at_sha`, `evidence_logs`
+- Done WOs: add `verified_at_sha` (explicit SHA, not "HEAD"), `dependencies`, `evidence_logs`
 - Legacy fields: prefix with `x_` (e.g., `x_objective`, `x_notes`)
+
+**Critical Rules**:
+- `verified_at_sha`: Use explicit commit SHA (e.g., `c2d0338`), never `"HEAD"`
+- `dependencies`: List prerequisite WO IDs (e.g., `[WO-P2.1]`)
+- `evidence_logs`: Relative paths to proof (logs gitignored but documented)
+- Epic registry: Track phases with SHAs, mark complete when all WOs done
+- No `.md` files in `_ctx/backlog/` - documentation goes to `docs/` or `_ctx/session_*.md`
 
 **Cross-references**: Every WO must reference valid `epic_id` (E-XXXX) and `dod_id`.
 
