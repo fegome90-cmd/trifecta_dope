@@ -1,0 +1,8 @@
+title: Implement Missing Verdict Generator (WO-0005)
+status: pending
+priority: medium
+description: "Implement verdict_generator.sh for MELT metrics generation."
+context: "WO-0005 was skipped. Re-evaluate if validation_report.txt supersedes this."
+steps:
+  - "Analyze need for verdict_generator.sh"
+  - "Implement or deprecate formally"
