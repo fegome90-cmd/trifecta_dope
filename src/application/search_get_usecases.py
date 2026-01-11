@@ -16,7 +16,9 @@ class SearchUseCase:
         self.file_system = file_system
         self.telemetry = telemetry
 
-    def execute(self, target_path: Path, query: str, limit: int = 5, enable_lint: bool = False) -> str:
+    def execute(
+        self, target_path: Path, query: str, limit: int = 5, enable_lint: bool = False
+    ) -> str:
         """Execute search with query linting, alias expansion and format output.
 
         Pipeline:
@@ -64,7 +66,9 @@ class SearchUseCase:
                 lint_plan["changes"] = {"added_strong": [], "added_weak": [], "reasons": []}
                 query_for_expander = normalized_query
             else:
-                query_for_expander = lint_plan["expanded_query"] if lint_plan["changed"] else normalized_query
+                query_for_expander = (
+                    lint_plan["expanded_query"] if lint_plan["changed"] else normalized_query
+                )
         else:
             lint_plan: LinterPlan = {
                 "original_query": normalized_query,
@@ -73,7 +77,7 @@ class SearchUseCase:
                 "anchors_detected": {"strong": [], "weak": [], "aliases_matched": []},
                 "expanded_query": normalized_query,
                 "changed": False,
-                "changes": {"added_strong": [], "added_weak": [], "reasons": []}
+                "changes": {"added_strong": [], "added_weak": [], "reasons": []},
             }
             query_for_expander = normalized_query
 

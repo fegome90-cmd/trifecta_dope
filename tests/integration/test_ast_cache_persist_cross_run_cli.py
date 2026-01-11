@@ -3,7 +3,6 @@ import subprocess
 import json
 import os
 import shutil
-from pathlib import Path
 
 # Use a test-specific env to enable persistence
 ENV_WITH_PERSIST = os.environ.copy()

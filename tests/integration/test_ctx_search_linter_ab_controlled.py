@@ -60,7 +60,6 @@ def ab_segment(tmp_path: Path) -> Path:
     configs_dir = segment / "configs"
     configs_dir.mkdir()
 
-    anchors = {"strong": ["ContextService", "agent.md"], "weak": ["docs", ".md"]}
     (configs_dir / "anchors.yaml").write_text(
         "strong:\n  - ContextService\n  - agent.md\nweak:\n  - docs\n  - .md\n"
     )

@@ -2,7 +2,6 @@ import pytest
 import subprocess
 import json
 import os
-from pathlib import Path
 
 # Use telemetry-enabled env
 ENV_WITH_PERSIST_AND_TEL = os.environ.copy()

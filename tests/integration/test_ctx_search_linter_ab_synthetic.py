@@ -17,6 +17,7 @@ import pytest
 
 TRIFECTA_ROOT = Path(__file__).resolve().parents[2]
 
+
 @pytest.fixture
 def mini_repo_with_linter_config(tmp_path: Path) -> Path:
     """Create minimal repo with linter config for A/B test."""
@@ -72,7 +73,16 @@ def test_ab_linter_off_zero_on_nonzero(mini_repo_with_linter_config: Path):
 
     # Bootstrap: create → sync
     create_result = subprocess.run(
-        ["uv", "--directory", str(TRIFECTA_ROOT), "run", "trifecta", "create", "--segment", str(mini_repo)],
+        [
+            "uv",
+            "--directory",
+            str(TRIFECTA_ROOT),
+            "run",
+            "trifecta",
+            "create",
+            "--segment",
+            str(mini_repo),
+        ],
         capture_output=True,
         text=True,
         cwd=mini_repo.parent,
@@ -80,7 +90,17 @@ def test_ab_linter_off_zero_on_nonzero(mini_repo_with_linter_config: Path):
     assert create_result.returncode == 0, f"create failed:\n{create_result.stderr}"
 
     sync_result = subprocess.run(
-        ["uv", "--directory", str(TRIFECTA_ROOT), "run", "trifecta", "ctx", "sync", "--segment", str(mini_repo)],
+        [
+            "uv",
+            "--directory",
+            str(TRIFECTA_ROOT),
+            "run",
+            "trifecta",
+            "ctx",
+            "sync",
+            "--segment",
+            str(mini_repo),
+        ],
         capture_output=True,
         text=True,
         cwd=mini_repo.parent,
