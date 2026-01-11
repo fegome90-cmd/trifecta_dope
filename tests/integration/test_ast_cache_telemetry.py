@@ -2,6 +2,7 @@ import pytest
 import subprocess
 import json
 import os
+from pathlib import Path
 
 # Use telemetry-enabled env
 ENV_WITH_PERSIST_AND_TEL = os.environ.copy()
@@ -31,10 +32,20 @@ def fresh_cli_workspace(tmp_path):
 
 def run_ast_symbols_with_telemetry(cwd, uri):
     """Helper to run CLI command with telemetry enabled."""
+    # Add workspace to PYTHONPATH for subprocess
+    import os
+    import sys
+    workspace_path = str(Path(__file__).parent.parent.parent)
+    env = ENV_WITH_PERSIST_AND_TEL.copy()
+    env["PYTHONPATH"] = workspace_path
+    
+    # Use the same Python version as pytest
+    python_executable = sys.executable
+    
     cmd = [
-        "uv",
-        "run",
-        "trifecta",
+        python_executable,
+        "-m",
+        "src.infrastructure.cli",
         "ast",
         "symbols",
         uri,
@@ -45,7 +56,7 @@ def run_ast_symbols_with_telemetry(cwd, uri):
     ]
 
     result = subprocess.run(
-        cmd, cwd=cwd, capture_output=True, text=True, env=ENV_WITH_PERSIST_AND_TEL
+        cmd, cwd=cwd, capture_output=True, text=True, env=env
     )
     return result
 
@@ -153,11 +164,19 @@ def test_ast_cache_telemetry_with_persistence_off(fresh_cli_workspace):
     env_no_persist = os.environ.copy()
     if "TRIFECTA_AST_PERSIST" in env_no_persist:
         del env_no_persist["TRIFECTA_AST_PERSIST"]
+    
+    # Add workspace to PYTHONPATH for subprocess
+    import sys
+    workspace_path = str(Path(__file__).parent.parent.parent)
+    env_no_persist["PYTHONPATH"] = workspace_path
+    
+    # Use the same Python version as pytest
+    python_executable = sys.executable
 
     cmd = [
-        "uv",
-        "run",
-        "trifecta",
+        python_executable,
+        "-m",
+        "src.infrastructure.cli",
         "ast",
         "symbols",
         uri,
