@@ -41,7 +41,7 @@ def mock_context_service():
         title_path=["agent.md"],
         score=0.9,
         token_est=100,
-        preview="Agent configuration..."
+        preview="Agent configuration...",
     )
     service.search = Mock(return_value=MagicMock(hits=[mock_hit]))
     return service
@@ -136,7 +136,9 @@ def test_vague_query_expansion_with_linter_enabled(
     query_linter.lint_query = mock_lint
 
     # Mock ContextService to be injected
-    with patch('src.application.search_get_usecases.ContextService', return_value=mock_context_service):
+    with patch(
+        "src.application.search_get_usecases.ContextService", return_value=mock_context_service
+    ):
         use_case = SearchUseCase(mock_file_system, mock_telemetry)
 
         # Execute with vague query (single token, no anchors)
@@ -144,26 +146,30 @@ def test_vague_query_expansion_with_linter_enabled(
             segment_with_configs,
             "config",  # Vague query: 1 token, no anchors
             limit=5,
-            enable_lint=True
+            enable_lint=True,
         )
 
         # Verify: linter was applied and query was expanded
         assert lint_plan_captured is not None, "lint_query should have been called"
-        assert lint_plan_captured["query_class"] == "vague", \
+        assert lint_plan_captured["query_class"] == "vague", (
             f"Expected 'vague', got '{lint_plan_captured['query_class']}'"
-        assert lint_plan_captured["changed"] is True, \
+        )
+        assert lint_plan_captured["changed"] is True, (
             "Query should have been expanded for vague query"
+        )
 
         # Verify: expanded_query includes strong anchors
         expanded_query = lint_plan_captured["expanded_query"]
-        assert "agent.md" in expanded_query or "prime.md" in expanded_query, \
+        assert "agent.md" in expanded_query or "prime.md" in expanded_query, (
             f"Expanded query should include strong anchors: {expanded_query}"
+        )
 
         # Verify: telemetry recorded linter expansion
         assert mock_telemetry.incr.called
         incr_calls = [str(call) for call in mock_telemetry.incr.call_args_list]
-        assert any("ctx_search_linter_expansion_count" in call for call in incr_calls), \
+        assert any("ctx_search_linter_expansion_count" in call for call in incr_calls), (
             "Telemetry should record linter expansion"
+        )
 
         # Verify: telemetry event includes linter metadata
         assert mock_telemetry.event.called
@@ -204,20 +210,18 @@ def test_vague_query_no_expansion_with_linter_disabled(
 
     query_linter.lint_query = mock_lint
 
-    with patch('src.application.search_get_usecases.ContextService', return_value=mock_context_service):
+    with patch(
+        "src.application.search_get_usecases.ContextService", return_value=mock_context_service
+    ):
         use_case = SearchUseCase(mock_file_system, mock_telemetry)
 
         # Execute with linter disabled
-        _ = use_case.execute(
-            segment_with_configs,
-            "config",
-            limit=5,
-            enable_lint=False
-        )
+        _ = use_case.execute(segment_with_configs, "config", limit=5, enable_lint=False)
 
         # Verify: lint_query was NOT called (optimization)
-        assert lint_call_count[0] == 0, \
+        assert lint_call_count[0] == 0, (
             f"lint_query should not be called when disabled, but was called {lint_call_count[0]} times"
+        )
 
         # Verify: telemetry records disabled state
         assert mock_telemetry.event.called
@@ -259,7 +263,9 @@ def test_guided_query_not_expanded(
 
     query_linter.lint_query = mock_lint
 
-    with patch('src.application.search_get_usecases.ContextService', return_value=mock_context_service):
+    with patch(
+        "src.application.search_get_usecases.ContextService", return_value=mock_context_service
+    ):
         use_case = SearchUseCase(mock_file_system, mock_telemetry)
 
         # Execute with guided query (5+ tokens with strong anchor)
@@ -267,24 +273,26 @@ def test_guided_query_not_expanded(
             segment_with_configs,
             "agent.md template creation code file",  # Guided: 5 tokens, has agent.md anchor
             limit=5,
-            enable_lint=True
+            enable_lint=True,
         )
 
         # Verify: guided query, not expanded
         assert lint_plan_captured is not None
-        assert lint_plan_captured["query_class"] == "guided", \
+        assert lint_plan_captured["query_class"] == "guided", (
             f"Expected 'guided', got '{lint_plan_captured['query_class']}'"
-        assert lint_plan_captured["changed"] is False, \
-            "Guided query should not be expanded"
+        )
+        assert lint_plan_captured["changed"] is False, "Guided query should not be expanded"
 
         # Verify: expanded_query equals original (no changes)
-        assert lint_plan_captured["expanded_query"] == "agent.md template creation code file", \
+        assert lint_plan_captured["expanded_query"] == "agent.md template creation code file", (
             "Guided query should remain unchanged"
+        )
 
         # Verify: telemetry does NOT record expansion
         incr_calls = [str(call) for call in mock_telemetry.incr.call_args_list]
-        assert not any("ctx_search_linter_expansion_count" in call for call in incr_calls), \
+        assert not any("ctx_search_linter_expansion_count" in call for call in incr_calls), (
             "Telemetry should not record expansion for guided queries"
+        )
 
     # Restore original function
     query_linter.lint_query = original_lint
@@ -318,28 +326,28 @@ def test_missing_config_disables_linter(
 
     query_linter.lint_query = mock_lint
 
-    with patch('src.application.search_get_usecases.ContextService', return_value=mock_context_service):
+    with patch(
+        "src.application.search_get_usecases.ContextService", return_value=mock_context_service
+    ):
         use_case = SearchUseCase(mock_file_system, mock_telemetry)
 
         # Execute with linter enabled but missing config
-        _ = use_case.execute(
-            segment_without_configs,
-            "config",
-            limit=5,
-            enable_lint=True
-        )
+        _ = use_case.execute(segment_without_configs, "config", limit=5, enable_lint=True)
 
         # Verify: missing config disables linter
         assert lint_plan_captured is not None
-        assert lint_plan_captured["query_class"] == "disabled_missing_config", \
+        assert lint_plan_captured["query_class"] == "disabled_missing_config", (
             f"Expected 'disabled_missing_config', got '{lint_plan_captured['query_class']}'"
-        assert lint_plan_captured["changed"] is False, \
+        )
+        assert lint_plan_captured["changed"] is False, (
             "Query should not be expanded when config is missing"
+        )
 
         # Verify: stderr warning from ConfigLoader
         captured = capsys.readouterr()
-        assert "anchors.yaml" in captured.err or "aliases.yaml" in captured.err, \
+        assert "anchors.yaml" in captured.err or "aliases.yaml" in captured.err, (
             "ConfigLoader should log warning to stderr for missing config"
+        )
 
         # Verify: telemetry records missing config
         assert mock_telemetry.event.called
@@ -379,7 +387,9 @@ def test_semi_query_classification(
 
     query_linter.lint_query = mock_lint
 
-    with patch('src.application.search_get_usecases.ContextService', return_value=mock_context_service):
+    with patch(
+        "src.application.search_get_usecases.ContextService", return_value=mock_context_service
+    ):
         use_case = SearchUseCase(mock_file_system, mock_telemetry)
 
         # Execute with semi-guided query
@@ -388,15 +398,17 @@ def test_semi_query_classification(
             segment_with_configs,
             "config agent.md setup",  # Semi: 3 tokens, 1 anchor
             limit=5,
-            enable_lint=True
+            enable_lint=True,
         )
 
         # Verify: semi-guided query, not expanded
         assert lint_plan_captured is not None
-        assert lint_plan_captured["query_class"] == "semi", \
+        assert lint_plan_captured["query_class"] == "semi", (
             f"Expected 'semi', got '{lint_plan_captured['query_class']}'"
-        assert lint_plan_captured["changed"] is False, \
+        )
+        assert lint_plan_captured["changed"] is False, (
             "Semi-guided query should not be expanded (only vague queries are expanded)"
+        )
 
     # Restore original function
     query_linter.lint_query = original_lint

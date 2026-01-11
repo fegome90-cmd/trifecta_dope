@@ -47,7 +47,13 @@ def test_reconcile_apply_regenerates_lock_only_with_apply_flag():
 
 def test_reconcile_never_moves_states_without_force():
     result = subprocess.run(
-        ["python", "scripts/ctx_reconcile_state.py", "--fixtures", "running_wo_without_worktree", "--apply"],
+        [
+            "python",
+            "scripts/ctx_reconcile_state.py",
+            "--fixtures",
+            "running_wo_without_worktree",
+            "--apply",
+        ],
         capture_output=True,
         text=True,
         check=False,

@@ -34,6 +34,7 @@ from eval.scripts.analyze_adoption_telemetry import (
 # Fixtures
 # ============================================================================
 
+
 @pytest.fixture
 def sample_events():
     """Sample telemetry events for testing."""
@@ -83,6 +84,7 @@ def mock_segment_path(tmp_path):
 # ============================================================================
 # Bug-Specific Tests (CRITICAL fixes)
 # ============================================================================
+
 
 def test_scan_db_growth_handles_deleted_files(mock_segment_path):
     """Test race condition fix: Files deleted between glob() and stat()."""
@@ -147,9 +149,7 @@ def test_analyze_lock_contention_empty_events():
 
 def test_analyze_lock_contention_single_wait():
     """Test edge case: Single lock wait event (percentile calculation)."""
-    events = [
-        {"cmd": "ast.cache.lock_wait", "timing_ms": 42}
-    ]
+    events = [{"cmd": "ast.cache.lock_wait", "timing_ms": 42}]
 
     result = analyze_lock_contention(events)
 
@@ -174,6 +174,7 @@ def test_constants_defined():
 # ============================================================================
 # Comprehensive Tests (All Analysis Functions)
 # ============================================================================
+
 
 def test_analyze_backend_distribution_empty_events():
     """Test edge case: Empty events for backend distribution."""
@@ -269,6 +270,7 @@ def test_filter_events_by_days_filters_correctly():
 # Dataclass Validation Tests
 # ============================================================================
 
+
 def test_telemetry_event_empty_ts_raises():
     """Test TelemetryEvent validation: empty ts raises ValueError."""
     with pytest.raises(ValueError, match="ts cannot be empty"):
@@ -287,7 +289,7 @@ def test_telemetry_event_with_valid_fields():
         ts="2026-01-09T12:00:00Z",
         cmd="ast.symbols",
         result={"backend": "FileLockedAstCache", "status": "ok"},
-        timing_ms=42
+        timing_ms=42,
     )
     assert event.ts == "2026-01-09T12:00:00Z"
     assert event.cmd == "ast.symbols"
@@ -302,7 +304,7 @@ def test_analysis_period_invalid_days_raises():
             end="2026-01-08T00:00:00Z",
             days_analyzed=0,
             total_events=100,
-            segment_path="/path"
+            segment_path="/path",
         )
 
 
@@ -314,7 +316,7 @@ def test_analysis_period_negative_events_raises():
             end="2026-01-08T00:00:00Z",
             days_analyzed=7,
             total_events=-1,
-            segment_path="/path"
+            segment_path="/path",
         )
 
 
@@ -343,7 +345,7 @@ def test_cache_effectiveness_stats_hit_rate_mismatch_raises():
             hits=1,
             misses=1,
             total_operations=2,
-            hit_rate=0.9  # Should be 0.5
+            hit_rate=0.9,  # Should be 0.5
         )
 
 
@@ -351,9 +353,4 @@ def test_cache_effectiveness_stats_negative_operations_raises():
     """Test CacheEffectivenessStats validation: negative values raises ValueError."""
     # Note: hits validation happens first, so we get hits error not total_operations error
     with pytest.raises(ValueError, match="hits must be >= 0"):
-        CacheEffectivenessStats(
-            hits=-1,
-            misses=0,
-            total_operations=-1,
-            hit_rate=0.0
-        )
+        CacheEffectivenessStats(hits=-1, misses=0, total_operations=-1, hit_rate=0.0)

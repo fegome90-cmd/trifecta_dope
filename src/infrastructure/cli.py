@@ -299,7 +299,9 @@ def search(
     segment: str = typer.Option(..., "--segment", "-s", help=HELP_SEGMENT),
     limit: int = typer.Option(5, "--limit", "-l", help="Max results"),
     telemetry_level: str = typer.Option("lite", "--telemetry", help=HELP_TELEMETRY),
-    no_lint: bool = typer.Option(False, "--no-lint", help="Disable query linting (anchor guidance expansion)"),
+    no_lint: bool = typer.Option(
+        False, "--no-lint", help="Disable query linting (anchor guidance expansion)"
+    ),
 ) -> None:
     """Search for relevant chunks in the Context Pack.
 
@@ -326,7 +328,9 @@ def search(
     try:
         # Determine if linting should be enabled (conservative default)
         enable_lint = _get_lint_enabled(no_lint)
-        output = use_case.execute(Path(segment).resolve(), query, limit=limit, enable_lint=enable_lint)
+        output = use_case.execute(
+            Path(segment).resolve(), query, limit=limit, enable_lint=enable_lint
+        )
         typer.echo(output)
         telemetry.observe("ctx.search", int((time.time() - start_time) * 1000))
     except Exception as e:

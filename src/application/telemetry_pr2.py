@@ -48,7 +48,7 @@ class ASTTelemetry:
         symbols_count = len(parse_result.symbols)
         cache_key = parse_result.cache_key
         cache_status = parse_result.status
-        
+
         # Calcular tamaño del skeleton usando to_dict()
         skeleton_bytes = len(json.dumps([s.to_dict() for s in parse_result.symbols]))
 
@@ -93,7 +93,7 @@ class SelectorTelemetry:
     ) -> None:
         """
         Emit selector.resolve event.
-        
+
         Args:
             query: Parsed sym:// query
             result: Resolution result
@@ -102,7 +102,7 @@ class SelectorTelemetry:
         query_str = f"sym://python/{query.path}"
         if query.member:
             query_str += f"#{query.member}"
-        
+
         self.tel.event(
             cmd="selector.resolve",
             args={"query": query_str},

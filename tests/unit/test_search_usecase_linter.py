@@ -29,7 +29,9 @@ def mock_context_service():
     return service
 
 
-def test_linter_expands_vague_query(tmp_path, mock_file_system, mock_telemetry, mock_context_service):
+def test_linter_expands_vague_query(
+    tmp_path, mock_file_system, mock_telemetry, mock_context_service
+):
     """Vague query should be expanded by linter (verified via lint_plan)."""
     # Setup: create configs/anchors.yaml in tmp_path
     configs_dir = tmp_path / "configs"
@@ -52,12 +54,15 @@ anchors:
     (ctx_dir / "context_pack.json").write_text('{"chunks": []}')
 
     # Mock ContextService to be injected
-    with patch('src.application.search_get_usecases.ContextService', return_value=mock_context_service):
+    with patch(
+        "src.application.search_get_usecases.ContextService", return_value=mock_context_service
+    ):
         use_case = SearchUseCase(mock_file_system, mock_telemetry)
 
         # Execute with vague query
         # We'll intercept lint_query to verify it was called correctly
         from src.domain import query_linter
+
         original_lint = query_linter.lint_query
         lint_plan_captured = None
 
@@ -74,7 +79,10 @@ anchors:
         assert lint_plan_captured is not None
         assert lint_plan_captured["query_class"] == "vague"
         assert lint_plan_captured["changed"]
-        assert "agent.md" in lint_plan_captured["expanded_query"] or "prime.md" in lint_plan_captured["expanded_query"]
+        assert (
+            "agent.md" in lint_plan_captured["expanded_query"]
+            or "prime.md" in lint_plan_captured["expanded_query"]
+        )
 
         # Verify telemetry recorded linter metrics
         assert mock_telemetry.incr.called
@@ -90,11 +98,12 @@ def test_linter_disabled_with_flag(tmp_path, mock_file_system, mock_telemetry):
     (ctx_dir / "aliases.yaml").write_text("aliases: {}")
     (ctx_dir / "context_pack.json").write_text('{"chunks": []}')
 
-    with patch('src.application.search_get_usecases.ContextService'):
+    with patch("src.application.search_get_usecases.ContextService"):
         use_case = SearchUseCase(mock_file_system, mock_telemetry)
 
         # We'll intercept lint_query to verify it was NOT called
         from src.domain import query_linter
+
         original_lint = query_linter.lint_query
         lint_call_count = [0]
 
@@ -129,8 +138,9 @@ anchors:
     (ctx_dir / "aliases.yaml").write_text("aliases: {}")
     (ctx_dir / "context_pack.json").write_text('{"chunks": []}')
 
-    with patch('src.application.search_get_usecases.ContextService'):
+    with patch("src.application.search_get_usecases.ContextService"):
         from src.domain import query_linter
+
         original_lint = query_linter.lint_query
         lint_plan_captured = None
 
@@ -142,7 +152,9 @@ anchors:
         query_linter.lint_query = mock_lint
 
         use_case = SearchUseCase(mock_file_system, mock_telemetry)
-        use_case.execute(tmp_path, "agent.md template creation code file", limit=5, enable_lint=True)
+        use_case.execute(
+            tmp_path, "agent.md template creation code file", limit=5, enable_lint=True
+        )
 
         # Verify: guided query, not expanded
         assert lint_plan_captured["query_class"] == "guided"
