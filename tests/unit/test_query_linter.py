@@ -43,11 +43,8 @@ def test_vague_expansion(anchors_cfg, aliases_cfg):
     assert len(plan["changes"]["added_strong"]) <= 2
     assert len(plan["changes"]["added_weak"]) <= 2
 
-    # Check default boost logic (if applicable)
-    # "agent template" has 'template' (weak doc intent?) -> check config
-    # 'template' is in weak.intent_terms, but my logic for doc_boost uses doc_terms.
-    # So it might hit "vague_default_boost" adding agent.md/prime.md
-    pass
+    # Verify expansion adds expected terms
+    assert "agent.md" in plan["expanded_query"] or "prime.md" in plan["expanded_query"]
 
 
 def test_nl_spanish_alias(anchors_cfg, aliases_cfg):

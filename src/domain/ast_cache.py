@@ -176,7 +176,8 @@ class InMemoryLRUCache:
     def stats(self) -> CacheStats:
         """Obtener estadísticas del cache."""
         total = self._hits + self._misses
-        hit_rate = (self._hits / total) if total > 0 else 0.0
+        raw_rate = (self._hits / total) if total > 0 else 0.0
+        hit_rate = max(0.0, min(1.0, raw_rate))
         return CacheStats(
             entries=len(self._cache),
             hits=self._hits,
@@ -333,7 +334,7 @@ class SQLiteCache:
 
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.execute("""
-                SELECT 
+                SELECT
                     COUNT(*) as entries,
                     SUM(CASE WHEN last_access > created_at THEN 1 ELSE 0 END) as hits,
                     SUM(CASE WHEN last_access = created_at THEN 1 ELSE 0 END) as misses,
@@ -343,8 +344,12 @@ class SQLiteCache:
             row = cursor.fetchone()
 
             entries, hits, misses, current_bytes = row or (0, 0, 0, 0)
+            # Handle None values from SUM when table is empty
+            hits = hits or 0
+            misses = misses or 0
             total = hits + misses
-            hit_rate = (hits / total) if total > 0 else 0.0
+            raw_rate = (hits / total) if total > 0 else 0.0
+            hit_rate = max(0.0, min(1.0, raw_rate))
 
             return CacheStats(
                 entries=entries,
