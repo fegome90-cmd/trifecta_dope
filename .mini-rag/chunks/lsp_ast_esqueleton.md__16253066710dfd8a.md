@@ -1,0 +1,7 @@
+ree-sitter ofrece tres ventajas críticas que lo hacen indispensable para una arquitectura "lean":
+Parsing Incremental de Alto Rendimiento:
+En un flujo de trabajo de agente, el código cambia constantemente. Los compiladores tradicionales suelen requerir un re-parsing completo del archivo tras cada edición, lo cual es computacionalmente costoso. Tree-sitter utiliza algoritmos GLR (Generalized LR) y estructuras de datos persistentes para actualizar el árbol sintáctico modificando solo los nodos afectados por la edición. Esto permite latencias de actualización en el rango de los microsegundos (<1ms), incluso para archivos grandes, permitiendo que el agente valide la estructura sintáctica en tiempo real a medida que genera tokens.8
+Robustez ante Errores de Sintaxis:
+Un agente a menudo genera código incompleto o trabaja sobre archivos que están en un estado intermedio de edición. La mayoría de los parsers de compilador fallan estrepitosamente ante el primer error de sintaxis, deteniendo el análisis. Tree-sitter está diseñado explícitamente para entornos de edición en vivo; puede aislar el error y construir un árbol válido para el resto del archivo. Esto es crucial para la recuperación de contexto: permite al agente "ver" las funciones circundantes incluso si la función actual está rota.1
+Universalidad y Portabilidad:
+Tree-sitter es una librería escrita en C puro que se compila a bina

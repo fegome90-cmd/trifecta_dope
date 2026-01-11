@@ -1,0 +1,147 @@
+version: 1
+id: WO-P3.0
+epic_id: E-0001
+title: "AST Cache Soak Run (Real Telemetry)"
+priority: P1
+status: done
+owner: null
+verified_at_sha: 3abbc30d97ed6b9467e68a37610fafcc27132c0e
+closed_at: "2026-01-06T17:20:00-03:00"
+run_ids:
+  - wo-p3-0-t2
+  - wo-p3-0
+
+scope:
+  allow:
+    - "eval/scripts/run_ast_cache_soak.sh"
+    - "eval/scripts/extract_ast_soak_metrics.py"
+    - "eval/scripts/gate_ast_soak.py"
+    - "_ctx/metrics/ast_soak_*.json"
+    - "_ctx/logs/wo_p3_0/*.log"
+  deny:
+    - "src/domain/**"
+    - "tests/soak/**" # No pytest based soak
+  # Artifacts trackeados (git): scripts, reports
+  # Evidencia no trackeada (gitignored): logs, metrics temporales
+
+verify:
+  commands:
+    - "TRIFECTA_AST_PERSIST=1 OPS=200 WORKERS=4 RUN_ID=wo-p3-0 bash eval/scripts/run_ast_cache_soak.sh"
+    - "python eval/scripts/extract_ast_soak_metrics.py --run-id wo-p3-0 --out _ctx/metrics/ast_soak_wo-p3-0.json"
+    - "python eval/scripts/gate_ast_soak.py --in _ctx/metrics/ast_soak_wo-p3-0.json"
+
+dod_id: DOD-DEFAULT
+
+governance:
+  must:
+    - "Use CLI trifecta for runs (uv run trifecta ...)"
+    - "Update _ctx/session_trifecta_dope.md"
+    - "Update this WO yaml status/verified_at_sha"
+    - "Update backlog.yaml when closing"
+    - "Commit (no --no-verify)"
+
+x_objective: |
+  Obtener evidencia OPERATIVA real (no contractual) del AST Cache.
+  Foco: hit/miss progression, lock contention, y DB integrity bajo carga (200 ops).
+  Estrategia: Micro-tasks harnessing (no pytest).
+
+x_deliverables:
+  - "eval/scripts/run_ast_cache_soak.sh (Parametric Harness)"
+  - "eval/scripts/extract_ast_soak_metrics.py (Metrics Extractor)"
+  - "eval/scripts/gate_ast_soak.py (Deterministic Gate)"
+  - "Evidence artifacts (_ctx/metrics/*.json, _ctx/logs/wo_p3_0/*.log)"
+
+x_acceptance_criteria:
+  - "Integrity check == 'ok' post-run"
+  - "Ops completadas >= OPS param"
+  - "Warm hit rate > Cold hit rate (evidencia de cacheo)"
+  - "Lock timeouts <= 1 (tolerancia mínima)"
+  - "NO performance gates (p95 latency es informativo)"
+
+x_micro_tasks:
+  - id: T1
+    name: "T1: Read & Anchor (Zero-Code)"
+    status: skipped
+    commands:
+      - "rg -n 'class.*Cache' src/domain/ast_cache.py | tee _ctx/logs/wo_p3_0/t1_anchor.log"
+      - "rg -n 'def persist' src/infrastructure/ast_cache_daemon.py | tee -a _ctx/logs/wo_p3_0/t1_anchor.log"
+      - "rg -n 'event.*type' src/infrastructure/telemetry.py | tee -a _ctx/logs/wo_p3_0/t1_anchor.log"
+    gates:
+      - "test -s _ctx/logs/wo_p3_0/t1_anchor.log"
+    evidence:
+      - "Skipped in favor of real soak test"
+    commit: "None"
+
+  - id: T2
+    name: "T2: Harness Mínimo"
+    status: done
+    commands:
+      - "TRIFECTA_AST_PERSIST=1 OPS=10 WORKERS=2 RUN_ID=wo-p3-0-t2 bash eval/scripts/run_ast_cache_soak.sh | tee _ctx/logs/wo_p3_0/t2_ops10.log"
+    gates:
+      - "test -s _ctx/logs/wo_p3_0/t2_ops10.log"
+      - "rg -n 'OPS=10' _ctx/logs/wo_p3_0/t2_ops10.log"
+      - "rg -q 'exit 0' _ctx/logs/wo_p3_0/t2_ops10.log || tail -5 _ctx/logs/wo_p3_0/t2_ops10.log | rg -q '0'"
+    evidence:
+      - "_ctx/logs/wo_p3_0/t2_ops10.log"
+    commit: "feat(eval): add ast cache soak harness (parametric)"
+
+  - id: T3
+    name: "T3: Extractor Métricas"
+    status: done
+    commands:
+      - "python eval/scripts/extract_ast_soak_metrics.py --run-id wo-p3-0-t2 --out _ctx/metrics/ast_soak_preflight_t3.json"
+      - "cat _ctx/metrics/ast_soak_preflight_t3.json | jq 'keys' | tee _ctx/logs/wo_p3_0/t3_validate.log"
+    gates:
+      - "test -s _ctx/metrics/ast_soak_preflight_t3.json"
+      - "jq -e '.counts' _ctx/metrics/ast_soak_preflight_t3.json >/dev/null"
+      - "jq -e '.latency_ms' _ctx/metrics/ast_soak_preflight_t3.json >/dev/null"
+    evidence:
+      - "_ctx/metrics/ast_soak_preflight_t3.json"
+      - "_ctx/logs/wo_p3_0/t3_validate.log"
+    commit: "feat(eval): add ast soak metrics extractor"
+
+  - id: T4
+    name: "T4: Gate Determinista"
+    status: done
+    commands:
+      - 'python eval/scripts/gate_ast_soak.py --in _ctx/metrics/ast_soak_preflight_t3.json --min-ops 2; echo "Exit code: $?" | tee _ctx/logs/wo_p3_0/t4_gate.log'
+    gates:
+      - "test -s _ctx/logs/wo_p3_0/t4_gate.log"
+      - "rg -q 'PASS' _ctx/logs/wo_p3_0/t4_gate.log"
+    evidence:
+      - "_ctx/logs/wo_p3_0/t4_gate.log"
+    commit: "test(eval): add deterministic soak gates"
+
+  - id: T5
+    name: "T5: Live Run + Evidence"
+    status: done
+    commands:
+      - "TRIFECTA_AST_PERSIST=1 OPS=200 WORKERS=4 RUN_ID=wo-p3-0 bash eval/scripts/run_ast_cache_soak.sh | tee _ctx/logs/wo_p3_0/t5_run.log"
+      - "python eval/scripts/extract_ast_soak_metrics.py --run-id wo-p3-0 --out _ctx/metrics/ast_soak_wo-p3-0.json"
+      - "python eval/scripts/gate_ast_soak.py --in _ctx/metrics/ast_soak_wo-p3-0.json --min-ops 200 | tee -a _ctx/logs/wo_p3_0/t5_gate.log"
+    gates:
+      - "test -s _ctx/logs/wo_p3_0/t5_gate.log"
+      - "rg -q 'PASS' _ctx/logs/wo_p3_0/t5_gate.log"
+      - "jq -e '.ops_completed >= 200' _ctx/metrics/ast_soak_wo-p3-0.json >/dev/null"
+    evidence:
+      - "_ctx/logs/wo_p3_0/t5_run.log"
+      - "_ctx/logs/wo_p3_0/t5_gate.log"
+      - "_ctx/metrics/ast_soak_wo-p3-0.json"
+    commit: "feat(eval): record ast soak run P3.0 evidence"
+
+  - id: T6
+    name: "T6: Gobernanza"
+    status: done
+    commands:
+      - "git status --short | tee _ctx/logs/wo_p3_0/t6_status.log"
+      - "git rev-parse HEAD | tee _ctx/logs/wo_p3_0/t6_sha.log"
+    gates:
+      - "test -s _ctx/logs/wo_p3_0/t6_status.log"
+      - "rg -q '^M _ctx/jobs/running/WO-P3.0.yaml' _ctx/logs/wo_p3_0/t6_status.log"
+    evidence:
+      - "_ctx/logs/wo_p3_0/t6_status.log"
+      - "_ctx/logs/wo_p3_0/t6_sha.log"
+    commit: "docs(ast): close WO-P3.0 soak audit-grade"
+
+dependencies:
+  - WO-P2.2

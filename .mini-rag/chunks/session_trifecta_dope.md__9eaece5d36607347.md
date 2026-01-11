@@ -1,0 +1,16 @@
+## 2026-01-02 12:45 UTC
+- **Summary**: Deprecated Tracking System Implementation COMPLETE
+- **Changes**:
+  - `docs/deprecations.yaml`: NEW - Static registry of deprecated code paths (source-of-truth)
+  - `src/infrastructure/deprecations.py`: NEW - Helper function `maybe_emit_deprecated()` with env-based policy
+  - `src/infrastructure/cli.py`: Instrumented substring fallback with deprecated tracking
+  - Policy: TRIFECTA_DEPRECATED env var (off|warn|fail)
+- **Tests**: 10/10 passing
+  - 5 unit tests (policy off/warn/fail, default, invalid values)
+  - 5 acceptance tests (all existing tests still passing)
+- **Features**:
+  - Emits `deprecated.used` event via existing telemetry (no new log files)
+  - Policy 'off' (default): no tracking
+  - Policy 'warn': emit telemetry event only
+  - Policy 'fail': emit event + exit code 2 (for CI/harness)
+- **Next**: Use TRIFECTA_DEPRECATED=warn in dogfooding to detect deprecated paths, remove fallback by 2026-02-15

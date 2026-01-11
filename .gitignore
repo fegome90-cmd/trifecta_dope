@@ -1,57 +1,47 @@
+
+!_ctx/logs/reconcile_real_testing.json
 # Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
-
+# Debug scripts (already in scripts/)
+# Demo/testing workspaces
 # Distribution / packaging
-dist/
-build/
-*.egg-info/
-
-# Virtual environments
-.venv/
-venv/
-
-# IDE
-.idea/
-.vscode/
-*.swp
-
-# OS
-.DS_Store
-Thumbs.db
-
 # Generated trifecta packs (for testing)
-example-segment/
-
+# IDE
 # Logs
-*.log
-
+# OS
+# Packaging and distribution
 # Test coverage
+# Third-party skills (git submodules/embedded repos)
+# Trifecta Telemetry
+# Trifecta cache directory
+# Virtual environments
+# Worktrees
+*$py.class
+*.egg-info/
+*.log
+*.py[cod]
+*.swp
+.DS_Store
 .coverage
 .coverage.*
-htmlcov/
-
-# Worktrees
-.worktrees/
-
-# Third-party skills (git submodules/embedded repos)
-skills/third_party/
-
-# Trifecta Telemetry
-_ctx/telemetry/
-tmp_*
-_ctx/generated/
-
-# Trifecta cache directory
+.envrc
+.idea/
 .trifecta/
-
-# Demo/testing workspaces
-tests/fixtures/demo_workspace/.trifecta/_ctx/telemetry/
-
-# Packaging and distribution
+.venv/
+.vscode/
+.worktrees/
+Thumbs.db
+__pycache__/
+_ctx/generated/
+_ctx/logs/
+_ctx/telemetry/
+build/
+dist/
+example-segment/
+htmlcov/
 packaging/scoop/.venv/
 packaging/scoop/dist/
-
-# Debug scripts (already in scripts/)
 scripts/debug/.venv/
+skills/third_party/
+tests/fixtures/demo_workspace/.trifecta/_ctx/telemetry/
+tmp_*
+venv/

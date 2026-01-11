@@ -1,10 +1,12 @@
 """Use case wrappers for Search and Get with telemetry."""
 
+import hashlib
 from pathlib import Path
 from typing import Any, Literal, Optional
 
 from src.application.context_service import ContextService, GetResult
 from src.infrastructure.file_system import FileSystemAdapter
+from src.domain.query_linter import LinterPlan
 
 
 class SearchUseCase:
@@ -14,11 +16,31 @@ class SearchUseCase:
         self.file_system = file_system
         self.telemetry = telemetry
 
-    def execute(self, target_path: Path, query: str, limit: int = 5) -> str:
-        """Execute search with alias expansion and format output."""
+    def execute(self, target_path: Path, query: str, limit: int = 5, enable_lint: bool = False) -> str:
+        """Execute search with query linting, alias expansion and format output.
+
+        Pipeline:
+        1. Normalize query (lowercase, strip, collapse whitespace)
+        2. Linter (if enabled): classify + anchor expansion for vague queries
+        3. Tokenize FINAL query (after linter decision) - CRITICAL ORDER
+        4. Alias expansion (synonym-based via _ctx/aliases.yaml)
+        5. Search: execute weighted search across all terms
+
+        Args:
+            target_path: Segment path to search
+            query: Raw search query
+            limit: Max results to return
+            enable_lint: If True, apply query linter for anchor guidance (default: False)
+
+        Returns:
+            Formatted search results string
+        """
         from src.infrastructure.alias_loader import AliasLoader
         from src.application.query_normalizer import QueryNormalizer
         from src.application.query_expander import QueryExpander
+        from src.infrastructure.segment_utils import resolve_segment_root
+        from src.infrastructure.config_loader import ConfigLoader
+        from src.domain.query_linter import lint_query
 
         # Load aliases
         alias_loader = AliasLoader(target_path)
@@ -26,11 +48,41 @@ class SearchUseCase:
 
         # Normalize query
         normalized_query = QueryNormalizer.normalize(query)
-        tokens = QueryNormalizer.tokenize(normalized_query)
+
+        # Apply Query Linter (anchor-based classification + expansion)
+        if enable_lint:
+            repo_root = resolve_segment_root(target_path)
+            anchors_cfg = ConfigLoader.load_anchors(repo_root)
+            aliases_cfg = ConfigLoader.load_linter_aliases(repo_root)
+
+            lint_plan: LinterPlan = lint_query(normalized_query, anchors_cfg, aliases_cfg)
+
+            # If config missing, force disabled state
+            if anchors_cfg.get("_missing_config") or aliases_cfg.get("_missing_config"):
+                lint_plan["query_class"] = "disabled_missing_config"
+                lint_plan["changed"] = False
+                lint_plan["changes"] = {"added_strong": [], "added_weak": [], "reasons": []}
+                query_for_expander = normalized_query
+            else:
+                query_for_expander = lint_plan["expanded_query"] if lint_plan["changed"] else normalized_query
+        else:
+            lint_plan: LinterPlan = {
+                "original_query": normalized_query,
+                "query_class": "disabled",
+                "token_count": 0,
+                "anchors_detected": {"strong": [], "weak": [], "aliases_matched": []},
+                "expanded_query": normalized_query,
+                "changed": False,
+                "changes": {"added_strong": [], "added_weak": [], "reasons": []}
+            }
+            query_for_expander = normalized_query
+
+        # CRITICAL: Tokenize AFTER linter decides final query
+        tokens = QueryNormalizer.tokenize(query_for_expander)
 
         # Expand query with aliases
         expander = QueryExpander(aliases)
-        expanded_terms = expander.expand(normalized_query, tokens)
+        expanded_terms = expander.expand(query_for_expander, tokens)
 
         # Execute search for each term and combine results
         service = ContextService(target_path)
@@ -50,6 +102,20 @@ class SearchUseCase:
         # Get expansion metadata for telemetry
         expansion_meta = expander.get_expansion_metadata(expanded_terms)
 
+        # Sanitize query for telemetry (NEVER store raw query)
+        query_preview = query[:200]  # Truncate preview
+        query_hash = hashlib.sha256(query.encode()).hexdigest()[:16]  # First 16 chars
+        query_len = len(query)
+
+        # Linter metadata
+        linter_meta = {
+            "linter_query_class": lint_plan["query_class"],
+            "linter_expanded": lint_plan["changed"],
+            "linter_added_strong_count": len(lint_plan["changes"]["added_strong"]),
+            "linter_added_weak_count": len(lint_plan["changes"]["added_weak"]),
+            "linter_reasons": lint_plan["changes"]["reasons"][:3],  # Max 3 reasons
+        }
+
         # Record telemetry
         if self.telemetry:
             self.telemetry.incr("ctx_search_count")
@@ -57,16 +123,29 @@ class SearchUseCase:
             if len(final_hits) == 0:
                 self.telemetry.incr("ctx_search_zero_hits_count")
 
+            # Linter metrics
+            if lint_plan["changed"]:
+                self.telemetry.incr("ctx_search_linter_expansion_count")
+            self.telemetry.incr(f"ctx_search_linter_class_{lint_plan['query_class']}_count")
+
+            # Alias expansion metrics
             if expansion_meta["alias_expanded"]:
                 self.telemetry.incr("ctx_search_alias_expansion_count")
                 self.telemetry.incr(
                     "ctx_search_alias_terms_total", expansion_meta["alias_terms_count"]
                 )
 
-            # Event with details
+            # Unified event with SANITIZED query and linter metadata
             self.telemetry.event(
                 "ctx.search",
-                {"query": query, "limit": limit, **expansion_meta},
+                {
+                    "query_preview": query_preview,
+                    "query_hash": query_hash,
+                    "query_len": query_len,
+                    "limit": limit,
+                    **expansion_meta,
+                    **linter_meta,
+                },
                 {"hits": len(final_hits), "returned_ids": [h.id for h in final_hits]},
                 1,  # timing_ms >= 1 required
             )

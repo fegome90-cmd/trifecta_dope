@@ -1,0 +1,100 @@
+{
+  "metrics": {
+    "buckets": {
+      "vague_1token": {
+        "total_queries": 10,
+        "anchor_usage_count": 10,
+        "anchor_usage_rate": 100.0,
+        "zero_hit_count": 0,
+        "zero_hit_rate": 0.0,
+        "median_hits_on": 8.5,
+        "mean_hits_on": 8.3
+      },
+      "spanish_natural": {
+        "total_queries": 13,
+        "anchor_usage_count": 0,
+        "anchor_usage_rate": 0.0,
+        "zero_hit_count": 0,
+        "zero_hit_rate": 0.0,
+        "median_hits_on": 10,
+        "mean_hits_on": 7.3076923076923075
+      },
+      "navigation_2hop": {
+        "total_queries": 10,
+        "anchor_usage_count": 0,
+        "anchor_usage_rate": 0.0,
+        "zero_hit_count": 0,
+        "zero_hit_rate": 0.0,
+        "median_hits_on": 10.0,
+        "mean_hits_on": 10
+      }
+    },
+    "causal_deltas": {
+      "expanded_true": {
+        "count": 10,
+        "median_delta": 1.0,
+        "deltas": [
+          1,
+          0,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          0,
+          1
+        ]
+      },
+      "expanded_false": {
+        "count": 23,
+        "median_delta": 0,
+        "deltas": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  },
+  "gate_results": {
+    "gates": {
+      "vague_anchor_usage_30pct": {
+        "value": 100.0,
+        "threshold": 30.0,
+        "pass": true
+      },
+      "vague_zero_hit_20pct": {
+        "value": 0.0,
+        "threshold": 20.0,
+        "pass": true
+      },
+      "expanded_positive_delta": {
+        "value": 1.0,
+        "threshold": 0.0,
+        "pass": true
+      }
+    },
+    "overall_pass": true
+  }
+}

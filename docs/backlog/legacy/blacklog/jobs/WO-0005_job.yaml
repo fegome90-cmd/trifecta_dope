@@ -1,0 +1,64 @@
+version: 1
+id: WO-0005
+epic_id: E-0001
+title: "Evidence Gate global: suite completa pytest -q"
+priority: P0
+status: done
+dod_id: DOD-GATE_HARDENING
+owner: null
+branch: "job/WO-0005-evidence-gate"
+worktree: "../wt-WO-0005"
+scope:
+  allow:
+    - "tests/**"
+    - "docs/reports/KNOWN_FAILS.md"
+    - "docs/CONTRACTS.md"
+    - "_ctx/logs/gate_*.log"
+  deny:
+    - ".env*"
+    - "**/production.*"
+    - "src/**"
+deliverables:
+  - "_ctx/logs/gate_fail_head.log"
+  - "_ctx/logs/gate_base_commit.txt"
+  - "/tmp/tf_gate_base.log"
+  - "_ctx/logs/gate_after_fix.log"
+  - "_ctx/logs/gate_full_after_fix.log"
+  - "tests/acceptance/test_pd_evidence_stop_e2e.py (FIXED)"
+verify:
+  commands:
+    - "uv run pytest -q tests/acceptance/test_pd_evidence_stop_e2e.py::test_e2e_evidence_stop_real_cli"
+    - "uv run pytest -q"
+    - "test -f _ctx/logs/gate_fail_head.log"
+    - "test -f _ctx/logs/gate_base_commit.txt"
+diff_budget:
+  max_files: 5
+  max_loc: 200
+stop_conditions:
+  max_iterations: 3
+  max_fail_verify: 1
+decision:
+  classification: test_broken
+  evidence:
+    - "_ctx/logs/gate_fail_head.log"
+    - "_ctx/logs/gate_base_commit.txt (BASE_COMMIT=bd26190)"
+    - "/tmp/tf_gate_base.log"
+    - "_ctx/logs/gate_after_fix.log"
+    - "_ctx/logs/gate_full_after_fix.log"
+  rationale: "Test file (test_pd_evidence_stop_e2e.py) added in commit 8386f8d, AFTER base commit bd26190 (before linter). Hard-coded query 'ContextService' does not exist in segment's context_pack.json. Fixed by changing query to 'context' which exists."
+  fix_applied:
+    file: "tests/acceptance/test_pd_evidence_stop_e2e.py"
+    lines: [240, 259]
+    change: "query: 'ContextService' -> 'context'"
+trace:
+  ticket: null
+  related_wos:
+    - WO-0004
+pass_criteria:
+  - "uv run pytest -q => 482 passed, 1 skipped, 0 failures ✅"
+  - "test_e2e_evidence_stop_real_cli PASS ✅"
+  - "Classification deterministic with evidence ✅"
+no_pass_criteria:
+  - "New test failures appear (regression)"
+  - "Cannot prove classification with logs"
+final_verdict: "PASS (482 passed, 0 failures)"

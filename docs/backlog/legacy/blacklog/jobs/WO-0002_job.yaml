@@ -1,0 +1,42 @@
+version: 1
+id: WO-0002
+epic_id: E-0001
+title: "Diccionario anchors+aliases + extractor puro"
+priority: P0
+status: done
+dod_id: DOD-DICTIONARY
+owner: null
+branch: "job/WO-0002-dictionary"
+worktree: "../wt-WO-0002"
+scope:
+  allow:
+    - "src/domain/anchor_extractor.py"
+    - "tests/unit/test_anchor_extractor.py"
+    - "configs/**"
+    - "docs/reports/anchor_dictionary_v1.md"
+  deny:
+    - ".env*"
+deliverables:
+  - "Verification: src/domain/anchor_extractor.py exists"
+  - "Verification: tests/unit/test_anchor_extractor.py exists"
+verify:
+  commands:
+    - "test -f src/domain/anchor_extractor.py"
+    - "test -f tests/unit/test_anchor_extractor.py"
+    - "uv run pytest -q tests/unit/test_anchor_extractor.py"
+diff_budget:
+  max_files: 2
+  max_loc: 100
+stop_conditions:
+  max_iterations: 2
+  max_fail_verify: 1
+trace:
+  ticket: null
+  related_wos:
+    - WO-0001
+pass_criteria:
+  - "anchor_extractor.py exists and is pure function"
+  - "tests pass"
+no_pass_criteria:
+  - "Files missing and not created"
+  - "Tests fail"

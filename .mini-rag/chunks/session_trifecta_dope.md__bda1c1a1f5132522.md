@@ -1,0 +1,14 @@
+## 2026-01-02 11:30 UTC
+- **Summary**: Type-Based Error Classification Implementation COMPLETE
+- **Changes**:
+  - `src/application/exceptions.py`: NEW - PrimeFileNotFoundError with path/segment_id attributes
+  - `src/application/use_cases.py`: Raise PrimeFileNotFoundError instead of generic FileNotFoundError
+  - `src/infrastructure/cli.py`: Type-based handler with isinstance() check + substring fallback
+  - Deprecation warning: `TRIFECTA_DEPRECATED: fallback_prime_missing_string_match_used` to stderr
+- **Tests**: 9/9 passing
+  - 5 acceptance tests (dogfooding verde)
+  - 3 unit tests (exception attributes, custom message, type independence)
+  - 1 unit test (type priority verification)
+- **Docs Optimization**: skill.md 96→69 lines, agent.md +protocols section, prime.md filled with new paths/glossary
+- **Commit**: 9c394c6 "feat: replace substring matching with type-based error classification"
+- **Next**: Monitor TRIFECTA_DEPRECATED in dogfooding, remove substring fallback after 2026-03-01

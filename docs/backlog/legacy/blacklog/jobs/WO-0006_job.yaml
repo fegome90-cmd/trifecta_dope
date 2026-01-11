@@ -1,0 +1,96 @@
+version: 1
+id: WO-0006
+epic_id: E-0001
+title: "Fixture sintético + gate de worktree limpio (reproducibilidad P0)"
+priority: P0
+status: pending
+dod_id: DOD-REPRODUCIBILITY
+owner: null
+branch: "job/WO-0006-synthetic-fixture-gate"
+worktree: "../wt-WO-0006"
+
+scope:
+  allow:
+    - "tests/fixtures/segment_minimal/**"
+    - "tests/acceptance/test_clean_worktree_reproducibility.py"
+    - "scripts/generate_synthetic_fixture.sh"
+    - "scripts/gate_clean_worktree.sh"
+    - "_ctx/logs/reproducibility_*.log"
+  deny:
+    - ".env*"
+    - "_ctx/context_pack.json"
+    - "src/**"
+
+objective: |
+  Eliminar dependency de estado preexistente creando:
+  1. Fixture sintético auto-contenido (tests/fixtures/segment_minimal/)
+  2. Gate de worktree limpio que valide ctx sync + ctx search
+
+  DESPUÉS decidir si necesita `trifecta bootstrap` o solo mejor error + docs.
+
+deliverables:
+  - "tests/fixtures/segment_minimal/ con AGENTS.md, prime/agent/session, context_pack.json pre-generado"
+  - "scripts/generate_synthetic_fixture.sh (rebuild determinista)"
+  - "tests/acceptance/test_clean_worktree_reproducibility.py (gate end-to-end)"
+  - "scripts/gate_clean_worktree.sh (CI-ready)"
+  - "_ctx/logs/reproducibility_gate_pass.log"
+
+verify:
+  commands:
+    - "bash scripts/generate_synthetic_fixture.sh"
+    - "uv run pytest -xvs tests/acceptance/test_clean_worktree_reproducibility.py"
+    - "bash scripts/gate_clean_worktree.sh"
+
+acceptance_criteria:
+  - "Fixture genera context_pack.json con >0 chunks sin errores"
+  - "Gate pasa en worktree limpio sin _ctx preexistente"
+  - "ctx search retorna >0 results (no 'Context pack not found')"
+  - "Script es idempotente (re-run da mismos SHA256)"
+
+diff_budget:
+  max_files: 25
+  max_loc: 800
+  rationale: "Fixture + tests + 2 scripts + docs"
+
+stop_conditions:
+  max_iterations: 8
+  max_verify_failures: 3
+  timeout_hours: 4
+
+trace:
+  plan_node_id: null
+  requirement_ids: ["reproducibility-gap", "clean-boot-fail"]
+
+dependencies:
+  - wo_id: null # Independiente
+
+risks:
+  - "Fixture podría quedar desactualizado si schema de context_pack cambia"
+  - "Gate podría pasar localmente pero fallar en CI por env differences"
+
+mitigation:
+  - "Usar schema version check en fixture"
+  - "Documentar env requirements (uv, python version) en gate script"
+
+notes: |
+  **Filosofía**: No asumir bootstrap command todavía.
+
+  Primero validar si fixture + gate + mejores error messages bastan.
+
+  Si gate muestra que bootstrap es realmente necesario → WO-0007.
+
+  **Fixture contents**:
+  - AGENTS.md (minimal stub: "# AGENTS")
+  - _ctx/prime_minimal.md (synthetic: "# Prime context")
+  - _ctx/agent_minimal.md (synthetic: "# Agent memory")  
+  - _ctx/session_minimal.md (synthetic: "# Session log")
+  - _ctx/context_pack.json (pre-generated via ctx sync)
+
+  **Gate validates**:
+  1. git worktree add /tmp/clean_gate HEAD
+  2. cd /tmp/clean_gate && rm -rf _ctx
+  3. trifecta ctx sync --segment . (should create context_pack.json)
+  4. trifecta ctx search --segment . --query "test" --limit 1 (should return results)
+  5. Exit 0 if both pass, Exit 1 if either fails
+
+verified_at_sha: null # Será llenado al completar

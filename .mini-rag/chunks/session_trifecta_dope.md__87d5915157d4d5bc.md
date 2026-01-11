@@ -1,0 +1,18 @@
+## 2026-01-02 13:45 UTC
+- **Summary**: Post-Refactor Quality Audit (Ola 1-4.1) COMPLETE
+- **Changes**:
+  - Ola 1: Fixed 3 import errors (SymbolInfo, SkeletonMapBuilder, _relpath stubs)
+  - Ola 2: Telemetry reserved key validation, SymbolQuery Result pattern, CLI create naming tests
+  - Ola 3: Formalized roadmap tests (--ignore=tests/roadmap in pyproject.toml)
+  - Ola 3.1: Hardened acceptance gate (-m "not slow"), 29/29 green
+  - Ola 4.0: Fixed PR2 integration (Result pattern in search_symbol)
+  - Ola 4.1: Moved prime tripwires to tests/roadmap/
+- **Tests**: 312 passed, 7 failed (core); 29 passed acceptance (gate green)
+- **Files Created**:
+  - `docs/TEST_GATES.md`: Official test gate commands
+  - `docs/auditoria/TRIAGE_REPORT.md`: Bucket analysis and ROI plan
+  - `tests/roadmap/`: 6 test files for unimplemented features
+  - `tests/acceptance/test_acceptance_gate_slow_marker.py`: Tripwire for @slow
+- **Config Changes**:
+  - `pyproject.toml`: addopts = "--ignore=tests/roadmap", roadmap marker added
+- **Next**: Continue with remaining 7 failures (selector_dsl, naming_contract, lsp_client_strict, t8_2_consistency, counters) or commit current state

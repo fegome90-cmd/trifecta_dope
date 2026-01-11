@@ -1,0 +1,43 @@
+{
+  "run_id": "wo-p3-0",
+  "counts": {
+    "ast.cache.miss": 1,
+    "ast.cache.write": 1,
+    "ast.symbols": 200,
+    "ast.cache.lock_wait": 3,
+    "ast.cache.hit": 199
+  },
+  "ops_completed": 200,
+  "lock_contention": {
+    "timeouts": 0,
+    "waits": 3,
+    "wait_ms_total": 271
+  },
+  "latency_ms": {
+    "ast.cache.miss": {
+      "p50": 23,
+      "p95": 23,
+      "max": 23
+    },
+    "ast.cache.write": {
+      "p50": 1,
+      "p95": 1,
+      "max": 1
+    },
+    "ast.symbols": {
+      "p50": 13,
+      "p95": 15,
+      "max": 129
+    },
+    "ast.cache.lock_wait": {
+      "p50": 106,
+      "p95": 109,
+      "max": 109
+    },
+    "ast.cache.hit": {
+      "p50": 13,
+      "p95": 14,
+      "max": 128
+    }
+  }
+}

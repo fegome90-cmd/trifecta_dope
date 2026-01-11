@@ -1,0 +1,186 @@
+# Field Exercises v2 - Hard Query Dataset
+
+version: 2
+description: "Controlled A/B evaluation with intentionally difficult queries to stress-test linter expansion"
+date: 2026-01-06
+total_queries: 33
+
+buckets:
+  - name: vague_1token
+    description: "Single-word vague queries (highest linter activation expected)"
+    count: 10
+  - name: spanish_natural
+    description: "Natural language Spanish queries (tests multilingual handling)"
+    count: 13
+  - name: navigation_2hop
+    description: "Multi-concept navigation queries requiring 2-hop inference"
+    count: 10
+
+queries:
+  # Bucket 1: vague_1token (10 queries)
+  - id: FE2-001
+    bucket: vague_1token
+    text: "testing"
+    rationale: "Ambiguous single token, multiple contexts (pytest, integration, unit)"
+
+  - id: FE2-002
+    bucket: vague_1token
+    text: "sync"
+    rationale: "Core operation with multiple implementations"
+
+  - id: FE2-003
+    bucket: vague_1token
+    text: "build"
+    rationale: "Overloaded term (context pack build, CI build, etc.)"
+
+  - id: FE2-004
+    bucket: vague_1token
+    text: "validate"
+    rationale: "Multiple validation use cases"
+
+  - id: FE2-005
+    bucket: vague_1token
+    text: "search"
+    rationale: "Self-referential query about search functionality"
+
+  - id: FE2-006
+    bucket: vague_1token
+    text: "error"
+    rationale: "Broad concept spanning error handling, cards, types"
+
+  - id: FE2-007
+    bucket: vague_1token
+    text: "config"
+    rationale: "Configuration spanning multiple layers"
+
+  - id: FE2-008
+    bucket: vague_1token
+    text: "index"
+    rationale: "Index operations (context pack, LSP, etc.)"
+
+  - id: FE2-009
+    bucket: vague_1token
+    text: "cache"
+    rationale: "Cache mechanisms (AST, linter, etc.)"
+
+  - id: FE2-010
+    bucket: vague_1token
+    text: "daemon"
+    rationale: "LSP daemon lifecycle and management"
+
+  # Bucket 2: spanish_natural (10 queries)
+  - id: FE2-011
+    bucket: spanish_natural
+    text: "cómo funciona el linter de queries"
+    rationale: "Natural Spanish question about linter mechanics"
+
+  - id: FE2-012
+    bucket: spanish_natural
+    text: "qué hace el comando ctx sync"
+    rationale: "Spanish query for ctx sync behavior"
+
+  - id: FE2-013
+    bucket: spanish_natural
+    text: "explicar arquitectura limpia"
+    rationale: "Clean architecture in Spanish"
+
+  - id: FE2-014
+    bucket: spanish_natural
+    text: "dónde están los tests de integración"
+    rationale: "Location query in Spanish"
+
+  - id: FE2-015
+    bucket: spanish_natural
+    text: "cuál es el flujo de validación"
+    rationale: "Validation workflow in Spanish"
+
+  - id: FE2-016
+    bucket: spanish_natural
+    text: "cómo se genera el context pack"
+    rationale: "Context pack generation in Spanish"
+
+  - id: FE2-017
+    bucket: spanish_natural
+    text: "qué son los anchors del linter"
+    rationale: "Linter anchors explanation in Spanish"
+
+  - id: FE2-018
+    bucket: spanish_natural
+    text: "explicar telemetría de eventos"
+    rationale: "Event telemetry in Spanish"
+
+  - id: FE2-019
+    bucket: spanish_natural
+    text: "cómo funciona el daemon LSP"
+    rationale: "LSP daemon in Spanish"
+
+  - id: FE2-020
+    bucket: spanish_natural
+    text: "dónde se configura el linter"
+    rationale: "Linter configuration location in Spanish"
+
+  - id: FE2-031
+    bucket: spanish_natural
+    text: "bitácora de auditoría"
+    rationale: "Pure Spanish for audit logs (no 'logs' keyword)"
+
+  - id: FE2-032
+    bucket: spanish_natural
+    text: "paquete de contexto"
+    rationale: "Pure Spanish for context pack (no 'pack' keyword)"
+
+  - id: FE2-033
+    bucket: spanish_natural
+    text: "registro de sesión"
+    rationale: "Pure Spanish for session log (no 'session' keyword)"
+
+  # Bucket 3: navigation_2hop (10 queries)
+  - id: FE2-021
+    bucket: navigation_2hop
+    text: "BuildContextPackUseCase dependencies and validation"
+    rationale: "2-hop: use case → dependencies → validation flow"
+
+  - id: FE2-022
+    bucket: navigation_2hop
+    text: "LSP daemon lifecycle and error handling"
+    rationale: "2-hop: daemon → lifecycle → error cases"
+
+  - id: FE2-023
+    bucket: navigation_2hop
+    text: "query linter configuration and anchor expansion"
+    rationale: "2-hop: config → anchors → expansion logic"
+
+  - id: FE2-024
+    bucket: navigation_2hop
+    text: "telemetry collection and event schema"
+    rationale: "2-hop: collection → events → schema"
+
+  - id: FE2-025
+    bucket: navigation_2hop
+    text: "context pack validation and hash verification"
+    rationale: "2-hop: validation → hashing → verification"
+
+  - id: FE2-026
+    bucket: navigation_2hop
+    text: "AST parsing and symbol extraction"
+    rationale: "2-hop: parsing → AST → symbols"
+
+  - id: FE2-027
+    bucket: navigation_2hop
+    text: "pre-commit hooks and context sync"
+    rationale: "2-hop: hooks → sync → context update"
+
+  - id: FE2-028
+    bucket: navigation_2hop
+    text: "error cards and fail-closed patterns"
+    rationale: "2-hop: error cards → fail-closed → patterns"
+
+  - id: FE2-029
+    bucket: navigation_2hop
+    text: "DI container and use case registration"
+    rationale: "2-hop: DI → container → registration"
+
+  - id: FE2-030
+    bucket: navigation_2hop
+    text: "work order backlog and DoD validation"
+    rationale: "2-hop: backlog → WO → DoD"

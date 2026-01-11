@@ -1,0 +1,1 @@
+3_AST=$AST_RC"; echo "G3_STATUS=$STATUS"; echo "G3_CODE=$CODE"` | (1) `/tmp/g3_ast.json` (JSON stdout), (2) `/tmp/g3_ast.stderr` (stderr separado), (3) `/tmp/g3_jq.log` (jq stderr), (4) `AST_RC`, `STATUS`, `CODE` | AP1 (jq parse desde archivo), AP6 (stderr capturado), AP7 (parse_error=FAIL) |

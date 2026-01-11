@@ -1,0 +1,14 @@
+## 2026-01-02 09:56 UTC
+- **Summary**: Error Card & Dogfooding Sprint COMPLETE
+- **Fixes**:
+  - `cli.py`: Error Card handler hardened (only emits `SEGMENT_NOT_INITIALIZED` for prime-specific errors)
+  - `cli.py`: Fixed `create -s` to write to target directory (was writing to CLI cwd)
+  - `cli.py`: Removed duplicate `--path` param, segment_id derived from dirname
+- **Tests**: 5 acceptance tests passing
+  - `test_ctx_sync_fails_when_prime_missing` - Error Card
+  - `test_ctx_sync_succeeds_after_initialization` - Real dogfooding (create→refresh-prime→sync)
+  - `test_ctx_sync_succeeds_with_valid_prime` - Happy path
+  - `test_error_card_not_emitted_for_other_file_errors` - Anti-false-positive tripwire
+  - `test_create_from_different_cwd` - Confirms create writes to target, not cwd
+- **Bug Fixed**: `docs/bugs/create_cwd_bug.md` marked FIXED
+- **Next**: Consider replacing substring matching with path comparison for more robust error classification

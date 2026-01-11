@@ -1,0 +1,12 @@
+## 2026-01-02 01:18 UTC
+- **Summary**: LSP Lifecycle Hardening + Error Card System
+- **Changes**:
+  - `lsp_client.py`: Added post-join guard (skip close if thread alive), increased timeout to 1.0s, defensive stopping check
+  - `daemon_paths.py`: Added /tmp validation + AF_UNIX path length checks
+  - `src/cli/error_cards.py`: NEW - Error Card renderer with stable markers
+  - `cli.py`: Added FileNotFoundError handler → SEGMENT_NOT_INITIALIZED Error Card
+  - `test_lsp_no_stderr_errors.py`: LSP activation verification gate
+  - `test_daemon_paths_constraints.py`: NEW - platform constraint tripwires
+  - `tests/acceptance/test_ctx_sync_preconditions.py`: NEW - black-box CLI tests
+- **Tests**: 17 integration + 2 acceptance passing
+- **Next**: Fix `trifecta create -s` to write to target dir (not CLI cwd)

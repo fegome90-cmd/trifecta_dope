@@ -1,0 +1,313 @@
+diff --git a/.cache_field_ex_off.json b/.cache_field_ex_off.json
+index 77c541e..03bb803 100644
+--- a/.cache_field_ex_off.json
++++ b/.cache_field_ex_off.json
+@@ -5,7 +5,8 @@
+     "query": "How does ValidateContextPackUseCase verify file hashes?",
+     "hits": 10,
+     "expected_min_hits": 2,
+-    "returncode": 0
++    "returncode": 0,
++    "anchor_used": false
+   },
+   {
+     "id": "FE-002",
+@@ -13,7 +14,8 @@
+     "query": "What is the LSP daemon lifecycle and shutdown sequence?",
+     "hits": 10,
+     "expected_min_hits": 2,
+-    "returncode": 0
++    "returncode": 0,
++    "anchor_used": false
+   },
+   {
+     "id": "FE-003",
+@@ -21,7 +23,8 @@
+     "query": "How is BuildContextPackUseCase normalizing newlines?",
+     "hits": 2,
+     "expected_min_hits": 2,
+-    "returncode": 0
++    "returncode": 0,
++    "anchor_used": false
+   },
+   {
+     "id": "FE-004",
+@@ -29,7 +32,8 @@
+     "query": "What schema validation does ctx_backlog_validate.py perform?",
+     "hits": 10,
+     "expected_min_hits": 2,
+-    "returncode": 0
++    "returncode": 0,
++    "anchor_used": false
+   },
+   {
+     "id": "FE-005",
+@@ -37,7 +41,8 @@
+     "query": "How does the query linter expand aliases and anchors?",
+     "hits": 10,
+     "expected_min_hits": 2,
+-    "returncode": 0
++    "returncode": 0,
++    "anchor_used": false
+   },
+   {
+     "id": "FE-006",
+@@ -45,7 +50,8 @@
+     "query": "What telemetry events are tracked in context pack operations?",
+     "hits": 10,
+     "expected_min_hits": 2,
+-    "returncode": 0
++    "returncode": 0,
++    "anchor_used": false
+   },
+   {
+     "id": "FE-007",
+@@ -53,7 +59,8 @@
+     "query": "Explain the context pack build and validation workflow",
+     "hits": 10,
+     "expected_min_hits": 3,
+-    "returncode": 0
++    "returncode": 0,
++    "anchor_used": false
+   },
+   {
+     "id": "FE-008",
+@@ -61,7 +68,8 @@
+     "query": "What is the difference between prime, agent, and skill files?",
+     "hits": 10,
+     "expected_min_hits": 2,
+-    "returncode": 0
++    "returncode": 0,
++    "anchor_used": false
+   },
+   {
+     "id": "FE-009",
+@@ -69,7 +77,8 @@
+     "query": "How does the backlog system organize work orders by state?",
+     "hits": 10,
+     "expected_min_hits": 2,
+-    "returncode": 0
++    "returncode": 0,
++    "anchor_used": false
+   },
+   {
+     "id": "FE-010",
+@@ -77,7 +86,8 @@
+     "query": "What is the purpose of the AST cache and persistence?",
+     "hits": 10,
+     "expected_min_hits": 2,
+-    "returncode": 0
++    "returncode": 0,
++    "anchor_used": false
+   },
+   {
+     "id": "FE-011",
+@@ -85,7 +95,8 @@
+     "query": "How do Definition of Done files relate to work orders?",
+     "hits": 10,
+     "expected_min_hits": 2,
+-    "returncode": 0
++    "returncode": 0,
++    "anchor_used": false
+   },
+   {
+     "id": "FE-012",
+@@ -93,7 +104,8 @@
+     "query": "What are the fail-closed principles in the testing strategy?",
+     "hits": 10,
+     "expected_min_hits": 2,
+-    "returncode": 0
++    "returncode": 0,
++    "anchor_used": false
+   },
+   {
+     "id": "FE-013",
+@@ -101,7 +113,8 @@
+     "query": "testing",
+     "hits": 5,
+     "expected_min_hits": 3,
+-    "returncode": 0
++    "returncode": 0,
++    "anchor_used": false
+   },
+   {
+     "id": "FE-014",
+@@ -109,7 +122,8 @@
+     "query": "validation errors",
+     "hits": 9,
+     "expected_min_hits": 2,
+-    "returncode": 0
++    "returncode": 0,
++    "anchor_used": false
+   },
+   {
+     "id": "FE-015",
+@@ -117,7 +131,8 @@
+     "query": "how to create a new segment",
+     "hits": 10,
+     "expected_min_hits": 2,
+-    "returncode": 0
++    "returncode": 0,
++    "anchor_used": false
+   },
+   {
+     "id": "FE-016",
+@@ -125,7 +140,8 @@
+     "query": "linter configuration",
+     "hits": 10,
+     "expected_min_hits": 2,
+-    "returncode": 0
++    "returncode": 0,
++    "anchor_used": false
+   },
+   {
+     "id": "FE-017",
+@@ -133,7 +149,8 @@
+     "query": "debugging hash mismatch problems",
+     "hits": 10,
+     "expected_min_hits": 2,
+-    "returncode": 0
++    "returncode": 0,
++    "anchor_used": false
+   },
+   {
+     "id": "FE-018",
+@@ -141,7 +158,8 @@
+     "query": "session logging and handoffs",
+     "hits": 10,
+     "expected_min_hits": 2,
+-    "returncode": 0
++    "returncode": 0,
++    "anchor_used": false
+   },
+   {
+     "id": "FE-019",
+@@ -149,7 +167,8 @@
+     "query": "clean architecture dependencies",
+     "hits": 10,
+     "expected_min_hits": 2,
+-    "returncode": 0
++    "returncode": 0,
++    "anchor_used": false
+   },
+   {
+     "id": "FE-020",
+@@ -157,6 +176,7 @@
+     "query": "sync",
+     "hits": 10,
+     "expected_min_hits": 3,
+-    "returncode": 0
++    "returncode": 0,
++    "anchor_used": false
+   }
+ ]
+\ No newline at end of file
+diff --git a/_ctx/generated/repo_map.md b/_ctx/generated/repo_map.md
+index 40e13f1..39e4989 100644
+--- a/_ctx/generated/repo_map.md
++++ b/_ctx/generated/repo_map.md
+@@ -2,7 +2,7 @@
+ 
+ > **Generated**: __DATE__
+ > **Purpose**: High-level module navigation for ctx.plan code_navigation feature
+-> **Hash**: 68292cc89ae0
++> **Hash**: fced975c9078
+ 
+ ---
+ 
+diff --git a/_ctx/generated/symbols_stub.md b/_ctx/generated/symbols_stub.md
+index 5e966b8..2480317 100644
+--- a/_ctx/generated/symbols_stub.md
++++ b/_ctx/generated/symbols_stub.md
+@@ -2,7 +2,7 @@
+ 
+ > **Status**: Placeholder for symbol-level navigation
+ > **Version**: v1 (Prime-based) → v2 (AST/LSP-based, planned)
+-> **Hash**: 68292cc89ae0
++> **Hash**: fced975c9078
+ 
+ ---
+ 
+diff --git a/_ctx/telemetry/events.jsonl b/_ctx/telemetry/events.jsonl
+index bf54b9e..63cda78 100644
+--- a/_ctx/telemetry/events.jsonl
++++ b/_ctx/telemetry/events.jsonl
+@@ -3643,3 +3643,64 @@
+ {"ts": "2026-01-06T13:27:50-0300", "run_id": "run_1767716870", "segment_id": "6f25e381", "cmd": "ctx.sync.stub_regen", "args": {"stub_name": "repo_map.md"}, "result": {"regen_ok": true, "reason": ""}, "timing_ms": 1, "warnings": [], "x": {}}
+ {"ts": "2026-01-06T13:27:50-0300", "run_id": "run_1767716870", "segment_id": "6f25e381", "cmd": "ctx.sync.stub_regen", "args": {"stub_name": "symbols_stub.md"}, "result": {"regen_ok": true, "reason": ""}, "timing_ms": 1, "warnings": [], "x": {}}
+ {"ts": "2026-01-06T13:27:50-0300", "run_id": "run_1767716870", "segment_id": "6f25e381", "cmd": "ctx.sync", "args": {"segment": "."}, "result": {"status": "ok"}, "timing_ms": 256, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:33:08-0300", "run_id": "run_1767717188", "segment_id": "6f25e381", "cmd": "ctx.sync.stub_regen", "args": {"stub_name": "repo_map.md"}, "result": {"regen_ok": true, "reason": ""}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:33:08-0300", "run_id": "run_1767717188", "segment_id": "6f25e381", "cmd": "ctx.sync.stub_regen", "args": {"stub_name": "symbols_stub.md"}, "result": {"regen_ok": true, "reason": ""}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:33:08-0300", "run_id": "run_1767717188", "segment_id": "6f25e381", "cmd": "ctx.sync", "args": {"segment": "."}, "result": {"status": "ok"}, "timing_ms": 274, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:40:13-0300", "run_id": "run_1767717612", "segment_id": "6f25e381", "cmd": "ctx.sync.stub_regen", "args": {"stub_name": "repo_map.md"}, "result": {"regen_ok": true, "reason": ""}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:40:13-0300", "run_id": "run_1767717612", "segment_id": "6f25e381", "cmd": "ctx.sync.stub_regen", "args": {"stub_name": "symbols_stub.md"}, "result": {"regen_ok": true, "reason": ""}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:40:13-0300", "run_id": "run_1767717612", "segment_id": "6f25e381", "cmd": "ctx.sync", "args": {"segment": "."}, "result": {"status": "ok"}, "timing_ms": 341, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:40-0300", "run_id": "run_1767717760", "segment_id": "6f25e381", "cmd": "ctx.sync", "args": {"segment": "<ABS_PATH_REDACTED>"}, "result": {"status": "error", "error_code": "SEGMENT_NOT_INITIALIZED"}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:42-0300", "run_id": "run_1767717762", "segment_id": "6f25e381", "cmd": "ctx.sync", "args": {"segment": "my_project"}, "result": {"status": "error", "error_code": "SEGMENT_NOT_INITIALIZED"}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:42-0300", "run_id": "run_1767717762", "segment_id": "6f25e381", "cmd": "ctx.sync.stub_regen", "args": {"stub_name": "repo_map.md"}, "result": {"regen_ok": true, "reason": ""}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:42-0300", "run_id": "run_1767717762", "segment_id": "6f25e381", "cmd": "ctx.sync.stub_regen", "args": {"stub_name": "symbols_stub.md"}, "result": {"regen_ok": true, "reason": ""}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:42-0300", "run_id": "run_1767717762", "segment_id": "6f25e381", "cmd": "ctx.sync", "args": {"segment": "<ABS_PATH_REDACTED>"}, "result": {"status": "ok"}, "timing_ms": 2, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:42-0300", "run_id": "run_1767717762", "segment_id": "6f25e381", "cmd": "ctx.search", "args": {"query_preview": "test query", "query_hash": "050579eeae87a043", "query_len": 10, "limit": 5, "alias_expanded": false, "alias_terms_count": 0, "alias_keys_used": [], "linter_query_class": "disabled", "linter_expanded": false, "linter_added_strong_count": 0, "linter_added_weak_count": 0, "linter_reasons": []}, "result": {"hits": 5, "returned_ids": ["prime:67c103fb9d", "agent:3a90758d20", "session:7711fe46a3", "skill:3a368108e2", "repo:readme_tf.md:9be2642f42"]}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:42-0300", "run_id": "run_1767717762", "segment_id": "6f25e381", "cmd": "ctx.sync", "args": {"segment": "<ABS_PATH_REDACTED>"}, "result": {"status": "error", "error_code": "SEGMENT_NOT_INITIALIZED"}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:44-0300", "run_id": "run_1767717764", "segment_id": "6f25e381", "cmd": "ctx.get", "args": {"ids": ["prime:363a719791"], "mode": "excerpt", "budget": 1500, "max_chunks": null, "stop_on_evidence": false}, "result": {"chunks_returned": 0, "total_tokens": 0, "trimmed": false, "stop_reason": "complete", "chunks_requested": 1, "chars_returned_total": 0, "evidence": {"strong_hit": false, "support": false}}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:45-0300", "run_id": "run_1767717765", "segment_id": "6f25e381", "cmd": "ctx.search", "args": {"query_preview": "context", "query_hash": "ea7792a26f405e2a", "query_len": 7, "limit": 3, "alias_expanded": false, "alias_terms_count": 0, "alias_keys_used": [], "linter_query_class": "disabled", "linter_expanded": false, "linter_added_strong_count": 0, "linter_added_weak_count": 0, "linter_reasons": []}, "result": {"hits": 3, "returned_ids": ["repo:docs/plans/2025-12-29-context-pack-ingestion.md:e040d50f67", "repo:docs/plans/context-pack-mvp-sprint.md:5a43d11d1e", "repo:docs/plans/2025-12-29-trifecta-context-loading.md:1f4b3a08b0"]}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:45-0300", "run_id": "run_1767717765", "segment_id": "6f25e381", "cmd": "ctx.get", "args": {"ids": ["repo:docs/plans/2025-12-29-context-pack-ingestion.md:e040d50f67", "repo:docs/plans/context-pack-mvp-sprint.md:5a43d11d1e", "repo:docs/plans/2025-12-29-trifecta-context-loading.md:1f4b3a08b0"], "mode": "excerpt", "budget": 1500, "max_chunks": null, "stop_on_evidence": true}, "result": {"chunks_returned": 3, "total_tokens": 945, "trimmed": false, "stop_reason": "complete", "chunks_requested": 3, "chars_returned_total": 3784, "evidence": {"strong_hit": false, "support": false}}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:45-0300", "run_id": "run_1767717765", "segment_id": "6f25e381", "cmd": "ctx.search", "args": {"query_preview": "get", "query_hash": "2998b3232d29e8dc", "query_len": 3, "limit": 2, "alias_expanded": false, "alias_terms_count": 0, "alias_keys_used": [], "linter_query_class": "disabled", "linter_expanded": false, "linter_added_strong_count": 0, "linter_added_weak_count": 0, "linter_reasons": []}, "result": {"hits": 2, "returned_ids": ["repo:src/application/search_get_usecases.py:6df9338977", "session:63cd475c70"]}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:45-0300", "run_id": "run_1767717765", "segment_id": "6f25e381", "cmd": "ctx.get", "args": {"ids": ["repo:src/application/search_get_usecases.py:6df9338977", "session:63cd475c70"], "mode": "excerpt", "budget": 1500, "max_chunks": null, "stop_on_evidence": false}, "result": {"chunks_returned": 2, "total_tokens": 612, "trimmed": false, "stop_reason": "complete", "chunks_requested": 2, "chars_returned_total": 2450, "evidence": {"strong_hit": false, "support": false}}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:45-0300", "run_id": "run_1767717765", "segment_id": "6f25e381", "cmd": "ctx.get", "args": {"ids": ["test:chunk1", "test:chunk2"], "mode": "excerpt", "budget": 1500, "max_chunks": 1, "stop_on_evidence": false}, "result": {"chunks_returned": 1, "total_tokens": 8, "trimmed": false, "stop_reason": "max_chunks", "chunks_requested": 2, "chars_returned_total": 34, "evidence": {"strong_hit": false, "support": false}}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:45-0300", "run_id": "run_1767717765", "segment_id": "6f25e381", "cmd": "ctx.get", "args": {"ids": ["test:chunk1", "test:chunk2"], "mode": "excerpt", "budget": 1500, "max_chunks": null, "stop_on_evidence": false}, "result": {"chunks_returned": 2, "total_tokens": 14, "trimmed": false, "stop_reason": "complete", "chunks_requested": 2, "chars_returned_total": 61, "evidence": {"strong_hit": false, "support": false}}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:45-0300", "run_id": "run_1767717765", "segment_id": "6f25e381", "cmd": "ctx.sync", "args": {"segment": "<ABS_PATH_REDACTED>"}, "result": {"status": "error", "error_code": "SEGMENT_NOT_INITIALIZED"}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:45-0300", "run_id": "run_1767717765", "segment_id": "6f25e381", "cmd": "ctx.sync.stub_regen", "args": {"stub_name": "repo_map.md"}, "result": {"regen_ok": true, "reason": ""}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:45-0300", "run_id": "run_1767717765", "segment_id": "6f25e381", "cmd": "ctx.sync.stub_regen", "args": {"stub_name": "symbols_stub.md"}, "result": {"regen_ok": true, "reason": ""}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:45-0300", "run_id": "run_1767717765", "segment_id": "6f25e381", "cmd": "ctx.sync", "args": {"segment": "<ABS_PATH_REDACTED>"}, "result": {"status": "ok"}, "timing_ms": 2, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:46-0300", "run_id": "run_1767717766", "segment_id": "6f25e381", "cmd": "ctx.sync.stub_regen", "args": {"stub_name": "repo_map.md"}, "result": {"regen_ok": true, "reason": ""}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:46-0300", "run_id": "run_1767717766", "segment_id": "6f25e381", "cmd": "ctx.sync.stub_regen", "args": {"stub_name": "symbols_stub.md"}, "result": {"regen_ok": true, "reason": ""}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:46-0300", "run_id": "run_1767717766", "segment_id": "6f25e381", "cmd": "ctx.sync", "args": {"segment": "<ABS_PATH_REDACTED>"}, "result": {"status": "ok"}, "timing_ms": 2, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:46-0300", "run_id": "run_1767717766", "segment_id": "6f25e381", "cmd": "ctx.sync.stub_regen", "args": {"stub_name": "repo_map.md"}, "result": {"regen_ok": true, "reason": ""}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:46-0300", "run_id": "run_1767717766", "segment_id": "6f25e381", "cmd": "ctx.sync.stub_regen", "args": {"stub_name": "symbols_stub.md"}, "result": {"regen_ok": true, "reason": ""}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:46-0300", "run_id": "run_1767717766", "segment_id": "6f25e381", "cmd": "ctx.sync", "args": {"segment": "/private/var/folders/k1/jz_hmygd3k36tzkffsbyb5x00000gn/T/pytest-of-felipe_gonzalez/pytest-227/test_telemetry_bypass_allows_a0/bypass_test"}, "result": {"status": "ok"}, "timing_ms": 2, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:46-0300", "run_id": "run_1767717766", "segment_id": "6f25e381", "cmd": "ctx.search", "args": {"query_preview": "servicio", "query_hash": "c884c75a881d4b5d", "query_len": 8, "limit": 5, "alias_expanded": false, "alias_terms_count": 0, "alias_keys_used": [], "linter_query_class": "disabled", "linter_expanded": false, "linter_added_strong_count": 0, "linter_added_weak_count": 0, "linter_reasons": []}, "result": {"hits": 0, "returned_ids": []}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:46-0300", "run_id": "run_1767717766", "segment_id": "6f25e381", "cmd": "ctx.search", "args": {"query_preview": "servicio", "query_hash": "c884c75a881d4b5d", "query_len": 8, "limit": 5, "alias_expanded": false, "alias_terms_count": 0, "alias_keys_used": [], "linter_query_class": "vague", "linter_expanded": true, "linter_added_strong_count": 2, "linter_added_weak_count": 0, "linter_reasons": ["vague_default_boost"]}, "result": {"hits": 1, "returned_ids": ["agent:abc123"]}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:46-0300", "run_id": "run_1767717766", "segment_id": "6f25e381", "cmd": "ctx.search", "args": {"query_preview": "servicio", "query_hash": "c884c75a881d4b5d", "query_len": 8, "limit": 5, "alias_expanded": false, "alias_terms_count": 0, "alias_keys_used": [], "linter_query_class": "disabled", "linter_expanded": false, "linter_added_strong_count": 0, "linter_added_weak_count": 0, "linter_reasons": []}, "result": {"hits": 0, "returned_ids": []}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:47-0300", "run_id": "run_1767717767", "segment_id": "6f25e381", "cmd": "ctx.search", "args": {"query_preview": "servicio", "query_hash": "c884c75a881d4b5d", "query_len": 8, "limit": 5, "alias_expanded": false, "alias_terms_count": 0, "alias_keys_used": [], "linter_query_class": "vague", "linter_expanded": true, "linter_added_strong_count": 2, "linter_added_weak_count": 0, "linter_reasons": ["vague_default_boost"]}, "result": {"hits": 1, "returned_ids": ["agent:abc123"]}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:50-0300", "run_id": "run_1767717770", "segment_id": "6f25e381", "cmd": "ctx.sync.stub_regen", "args": {"stub_name": "repo_map.md"}, "result": {"regen_ok": true, "reason": ""}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:50-0300", "run_id": "run_1767717770", "segment_id": "6f25e381", "cmd": "ctx.sync.stub_regen", "args": {"stub_name": "symbols_stub.md"}, "result": {"regen_ok": true, "reason": ""}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:50-0300", "run_id": "run_1767717770", "segment_id": "6f25e381", "cmd": "ctx.sync", "args": {"segment": "."}, "result": {"status": "ok"}, "timing_ms": 257, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:53-0300", "run_id": "run_1767717773", "segment_id": "6f25e381", "cmd": "lsp.spawn", "args": {}, "result": {"status": "ok"}, "timing_ms": 1, "warnings": [], "x": {"lsp_state": "WARMING"}}
++{"ts": "2026-01-06T13:42:53-0300", "run_id": "run_1767717773", "segment_id": "6f25e381", "cmd": "lsp.fallback", "args": {}, "result": {"status": "ok"}, "timing_ms": 1, "warnings": [], "x": {"reason": "test", "fallback_to": "ast"}}
++{"ts": "2026-01-06T13:42:53-0300", "run_id": "run_1767717773", "segment_id": "6f25e381", "cmd": "lsp.spawn", "args": {"executable": "/abs/path/to/pylsp"}, "result": {}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:53-0300", "run_id": "run_1767717773", "segment_id": "6f25e381", "cmd": "lsp.spawn", "args": {"executable": null}, "result": {"status": "failed", "error": "binary_not_found"}, "timing_ms": 1, "warnings": [], "x": {"lsp_state": "FAILED"}}
++{"ts": "2026-01-06T13:42:53-0300", "run_id": "run_1767717773", "segment_id": "6f25e381", "cmd": "lsp.test_zero", "args": {}, "result": {}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:53-0300", "run_id": "run_1767717773", "segment_id": "6f25e381", "cmd": "lsp.spawn", "args": {}, "result": {"status": "ok"}, "timing_ms": 1, "warnings": [], "x": {"lsp_state": "WARMING"}}
++{"ts": "2026-01-06T13:42:53-0300", "run_id": "run_1767717773", "segment_id": "6f25e381", "cmd": "lsp.fallback", "args": {}, "result": {"status": "ok"}, "timing_ms": 1, "warnings": [], "x": {"reason": "test", "fallback_to": "ast"}}
++{"ts": "2026-01-06T13:42:53-0300", "run_id": "run_1767717773", "segment_id": "6f25e381", "cmd": "lsp.spawn", "args": {"executable": "/abs/path/to/pylsp"}, "result": {}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:53-0300", "run_id": "run_1767717773", "segment_id": "6f25e381", "cmd": "lsp.spawn", "args": {"executable": null}, "result": {"status": "failed", "error": "binary_not_found"}, "timing_ms": 1, "warnings": [], "x": {"lsp_state": "FAILED"}}
++{"ts": "2026-01-06T13:42:53-0300", "run_id": "run_1767717773", "segment_id": "6f25e381", "cmd": "lsp.test_zero", "args": {}, "result": {}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:53-0300", "run_id": "run_1767717773", "segment_id": "6f25e381", "cmd": "ctx.build", "args": {"segment": "<ABS_PATH_REDACTED>"}, "result": {"status": "ok"}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:53-0300", "run_id": "run_1767717773", "segment_id": "6f25e381", "cmd": "ctx.build", "args": {"segment": "<ABS_PATH_REDACTED>"}, "result": {"status": "ok"}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:53-0300", "run_id": "run_1767717773", "segment_id": "6f25e381", "cmd": "ctx.build", "args": {"segment": "<ABS_PATH_REDACTED>"}, "result": {"status": "validation_failed", "errors": 1}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:53-0300", "run_id": "run_1767717773", "segment_id": "6f25e381", "cmd": "ctx.build", "args": {"segment": "<ABS_PATH_REDACTED>"}, "result": {"status": "legacy_files_error", "count": 1}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:53-0300", "run_id": "run_1767717773", "segment_id": "6f25e381", "cmd": "lsp.spawn", "args": {"executable": "/usr/bin/python3"}, "result": {"status": "ok"}, "timing_ms": 1, "warnings": [], "x": {"lsp_state": "COLD"}}
++{"ts": "2026-01-06T13:42:53-0300", "run_id": "run_1767717773", "segment_id": "6f25e381", "cmd": "ctx.sync.stub_regen", "args": {"stub_name": "repo_map.md"}, "result": {"regen_ok": true, "reason": ""}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:53-0300", "run_id": "run_1767717773", "segment_id": "6f25e381", "cmd": "ctx.sync.stub_regen", "args": {"stub_name": "symbols_stub.md"}, "result": {"regen_ok": true, "reason": ""}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:53-0300", "run_id": "run_1767717773", "segment_id": "6f25e381", "cmd": "ctx.sync", "args": {"segment": "<ABS_PATH_REDACTED>"}, "result": {"status": "ok"}, "timing_ms": 3, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:53-0300", "run_id": "run_1767717773", "segment_id": "6f25e381", "cmd": "ctx.build", "args": {"segment": "<ABS_PATH_REDACTED>"}, "result": {"status": "constitution_failed", "errors": 1}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:54-0300", "run_id": "run_1767717774", "segment_id": "6f25e381", "cmd": "ctx.build", "args": {"segment": "<ABS_PATH_REDACTED>"}, "result": {"status": "constitution_failed", "errors": 1}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:54-0300", "run_id": "run_1767717774", "segment_id": "6f25e381", "cmd": "ctx.build", "args": {"segment": "<ABS_PATH_REDACTED>"}, "result": {"status": "ok"}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:54-0300", "run_id": "run_1767717774", "segment_id": "6f25e381", "cmd": "ctx.build", "args": {"segment": "<ABS_PATH_REDACTED>"}, "result": {"status": "validation_failed", "errors": 2}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:54-0300", "run_id": "run_1767717774", "segment_id": "6f25e381", "cmd": "ctx.build", "args": {"segment": "<ABS_PATH_REDACTED>"}, "result": {"status": "ok"}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-01-06T13:42:54-0300", "run_id": "run_1767717774", "segment_id": "6f25e381", "cmd": "ctx.build", "args": {"segment": "<ABS_PATH_REDACTED>"}, "result": {"status": "validation_failed", "errors": 1}, "timing_ms": 1, "warnings": [], "x": {}}
+diff --git a/_ctx/telemetry/last_run.json b/_ctx/telemetry/last_run.json
+index b0fca29..4a89a8c 100644
+--- a/_ctx/telemetry/last_run.json
++++ b/_ctx/telemetry/last_run.json
+@@ -1,7 +1,7 @@
+ {
+-  "run_id": "run_1767716870",
++  "run_id": "run_1767717774",
+   "segment_id": "6f25e381",
+-  "ts": "2026-01-06 13:27:50",
++  "ts": "2026-01-06 13:42:54",
+   "ast": {
+     "ast_parse_count": 0,
+     "ast_cache_hit_count": 0,

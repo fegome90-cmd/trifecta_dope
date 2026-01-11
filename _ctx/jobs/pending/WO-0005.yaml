@@ -1,0 +1,44 @@
+version: 1
+id: WO-0005
+epic_id: E-0001
+title: "Evidence Gate global: suite completa pytest -q (Fase 5)"
+priority: P0
+status: active
+owner: null
+branch: "job/WO-0005-evidence-gate"
+worktree: "../wt-WO-0005"
+phase: "P0 Audit (AST Persistence)"
+
+scope:
+  allow:
+    - "tests/**"
+    - "docs/**"
+    - "scripts/**"
+    - "_ctx/logs/**"
+    - "_ctx/logs/wo0005_p0_ast/**"
+  deny:
+    - ".env*"
+    - "**/production.*"
+
+deliverables:
+  - "docs/reports/wo0005_p0_ast_inventory.md (Inventory)"
+  - "tests/integration/test_ast_sqlite_cache_roundtrip.py (Contracts)"
+  - "_ctx/logs/wo0005_p0_ast/ (Evidence)"
+  - "_ctx/logs/gate_fail_head.log"
+  - "_ctx/logs/gate_base_commit.txt"
+
+verify:
+  commands:
+    - "scripts/verify.sh"
+    - "uv run pytest -q"
+  verified_at_sha: "HEAD"
+
+dod_id: DOD-DEFAULT
+trace:
+  ticket: null
+  related_wos: []
+
+x_risks:
+  - "SQLite binary encoding dependence"
+  - "Parallel process locking (WAL mode not redundant)"
+  - "Implicit segment_id logic in persisted keys"

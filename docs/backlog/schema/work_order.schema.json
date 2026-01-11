@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "id",
+    "epic_id",
+    "title",
+    "priority",
+    "status",
+    "owner",
+    "scope",
+    "verify",
+    "dod_id"
+  ],
+  "properties": {
+    "version": {"type": "integer"},
+    "id": {"type": "string", "pattern": "^WO-[0-9]{4}$"},
+    "epic_id": {"type": "string", "pattern": "^E-[0-9]{4}$"},
+    "title": {"type": "string"},
+    "priority": {"type": "string", "pattern": "^P[0-3]$"},
+    "status": {"type": "string", "enum": ["pending", "running", "done", "failed"]},
+    "owner": {"type": ["string", "null"]},
+    "branch": {"type": ["string", "null"]},
+    "worktree": {"type": ["string", "null"]},
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allow", "deny"],
+      "properties": {
+        "allow": {"type": "array", "items": {"type": "string"}},
+        "deny": {"type": "array", "items": {"type": "string"}}
+      },
+      "patternProperties": {"^x_": {}}
+    },
+    "deliverables": {"type": "array", "items": {"type": "string"}},
+    "verify": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["commands"],
+      "properties": {
+        "commands": {"type": "array", "items": {"type": "string"}}
+      },
+      "patternProperties": {"^x_": {}}
+    },
+    "diff_budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_files": {"type": "integer"},
+        "max_loc": {"type": "integer"}
+      },
+      "patternProperties": {"^x_": {}}
+    },
+    "stop_conditions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_iterations": {"type": "integer"},
+        "max_fail_verify": {"type": "integer"}
+      },
+      "patternProperties": {"^x_": {}}
+    },
+    "dod_id": {"type": "string"},
+    "trace": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ticket": {"type": ["string", "null"]},
+        "related_wos": {"type": "array", "items": {"type": "string"}}
+      },
+      "patternProperties": {"^x_": {}}
+    },
+    "started_at": {"type": ["string", "null"]},
+    "finished_at": {"type": ["string", "null"]},
+    "result": {"type": ["string", "null"]},
+    "commit_sha": {"type": ["string", "null"]},
+    "verified_at_sha": {"type": ["string", "null"]},
+    "evidence_logs": {"type": "array", "items": {"type": "string"}}
+  },
+  "patternProperties": {
+    "^x_": {}
+  }
+}

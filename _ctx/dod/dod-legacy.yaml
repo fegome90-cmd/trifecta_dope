@@ -1,0 +1,28 @@
+version: 1
+dod:
+  - id: DOD-LINTER_AB
+    title: "DoD linter A/B (legacy)"
+    x_legacy: true
+    required_artifacts:
+      - "_ctx/logs/ab_off.log"
+      - "_ctx/logs/ab_on.log"
+      - "verdict.json"
+    required_checks:
+      - name: "ab_linter_tests"
+        commands:
+          - "uv run pytest -q tests/integration/test_ctx_search_linter_ab_controlled.py"
+    rules:
+      - "OFF=0 hits, ON>0 hits (evidencia en logs)"
+  - id: DOD-REPRODUCIBILITY
+    title: "DoD reproducibilidad (legacy)"
+    x_legacy: true
+    required_artifacts:
+      - "tests.log"
+      - "gate.log"
+      - "verdict.json"
+    required_checks:
+      - name: "acceptance_tests"
+        commands:
+          - "uv run pytest -q tests/acceptance/test_cli_smoke_real_use.py"
+    rules:
+      - "Evidencia reproducible guardada en logs"

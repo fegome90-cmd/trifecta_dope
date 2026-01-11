@@ -8,8 +8,11 @@ dependencies = [
     "typer[all]>=0.9.0",
     "pydantic>=2.0",
     "pyyaml>=6.0",
+    "ruamel.yaml>=0.18.0",
     "tree-sitter>=0.23.0",
     "tree-sitter-python>=0.23.0",
+    "jsonschema>=4.0.0",
+    "filelock>=3.20.2",
 ]
 
 [project.optional-dependencies]
@@ -78,4 +81,12 @@ addopts = "--ignore=tests/roadmap"
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "roadmap: marks tests for unimplemented features (run with '-m roadmap')",
+]
+
+[tool.pytest.ini_options.env]
+TRIFECTA_AST_PERSIST = 1
+
+[dependency-groups]
+dev = [
+    "pytest-env>=1.2.0",
 ]

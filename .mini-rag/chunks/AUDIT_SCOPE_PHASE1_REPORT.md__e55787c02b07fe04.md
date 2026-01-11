@@ -1,0 +1,31 @@
+#### last_run.json (RUN_ID actual)
+
+```json
+{
+  "run_id": "run_1767365222",
+  "segment_id": "6f25e381",
+  "ts": "2026-01-02 11:47:03",
+  "ast": {
+    "ast_parse_count": 0,
+    "ast_cache_hit_count": 0,
+    "ast_cache_miss_count": 0
+  },
+  "lsp": {
+    "lsp_spawn_count": 0,
+    "lsp_ready_count": 0,
+    "lsp_fallback_count": 0,
+    "lsp_request_count": 0
+  },
+  "telemetry_drops": {
+    "drop_rate": 0.0
+  },
+  "latencies": {
+    "ctx.search": {
+      "count": 1,
+      "p50_ms": 13,
+      "p95_ms": 13,
+      "max_ms": 13
+    }
+  }
+}
+```

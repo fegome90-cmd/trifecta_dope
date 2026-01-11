@@ -1,0 +1,7 @@
+Informe de Auditoría Técnica: Arquitecturas Deterministas de Navegación de Código para Agentes de Software (Enfoque Lean)
+Resumen Ejecutivo
+Este informe técnico establece una hoja de ruta para la implementación de sistemas de navegación de código en agentes de software, priorizando la precisión determinista sobre la búsqueda semántica probabilística. Tras auditar la literatura actual y repositorios de referencia, se concluye que la arquitectura óptima es híbrida: Tree-sitter para la generación instantánea de mapas estructurales ("Skeleton Maps") y clientes LSP headless para la resolución semántica bajo demanda ("Just-in-Time"). Esta combinación mitiga la latencia de indexación de los servidores de lenguaje tradicionales mientras supera la fragilidad de las expresiones regulares.
+Recomendaciones Clave:
+Adopte una Estrategia de "Skeleton Map" con Tree-sitter: Genere índices ligeros en memoria de definiciones y firmas al inicio, evitando la sobrecarga de grafos de símbolos completos (LSIF/SCIP) para operaciones locales.1
+Implemente un Sistema de Archivos Virtual (Shadow Workspace): Desacople la exploración del agente del sistema de archivos físico mediante notificaciones didChange del LSP, permitiendo validación segura y atómica de ediciones sin persistencia prematura.3
+Utilice Selectores Semánticos Robustos: Reemplace las referencias frágiles archivo:línea por un DSL de selectore

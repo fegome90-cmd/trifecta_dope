@@ -1,0 +1,7 @@
+Esta consulta extrae solo los nombres de clases y métodos con sus firmas, ignorando el contenido lógico. El resultado es un mapa comprimido que es órdenes de magnitud más pequeño que el código fuente (reducción típica de 100:1), permitiendo que la estructura completa de un repositorio mediano (50k LOC) quepa en la ventana de contexto del LLM o en una caché en memoria de acceso instantáneo.2
+Impacto en la Selección de Contexto:
+Este mapa permite al agente responder preguntas arquitectónicas ("¿Dónde se maneja la autenticación?") y localizar definiciones sin leer los archivos completos. Actúa como un índice de "Divulgación Progresiva" (Progressive Disclosure): el agente consulta el mapa, localiza el archivo relevante y solo entonces lee el contenido detallado de ese archivo específico.
+2.3 Hashing Estructural para Invalidación de Caché
+La eficiencia operativa depende de no re-analizar lo que no ha cambiado. El uso de marcas de tiempo (mtime) es inadecuado en entornos de agentes donde los archivos pueden ser regenerados o revertidos frecuentemente. La solución robusta es el Hashing Estructural.14
+En lugar de hashear el contenido textual del archivo (que cambia con cualquier espacio en blanco o comentario irrelevante), se calcula un hash sobre los nodos relevantes del AST extraído.
+Mecanismo: Se recorre el AST del "esqueleto". Se concatenan los tipos de nodo y sus identificadores (

@@ -1,0 +1,1 @@
+## A) Hallazgos (Evidencia Verificada)

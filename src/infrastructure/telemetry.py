@@ -83,7 +83,7 @@ class Telemetry:
         self.root = resolve_segment_root(root or Path.cwd())
         self.segment_id = compute_segment_id(self.root)
         self.segment_label = root.name if root else self.root.name
-        self.run_id = f"run_{int(time.time())}"
+        self.run_id = os.environ.get("TRIFECTA_RUN_ID", f"run_{int(time.time())}")
         self.metrics: Dict[str, int] = {}
         self.timings: Dict[str, list] = {}
 

@@ -1,0 +1,13 @@
+version: 1
+dod:
+  - id: DOD-LEGACY
+    title: "Legacy DoD"
+    required_artifacts:
+      - "tests.log"
+    required_checks:
+      - name: "verify"
+        commands:
+          - "scripts/verify.sh"
+    rules:
+      - "Legacy evidence required"
+    x_legacy: true

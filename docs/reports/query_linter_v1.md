@@ -95,5 +95,51 @@ Applied **ONLY** to `VAGUE` queries.
 ```
 
 ## Out of Scope
-*   **CLI Integration**: This logic is pure domain. Not yet hooked into `ctx search`.
 *   **Retries**: No retry logic here. The expanded query is just a suggestion for the next layer.
+
+## CLI Integration (Phase 4)
+
+**Status**: ✅ INTEGRATED (2026-01-05)
+
+### Integration Point
+- **File**: `src/application/search_get_usecases.py:52-73`
+- **Location**: Between QueryNormalizer and QueryExpander
+- **Trigger**: Conditional via `enable_lint` parameter (default: False)
+
+### CLI Flags
+- `--no-lint`: Disable query linting for this search (default: present = disabled)
+- `TRIFECTA_LINT`: Environment variable to enable/disable globally
+  - `TRIFECTA_LINT=1` or `true`: Enable linting
+  - `TRIFECTA_LINT=0` or `false`: Disable linting
+  - Default (unset): DISABLED (conservative rollout)
+
+### Examples
+
+#### Vague Query (With Expansion)
+```bash
+$ TRIFECTA_LINT=1 trifecta ctx search --segment . --query "config"
+# Internally expanded to: "config agent.md prime.md"
+```
+
+#### Guided Query (No Expansion)
+```bash
+$ TRIFECTA ctx search --segment . --query "agent.md template creation"
+# No expansion: query already guided
+```
+
+#### Disable Linting
+```bash
+$ trifecta ctx search --segment . --query "config" --no-lint
+# Linter explicitly disabled via flag
+```
+
+### Test Coverage
+- Unit tests: 3 tests in `tests/unit/test_search_usecase_linter.py`
+- Integration tests: 5 tests in `tests/integration/test_ctx_search_linter.py`
+- All tests passing (8/8)
+
+### Telemetry
+Metrics tracked:
+- `ctx_search_linter_expansion_count`: Number of queries expanded
+- `ctx_search_linter_class_{vague,semi,guided,disabled}_count`: Classification counts
+- Event `ctx.search` includes linter metadata (query_class, linter_expanded, added_strong/weak_count, reasons)

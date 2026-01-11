@@ -1,0 +1,2 @@
+### Location
+`scoop/trifecta.json`

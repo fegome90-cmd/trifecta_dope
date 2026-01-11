@@ -7,7 +7,8 @@ from src.infrastructure.telemetry import Telemetry
 from src.domain.result import Ok, Err
 from src.application.symbol_selector import SymbolQuery
 from src.application.ast_parser import SkeletonMapBuilder, ParseResult
-from src.domain.ast_cache import AstCache, InMemoryLRUCache, SQLiteCache
+from src.domain.ast_cache import SQLiteCache
+from src.infrastructure.factories import get_ast_cache
 
 ast_app = typer.Typer(help="AST & Parsing Commands")
 
@@ -22,22 +23,10 @@ def _get_telemetry(level: str = "lite") -> Optional[Telemetry]:
     return Telemetry(Path.cwd(), level=level)
 
 
-def _get_cache(
-    persist: bool = False,
-    segment_id: str = ".",
-    max_entries: int = 10000,
-    max_bytes: int = 100 * 1024 * 1024,
-) -> AstCache:
-    """Get cache instance based on persistence setting."""
-    if persist:
-        # Use SQLite cache for persistence
-        cache_dir = Path.cwd() / ".trifecta" / "cache"
-        cache_dir.mkdir(parents=True, exist_ok=True)
-        db_path = cache_dir / f"ast_cache_{segment_id.replace('/', '_')}.db"
-        return SQLiteCache(db_path=db_path, max_entries=max_entries, max_bytes=max_bytes)
-    else:
-        # Use in-memory cache (ephemeral)
-        return InMemoryLRUCache(max_entries=max_entries, max_bytes=max_bytes)
+CACHE_DIR_NAME = ".trifecta"
+
+
+# removed local _get_cache in favor of factory
 
 
 @ast_app.command("symbols")
@@ -45,12 +34,14 @@ def symbols(
     uri: str = typer.Argument(..., help="sym://python/mod|type/..."),
     segment: str = typer.Option(".", "--segment"),
     telemetry_level: str = typer.Option("off", "--telemetry"),
-    persist_cache: bool = typer.Option(False, "--persist-cache", help="Use persistent SQLite cache"),
+    persist_cache: bool = typer.Option(
+        False, "--persist-cache", help="Use persistent SQLite cache"
+    ),
 ):
     """Return symbols from Python modules using AST parsing (M1)."""
     root = Path(segment).resolve()
     telemetry = _get_telemetry(telemetry_level)
-    cache = _get_cache(persist=persist_cache, segment_id=str(root))
+    cache = get_ast_cache(persist=persist_cache, segment_id=str(root), telemetry=telemetry)
 
     try:
         # 1. Parse URI
@@ -61,7 +52,13 @@ def symbols(
             case Ok(q):
                 query = q
             case _:
-                _json_output({"status": "error", "error_code": "PARSE_ERROR", "message": "Failed to parse URI"})
+                _json_output(
+                    {
+                        "status": "error",
+                        "error_code": "PARSE_ERROR",
+                        "message": "Failed to parse URI",
+                    }
+                )
                 raise typer.Exit(1)
 
         # 2. Resolve file_path (lean, fail-closed)
@@ -94,7 +91,9 @@ def symbols(
             "status": "ok",
             "segment_root": str(root),
             "file_rel": str(file_path.relative_to(root)),
-            "symbols": [{"kind": s.kind, "name": s.name, "line": s.start_line} for s in result.symbols],
+            "symbols": [
+                {"kind": s.kind, "name": s.name, "line": s.start_line} for s in result.symbols
+            ],
             "cache_status": result.status,
             "cache_key": result.cache_key,
         }
@@ -150,22 +149,26 @@ def clear_cache(
 ):
     """Clear AST cache for the segment."""
     root = Path(segment).resolve()
-    cache_dir = Path.cwd() / ".trifecta" / "cache"
+    cache_dir = Path.cwd() / CACHE_DIR_NAME / "cache"
     cache_path = cache_dir / f"ast_cache_{str(root).replace('/', '_')}.db"
-    
+
     if cache_path.exists():
         cache_path.unlink()
-        _json_output({
-            "status": "ok",
-            "message": f"Cache cleared for segment: {segment}",
-            "cache_path": str(cache_path),
-        })
+        _json_output(
+            {
+                "status": "ok",
+                "message": f"Cache cleared for segment: {segment}",
+                "cache_path": str(cache_path),
+            }
+        )
     else:
-        _json_output({
-            "status": "ok",
-            "message": f"No cache found for segment: {segment}",
-            "cache_path": str(cache_path),
-        })
+        _json_output(
+            {
+                "status": "ok",
+                "message": f"No cache found for segment: {segment}",
+                "cache_path": str(cache_path),
+            }
+        )
 
 
 @ast_app.command("cache-stats")
@@ -174,28 +177,34 @@ def cache_stats(
 ):
     """Show AST cache statistics for the segment."""
     root = Path(segment).resolve()
-    cache_dir = Path.cwd() / ".trifecta" / "cache"
+    cache_dir = Path.cwd() / CACHE_DIR_NAME / "cache"
     db_path = cache_dir / f"ast_cache_{str(root).replace('/', '_')}.db"
-    
+
     if db_path.exists():
         cache = SQLiteCache(db_path=db_path)
         stats = cache.stats()
-        _json_output({
-            "status": "ok",
-            "segment": segment,
-            "cache_path": str(db_path),
-            "stats": {
-                "entries": stats.entries,
-                "bytes": stats.current_bytes,
-                "hits": stats.hits,
-                "misses": stats.misses,
-                "hit_rate": f"{stats.hit_rate:.2%}" if stats.hits + stats.misses > 0 else "0.00%",
-            },
-        })
+        _json_output(
+            {
+                "status": "ok",
+                "segment": segment,
+                "cache_path": str(db_path),
+                "stats": {
+                    "entries": stats.entries,
+                    "bytes": stats.current_bytes,
+                    "hits": stats.hits,
+                    "misses": stats.misses,
+                    "hit_rate": f"{stats.hit_rate:.2%}"
+                    if stats.hits + stats.misses > 0
+                    else "0.00%",
+                },
+            }
+        )
     else:
-        _json_output({
-            "status": "ok",
-            "segment": segment,
-            "cache_path": str(db_path),
-            "message": "No cache found (cache not initialized)",
-        })
+        _json_output(
+            {
+                "status": "ok",
+                "segment": segment,
+                "cache_path": str(db_path),
+                "message": "No cache found (cache not initialized)",
+            }
+        )

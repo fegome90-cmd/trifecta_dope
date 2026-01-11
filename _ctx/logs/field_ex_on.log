@@ -1,0 +1,1740 @@
+=== FE-001 ===
+Query: How does ValidateContextPackUseCase verify file hashes?
+Mode: on
+Hits: 10
+STDOUT:
+Search Results (10 hits):
+
+1. [repo:docs/testing/minirag_index_files.md:6939eb71df] minirag_index_files.md
+   Score: 1.50 | Tokens: ~82
+   Preview: # Mini-RAG Index Files (Local)
+
+Use this reference when you need to locate index artifacts on disk.
+
+## Files
+
+- `.mini-...
+
+2. [repo:src/infrastructure/file_system_utils.py:4f9332a66c] file_system_utils.py
+   Score: 1.50 | Tokens: ~321
+   Preview: import fcntl
+from pathlib import Path
+from contextlib import contextmanager
+from typing import Generator
+
+
+class AtomicW...
+
+3. [repo:src/infrastructure/file_system.py:74bd3f49ef] file_system.py
+   Score: 1.50 | Tokens: ~548
+   Preview: """File System Adapter for Trifecta operations."""
+
+from pathlib import Path
+
+from typing import TYPE_CHECKING
+
+from src...
+
+4. [prime:5d535ae4c0] prime_trifecta_dope.md
+   Score: 0.50 | Tokens: ~645
+   Preview: ---
+segment: trifecta_dope
+profile: load_only
+---
+
+# Prime Trifecta_Dope - Lista de Lectura
+
+> **REPO_ROOT**: `/Users/fe...
+
+5. [agent:ef1f0500d6] agent_trifecta_dope.md
+   Score: 0.50 | Tokens: ~1992
+   Preview: ---
+segment: .
+scope: Verification
+repo_root: /workspaces/trifecta_dope
+last_verified: 2026-01-05
+default_profile: impl_...
+
+6. [session:d91bbe6c48] session_trifecta_dope.md
+   Score: 0.50 | Tokens: ~9796
+   Preview: # session.md - Trifecta Context Runbook
+
+segment: trifecta-dope
+
+## Purpose
+This file is a **runbook** for using Trifect...
+
+7. [repo:docs/telemetry_concurrency.md:36eb376664] telemetry_concurrency.md
+   Score: 0.50 | Tokens: ~1666
+   Preview: # Telemetry Concurrency Model
+
+**Version:** 1.0 (PR#1)  
+**Concurrency Strategy:** Lossy, non-blocking POSIX file lockin...
+
+8. [repo:docs/plans/telemetry_before_after.md:2d712eaaf5] telemetry_before_after.md
+   Score: 0.50 | Tokens: ~852
+   Preview: # Telemetry Evaluation Report: ANTES / DESPUÉS
+
+**Date**: 2025-12-31
+**Objective**: Evaluate ctx.plan effectiveness in r...
+
+9. [repo:docs/security/DEPLOYMENT_CHECKLIST.md:db85a9576f] DEPLOYMENT_CHECKLIST.md
+   Score: 0.50 | Tokens: ~1098
+   Preview: # Security Deployment Checklist
+
+This checklist ensures all security improvements are properly deployed and functional.
+...
+
+10. [repo:docs/testing/minirag_config_reference.md:357524266a] minirag_config_reference.md
+   Score: 0.50 | Tokens: ~166
+   Preview: # Mini-RAG Config Reference (Local)
+
+This file exists to make Mini-RAG configuration discoverable via search.
+It mirrors...
+
+
+STDERR:
+warning: `VIRTUAL_ENV=trifecta_dope/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead
+
+
+
+=== FE-002 ===
+Query: What is the LSP daemon lifecycle and shutdown sequence?
+Mode: on
+Hits: 10
+STDOUT:
+Search Results (10 hits):
+
+1. [repo:docs/cli/AST_LSP_DAEMON_USAGE_REPORT.md:e6dd7f19b3] AST_LSP_DAEMON_USAGE_REPORT.md
+   Score: 3.50 | Tokens: ~6694
+   Preview: # Informe: Uso de AST, LSP y Daemon en el Análisis de CLI
+
+**Fecha**: 2026-01-05  
+**Tarea**: Análisis sistemático de cl...
+
+2. [repo:docs/auditoria/LSP_DAEMON_DEEP_INVESTIGATION.md:1e4ddde07c] LSP_DAEMON_DEEP_INVESTIGATION.md
+   Score: 3.00 | Tokens: ~9323
+   Preview: # Investigación Profunda: Arquitectura LSP/Daemon Trifecta
+**Superpowers Skill**: `#brainstorm`  
+**Fecha**: 2025-06-01 ...
+
+3. [repo:docs/contracts/LSP_RELAXED_READY.md:c3d336bae7] LSP_RELAXED_READY.md
+   Score: 2.50 | Tokens: ~328
+   Preview: # LSP Relaxed READY Contract
+
+## Definition
+The **Relaxed READY** contract specifies that the `LSPClient` transitions to...
+
+4. [repo:src/infrastructure/lsp_daemon.py:989cc77c2d] lsp_daemon.py
+   Score: 2.50 | Tokens: ~2327
+   Preview: import os
+import sys
+import socket
+import time
+import json
+import signal
+import fcntl
+import subprocess
+from pathlib imp...
+
+5. [repo:docs/lsp/problema-02-race-condition-shutdown.md:b9d51efe33] problema-02-race-condition-shutdown.md
+   Score: 2.00 | Tokens: ~5414
+   Preview: # Problema 2: Race Condition en Shutdown del LSP Client
+
+**Prioridad**: 🟡 MEDIA  
+**Estado**: Investigación Completa  
+*...
+
+6. [repo:docs/lsp/problema-03-daemon-ttl-no-renovable.md:8a4d799fd7] problema-03-daemon-ttl-no-renovable.md
+   Score: 2.00 | Tokens: ~3608
+   Preview: # Problema 3: Daemon TTL No Renovable
+
+**Prioridad**: 🟡 MEDIA  
+**Estado**: Investigación Completa  
+**Fecha**: 2026-01-...
+
+7. [repo:docs/lsp/daemon-architecture-analysis.md:6654b63b27] daemon-architecture-analysis.md
+   Score: 2.00 | Tokens: ~6956
+   Preview: # Análisis de Arquitectura del Daemon LSP
+
+**Fecha**: 2026-01-05  
+**Versión**: 1.0  
+**Estado**: Análisis Completo
+
+---...
+
+8. [repo:docs/plans/ast_lsp.md:b7e1401016] ast_lsp.md
+   Score: 1.50 | Tokens: ~1845
+   Preview: Perfecto. Tomo tu informe como “input” y lo convierto en **plan de sprint lean**, con tickets, DoD, tests y métricas. El...
+
+9. [repo:docs/plans/2025-12-31-lsp-ast-positive-eval-plan.md:e6d3797b5a] 2025-12-31-lsp-ast-positive-eval-plan.md
+   Score: 1.50 | Tokens: ~917
+   Preview: # LSP/AST Positive Eval Pack Implementation Plan
+
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans ...
+
+10. [repo:docs/technical_reports/2026-01-01_ast_lsp_audit_architecture.md:826a793460] 2026-01-01_ast_lsp_audit_architecture.md
+   Score: 1.50 | Tokens: ~2064
+   Preview: # Audit & Architecture: AST/LSP Dual-Engine Strategy v2
+
+**Date**: 2026-01-01
+**Role**: Auditor/Architect
+**Scope**: Log...
+
+
+STDERR:
+warning: `VIRTUAL_ENV=trifecta_dope/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead
+
+
+
+=== FE-003 ===
+Query: How is BuildContextPackUseCase normalizing newlines?
+Mode: on
+Hits: 2
+STDOUT:
+Search Results (2 hits):
+
+1. [repo:docs/reports/wo0009_fix_sync_indexes_repo_content.md:817d82e313] wo0009_fix_sync_indexes_repo_content.md
+   Score: 0.50 | Tokens: ~529
+   Preview: # WO-0009 Fix: ctx sync Indexes Repo Content
+
+**Status**: DONE ✅  
+**Verified**: 2026-01-06T01:00:00-03:00  
+**SHA**: (w...
+
+2. [repo:GEMINI.md:e56c9fc442] GEMINI.md
+   Score: 0.50 | Tokens: ~1413
+   Preview: - history:
+    - user_prompt_summary: "Refine AGENTS.md Gate Hardening and Prepare Legacy Burn-Down Sprint"
+      agent_...
+
+
+STDERR:
+warning: `VIRTUAL_ENV=trifecta_dope/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead
+
+
+
+=== FE-004 ===
+Query: What schema validation does ctx_backlog_validate.py perform?
+Mode: on
+Hits: 10
+STDOUT:
+Search Results (10 hits):
+
+1. [repo:docs/telemetry_event_schema.md:fe3a5af92b] telemetry_event_schema.md
+   Score: 1.50 | Tokens: ~1662
+   Preview: # Telemetry Event Schema (AST+LSP)
+
+**Version:** 1.0 (PR#1 - Infrastructure)  
+**Status:** Specification (implementation...
+
+2. [repo:docs/v2_roadmap/2025-12-31-north-star-validation.md:a551bb5f92] 2025-12-31-north-star-validation.md
+   Score: 1.50 | Tokens: ~2993
+   Preview: # North Star Strict Validation - Implementation Plan (FP Edition)
+
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers...
+
+3. [repo:docs/reports/pack_validation_newline_normalization.md:ef08ed34f2] pack_validation_newline_normalization.md
+   Score: 1.50 | Tokens: ~1046
+   Preview: # Pack Validation Newline Normalization - Technical Report
+
+**Date**: 2026-01-06  
+**Issue**: Hash mismatch loop in cont...
+
+4. [repo:docs/ast_cache_validation_instructions.md:7a78062ff5] ast_cache_validation_instructions.md
+   Score: 1.00 | Tokens: ~1756
+   Preview: # Instrucciones para Validar el Sistema de Cache de AST
+
+## Objetivo
+
+Validar que el sistema de cache de AST v1 funciona...
+
+5. [repo:docs/reports/ast_cache_validation_2026-01-05.md:9490aa9d75] ast_cache_validation_2026-01-05.md
+   Score: 1.00 | Tokens: ~3288
+   Preview: # Reporte de Validación del Sistema de Cache de AST
+
+## Fecha
+2026-01-05 06:17 UTC
+
+## Entorno
+- **Workspace**: `/worksp...
+
+6. [repo:docs/RELEASE_NOTES_v1.md:13c8652ece] RELEASE_NOTES_v1.md
+   Score: 0.50 | Tokens: ~424
+   Preview: # Trifecta Context Loading v1 — Release Notes
+
+**Status**: Verified & Ready for Integration
+**Date**: 2025-12-29
+
+## 🚀 W...
+
+7. [repo:docs/v2_roadmap/2025-12-31-north-star-walkthrough.md:76bb723ada] 2025-12-31-north-star-walkthrough.md
+   Score: 0.50 | Tokens: ~1197
+   Preview: # North Star Strict Validation - Implementation Walkthrough
+
+**Date**: 2025-12-31
+**Engineer**: Trifecta CLI Team
+**Obje...
+
+8. [repo:docs/plans/2025-12-29-context-pack-ingestion.md:e040d50f67] 2025-12-29-context-pack-ingestion.md
+   Score: 0.50 | Tokens: ~2341
+   Preview: # Trifecta Context Pack - Implementation Plan
+
+**Date**: 2025-12-29
+**Status**: Design Complete
+**Schema Version**: 1
+
+>...
+
+9. [repo:docs/backlog/LESSONS.md:fa78b1dc77] LESSONS.md
+   Score: 0.50 | Tokens: ~55
+   Preview: # Lessons Learned
+
+- Keep WO scopes small to reduce verification cost and rollback risk.
+- Fail-closed validation and re...
+
+10. [repo:docs/technical_reports/2026-01-01_TELEMETRY_COMPLETION_REPORT.md:98cf2365f3] 2026-01-01_TELEMETRY_COMPLETION_REPORT.md
+   Score: 0.50 | Tokens: ~2634
+   Preview: # TELEMETRY AUDIT COMPLETION REPORT
+
+**Date:** 2026-01-01 02:50 UTC  
+**Duration:** Full audit + comprehensive documenta...
+
+
+STDERR:
+warning: `VIRTUAL_ENV=trifecta_dope/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead
+
+
+
+=== FE-005 ===
+Query: How does the query linter expand aliases and anchors?
+Mode: on
+Hits: 10
+STDOUT:
+Search Results (10 hits):
+
+1. [repo:src/application/query_expander.py:d751995453] query_expander.py
+   Score: 5.00 | Tokens: ~804
+   Preview: """Query expansion with alias support and weighting."""
+
+from typing import Any, Dict, List, Tuple, Set
+
+
+class QueryExp...
+
+2. [repo:docs/query-linter-integration.md:0498e83259] query-linter-integration.md
+   Score: 4.00 | Tokens: ~1075
+   Preview: # Query Linter Integration Guide
+
+## Overview
+
+The Query Linter enhances `ctx search` by applying semantic classificatio...
+
+3. [repo:docs/reports/query_linter_v1.md:e77d61757e] query_linter_v1.md
+   Score: 4.00 | Tokens: ~966
+   Preview: # Query Linter v1 (Phase 3)
+
+**Component**: `src/domain/query_linter.py`
+**Status**: Verified (PASS)
+
+## Classification ...
+
+4. [repo:docs/plans/2026-01-05-query-linter-cli-integration-corrected.md:26dd847794] 2026-01-05-query-linter-cli-integration-corrected.md
+   Score: 3.00 | Tokens: ~9199
+   Preview: # Query Linter CLI Integration Implementation Plan (CORRECTED)
+
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:ex...
+
+5. [repo:docs/testing/query_linter_integration_test_report.md:19f0fa6de6] query_linter_integration_test_report.md
+   Score: 3.00 | Tokens: ~2067
+   Preview: # Query Linter CLI Integration - Real-World Test Report
+
+**Generated:** January 5, 2026  
+**Test Environment:** trifecta...
+
+6. [repo:docs/reports/query_linter_cli_verification.md:8be3e4cb2e] query_linter_cli_verification.md
+   Score: 3.00 | Tokens: ~1854
+   Preview: # Query Linter CLI Integration - Evidence Gate Verification (HARDENED)
+
+**Date:** 2026-01-05
+**Mission:** Fix linter_rea...
+
+7. [repo:src/domain/query_linter.py:980f718dd8] query_linter.py
+   Score: 2.50 | Tokens: ~1623
+   Preview: import copy
+from typing import TypedDict
+from src.domain.anchor_extractor import extract_anchors
+
+
+class LinterChanges(T...
+
+8. [repo:src/application/query_normalizer.py:a79190287d] query_normalizer.py
+   Score: 2.00 | Tokens: ~390
+   Preview: """Query normalization and tokenization for search."""
+
+import re
+from typing import List
+
+
+class QueryNormalizer:
+    "...
+
+9. [repo:docs/auditoria/SCOPE_READING_BEHAVIOR_REPORT.md:ba5eeb9047] SCOPE_READING_BEHAVIOR_REPORT.md
+   Score: 1.50 | Tokens: ~1036
+   Preview: # SCOPE_READING_BEHAVIOR_REPORT.md
+
+## A) Mapa de lectura (CLI → Use Case → Storage)
+
+1. **`trifecta ctx search`**:
+   -...
+
+10. [repo:docs/reports/wo0008_ab_linter_reproducibility.md:fb205e2c69] wo0008_ab_linter_reproducibility.md
+   Score: 1.50 | Tokens: ~788
+   Preview: # WO-0008 A/B Linter Reproducibility — FINAL REPORT ✅
+
+**Date**: 2026-01-06T11:09:00-03:00  
+**Status**: PASS  
+**Eviden...
+
+
+STDERR:
+warning: `VIRTUAL_ENV=trifecta_dope/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead
+
+
+
+=== FE-006 ===
+Query: What telemetry events are tracked in context pack operations?
+Mode: on
+Hits: 10
+STDOUT:
+Search Results (10 hits):
+
+1. [repo:docs/plans/2025-12-29-context-pack-ingestion.md:e040d50f67] 2025-12-29-context-pack-ingestion.md
+   Score: 3.00 | Tokens: ~2341
+   Preview: # Trifecta Context Pack - Implementation Plan
+
+**Date**: 2025-12-29
+**Status**: Design Complete
+**Schema Version**: 1
+
+>...
+
+2. [repo:docs/plans/context-pack-mvp-sprint.md:5a43d11d1e] context-pack-mvp-sprint.md
+   Score: 3.00 | Tokens: ~627
+   Preview: # Context Pack MVP Sprint Plan
+
+**Date:** 2025-12-31  
+**Status:** READY FOR EXECUTION
+
+---
+
+## A) Contract Summary
+
+1. ...
+
+3. [repo:docs/implementation/context-pack-implementation.md:ee3f9736df] context-pack-implementation.md
+   Score: 3.00 | Tokens: ~6130
+   Preview: # Context Pack Implementation - Foundational Design Document
+
+**Date**: 2025-12-29 (Original Design)
+**Version**: 1.0 (F...
+
+4. [repo:docs/telemetry_event_schema.md:fe3a5af92b] telemetry_event_schema.md
+   Score: 2.00 | Tokens: ~1662
+   Preview: # Telemetry Event Schema (AST+LSP)
+
+**Version:** 1.0 (PR#1 - Infrastructure)  
+**Status:** Specification (implementation...
+
+5. [repo:docs/technical_reports/2026-01-01_TELEMETRY_INDEX.md:544cdb5738] 2026-01-01_TELEMETRY_INDEX.md
+   Score: 2.00 | Tokens: ~2710
+   Preview: # TELEMETRY INSTRUMENTATION: COMPLETE AUDIT PACKAGE
+
+**Date:** 2026-01-01  
+**Status:** ✅ **FINAL & APPROVED** — Ready f...
+
+6. [repo:docs/technical_reports/2026-01-01_TELEMETRY_COMPLETION_REPORT.md:98cf2365f3] 2026-01-01_TELEMETRY_COMPLETION_REPORT.md
+   Score: 2.00 | Tokens: ~2634
+   Preview: # TELEMETRY AUDIT COMPLETION REPORT
+
+**Date:** 2026-01-01 02:50 UTC  
+**Duration:** Full audit + comprehensive documenta...
+
+7. [repo:docs/telemetry/TELEMETRY_HEALTH_REPORT.md:ea0002bbf4] TELEMETRY_HEALTH_REPORT.md
+   Score: 2.00 | Tokens: ~780
+   Preview: # Telemetry Health Report (RC v3)
+
+**Date**: 2026-01-03 23:35
+**Auditor**: Fail-Closed Analyst
+**Scope**: 2,114 events (...
+
+8. [repo:docs/telemetry/TELEMETRY_HEALTH_REPORT_v4.md:c3f814606d] TELEMETRY_HEALTH_REPORT_v4.md
+   Score: 2.00 | Tokens: ~653
+   Preview: # Telemetry Health Report (RC v4)
+
+**Date**: 2026-01-03 23:58
+**Auditor**: Fail-Closed Analyst
+**Scope**: 2,114 events (...
+
+9. [repo:docs/reports/pack_validation_newline_normalization.md:ef08ed34f2] pack_validation_newline_normalization.md
+   Score: 2.00 | Tokens: ~1046
+   Preview: # Pack Validation Newline Normalization - Technical Report
+
+**Date**: 2026-01-06  
+**Issue**: Hash mismatch loop in cont...
+
+10. [repo:src/application/telemetry_pr2.py:4aa0202be4] telemetry_pr2.py
+   Score: 2.00 | Tokens: ~1792
+   Preview: """
+PR#2 Telemetry Integration: Emit ast.*, selector.*, file.read, lsp.* events.
+
+This module bridges AST/Selector/LSP o...
+
+
+STDERR:
+warning: `VIRTUAL_ENV=trifecta_dope/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead
+
+
+
+=== FE-007 ===
+Query: Explain the context pack build and validation workflow
+Mode: on
+Hits: 10
+STDOUT:
+Search Results (10 hits):
+
+1. [repo:docs/reports/pack_validation_newline_normalization.md:ef08ed34f2] pack_validation_newline_normalization.md
+   Score: 4.00 | Tokens: ~1046
+   Preview: # Pack Validation Newline Normalization - Technical Report
+
+**Date**: 2026-01-06  
+**Issue**: Hash mismatch loop in cont...
+
+2. [repo:docs/plans/2025-12-29-context-pack-ingestion.md:e040d50f67] 2025-12-29-context-pack-ingestion.md
+   Score: 3.00 | Tokens: ~2341
+   Preview: # Trifecta Context Pack - Implementation Plan
+
+**Date**: 2025-12-29
+**Status**: Design Complete
+**Schema Version**: 1
+
+>...
+
+3. [repo:docs/plans/context-pack-mvp-sprint.md:5a43d11d1e] context-pack-mvp-sprint.md
+   Score: 3.00 | Tokens: ~627
+   Preview: # Context Pack MVP Sprint Plan
+
+**Date:** 2025-12-31  
+**Status:** READY FOR EXECUTION
+
+---
+
+## A) Contract Summary
+
+1. ...
+
+4. [repo:docs/implementation/context-pack-implementation.md:ee3f9736df] context-pack-implementation.md
+   Score: 3.00 | Tokens: ~6130
+   Preview: # Context Pack Implementation - Foundational Design Document
+
+**Date**: 2025-12-29 (Original Design)
+**Version**: 1.0 (F...
+
+5. [repo:docs/CLI_WORKFLOW.md:0dee3847a0] CLI_WORKFLOW.md
+   Score: 2.50 | Tokens: ~1230
+   Preview: # Trifecta CLI Workflow
+
+**North Star**: Trifecta enables agents to programmatically retrieve relevant context using bui...
+
+6. [repo:docs/research/futuro/Advance context enhance 2 (1).md:cdd1776c3a] Advance context enhance 2 (1).md
+   Score: 2.50 | Tokens: ~3733
+   Preview: # Advanced Context Use: Context as Invokable Tools
+
+Large language models can now handle massive context windows—200K to...
+
+7. [repo:src/application/context_service.py:299a315568] context_service.py
+   Score: 2.00 | Tokens: ~2819
+   Preview: """Service for Programmatic Context Calling logic."""
+
+import json
+from pathlib import Path
+from typing import Literal, ...
+
+8. [repo:GEMINI.md:e56c9fc442] GEMINI.md
+   Score: 2.00 | Tokens: ~1413
+   Preview: - history:
+    - user_prompt_summary: "Refine AGENTS.md Gate Hardening and Prepare Legacy Burn-Down Sprint"
+      agent_...
+
+9. [repo:docs/ast_cache_validation_instructions.md:7a78062ff5] ast_cache_validation_instructions.md
+   Score: 1.50 | Tokens: ~1756
+   Preview: # Instrucciones para Validar el Sistema de Cache de AST
+
+## Objetivo
+
+Validar que el sistema de cache de AST v1 funciona...
+
+10. [repo:docs/v2_roadmap/2025-12-31-north-star-validation.md:a551bb5f92] 2025-12-31-north-star-validation.md
+   Score: 1.50 | Tokens: ~2993
+   Preview: # North Star Strict Validation - Implementation Plan (FP Edition)
+
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers...
+
+
+STDERR:
+warning: `VIRTUAL_ENV=trifecta_dope/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead
+
+
+
+=== FE-008 ===
+Query: What is the difference between prime, agent, and skill files?
+Mode: on
+Hits: 10
+STDOUT:
+Search Results (10 hits):
+
+1. [skill:269d20e0fa] skill.md
+   Score: 1.50 | Tokens: ~1514
+   Preview: ---
+name: trifecta_dope
+description: Use when working on Verification
+---
+## Overview
+Verification
+
+## ⚠️ ONBOARDING OBL...
+
+2. [repo:docs/plans/2026-01-05-skill-md-update.md:d4a2a7ac33] 2026-01-05-skill-md-update.md
+   Score: 1.50 | Tokens: ~2785
+   Preview: # Skill.md Update Implementation Plan
+
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implemen...
+
+3. [repo:docs/plans/context-pack-mvp-sprint.md:5a43d11d1e] context-pack-mvp-sprint.md
+   Score: 1.50 | Tokens: ~627
+   Preview: # Context Pack MVP Sprint Plan
+
+**Date:** 2025-12-31  
+**Status:** READY FOR EXECUTION
+
+---
+
+## A) Contract Summary
+
+1. ...
+
+4. [repo:docs/plans/2026-01-05-sync-and-refactor-cli.md:89a05c3df8] 2026-01-05-sync-and-refactor-cli.md
+   Score: 1.50 | Tokens: ~498
+   Preview: # Sync & Refactor Implementation Plan
+
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development...
+
+5. [repo:docs/technical_reports/2026-01-01_architecture_visual_ast_integration.md:80c6c8a5d1] 2026-01-01_architecture_visual_ast_integration.md
+   Score: 1.50 | Tokens: ~589
+   Preview: # Architecture Visualization: Trifecta v2 Dual-Engine
+
+This diagram clarifies the relationship between the existing `ctx...
+
+6. [repo:src/application/query_expander.py:d751995453] query_expander.py
+   Score: 1.50 | Tokens: ~804
+   Preview: """Query expansion with alias support and weighting."""
+
+from typing import Any, Dict, List, Tuple, Set
+
+
+class QueryExp...
+
+7. [ref:trifecta_dope/docs/bugs/create_cwd_bug.md:f44b047fdd] create_cwd_bug.md
+   Score: 1.00 | Tokens: ~395
+   Preview: # BUG: `trifecta create -s <target>` writes to CLI cwd, not target directory
+
+## Status
+**FIXED** - 2026-01-02
+
+## Descr...
+
+8. [repo:docs/CONTRACTS.md:35f85385a0] CONTRACTS.md
+   Score: 1.00 | Tokens: ~809
+   Preview: # Telemetry Environment Contracts
+
+This document defines the behavior of the Telemetry system regarding environment vari...
+
+9. [repo:docs/PD_REPORT_CONTRACT.md:0dc6d2a0c3] PD_REPORT_CONTRACT.md
+   Score: 1.00 | Tokens: ~1063
+   Preview: # PD_REPORT Contract
+
+## Overview
+
+The `--pd-report` flag on `trifecta ctx get` emits a parseable metrics line for testi...
+
+10. [repo:docs/ERROR_PROMPTS.md:bc3d75f2b8] ERROR_PROMPTS.md
+   Score: 1.00 | Tokens: ~1088
+   Preview: # Error→Prompt System
+
+## Overview
+
+The Error→Prompt system generates actionable recovery prompts when CLI commands fail...
+
+
+STDERR:
+warning: `VIRTUAL_ENV=trifecta_dope/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead
+
+
+
+=== FE-009 ===
+Query: How does the backlog system organize work orders by state?
+Mode: on
+Hits: 10
+STDOUT:
+Search Results (10 hits):
+
+1. [repo:docs/plans/2026-01-05-backlog-wo-dod-pipeline-plan.md:f96371f390] 2026-01-05-backlog-wo-dod-pipeline-plan.md
+   Score: 2.50 | Tokens: ~5808
+   Preview: # Backlog + Work Orders + DoD Pipeline Implementation Plan
+
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:execut...
+
+2. [repo:docs/backlog/README.md:b1178ab455] README.md
+   Score: 2.00 | Tokens: ~194
+   Preview: # Backlog + Work Orders Pipeline
+
+## State machine
+
+Work orders move through these states:
+
+- `pending` -> `running` -> ...
+
+3. [repo:docs/CONTRACTS.md:35f85385a0] CONTRACTS.md
+   Score: 1.50 | Tokens: ~809
+   Preview: # Telemetry Environment Contracts
+
+This document defines the behavior of the Telemetry system regarding environment vari...
+
+4. [repo:docs/CLI_WORKFLOW.md:0dee3847a0] CLI_WORKFLOW.md
+   Score: 1.50 | Tokens: ~1230
+   Preview: # Trifecta CLI Workflow
+
+**North Star**: Trifecta enables agents to programmatically retrieve relevant context using bui...
+
+5. [repo:docs/auditoria/WORKSPACE_CLEANUP_REPORT.md:7faa87db1c] WORKSPACE_CLEANUP_REPORT.md
+   Score: 1.50 | Tokens: ~1796
+   Preview: # Workspace Cleanup Report
+
+**Date**: 2026-01-05
+**Scope**: Analysis of demo_workspace, scoop, and tools directories
+**S...
+
+6. [repo:src/infrastructure/file_system.py:74bd3f49ef] file_system.py
+   Score: 1.50 | Tokens: ~548
+   Preview: """File System Adapter for Trifecta operations."""
+
+from pathlib import Path
+
+from typing import TYPE_CHECKING
+
+from src...
+
+7. [repo:docs/ERROR_PROMPTS.md:bc3d75f2b8] ERROR_PROMPTS.md
+   Score: 1.00 | Tokens: ~1088
+   Preview: # Error→Prompt System
+
+## Overview
+
+The Error→Prompt system generates actionable recovery prompts when CLI commands fail...
+
+8. [repo:docs/plans/2025-12-30_implementation_workflow.md:f12169eb06] 2025-12-30_implementation_workflow.md
+   Score: 1.00 | Tokens: ~2864
+   Preview: # v1.1 Implementation Sprint - Visual Roadmap
+
+## Current Architecture (BEFORE v1.1)
+
+```
+┌─────────────────────────────...
+
+9. [repo:docs/prompts/wo0010_field_exercises_v1.md:16c8a51de2] wo0010_field_exercises_v1.md
+   Score: 1.00 | Tokens: ~1403
+   Preview: # Agent Prompt: WO-0010 Field Exercises v1
+
+## Context
+You are executing WO-0010 to establish a quantitative benchmark f...
+
+10. [repo:docs/reports/merge_conflicts.md:ae638c42aa] merge_conflicts.md
+   Score: 1.00 | Tokens: ~332
+   Preview: # Merge Conflict Decisions
+
+## Context
+
+This report lists the dirty files in `/Users/felipe_gonzalez/Developer/agent_h/t...
+
+
+STDERR:
+warning: `VIRTUAL_ENV=trifecta_dope/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead
+
+
+
+=== FE-010 ===
+Query: What is the purpose of the AST cache and persistence?
+Mode: on
+Hits: 10
+STDOUT:
+Search Results (10 hits):
+
+1. [repo:docs/ast_cache_validation_instructions.md:7a78062ff5] ast_cache_validation_instructions.md
+   Score: 3.50 | Tokens: ~1756
+   Preview: # Instrucciones para Validar el Sistema de Cache de AST
+
+## Objetivo
+
+Validar que el sistema de cache de AST v1 funciona...
+
+2. [repo:docs/plans/2026-01-05-ast-cache-fixes-v2.md:33878fb0c0] 2026-01-05-ast-cache-fixes-v2.md
+   Score: 3.50 | Tokens: ~2923
+   Preview: # Plan: Correcciones del Sistema de Cache de AST (v2)
+
+**Fecha**: 2026-01-05  
+**Prioridad**: ALTA  
+**Estado**: Planifi...
+
+3. [repo:docs/plans/2026-01-05-ast-cache-fixes.md:599e8be762] 2026-01-05-ast-cache-fixes.md
+   Score: 3.50 | Tokens: ~8174
+   Preview: # Plan: Correcciones del Sistema de Cache de AST (v2)
+
+**Fecha**: 2026-01-05
+**Prioridad**: ALTA
+**Estado**: Planificaci...
+
+4. [repo:docs/tech_debt_ast_cache.md:6a1dae7143] tech_debt_ast_cache.md
+   Score: 3.00 | Tokens: ~674
+   Preview: # Tech Debt: AST Cache Improvements
+
+**Related PR**: Fix AST Cache --persist-cache Serialization Bug  
+**Date**: 2026-01...
+
+5. [repo:docs/PR_NOTES_ast_cache_fix.md:fb668abb82] PR_NOTES_ast_cache_fix.md
+   Score: 3.00 | Tokens: ~645
+   Preview: # PR: Fix AST Cache --persist-cache Serialization Bug
+
+## Problem
+
+`trifecta ast symbol... --persist-cache` crashed with...
+
+6. [repo:docs/technical_reports/2026-01-01_architecture_visual_ast_integration.md:80c6c8a5d1] 2026-01-01_architecture_visual_ast_integration.md
+   Score: 3.00 | Tokens: ~589
+   Preview: # Architecture Visualization: Trifecta v2 Dual-Engine
+
+This diagram clarifies the relationship between the existing `ctx...
+
+7. [repo:docs/cli/AST_CACHE_DEEP_DIVE_ANALYSIS.md:5e6ebd431b] AST_CACHE_DEEP_DIVE_ANALYSIS.md
+   Score: 3.00 | Tokens: ~1693
+   Preview: # Análisis Profundo del Sistema de Cache de AST
+
+**Fecha**: 2026-01-05  
+**Fuente**: Código fuente de src/application/as...
+
+8. [repo:docs/reports/merge_readiness_ast_cache_audit_grade.md:7870293142] merge_readiness_ast_cache_audit_grade.md
+   Score: 3.00 | Tokens: ~2216
+   Preview: # Audit-Grade Merge Readiness: AST Cache --persist-cache Fix
+
+**Date**: 2026-01-05 12:50 UTC-3  
+**Protocol**: Fail-clos...
+
+9. [repo:docs/reports/merge_readiness_ast_cache_audit_grade.patchnotes.md:2799db6ee9] merge_readiness_ast_cache_audit_grade.patchnotes.md
+   Score: 3.00 | Tokens: ~1001
+   Preview: # Patch Notes v2: Audit-Grade Merge Readiness Report
+
+**Date**: 2026-01-05 13:18 UTC-3  
+**File**: `docs/reports/merge_r...
+
+10. [repo:docs/reports/ast_cache_validation_2026-01-05.md:9490aa9d75] ast_cache_validation_2026-01-05.md
+   Score: 3.00 | Tokens: ~3288
+   Preview: # Reporte de Validación del Sistema de Cache de AST
+
+## Fecha
+2026-01-05 06:17 UTC
+
+## Entorno
+- **Workspace**: `/worksp...
+
+
+STDERR:
+warning: `VIRTUAL_ENV=trifecta_dope/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead
+
+
+
+=== FE-011 ===
+Query: How do Definition of Done files relate to work orders?
+Mode: on
+Hits: 10
+STDOUT:
+Search Results (10 hits):
+
+1. [repo:docs/CLI_WORKFLOW.md:0dee3847a0] CLI_WORKFLOW.md
+   Score: 1.50 | Tokens: ~1230
+   Preview: # Trifecta CLI Workflow
+
+**North Star**: Trifecta enables agents to programmatically retrieve relevant context using bui...
+
+2. [repo:docs/testing/minirag_index_files.md:6939eb71df] minirag_index_files.md
+   Score: 1.50 | Tokens: ~82
+   Preview: # Mini-RAG Index Files (Local)
+
+Use this reference when you need to locate index artifacts on disk.
+
+## Files
+
+- `.mini-...
+
+3. [repo:docs/auditoria/WORKSPACE_CLEANUP_REPORT.md:7faa87db1c] WORKSPACE_CLEANUP_REPORT.md
+   Score: 1.50 | Tokens: ~1796
+   Preview: # Workspace Cleanup Report
+
+**Date**: 2026-01-05
+**Scope**: Analysis of demo_workspace, scoop, and tools directories
+**S...
+
+4. [repo:docs/plans/2025-12-30_implementation_workflow.md:f12169eb06] 2025-12-30_implementation_workflow.md
+   Score: 1.00 | Tokens: ~2864
+   Preview: # v1.1 Implementation Sprint - Visual Roadmap
+
+## Current Architecture (BEFORE v1.1)
+
+```
+┌─────────────────────────────...
+
+5. [repo:docs/backlog/README.md:b1178ab455] README.md
+   Score: 1.00 | Tokens: ~194
+   Preview: # Backlog + Work Orders Pipeline
+
+## State machine
+
+Work orders move through these states:
+
+- `pending` -> `running` -> ...
+
+6. [repo:docs/reports/merge_conflicts.md:ae638c42aa] merge_conflicts.md
+   Score: 1.00 | Tokens: ~332
+   Preview: # Merge Conflict Decisions
+
+## Context
+
+This report lists the dirty files in `/Users/felipe_gonzalez/Developer/agent_h/t...
+
+7. [skill:269d20e0fa] skill.md
+   Score: 0.50 | Tokens: ~1514
+   Preview: ---
+name: trifecta_dope
+description: Use when working on Verification
+---
+## Overview
+Verification
+
+## ⚠️ ONBOARDING OBL...
+
+8. [agent:ef1f0500d6] agent_trifecta_dope.md
+   Score: 0.50 | Tokens: ~1992
+   Preview: ---
+segment: .
+scope: Verification
+repo_root: /workspaces/trifecta_dope
+last_verified: 2026-01-05
+default_profile: impl_...
+
+9. [ref:trifecta_dope/.github/copilot-instructions.md:d3ec7feecc] copilot-instructions.md
+   Score: 0.50 | Tokens: ~643
+   Preview: # GitHub Copilot Instructions - Superpowers Skills
+
+<EXTREMELY_IMPORTANT> You have superpowers.
+
+## Qué son Superpowers
+...
+
+10. [repo:docs/CONTRACTS.md:35f85385a0] CONTRACTS.md
+   Score: 0.50 | Tokens: ~809
+   Preview: # Telemetry Environment Contracts
+
+This document defines the behavior of the Telemetry system regarding environment vari...
+
+
+STDERR:
+warning: `VIRTUAL_ENV=trifecta_dope/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead
+
+
+
+=== FE-012 ===
+Query: What are the fail-closed principles in the testing strategy?
+Mode: on
+Hits: 10
+STDOUT:
+Search Results (10 hits):
+
+1. [repo:docs/PD_REPORT_CONTRACT.md:0dc6d2a0c3] PD_REPORT_CONTRACT.md
+   Score: 1.50 | Tokens: ~1063
+   Preview: # PD_REPORT Contract
+
+## Overview
+
+The `--pd-report` flag on `trifecta ctx get` emits a parseable metrics line for testi...
+
+2. [repo:docs/backlog/LESSONS.md:fa78b1dc77] LESSONS.md
+   Score: 1.50 | Tokens: ~55
+   Preview: # Lessons Learned
+
+- Keep WO scopes small to reduce verification cost and rollback risk.
+- Fail-closed validation and re...
+
+3. [repo:docs/prompts/wo0010_field_exercises_v1.md:16c8a51de2] wo0010_field_exercises_v1.md
+   Score: 1.50 | Tokens: ~1403
+   Preview: # Agent Prompt: WO-0010 Field Exercises v1
+
+## Context
+You are executing WO-0010 to establish a quantitative benchmark f...
+
+4. [ref:trifecta_dope/docs/bugs/create_cwd_bug.md:f44b047fdd] create_cwd_bug.md
+   Score: 1.00 | Tokens: ~395
+   Preview: # BUG: `trifecta create -s <target>` writes to CLI cwd, not target directory
+
+## Status
+**FIXED** - 2026-01-02
+
+## Descr...
+
+5. [repo:docs/CONTRACTS.md:35f85385a0] CONTRACTS.md
+   Score: 1.00 | Tokens: ~809
+   Preview: # Telemetry Environment Contracts
+
+This document defines the behavior of the Telemetry system regarding environment vari...
+
+6. [repo:docs/ERROR_PROMPTS.md:bc3d75f2b8] ERROR_PROMPTS.md
+   Score: 1.00 | Tokens: ~1088
+   Preview: # Error→Prompt System
+
+## Overview
+
+The Error→Prompt system generates actionable recovery prompts when CLI commands fail...
+
+7. [repo:docs/query-linter-integration.md:0498e83259] query-linter-integration.md
+   Score: 1.00 | Tokens: ~1075
+   Preview: # Query Linter Integration Guide
+
+## Overview
+
+The Query Linter enhances `ctx search` by applying semantic classificatio...
+
+8. [repo:docs/plans/t9_plan_eval_report.md:53b56c8a26] t9_plan_eval_report.md
+   Score: 1.00 | Tokens: ~1789
+   Preview: # T9.2 Evaluation Report: ctx.plan 3-Level Matching
+
+**Date**: 2025-12-31
+**Task**: Reduce plan_miss < 20% without conve...
+
+9. [repo:docs/plans/2026-01-03-ast-symbol-resolver-fix.md:a151d5efb4] 2026-01-03-ast-symbol-resolver-fix.md
+   Score: 1.00 | Tokens: ~1330
+   Preview: # AST/LSP Symbol Resolver Fix Implementation Plan
+
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans...
+
+10. [repo:docs/plans/2025-12-30-fp-installer-unification.md:86555bcf64] 2025-12-30-fp-installer-unification.md
+   Score: 1.00 | Tokens: ~1240
+   Preview: # FP Installer Unification Implementation Plan
+
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to...
+
+
+STDERR:
+warning: `VIRTUAL_ENV=trifecta_dope/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead
+
+
+
+=== FE-013 ===
+Query: testing
+Mode: on
+Hits: 6
+STDOUT:
+Search Results (6 hits):
+
+1. [repo:docs/evidence/2026-01-02_trifecta_docs_optimization.md:2c63953610] 2026-01-02_trifecta_docs_optimization.md
+   Score: 1.00 | Tokens: ~2747
+   Preview: # Informe de Optimización: Trifecta Docs (skill.md + agent.md + prime.md)
+
+## Resumen Ejecutivo
+
+**Objetivo**: Eliminar ...
+
+2. [repo:docs/PD_REPORT_CONTRACT.md:0dc6d2a0c3] PD_REPORT_CONTRACT.md
+   Score: 0.50 | Tokens: ~1063
+   Preview: # PD_REPORT Contract
+
+## Overview
+
+The `--pd-report` flag on `trifecta ctx get` emits a parseable metrics line for testi...
+
+3. [repo:docs/plans/t9_plan_eval_tasks_v2.md:0bbe60e5db] t9_plan_eval_tasks_v2.md
+   Score: 0.50 | Tokens: ~1387
+   Preview: # T9.3 Plan Evaluation Dataset v2 (Holdout + L1)
+
+**Purpose**: Generalization testing for ctx.plan (anti-overfitting)
+**...
+
+4. [repo:docs/plans/t9_plan_eval_tasks_v2_nl.md:346334f09b] t9_plan_eval_tasks_v2_nl.md
+   Score: 0.50 | Tokens: ~1533
+   Preview: # T9.3.2 Plan Evaluation Dataset v2 - NL (Natural Language Only)
+
+**Purpose**: Natural language generalization testing f...
+
+5. [repo:docs/reports/fixtures/merge_readiness_BAD.md:75a177eb5a] merge_readiness_BAD.md
+   Score: 0.50 | Tokens: ~2283
+   Preview: # ⚠️ FIXTURE — INTENTIONAL FAILURE (DO NOT USE AS EVIDENCE)
+# Purpose: Prove tripwire rejects globs outside find command...
+
+6. [repo:src/cli/error_cards.py:3edc60e345] error_cards.py
+   Score: 0.50 | Tokens: ~205
+   Preview: """
+Error Card utilities for structured CLI error output.
+
+Provides fail-closed error messages with stable markers for t...
+
+
+STDERR:
+warning: `VIRTUAL_ENV=trifecta_dope/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead
+
+
+
+=== FE-014 ===
+Query: validation errors
+Mode: on
+Hits: 10
+STDOUT:
+Search Results (10 hits):
+
+1. [repo:docs/v2_roadmap/2025-12-31-north-star-validation.md:a551bb5f92] 2025-12-31-north-star-validation.md
+   Score: 1.50 | Tokens: ~2993
+   Preview: # North Star Strict Validation - Implementation Plan (FP Edition)
+
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers...
+
+2. [repo:docs/reports/pack_validation_newline_normalization.md:ef08ed34f2] pack_validation_newline_normalization.md
+   Score: 1.50 | Tokens: ~1046
+   Preview: # Pack Validation Newline Normalization - Technical Report
+
+**Date**: 2026-01-06  
+**Issue**: Hash mismatch loop in cont...
+
+3. [repo:docs/ast_cache_validation_instructions.md:7a78062ff5] ast_cache_validation_instructions.md
+   Score: 1.00 | Tokens: ~1756
+   Preview: # Instrucciones para Validar el Sistema de Cache de AST
+
+## Objetivo
+
+Validar que el sistema de cache de AST v1 funciona...
+
+4. [repo:docs/evidence/2026-01-02_trifecta_docs_optimization.md:2c63953610] 2026-01-02_trifecta_docs_optimization.md
+   Score: 1.00 | Tokens: ~2747
+   Preview: # Informe de Optimización: Trifecta Docs (skill.md + agent.md + prime.md)
+
+## Resumen Ejecutivo
+
+**Objetivo**: Eliminar ...
+
+5. [repo:docs/reports/ast_cache_validation_2026-01-05.md:9490aa9d75] ast_cache_validation_2026-01-05.md
+   Score: 1.00 | Tokens: ~3288
+   Preview: # Reporte de Validación del Sistema de Cache de AST
+
+## Fecha
+2026-01-05 06:17 UTC
+
+## Entorno
+- **Workspace**: `/worksp...
+
+6. [repo:docs/v2_roadmap/2025-12-31-north-star-walkthrough.md:76bb723ada] 2025-12-31-north-star-walkthrough.md
+   Score: 0.50 | Tokens: ~1197
+   Preview: # North Star Strict Validation - Implementation Walkthrough
+
+**Date**: 2025-12-31
+**Engineer**: Trifecta CLI Team
+**Obje...
+
+7. [repo:docs/backlog/LESSONS.md:fa78b1dc77] LESSONS.md
+   Score: 0.50 | Tokens: ~55
+   Preview: # Lessons Learned
+
+- Keep WO scopes small to reduce verification cost and rollback risk.
+- Fail-closed validation and re...
+
+8. [repo:docs/auditoria/TRIAGE_REPORT.md:210d31e050] TRIAGE_REPORT.md
+   Score: 0.50 | Tokens: ~970
+   Preview: # Triage Report — Ola 2 (54 failures + 10 errors)
+
+**Fecha**: 2026-01-02  
+**Baseline**: 287 passed, 54 failed, 10 error...
+
+9. [repo:docs/reports/repro_clean_boot_v1.md:e190fc1fca] repro_clean_boot_v1.md
+   Score: 0.50 | Tokens: ~901
+   Preview: # Clean Boot Reproducibility v1 — WO-0007
+
+**Created**: 2026-01-05T22:59:00-03:00  
+**SHA**: (verified_at_sha will be ad...
+
+10. [repo:src/infrastructure/validators.py:15fae08222] validators.py
+   Score: 0.50 | Tokens: ~1459
+   Preview: """
+Segment Validation Logic (Pure Core)
+
+This module contains validation logic for Trifecta segments.
+Follows Clean Arc...
+
+
+STDERR:
+warning: `VIRTUAL_ENV=trifecta_dope/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead
+
+
+
+=== FE-015 ===
+Query: how to create a new segment
+Mode: on
+Hits: 10
+STDOUT:
+Search Results (10 hits):
+
+1. [ref:trifecta_dope/docs/bugs/create_cwd_bug.md:f44b047fdd] create_cwd_bug.md
+   Score: 1.50 | Tokens: ~395
+   Preview: # BUG: `trifecta create -s <target>` writes to CLI cwd, not target directory
+
+## Status
+**FIXED** - 2026-01-02
+
+## Descr...
+
+2. [repo:docs/bugs/create_cwd_bug.md:c3f0529e5f] create_cwd_bug.md
+   Score: 1.50 | Tokens: ~395
+   Preview: # BUG: `trifecta create -s <target>` writes to CLI cwd, not target directory
+
+## Status
+**FIXED** - 2026-01-02
+
+## Descr...
+
+3. [repo:docs/reports/pack_validation_newline_normalization.md:ef08ed34f2] pack_validation_newline_normalization.md
+   Score: 1.50 | Tokens: ~1046
+   Preview: # Pack Validation Newline Normalization - Technical Report
+
+**Date**: 2026-01-06  
+**Issue**: Hash mismatch loop in cont...
+
+4. [repo:src/infrastructure/segment_utils.py:13e7dc1ef3] segment_utils.py
+   Score: 1.50 | Tokens: ~253
+   Preview: import hashlib
+from pathlib import Path
+from typing import Optional
+
+
+def resolve_segment_root(start_path: Optional[Path...
+
+5. [prime:5d535ae4c0] prime_trifecta_dope.md
+   Score: 0.50 | Tokens: ~645
+   Preview: ---
+segment: trifecta_dope
+profile: load_only
+---
+
+# Prime Trifecta_Dope - Lista de Lectura
+
+> **REPO_ROOT**: `/Users/fe...
+
+6. [agent:ef1f0500d6] agent_trifecta_dope.md
+   Score: 0.50 | Tokens: ~1992
+   Preview: ---
+segment: .
+scope: Verification
+repo_root: /workspaces/trifecta_dope
+last_verified: 2026-01-05
+default_profile: impl_...
+
+7. [session:d91bbe6c48] session_trifecta_dope.md
+   Score: 0.50 | Tokens: ~9796
+   Preview: # session.md - Trifecta Context Runbook
+
+segment: trifecta-dope
+
+## Purpose
+This file is a **runbook** for using Trifect...
+
+8. [ref:trifecta_dope/README.md:c2d9ad0077] README.md
+   Score: 0.50 | Tokens: ~3347
+   Preview: # Trifecta Generator
+
+> **North Star**: Un agente entienda cualquier segmento del repo en <60 segundos leyendo solo 3 ar...
+
+9. [repo:docs/CLI_WORKFLOW.md:0dee3847a0] CLI_WORKFLOW.md
+   Score: 0.50 | Tokens: ~1230
+   Preview: # Trifecta CLI Workflow
+
+**North Star**: Trifecta enables agents to programmatically retrieve relevant context using bui...
+
+10. [repo:docs/research/braindope.md:fe0e500b2f] braindope.md
+   Score: 0.50 | Tokens: ~2406
+   Preview: ---
+segment: trifecta-generator
+mode: ideation
+last_updated: 2025-12-28
+---
+
+# 0) North Star (una frase)
+**Queremos que:...
+
+
+STDERR:
+warning: `VIRTUAL_ENV=trifecta_dope/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead
+
+
+
+=== FE-016 ===
+Query: linter configuration
+Mode: on
+Hits: 10
+STDOUT:
+Search Results (10 hits):
+
+1. [repo:docs/query-linter-integration.md:0498e83259] query-linter-integration.md
+   Score: 1.50 | Tokens: ~1075
+   Preview: # Query Linter Integration Guide
+
+## Overview
+
+The Query Linter enhances `ctx search` by applying semantic classificatio...
+
+2. [repo:docs/plans/2026-01-05-query-linter-cli-integration-corrected.md:26dd847794] 2026-01-05-query-linter-cli-integration-corrected.md
+   Score: 1.50 | Tokens: ~9199
+   Preview: # Query Linter CLI Integration Implementation Plan (CORRECTED)
+
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:ex...
+
+3. [repo:docs/testing/query_linter_integration_test_report.md:19f0fa6de6] query_linter_integration_test_report.md
+   Score: 1.50 | Tokens: ~2067
+   Preview: # Query Linter CLI Integration - Real-World Test Report
+
+**Generated:** January 5, 2026  
+**Test Environment:** trifecta...
+
+4. [repo:docs/reports/query_linter_v1.md:e77d61757e] query_linter_v1.md
+   Score: 1.50 | Tokens: ~966
+   Preview: # Query Linter v1 (Phase 3)
+
+**Component**: `src/domain/query_linter.py`
+**Status**: Verified (PASS)
+
+## Classification ...
+
+5. [repo:docs/reports/query_linter_cli_verification.md:8be3e4cb2e] query_linter_cli_verification.md
+   Score: 1.50 | Tokens: ~1854
+   Preview: # Query Linter CLI Integration - Evidence Gate Verification (HARDENED)
+
+**Date:** 2026-01-05
+**Mission:** Fix linter_rea...
+
+6. [repo:docs/reports/wo0008_ab_linter_reproducibility.md:fb205e2c69] wo0008_ab_linter_reproducibility.md
+   Score: 1.50 | Tokens: ~788
+   Preview: # WO-0008 A/B Linter Reproducibility — FINAL REPORT ✅
+
+**Date**: 2026-01-06T11:09:00-03:00  
+**Status**: PASS  
+**Eviden...
+
+7. [repo:src/domain/query_linter.py:980f718dd8] query_linter.py
+   Score: 1.50 | Tokens: ~1623
+   Preview: import copy
+from typing import TypedDict
+from src.domain.anchor_extractor import extract_anchors
+
+
+class LinterChanges(T...
+
+8. [repo:docs/evidence/2026-01-02_trifecta_docs_optimization.md:2c63953610] 2026-01-02_trifecta_docs_optimization.md
+   Score: 1.00 | Tokens: ~2747
+   Preview: # Informe de Optimización: Trifecta Docs (skill.md + agent.md + prime.md)
+
+## Resumen Ejecutivo
+
+**Objetivo**: Eliminar ...
+
+9. [repo:docs/security/DEPLOYMENT_CHECKLIST.md:db85a9576f] DEPLOYMENT_CHECKLIST.md
+   Score: 0.50 | Tokens: ~1098
+   Preview: # Security Deployment Checklist
+
+This checklist ensures all security improvements are properly deployed and functional.
+...
+
+10. [repo:docs/testing/minirag_config_reference.md:357524266a] minirag_config_reference.md
+   Score: 0.50 | Tokens: ~166
+   Preview: # Mini-RAG Config Reference (Local)
+
+This file exists to make Mini-RAG configuration discoverable via search.
+It mirrors...
+
+
+STDERR:
+warning: `VIRTUAL_ENV=trifecta_dope/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead
+
+
+
+=== FE-017 ===
+Query: debugging hash mismatch problems
+Mode: on
+Hits: 10
+STDOUT:
+Search Results (10 hits):
+
+1. [repo:docs/reports/pack_validation_newline_normalization.md:ef08ed34f2] pack_validation_newline_normalization.md
+   Score: 1.00 | Tokens: ~1046
+   Preview: # Pack Validation Newline Normalization - Technical Report
+
+**Date**: 2026-01-06  
+**Issue**: Hash mismatch loop in cont...
+
+2. [repo:docs/lsp/README.md:3e832b8847] README.md
+   Score: 0.50 | Tokens: ~914
+   Preview: # Análisis de Problemas del Daemon LSP
+
+**Fecha**: 2026-01-05  
+**Metodología**: Superpowers Systematic Debugging  
+**Es...
+
+3. [repo:docs/cli/CLI_ANALYSIS_INDEX.md:2609c5f1b4] CLI_ANALYSIS_INDEX.md
+   Score: 0.50 | Tokens: ~2392
+   Preview: # CLI Analysis - Complete Package Index
+
+**Analysis Date**: January 5, 2026  
+**Analysis Method**: Superpowers Systemati...
+
+4. [repo:docs/auditoria/AUDIT_PHASE2_DICTAMEN_PLAN.md:5d6eb4da09] AUDIT_PHASE2_DICTAMEN_PLAN.md
+   Score: 0.50 | Tokens: ~1911
+   Preview: # AUDITORÍA FASE 2 - DICTAMEN + PLAN MÍNIMO
+**Fecha**: 2026-01-02
+**SHA**: bb615dfdc3ce62b5139d1f27fa8f376b21dd5b09
+**Mé...
+
+5. [repo:src/application/plan_use_case.py:cc6fd691c3] plan_use_case.py
+   Score: 0.50 | Tokens: ~8310
+   Preview: """Plan Use Case - PRIME-only planning with 4-level matching."""
+
+import hashlib
+import json
+import re
+from pathlib impo...
+
+6. [repo:src/application/chunking.py:3a22e3b1dc] chunking.py
+   Score: 0.50 | Tokens: ~284
+   Preview: """Chunking logic for Context Pack MVP.
+
+Whole-file chunking strategy:
+- Treats each doc as a single chunk
+- Stable IDs ...
+
+7. [repo:src/application/ast_parser.py:cdc0af43b2] ast_parser.py
+   Score: 0.50 | Tokens: ~1637
+   Preview: from pathlib import Path
+import hashlib
+import json
+import ast as ast_module
+from dataclasses import dataclass, asdict
+f...
+
+8. [repo:src/application/stub_regen_use_case.py:cadf594de1] stub_regen_use_case.py
+   Score: 0.50 | Tokens: ~1948
+   Preview: """Stub Regeneration Use Case - Regenerates _ctx/generated/ files."""
+
+import hashlib
+from pathlib import Path
+
+
+class S...
+
+9. [repo:src/application/search_get_usecases.py:6df9338977] search_get_usecases.py
+   Score: 0.50 | Tokens: ~2880
+   Preview: """Use case wrappers for Search and Get with telemetry."""
+
+import hashlib
+from pathlib import Path
+from typing import A...
+
+10. [repo:src/infrastructure/telemetry.py:c8abb10311] telemetry.py
+   Score: 0.50 | Tokens: ~2045
+   Preview: import json
+import time
+import os
+import hashlib
+from pathlib import Path
+from typing import Dict
+
+from src.infrastructu...
+
+
+STDERR:
+warning: `VIRTUAL_ENV=trifecta_dope/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead
+
+
+
+=== FE-018 ===
+Query: session logging and handoffs
+Mode: on
+Hits: 10
+STDOUT:
+Search Results (10 hits):
+
+1. [repo:docs/session_update/braindope_session_logging.md:c371c54380] braindope_session_logging.md
+   Score: 3.00 | Tokens: ~6061
+   Preview: # Braindope: Session Structured Logging
+**Estado**: 🔴 En Cuestionamiento
+**Fecha Inicio**: 2026-01-04
+**Fecha Última Act...
+
+2. [session:d91bbe6c48] session_trifecta_dope.md
+   Score: 1.50 | Tokens: ~9796
+   Preview: # session.md - Trifecta Context Runbook
+
+segment: trifecta-dope
+
+## Purpose
+This file is a **runbook** for using Trifect...
+
+3. [repo:docs/sessions/2026-01-05_session_completion_report.md:13f42ed6b8] 2026-01-05_session_completion_report.md
+   Score: 1.50 | Tokens: ~2956
+   Preview: # Session Completion Report - 2026-01-05
+## Trifecta Workspace Documentation Audit & Update
+
+**Session Duration:** Full ...
+
+4. [repo:src/application/query_expander.py:d751995453] query_expander.py
+   Score: 1.50 | Tokens: ~804
+   Preview: """Query expansion with alias support and weighting."""
+
+from typing import Any, Dict, List, Tuple, Set
+
+
+class QueryExp...
+
+5. [repo:docs/plans/2026-01-05-sync-and-refactor-cli.md:89a05c3df8] 2026-01-05-sync-and-refactor-cli.md
+   Score: 1.00 | Tokens: ~498
+   Preview: # Sync & Refactor Implementation Plan
+
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development...
+
+6. [repo:docs/session_update/SCOOP_v2.1_DRAFT.md:6a8e67c07e] SCOOP_v2.1_DRAFT.md
+   Score: 1.00 | Tokens: ~8436
+   Preview: # SCOOP v2.1 (DRAFT) — Session Structured Logging
+
+## METADATA
+
+**Cambio propuesto**: Session via Telemetry Event Type  ...
+
+7. [ref:trifecta_dope/docs/bugs/create_cwd_bug.md:f44b047fdd] create_cwd_bug.md
+   Score: 0.50 | Tokens: ~395
+   Preview: # BUG: `trifecta create -s <target>` writes to CLI cwd, not target directory
+
+## Status
+**FIXED** - 2026-01-02
+
+## Descr...
+
+8. [repo:docs/CONTRACTS.md:35f85385a0] CONTRACTS.md
+   Score: 0.50 | Tokens: ~809
+   Preview: # Telemetry Environment Contracts
+
+This document defines the behavior of the Telemetry system regarding environment vari...
+
+9. [repo:docs/PD_REPORT_CONTRACT.md:0dc6d2a0c3] PD_REPORT_CONTRACT.md
+   Score: 0.50 | Tokens: ~1063
+   Preview: # PD_REPORT Contract
+
+## Overview
+
+The `--pd-report` flag on `trifecta ctx get` emits a parseable metrics line for testi...
+
+10. [repo:docs/ERROR_PROMPTS.md:bc3d75f2b8] ERROR_PROMPTS.md
+   Score: 0.50 | Tokens: ~1088
+   Preview: # Error→Prompt System
+
+## Overview
+
+The Error→Prompt system generates actionable recovery prompts when CLI commands fail...
+
+
+STDERR:
+warning: `VIRTUAL_ENV=trifecta_dope/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead
+
+
+
+=== FE-019 ===
+Query: clean architecture dependencies
+Mode: on
+Hits: 10
+STDOUT:
+Search Results (10 hits):
+
+1. [repo:docs/plans/t9_3_1_clean_gate_report.md:2fc0654358] t9_3_1_clean_gate_report.md
+   Score: 1.50 | Tokens: ~3213
+   Preview: # T9.3.1 Evaluation Report: Clean Gates (Anti-Gaming)
+
+**Date**: 2025-12-31
+**Mode**: Evidence-Only + Fail-Closed + No-G...
+
+2. [repo:docs/technical_reports/2026-01-01_ast_lsp_audit_architecture.md:826a793460] 2026-01-01_ast_lsp_audit_architecture.md
+   Score: 1.50 | Tokens: ~2064
+   Preview: # Audit & Architecture: AST/LSP Dual-Engine Strategy v2
+
+**Date**: 2026-01-01
+**Role**: Auditor/Architect
+**Scope**: Log...
+
+3. [repo:docs/technical_reports/2026-01-01_architecture_audit_background_tasks_context_bundles.md:b365894e34] 2026-01-01_architecture_audit_background_tasks_context_bundles.md
+   Score: 1.50 | Tokens: ~10543
+   Preview: ---
+title: "Auditoría de Arquitectura: Background Tasks & Context Bundles"
+date: 2026-01-01
+scope: Integration Opportuni...
+
+4. [repo:docs/technical_reports/2026-01-01_architecture_visual_ast_integration.md:80c6c8a5d1] 2026-01-01_architecture_visual_ast_integration.md
+   Score: 1.50 | Tokens: ~589
+   Preview: # Architecture Visualization: Trifecta v2 Dual-Engine
+
+This diagram clarifies the relationship between the existing `ctx...
+
+5. [repo:docs/auditoria/WORKSPACE_CLEANUP_REPORT.md:7faa87db1c] WORKSPACE_CLEANUP_REPORT.md
+   Score: 1.50 | Tokens: ~1796
+   Preview: # Workspace Cleanup Report
+
+**Date**: 2026-01-05
+**Scope**: Analysis of demo_workspace, scoop, and tools directories
+**S...
+
+6. [repo:docs/reports/repro_clean_boot_v1.md:e190fc1fca] repro_clean_boot_v1.md
+   Score: 1.50 | Tokens: ~901
+   Preview: # Clean Boot Reproducibility v1 — WO-0007
+
+**Created**: 2026-01-05T22:59:00-03:00  
+**SHA**: (verified_at_sha will be ad...
+
+7. [repo:docs/MIGRATION_v1.1.md:f950157be8] MIGRATION_v1.1.md
+   Score: 1.00 | Tokens: ~716
+   Preview: # Migration Guide v1.1
+
+## Script Consolidation
+
+### install_FP.py → Stable Installer (v1.1+)
+
+**Status**: ✅ STABLE - Us...
+
+8. [repo:docs/plans/2026-01-05-ast-cache-fixes-v2.md:33878fb0c0] 2026-01-05-ast-cache-fixes-v2.md
+   Score: 1.00 | Tokens: ~2923
+   Preview: # Plan: Correcciones del Sistema de Cache de AST (v2)
+
+**Fecha**: 2026-01-05  
+**Prioridad**: ALTA  
+**Estado**: Planifi...
+
+9. [repo:docs/plans/2026-01-05-ast-cache-fixes.md:599e8be762] 2026-01-05-ast-cache-fixes.md
+   Score: 1.00 | Tokens: ~8174
+   Preview: # Plan: Correcciones del Sistema de Cache de AST (v2)
+
+**Fecha**: 2026-01-05
+**Prioridad**: ALTA
+**Estado**: Planificaci...
+
+10. [repo:docs/plans/2025-12-30_implementation_workflow.md:f12169eb06] 2025-12-30_implementation_workflow.md
+   Score: 1.00 | Tokens: ~2864
+   Preview: # v1.1 Implementation Sprint - Visual Roadmap
+
+## Current Architecture (BEFORE v1.1)
+
+```
+┌─────────────────────────────...
+
+
+STDERR:
+warning: `VIRTUAL_ENV=trifecta_dope/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead
+
+
+
+=== FE-020 ===
+Query: sync
+Mode: on
+Hits: 10
+STDOUT:
+Search Results (10 hits):
+
+1. [repo:docs/plans/2026-01-05-sync-and-refactor-cli.md:89a05c3df8] 2026-01-05-sync-and-refactor-cli.md
+   Score: 1.50 | Tokens: ~498
+   Preview: # Sync & Refactor Implementation Plan
+
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development...
+
+2. [repo:docs/reports/wo0009_fix_sync_indexes_repo_content.md:817d82e313] wo0009_fix_sync_indexes_repo_content.md
+   Score: 1.50 | Tokens: ~529
+   Preview: # WO-0009 Fix: ctx sync Indexes Repo Content
+
+**Status**: DONE ✅  
+**Verified**: 2026-01-06T01:00:00-03:00  
+**SHA**: (w...
+
+3. [repo:docs/reports/wo0008_blocked_sync_metadata_only.md:089a9de673] wo0008_blocked_sync_metadata_only.md
+   Score: 1.50 | Tokens: ~865
+   Preview: # WO-0008 Blocked: ctx sync Metadata-Only Indexing
+
+**Status**: BLOCKED  
+**Blocker**: `ctx sync` indexes only `_ctx` me...
+
+4. [repo:src/application/obsidian_sync_use_case.py:1624323f39] obsidian_sync_use_case.py
+   Score: 1.50 | Tokens: ~1820
+   Preview: """Obsidian sync use case.
+
+This module orchestrates the end-to-end sync of findings to Obsidian,
+following Trifecta's C...
+
+5. [repo:docs/evidence/2026-01-02_trifecta_docs_optimization.md:2c63953610] 2026-01-02_trifecta_docs_optimization.md
+   Score: 1.00 | Tokens: ~2747
+   Preview: # Informe de Optimización: Trifecta Docs (skill.md + agent.md + prime.md)
+
+## Resumen Ejecutivo
+
+**Objetivo**: Eliminar ...
+
+6. [repo:docs/sessions/2026-01-05_session_completion_report.md:13f42ed6b8] 2026-01-05_session_completion_report.md
+   Score: 0.50 | Tokens: ~2956
+   Preview: # Session Completion Report - 2026-01-05
+## Trifecta Workspace Documentation Audit & Update
+
+**Session Duration:** Full ...
+
+7. [repo:docs/data/telemetry_exec_summary.md:051d389f50] telemetry_exec_summary.md
+   Score: 0.50 | Tokens: ~320
+   Preview: ## CLI Usage Summary - 2025-12-31 (all recorded events)
+
+**Commands**: 1056 total | Top: ctx.plan 92.6%, ctx.search 3.7%...
+
+8. [repo:docs/auditoria/SCOPE_PD_L0_REPORT.md:41a8e86fc8] SCOPE_PD_L0_REPORT.md
+   Score: 0.50 | Tokens: ~1554
+   Preview: # SCOPE_PD_L0_REPORT.md
+
+## A) Inventario de componentes
+
+| Componente | Archivo(s) | Función(es) clave | Rol |
+|-------...
+
+9. [repo:docs/reports/repro_clean_boot_v1.md:e190fc1fca] repro_clean_boot_v1.md
+   Score: 0.50 | Tokens: ~901
+   Preview: # Clean Boot Reproducibility v1 — WO-0007
+
+**Created**: 2026-01-05T22:59:00-03:00  
+**SHA**: (verified_at_sha will be ad...
+
+10. [repo:src/application/hookify_extractor.py:77eee65771] hookify_extractor.py
+   Score: 0.50 | Tokens: ~2579
+   Preview: """Hookify violation extractor for Obsidian sync.
+
+This module extracts findings from hookify violations and converts
+th...
+
+
+STDERR:
+warning: `VIRTUAL_ENV=trifecta_dope/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead
+
+

@@ -1,0 +1,43 @@
+version: 1
+id: WO-0003
+epic_id: E-0001
+title: "Query Linter core: classify + expand + lint_plan"
+priority: P0
+status: done
+dod_id: DOD-LINTER_CORE
+owner: null
+branch: "job/WO-0003-linter-core"
+worktree: "../wt-WO-0003"
+scope:
+  allow:
+    - "src/domain/query_linter.py"
+    - "tests/unit/test_query_linter.py"
+    - "docs/reports/query_linter_v1.md"
+  deny:
+    - ".env*"
+    - "src/infrastructure/**"
+deliverables:
+  - "Verification: src/domain/query_linter.py exists"
+  - "Verification: tests/unit/test_query_linter.py exists"
+verify:
+  commands:
+    - "test -f src/domain/query_linter.py"
+    - "test -f tests/unit/test_query_linter.py"
+    - "uv run pytest -q tests/unit/test_query_linter.py"
+diff_budget:
+  max_files: 2
+  max_loc: 100
+stop_conditions:
+  max_iterations: 2
+  max_fail_verify: 1
+trace:
+  ticket: null
+  related_wos:
+    - WO-0002
+pass_criteria:
+  - "query_linter.py exists"
+  - "tests pass"
+  - "Guided no expande, vague expande"
+no_pass_criteria:
+  - "Files missing"
+  - "Tests fail"

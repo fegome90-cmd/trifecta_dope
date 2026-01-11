@@ -1,0 +1,49 @@
+version: 1
+epics:
+  - id: E-0001
+    title: "AST Cache Operability"
+    description: |
+      Make AST cache operational via configuration (flags/env vars) with full observability.
+
+      Goal: Transition from "works when injected" to production-ready persistence
+      with telemetry, deterministic locking, and fail-closed testing.
+
+    status: complete
+    priority: P0
+
+    wo_queue:
+      - WO-P2.1 # Telemetry Integration (done)
+      - WO-P2.2 # File Locks via Wrapper (done)
+      - WO-P3.0 # Soak Harness & Evidence (done)
+      - WO-0012 # Persistence Feature Flag (partial - test env only)
+      - WO-0012.1 # Dev CLI Persistence Default (done)
+      - WO-0013 # AST Persist Adoption Observability (pending)
+
+    x_legacy_wo_queue:
+      - WO-P0 # Inventory (done - SHA b0ab32f)
+      - WO-P1 # Wiring (done - SHA 354afb6, verified e7956fd)
+      - WO-P2.1 # Telemetry (done - SHA e323433)
+      - WO-P2.2 # File Locks (done - SHA c2d0338)
+
+    x_phases:
+      - name: "P0: Inventory"
+        status: complete
+        sha: "b0ab32f"
+      - name: "P1: Factory Wiring"
+        status: complete
+        sha: "354afb6"
+        verified_sha: "e7956fd"
+      - name: "P2.1: Telemetry"
+        status: complete
+        sha: "e323433"
+      - name: "P2.2: File Locks"
+        status: complete
+        sha: "c2d0338"
+
+    x_deferred:
+      - "P2.3: Corruption Detection & Recovery"
+      - "P2.4: Resource Monitoring"
+      - "P2.5: TTL & Eviction"
+
+    generated_at: "2026-01-06T16:10:00-03:00"
+    x_curated_at: "2026-01-06T16:10:00-03:00"

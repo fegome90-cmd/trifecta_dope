@@ -1,0 +1,98 @@
+version: 1
+dod:
+  - id: DOD-BASELINE
+    title: "DoD para Baseline/Dataset WOs"
+    description: "Validación de datasets, runners y reportes reproducibles"
+    required_artifacts:
+      - "dataset.yaml (queries con clasificación)"
+      - "runner.sh (script ejecutable)"
+      - "report.md (métricas + evidencia)"
+      - "summary.json (métricas canónicas)"
+    required_checks:
+      - name: "dataset_valid"
+        command: "test -f <dataset> && grep -q 'vague\\|semi\\|guided' <dataset>"
+      - name: "runner_executable"
+        command: "test -x <runner> || bash -n <runner>"
+      - name: "report_contains_metrics"
+        command: "grep -q 'hit_rate\\|avg_hits' <report>"
+    rules:
+      - "Dataset debe tener >=30 queries clasificadas"
+      - "Runner produce logs + summary JSON"
+      - "Evidencia reproducible con comando único"
+
+  - id: DOD-DICTIONARY
+    title: "DoD para Diccionario/Extractor WOs"
+    description: "Validación de configs (anchors, aliases) y extractors puros"
+    required_artifacts:
+      - "configs/anchors.yaml (strong/weak)"
+      - "configs/aliases.yaml (pattern→canonical)"
+      - "src/domain/*_extractor.py (pure function)"
+      - "tests/unit/test_*_extractor.py"
+      - "report.md (coverage + examples)"
+    required_checks:
+      - name: "unit_tests_pass"
+        command: "uv run pytest -q tests/unit/test_*_extractor.py"
+      - name: "configs_valid"
+        command: 'python -c ''import yaml; yaml.safe_load(open("configs/anchors.yaml"))'''
+    rules:
+      - "Extractor es función pura (no IO)"
+      - "Aliases incluyen >=5 ES (español)"
+      - "Tests pasan (deterministas)"
+
+  - id: DOD-LINTER_CORE
+    title: "DoD para Linter Core WOs"
+    description: "Validación de lógica de clasificación + expansión"
+    required_artifacts:
+      - "src/domain/query_linter.py"
+      - "tests/unit/test_query_linter.py"
+      - "report.md (reglas + ejemplos)"
+    required_checks:
+      - name: "unit_tests_pass"
+        command: "uv run pytest -q tests/unit/test_query_linter.py"
+      - name: "stability_check"
+        command: "grep -q 'guided no expande' <report> && grep -q 'vague expande' <report>"
+    rules:
+      - "Guided no expande (estabilidad)"
+      - "Vague expande (<=2 strong, <=2 weak)"
+      - "NL con alias clasifica correctamente"
+
+  - id: DOD-CLI_INTEGRATION
+    title: "DoD para CLI Integration WOs"
+    description: "Validación de integración CLI con flags, pipeline, telemetry"
+    required_artifacts:
+      - "src/infrastructure/cli.py (flags)"
+      - "src/application/*_usecases.py (pipeline)"
+      - "tests/integration/test_*_ab_controlled.py (A/B)"
+      - "_ctx/logs/ab_off.log + ab_on.log"
+      - "report.md (A/B evidencia + telemetry)"
+    required_checks:
+      - name: "integration_tests_pass"
+        command: "uv run pytest -q tests/integration/test_*_ab_controlled.py"
+      - name: "ab_delta_positive"
+        command: "grep -q 'Search Results' _ctx/logs/ab_on.log && grep -q 'No results' _ctx/logs/ab_off.log"
+      - name: "telemetry_sanitized"
+        command: "! grep -q 'query.*raw' _ctx/telemetry/events.jsonl"
+    rules:
+      - "A/B test OFF=0, ON>0 (evidencia reproducible)"
+      - "Telemetry NO guarda query raw"
+      - "Feature flag (default OFF) funciona"
+
+  - id: DOD-GATE_HARDENING
+    title: "DoD para Gate Hardening WOs"
+    description: "Validación de clasificación test + fix + gate pass"
+    required_artifacts:
+      - "_ctx/logs/gate_fail_head.log"
+      - "_ctx/logs/gate_base_commit.txt"
+      - "_ctx/logs/gate_after_fix.log (si fix aplicado)"
+      - "_ctx/logs/gate_full_after_fix.log"
+      - "classification.md (evidencia + rationale)"
+    required_checks:
+      - name: "full_gate_pass"
+        command: "uv run pytest -q"
+      - name: "classification_documented"
+        command: "test -f _ctx/logs/gate_base_commit.txt"
+    rules:
+      - "Clasificación determinista (pre_existing|regression|test_broken)"
+      - "Evidencia con logs de HEAD + BASE"
+      - "Si fix: gate pasa (0 failures)"
+      - "Si pre_existing: gate alternativo documentado"

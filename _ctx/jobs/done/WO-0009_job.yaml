@@ -1,0 +1,82 @@
+version: 1
+id: WO-0009
+epic_id: E-0001
+title: "ctx sync debe indexar contenido del repo (docs/src), no solo _ctx"
+priority: P0
+status: done
+dod_id: DOD-REPRODUCIBILITY
+owner: null
+x_legacy: true
+x_branch: "job/WO-0009-sync-repo-content"
+x_worktree: "../wt-WO-0009"
+
+scope:
+  allow:
+    - "tests/integration/test_ctx_sync_indexes_repo_content.py"
+    - "src/application/**" # If build logic needs modification
+    - "docs/reports/wo0009_*.md"
+    - "_ctx/logs/wo0009_*.log"
+  deny:
+    - ".env*"
+    - "configs/**" # Should not need config changes
+
+x_objective: |
+  Fix ctx sync to index repo content (docs/, src/) in addition to _ctx metadata.
+
+  Current behavior: ctx sync only indexes skill.md, prime, agent, session.
+  Expected: ctx sync indexes ALL markdown/code files in segment.
+
+  Blocker for: WO-0008 (A/B linter needs content to search)
+
+x_deliverables:
+  - "tests/integration/test_ctx_sync_indexes_repo_content.py (RED → GREEN)"
+  - "Fix in sync/build logic to include docs/src"
+  - "Gate script verifying pack contains repo content"
+  - "docs/reports/wo0009_sync_repo_content_fix.md"
+
+verify:
+  commands:
+    - "uv run pytest -xvs tests/integration/test_ctx_sync_indexes_repo_content.py"
+    - "bash scripts/gate_ctx_sync_repo_content.sh"
+
+x_acceptance_criteria:
+  - "In synthetic fixture: docs/servicio.md appears in context_pack.json"
+  - "grep 'SERVICIO_ANCHOR_TOKEN' pack.json ≠ empty"
+  - "ctx search --query 'SERVICIO_ANCHOR_TOKEN' → hits > 0"
+  - "Test passes in clean worktree"
+
+diff_budget:
+  max_files: 20
+  max_loc: 600
+
+x_dependencies:
+  - wo_id: WO-0007 # Requires bootstrap pipeline
+
+x_risks:
+  - "Indexing all files could create huge packs"
+  - "Need filtering logic to exclude build artifacts"
+
+x_mitigation:
+  - "Implement file type whitelist (.md, .py, .ts, .yaml)"
+  - "Respect .gitignore patterns"
+  - "Add pack size gate (warn if >100MB)"
+
+x_notes: |
+  Created to unblock WO-0008.
+
+  Evidence: WO-0008 debug showed pack only contains:
+  - skill.md
+  - prime_*.md
+  - agent_*.md
+  - session_*.md
+
+  Missing: user content from docs/, src/, etc.
+
+verified_at_sha: 1d80a878b486177e94491fda068028287eddd1d8
+evidence_logs:
+  - "_ctx/logs/wo0009/00_sha.txt"
+  - "_ctx/logs/wo0009/01_locate_sync.log"
+  - "_ctx/logs/wo0009/02_analysis_notes.md"
+  - "_ctx/logs/wo0009_green_final/01_pytest_fail.log"
+  - "_ctx/logs/wo0009_green_final/02_pytest_green.log"
+  - "_ctx/logs/wo0009_green_final/03_gate_wo0007.log"

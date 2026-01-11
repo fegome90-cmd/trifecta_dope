@@ -1,0 +1,1 @@
+## PLAN DE SPRINT: 3 TICKETS (10–12 días)

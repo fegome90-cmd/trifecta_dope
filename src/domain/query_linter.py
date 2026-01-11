@@ -1,4 +1,25 @@
+import copy
+from typing import TypedDict
 from src.domain.anchor_extractor import extract_anchors
+
+
+class LinterChanges(TypedDict):
+    """Type for linter changes structure."""
+    added_strong: list[str]
+    added_weak: list[str]
+    reasons: list[str]
+
+
+class LinterPlan(TypedDict):
+    """Type for linter plan returned by lint_query."""
+    original_query: str
+    query_class: str
+    token_count: int
+    anchors_detected: dict
+    expanded_query: str
+    changed: bool
+    changes: LinterChanges
+
 
 def classify_query(query: str, anchors_cfg: dict, aliases_cfg: dict) -> dict:
     """
@@ -57,7 +78,15 @@ def expand_query(query: str, analysis: dict, anchors_cfg: dict) -> dict:
     existing_strong = analysis["anchors"]["strong"]
     
     is_doc_intent = any(t in existing_weak for t in ["doc", "docs", "documentación", "guía", "manual", "uso", "cómo", "how", "howto"])
-    
+
+    # If strong anchors were detected via aliases, surface them in the expanded query.
+    # This keeps vague queries from staying empty when aliases are the only signal.
+    for cand in existing_strong:
+        if cand not in query.split() and cand not in added_strong and len(added_strong) < 2:
+            added_strong.append(cand)
+    if added_strong and "vague_alias_boost" not in reasons:
+        reasons.append("vague_alias_boost")
+
     # Regla: preferir strong.dirs + strong.exts cuando el usuario pida documentación
     if is_doc_intent:
         # Intentar añadir docs/ y readme.md si no están presentes
@@ -72,12 +101,15 @@ def expand_query(query: str, analysis: dict, anchors_cfg: dict) -> dict:
     # pero el mandato dice "limitado".
     if len(added_strong) < 2:
         defaults = ["agent.md", "prime.md"]
+        added_any = False
         for cand in defaults:
             if cand not in existing_strong and cand not in added_strong and len(added_strong) < 2:
                 # Solo añadir si la query es REALMENTE vaga (token count muy bajo)
                 if analysis["token_count"] <= 2:
                     added_strong.append(cand)
-                    reasons.append("vague_default_boost")
+                    added_any = True
+        if added_any:
+            reasons.append("vague_default_boost")
 
     # Construir query expandida
     # Simplemente concatenamos los términos únicos
@@ -100,9 +132,19 @@ def expand_query(query: str, analysis: dict, anchors_cfg: dict) -> dict:
         "reasons": reasons
     }
 
-def lint_query(query: str, anchors_cfg: dict, aliases_cfg: dict) -> dict:
+def lint_query(query: str, anchors_cfg: dict, aliases_cfg: dict) -> LinterPlan:
     """
     Orquesta clasificación y expansión para producir un plan auditable.
+
+    Returns:
+        LinterPlan with structure:
+        - original_query: The original query string
+        - query_class: "vague" | "semi" | "guided"
+        - token_count: Number of tokens in query
+        - anchors_detected: Dict with strong/weak/aliases_matched lists
+        - expanded_query: Final query (may be expanded or original)
+        - changed: True if query was expanded
+        - changes: Dict with added_strong, added_weak, reasons lists
     """
     analysis = classify_query(query, anchors_cfg, aliases_cfg)
     
@@ -112,7 +154,7 @@ def lint_query(query: str, anchors_cfg: dict, aliases_cfg: dict) -> dict:
         expansion = expand_query(query, analysis, anchors_cfg)
         expanded_query = expansion["expanded_query"]
         changed = expanded_query != query
-        changes = {
+        changes: LinterChanges = {
             "added_strong": expansion["added_strong"],
             "added_weak": expansion["added_weak"],
             "reasons": expansion["reasons"]
@@ -120,7 +162,7 @@ def lint_query(query: str, anchors_cfg: dict, aliases_cfg: dict) -> dict:
     else:
         expanded_query = query
         changed = False
-        changes = {
+        changes: LinterChanges = {
             "added_strong": [],
             "added_weak": [],
             "reasons": []
