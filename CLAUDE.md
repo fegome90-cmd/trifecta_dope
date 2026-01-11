@@ -88,12 +88,13 @@ See `docs/CONTRACTS.md` and architecture docs in `docs/adr/` for complete patter
 - **docs/CONTRACTS.md** - API contracts, schemas
 - **docs/CLI_WORKFLOW.md** - Official CLI usage
 - **docs/adr/** - Architecture decision records
+- **docs/backlog/** - Work Order system (WORKFLOW.md, OPERATIONS.md, TROUBLESHOOTING.md)
 - **_ctx/agent_trifecta_dope.md** - Active features, tech stack
 - **_ctx/session_trifecta_dope.md** - Session history, runbook
 
 ---
 
-## Trifecta-Specific  Rules
+## Trifecta-Specific Rules
 
 ### _ctx/ Directory Conventions
 - **_ctx/logs/**: ONLY .log files (command stdout/stderr). Use /tmp/ for intermediate .md files.
@@ -114,45 +115,67 @@ See `docs/CONTRACTS.md` and architecture docs in `docs/adr/` for complete patter
 
 ---
 
-## Backlog System
+## Work Orders (WO System)
 
-**Structure**: State-segregated Work Orders (WO) + Epic registry
+The WO system provides isolated development environments using git worktrees.
+
+### Quick Workflow
+
+```bash
+# List pending WOs
+python scripts/ctx_wo_take.py --list
+
+# Take WO (auto-creates branch + worktree)
+python scripts/ctx_wo_take.py WO-XXXX
+
+# Navigate & work
+cd .worktrees/WO-XXXX
+
+# Complete WO
+python scripts/ctx_wo_finish.py WO-XXXX
+```
+
+### Key Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `ctx_wo_take.py` | Take WO with auto branch/worktree creation |
+| `ctx_wo_finish.py` | Complete WO with DoD validation |
+| `helpers.py` | Core utilities (worktree, lock, branch) |
+| `ctx_reconcile_state.py` | Repair state inconsistencies |
+
+### Structure & State Machine
 
 ```
-_ctx/
-├── backlog/backlog.yaml        # Epic registry (YAML only, no .md)
-├── jobs/
-│   ├── pending/*.yaml          # WO awaiting work
-│   ├── running/*.yaml          # WO in progress
-│   ├── done/*.yaml             # WO completed
-│   └── failed/*.yaml           # WO failed
-└── dod/*.yaml                  # Definition of Done catalog
+_ctx/jobs/
+├── pending/*.yaml    → [take] → running/*.yaml → [finish] → done/*.yaml
+└── failed/*.yaml
 ```
 
-**Key Files**:
-- **Epic organization**: `_ctx/backlog/backlog.yaml`
-- **Schema validation**: `docs/backlog/schema/*.schema.json`
-- **Validator**: `python scripts/ctx_backlog_validate.py --strict`
-- **Migration guide**: `docs/backlog/MIGRATION.md`
+**States**: pending → running → done (or failed)
 
-**WO Fields**:
-- Required: `id`, `epic_id`, `title`, `priority`, `status`, `scope`, `verify`, `dod_id`
-- Done WOs: add `verified_at_sha` (explicit SHA, not "HEAD"), `dependencies`, `evidence_logs`
-- Legacy fields: prefix with `x_` (e.g., `x_objective`, `x_notes`)
+### Worktree Management
 
-**Critical Rules**:
-- **Single Source of Truth**: A WO YAML must exist in exactly ONE state folder (`pending/`, `running/`, `done/`). Use `mv` to transition, never copy.
-- `verified_at_sha`: Use explicit commit SHA (e.g., `c2d0338`), never `"HEAD"`
-- `dependencies`: List prerequisite WO IDs (e.g., `[WO-P2.1]`)
-- `evidence_logs`: Relative paths to proof (logs gitignored but documented)
-- Epic registry: Track phases with SHAs, mark complete when all WOs done
-- No `.md` files in `_ctx/backlog/` - documentation goes to `docs/` or `_ctx/session_*.md`
+- **Branch**: `feat/wo-WO-XXXX` (from `main`)
+- **Path**: `.worktrees/WO-XXXX`
+- **Lock**: `_ctx/jobs/running/WO-XXXX.lock` (atomic, stale >1h auto-cleaned)
 
-**Cross-references**: Every WO must reference valid `epic_id` (E-XXXX) and `dod_id`.
+```bash
+git worktree list              # List worktrees
+git worktree remove .worktrees/WO-XXXX  # Cleanup
+```
+
+### Detailed Documentation
+
+- **[WORKFLOW.md](docs/backlog/WORKFLOW.md)** — Complete lifecycle guide
+- **[OPERATIONS.md](docs/backlog/OPERATIONS.md)** — Daily operations playbook
+- **[TROUBLESHOOTING.md](docs/backlog/TROUBLESHOOTING.md)** — Common issues
+- **[README.md](docs/backlog/README.md)** — Quick reference
 
 ---
 
 ## Telemetry
+
 - **Production**: Events logged to `_ctx/telemetry/events.jsonl`
 - **Testing**: Use `TRIFECTA_NO_TELEMETRY=1` for zero side-effects
 - **Pre-commit**: Auto-redirects telemetry via `TRIFECTA_TELEMETRY_DIR`
