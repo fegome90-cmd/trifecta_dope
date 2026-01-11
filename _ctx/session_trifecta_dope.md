@@ -422,12 +422,12 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Summary**: Auditar agent_trifecta_dope.md para verificar que refleja CLI v2.0, features actuales (AST M1, telemetry, LSP, Error Cards), y remover rutas desactualizadas
 - **Files**: agent_trifecta_dope.md
 - **Commands**: ctx search, ctx get
-- **Pack SHA**: `da3944a71db59890`
+- **Pack SHA**: `da3944a71db594a6`
 
 ## 2026-01-05 04:00 UTC
 - **Summary**: Investigate 'Central Telefonica' search strategy implementation
 - **Commands**: ctx sync, ctx search
-- **Pack SHA**: `da3944a71db59890`
+- **Pack SHA**: `da3944a71db594a6`
 
 ## 2026-01-05 04:01 UTC
 - **Summary**: Implementar plan de actualización para agent_trifecta_dope.md: metadata (repo_root, last_verified), Tech Stack (versiones, deps telemetry), Workflow (paths portables), Gates (Makefile commands), Features (AST M1 PRODUCTION, telemetry COMPLETE, LSP RELAXED READY, Error Cards, Deprecation tracking), Troubleshooting (soluciones reales)
@@ -760,7 +760,7 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 
 ## 2026-01-06 13:36-14:00 UTC - WO-0010 Anchor Metrics from Telemetry
 - **Objetivo**: Extender Field Exercises v1 para reportar uso de anchors desde telemetría (no heurístico de stdout)
-- **Implementación**: 
+- **Implementación**:
   - Extractor: eval/scripts/extract_anchor_metrics.py
   - Lectura de _ctx/telemetry/events.jsonl
   - Métricas desde args (linter_expanded, linter_added_strong_count, etc.)
@@ -788,7 +788,7 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
   - vague_anchor_usage: 100% (≥30%)
   - vague_zero_hit: 0% (≤20%)
   - expanded_positive_delta: +4.0 (>0)
-- **Hallazgos**: 
+- **Hallazgos**:
   - Vague: 100% expansion, +4 median delta
   - Spanish: 100% zero-hit (multilingual gap)
   - Navigation: Strong baseline, +2.5 delta
@@ -852,14 +852,14 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 **Objetivo**: Verificar que SHA 354afb6 (P1 Wiring) sigue operativo en condiciones duras.
 
 **Gates Ejecutados**:
-1. **Gate 1 (Main Repo)**: \`uv run pytest -q test_ast_cache_persist_cross_run_cli.py\` → ✅ 2/2 PASSED
+1. **Gate 1 (Main Repo)**: `uv run pytest -q test_ast_cache_persist_cross_run_cli.py` → ✅ 2/2 PASSED
 2. **Gate 2 (Clean Worktree /tmp)**: Fresh install + pytest → ✅ 2/2 PASSED (1.41s)
 3. **Gate 3 (Evidence Signals)**:
-   - ✅ Factory \`get_ast_cache()\` usado en 2 sitios (cli_ast, pr2_context_searcher)
+   - ✅ Factory `get_ast_cache()` usado en 2 sitios (cli_ast, pr2_context_searcher)
    - ✅ Cross-run hit verificado: status1='miss', status2='hit'
-   - ✅ SQLite creado en \`.trifecta/cache/*.db\`
+   - ✅ SQLite creado en `.trifecta/cache/*.db`
 
-**Logs**: \`_ctx/logs/p1_verify_ast_cache_cross_run.log\`, \`/tmp/tf_p1_verify_pytest_v2.log\`
+**Logs**: `_ctx/logs/p1_verify_ast_cache_cross_run.log`, `/tmp/tf_p1_verify_pytest_v2.log`
 
 **Veredicto**: ✅ P1 PASS (Verified at HEAD a63452f).
 
@@ -878,7 +878,7 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 
 **Execution Order**: Sprint 1 (Observability) → Sprint 2 (Safety) → Sprint 3 (Optimization)
 
-**Plan**: \`docs/plans/implementation_plan_ast_persist_p2.md\`
+**Plan**: `docs/plans/implementation_plan_ast_persist_p2.md`
 
 **Status**: BACKLOG (not executing yet)
 
@@ -896,8 +896,8 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 
 **Gate**: miss → hit visible en telemetría.
 
-**Plan**: \`docs/plans/implementation_plan_wo_p2_1_telemetry.md\`
-**WO**: \`_ctx/jobs/pending/WO-P2.1.yaml\`
+**Plan**: `docs/plans/implementation_plan_wo_p2_1_telemetry.md`
+**WO**: `_ctx/jobs/pending/WO-P2.1.yaml`
 
 **Status**: READY TO EXECUTE
 
@@ -912,15 +912,15 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 4. ✅ E2E test (3/3 PASSED)
 
 **Tests**:
-- \`test_ast_cache_telemetry_events\`: miss → hit verified ✅
-- \`test_ast_cache_event_schema\`: Schema validated ✅
-- \`test_ast_cache_telemetry_with_persistence_off\`: InMemory backend verified ✅
+- `test_ast_cache_telemetry_events`: miss → hit verified ✅
+- `test_ast_cache_event_schema`: Schema validated ✅
+- `test_ast_cache_telemetry_with_persistence_off`: InMemory backend verified ✅
 - Regression: P1 tests still pass (4/4) ✅
 
 **Events Emitted**:
-- \`ast.cache.hit\`: Value found
-- \`ast.cache.miss\`: Value not found
-- \`ast.cache.write\`: New value written
+- `ast.cache.hit`: Value found
+- `ast.cache.miss`: Value not found
+- `ast.cache.write`: New value written
 
 **Veredicto**: ✅ WO-P2.1 PASS
 
@@ -930,7 +930,7 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 
 **Objetivo**: Prevenir corrupción SQLite por acceso CLI+daemon concurrente.
 
-**Approach**: Advisory file locks vía \`filelock\` library.
+**Approach**: Advisory file locks vía `filelock` library.
 
 **Strategy**: Fail-closed (lock timeout → error + telemetry, NO fallback silencioso).
 
@@ -940,8 +940,8 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 3. Wire telemetry for lock_timeout events
 4. E2E concurrency test (2 workers)
 
-**Plan**: \`docs/plans/implementation_plan_wo_p2_2_locks.md\`
-**WO**: \`_ctx/jobs/pending/WO-P2.2.yaml\`
+**Plan**: `docs/plans/implementation_plan_wo_p2_2_locks.md`
+**WO**: `_ctx/jobs/pending/WO-P2.2.yaml`
 
 **Status**: READY TO EXECUTE
 
@@ -950,7 +950,7 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 **Objetivo**: File locking para concurrencia CLI+daemon.
 
 **Ejecución**:
-- ✅ RED test creado (\`test_ast_cache_concurrency.py\`)
+- ✅ RED test creado (`test_ast_cache_concurrency.py`)
 - ✅ Test PASÓ sin locks (SQLite WAL mode ya protege)
 - ❌ Implementación lock context manager: complejidad no justifica beneficio
 
@@ -972,7 +972,7 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 **Approach**: Wrapper pattern (FileLockedAstCache) sin tocar SQLiteCache.
 
 **Implementación**:
-1. ✅ Created \`FileLockedAstCache\` wrapper (src/infrastructure/file_locked_cache.py)
+1. ✅ Created `FileLockedAstCache` wrapper (src/infrastructure/file_locked_cache.py)
 2. ✅ Wired in factory (wraps SQLiteCache when persist=True)
 3. ✅ Contractual tests (4/4 PASSED):
    - test_lock_timeout_contract: Timeout determinista ✅
@@ -983,7 +983,7 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 
 **Value Delivered**:
 - Timeout determinista (no random OperationalError)
-- Telemetry: \`ast.cache.lock_timeout\` + \`ast.cache.lock_wait\`
+- Telemetry: `ast.cache.lock_timeout` + `ast.cache.lock_wait`
 - Control explícito daemon+CLI
 
 **Veredicto**: ✅ WO-P2.2 COMPLETE
@@ -1090,3 +1090,16 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Governance**: WOs aligned, backlog updated.
 - **Next**: WO-0013 (Adoption Observability).
 - **Commit**: chore(ops): close sprint + prep WO-0013 adoption observability
+
+## 2026-01-11 16:15 UTC
+- **Summary**: Fix Mypy 'no-redef' error in `query_linter.py`.
+- **Changes**: Refactored `lint_query` to declare `changes` variable once before conditional blocks to satisfy strict type checking.
+- **Files**: src/domain/query_linter.py
+- **Commands**: uv run mypy src/domain/query_linter.py
+- **Pack SHA**: 9737624
+
+## 2026-01-11 16:45 UTC
+- **Summary**: Plan remediation for WO-0019 technical debt (GGA hooks, dependencies, doc hygiene).
+- **Files**: docs/plans/2026-01-11-fix-wo-0019-technical-debt.md
+- **Commands**: cat skills/.../SKILL.md, write_file
+- **Pack SHA**: 9737624

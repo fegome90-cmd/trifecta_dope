@@ -1,23 +1,23 @@
-# Gemini Agent Memory
+# Gemini Agent Memory & Operational Manual
 
 ## 🛑 MANDATORY: Session Logging & Persistence
 
-**Rule 1: Use the CLI**  
+**Rule 1: Use the CLI**
 You must use the `trifecta` CLI for all agentic workflows. Do not run loose scripts unless constructing a specific harness.
 
-**Rule 2: Audit-Grade Logging**  
+**Rule 2: Audit-Grade Logging**
 Upon completing a task, you MUST append a session summary to the `_ctx/session_trifecta_dope.md` file (Project-local).
 Also append audit-grade summary to `HISTORY.md` in global logic when appropriate.
 
 **Rule 3: Work Order Governance**
-Update the relevant WO YAML (`_ctx/jobs/...`) and `_ctx/backlog/backlog.yaml` immediately upon task completion. 
+Update the relevant WO YAML (`_ctx/jobs/...`) and `_ctx/backlog/backlog.yaml` immediately upon task completion.
 - Status: `pending` -> `running` -> `done`
 - SHA: `verified_at_sha` (explicit commit)
 
 **Rule 4: Commit Discipline**
 Commits MUST run pre-commit hooks. Do NOT use `--no-verify` unless managing a WIP or emergency hotfix.
 
-**Rule 5: Superpowers**  
+**Rule 5: Superpowers**
 If `superpowers` are mentioned, check `skill.md` or global superpowers, specifically `~/.claude/skills/superpowers`.
 
 **Rule 6: Delivery Dynamics (Superpower Chain)**
@@ -31,7 +31,7 @@ All work must follow this strict sequence of Superpower invocation:
 
 ---
 
-## ⚡️ Trifecta CLI Protocol (See [skill.md](file:///Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/skill.md))
+## ⚡️ Trifecta CLI Protocol
 
 **Core Environment**: `uv` package manager + `fish` terminal.
 
@@ -44,16 +44,28 @@ make gate-all             # Run full verification (Unit+Int+Acceptance)
 ```
 
 ### 2. Context Cycle (Search → Get)
-Do not guess files. Use the context engine:
-```bash
-# A. Search (Instruction-based, NOT keywords)
-uv run trifecta ctx search --segment . --query "How to implement file locking in sqlite cache" --limit 5
+Do not guess files. Use the context engine with **instructions**, not keywords.
 
-# B. Get (Chunk-based)
-uv run trifecta ctx get --segment . --ids "infra:cache_v1,doc:design_p2" --mode excerpt
+**A. Search (Instruction-based)**
+```bash
+uv run trifecta ctx search --segment . \
+  --query "Find documentation about how to implement file locking in sqlite cache" \
+  --limit 5
 ```
 
-### 3. Backlog Governance
+**B. Get (Chunk-based)**
+```bash
+# Use excerpt first to confirm relevance, then full if needed
+uv run trifecta ctx get --segment . --ids "infra:cache_v1,doc:design_p2" --mode excerpt --budget-token-est 900
+```
+
+### 3. Session Evidence Protocol (The 4-Step Cycle)
+1. **PERSIST intent**: `trifecta session append --segment . --summary "..."`
+2. **SEARCH**: Find relevant context via `trifecta ctx search`.
+3. **GET**: Confirm via `trifecta ctx get`.
+4. **RECORD result**: `trifecta session append --segment . --summary "Completed: ..."`
+
+### 4. Backlog Governance
 - **Registry**: `_ctx/backlog/backlog.yaml` (Epic Source of Truth)
 - **Work Orders**: `_ctx/jobs/{pending,running,done}/*.yaml`
 - **Validation**: `python scripts/ctx_backlog_validate.py --strict`
@@ -80,6 +92,19 @@ uv run trifecta ctx get --segment . --ids "infra:cache_v1,doc:design_p2" --mode 
 - **Rollback**: "Default ON" claim must be backed by verifying "Override OFF" via env var.
 - **Backlog**: WOs are atomic state files. Use `git mv` only. Duplicate files break toolchains.
 - **Verification**: `exit 0` is weak. Strong gates assert internal state (e.g. `backend == FileLocked`, `.db` file exists).
+
+---
+
+## 🚫 Anti-Patterns & Violations (Hookify Rules)
+
+| Violation | Code | Description | Fix |
+|-----------|------|-------------|-----|
+| **Stringly-Typed** | P1 | Using string matching for error/type checks. | Use `isinstance(e, ErrorType)` or match/case. |
+| **Non-Deterministic** | P2 | `sleep`, `flaky`, `xfail`, or timing deps. | Use async/await, contract-based outputs. |
+| **CWD Coupling** | P3 | Relative paths (`..`), `os.getcwd()`. | Use `segment_root / "file"`, absolute paths. |
+| **Concurrency Noise** | P4 | Race conditions, stderr pollution, bad shutdown. | Harden lifecycle, tripwire tests, clean threads. |
+| **Env Precedence** | P5 | Unclear env vs flag precedence. | Explicit precedence table, single source of truth. |
+| **Secrets/Debug** | - | Hardcoded secrets, `console.log`, `pdb`. | Use env vars, remove debug code. |
 
 ---
 

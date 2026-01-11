@@ -164,7 +164,11 @@ def lint_query(query: str, anchors_cfg: dict, aliases_cfg: dict) -> LinterPlan:
     else:
         expanded_query = query
         changed = False
-        changes: LinterChanges = {"added_strong": [], "added_weak": [], "reasons": []}
+        changes: LinterChanges = {
+            "added_strong": [],
+            "added_weak": [],
+            "reasons": [],
+        }
 
     return {
         "original_query": query,
