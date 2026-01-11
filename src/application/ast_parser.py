@@ -2,7 +2,7 @@ from pathlib import Path
 import hashlib
 import json
 import ast as ast_module
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from typing import List, Tuple, Optional, TYPE_CHECKING
 from src.domain.ast_models import ChildSymbol, Range
 

@@ -1,7 +1,6 @@
 import pytest
 import yaml
-from pathlib import Path
-from src.domain.query_linter import lint_query, classify_query
+from src.domain.query_linter import lint_query
 
 # Fixtures from real config files
 @pytest.fixture

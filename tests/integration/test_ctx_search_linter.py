@@ -11,7 +11,6 @@ output strings, making them robust to future formatting changes.
 """
 
 import pytest
-from pathlib import Path
 from unittest.mock import Mock, MagicMock, patch
 from src.application.search_get_usecases import SearchUseCase
 
@@ -141,7 +140,7 @@ def test_vague_query_expansion_with_linter_enabled(
         use_case = SearchUseCase(mock_file_system, mock_telemetry)
 
         # Execute with vague query (single token, no anchors)
-        output = use_case.execute(
+        _ = use_case.execute(
             segment_with_configs,
             "config",  # Vague query: 1 token, no anchors
             limit=5,
@@ -209,7 +208,7 @@ def test_vague_query_no_expansion_with_linter_disabled(
         use_case = SearchUseCase(mock_file_system, mock_telemetry)
 
         # Execute with linter disabled
-        output = use_case.execute(
+        _ = use_case.execute(
             segment_with_configs,
             "config",
             limit=5,
@@ -264,7 +263,7 @@ def test_guided_query_not_expanded(
         use_case = SearchUseCase(mock_file_system, mock_telemetry)
 
         # Execute with guided query (5+ tokens with strong anchor)
-        output = use_case.execute(
+        _ = use_case.execute(
             segment_with_configs,
             "agent.md template creation code file",  # Guided: 5 tokens, has agent.md anchor
             limit=5,
@@ -323,7 +322,7 @@ def test_missing_config_disables_linter(
         use_case = SearchUseCase(mock_file_system, mock_telemetry)
 
         # Execute with linter enabled but missing config
-        output = use_case.execute(
+        _ = use_case.execute(
             segment_without_configs,
             "config",
             limit=5,
@@ -385,7 +384,7 @@ def test_semi_query_classification(
 
         # Execute with semi-guided query
         # Semi: 3 tokens, 1 strong anchor (not < 3, not >= 5 with anchors)
-        output = use_case.execute(
+        _ = use_case.execute(
             segment_with_configs,
             "config agent.md setup",  # Semi: 3 tokens, 1 anchor
             limit=5,

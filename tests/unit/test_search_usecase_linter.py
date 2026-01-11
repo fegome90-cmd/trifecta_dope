@@ -1,7 +1,6 @@
 """Tests for SearchUseCase linter integration (deterministic, verify lint_plan)."""
 
 import pytest
-from pathlib import Path
 from unittest.mock import Mock, MagicMock, patch
 from src.application.search_get_usecases import SearchUseCase
 
@@ -69,12 +68,12 @@ anchors:
 
         query_linter.lint_query = mock_lint
 
-        output = use_case.execute(tmp_path, "config", limit=5, enable_lint=True)
+        use_case.execute(tmp_path, "config", limit=5, enable_lint=True)
 
         # Verify linter was applied and query was expanded
         assert lint_plan_captured is not None
         assert lint_plan_captured["query_class"] == "vague"
-        assert lint_plan_captured["changed"] == True
+        assert lint_plan_captured["changed"]
         assert "agent.md" in lint_plan_captured["expanded_query"] or "prime.md" in lint_plan_captured["expanded_query"]
 
         # Verify telemetry recorded linter metrics
@@ -105,7 +104,7 @@ def test_linter_disabled_with_flag(tmp_path, mock_file_system, mock_telemetry):
 
         query_linter.lint_query = mock_lint
 
-        output = use_case.execute(tmp_path, "config", limit=5, enable_lint=False)
+        use_case.execute(tmp_path, "config", limit=5, enable_lint=False)
 
         # Verify linter was NOT called
         assert lint_call_count[0] == 0
@@ -143,8 +142,8 @@ anchors:
         query_linter.lint_query = mock_lint
 
         use_case = SearchUseCase(mock_file_system, mock_telemetry)
-        output = use_case.execute(tmp_path, "agent.md template creation code file", limit=5, enable_lint=True)
+        use_case.execute(tmp_path, "agent.md template creation code file", limit=5, enable_lint=True)
 
         # Verify: guided query, not expanded
         assert lint_plan_captured["query_class"] == "guided"
-        assert lint_plan_captured["changed"] == False
+        assert not lint_plan_captured["changed"]

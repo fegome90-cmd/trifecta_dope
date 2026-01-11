@@ -1,9 +1,7 @@
 import pytest
 import sqlite3
 import json
-import time
-from pathlib import Path
-from src.domain.ast_cache import SQLiteCache, CacheEntry
+from src.domain.ast_cache import SQLiteCache
 from src.application.ast_parser import SkeletonMapBuilder
 
 

@@ -34,7 +34,7 @@ class ConfigLoader:
                 data = yaml.safe_load(f)
 
                 if not isinstance(data, dict) or "anchors" not in data:
-                    print(f"[ConfigLoader] anchors.yaml invalid structure (missing 'anchors' key)", file=sys.stderr)
+                    print("[ConfigLoader] anchors.yaml invalid structure (missing 'anchors' key)", file=sys.stderr)
                     return {"_missing_config": True, "anchors": {}}
 
                 return data
@@ -68,7 +68,7 @@ class ConfigLoader:
                 data = yaml.safe_load(f)
 
                 if not isinstance(data, dict) or "aliases" not in data:
-                    print(f"[ConfigLoader] aliases.yaml invalid structure (missing 'aliases' key)", file=sys.stderr)
+                    print("[ConfigLoader] aliases.yaml invalid structure (missing 'aliases' key)", file=sys.stderr)
                     return {"_missing_config": True, "aliases": []}
 
                 return data

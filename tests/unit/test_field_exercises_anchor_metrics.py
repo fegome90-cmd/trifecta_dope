@@ -5,12 +5,10 @@ Tests the extraction logic using fixture telemetry events.
 """
 
 import json
-from pathlib import Path
 
 import pytest
 
 from eval.scripts.extract_anchor_metrics import (
-    analyze_linter_events,
     extract_anchor_metrics,
     load_telemetry_events,
 )

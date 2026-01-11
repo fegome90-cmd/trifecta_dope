@@ -1,4 +1,3 @@
-import copy
 from typing import TypedDict
 from src.domain.anchor_extractor import extract_anchors
 
@@ -72,8 +71,8 @@ def expand_query(query: str, analysis: dict, anchors_cfg: dict) -> dict:
     added_weak = []
     reasons = []
     
-    # Helper para cargar config safe
-    strong_cfg = anchors_cfg.get("anchors", {}).get("strong", {})
+    # Helper para cargar config safe (unused, kept for potential future use)
+    # strong_cfg = anchors_cfg.get("anchors", {}).get("strong", {})
     # weak_cfg = anchors_cfg.get("anchors", {}).get("weak", {}) # Unused for now
     
     # Detección de intención documental en tokens existentes
