@@ -211,53 +211,109 @@ Examples:
             logger.error(f"Lock info:\n{lock_content}")
             return 1
 
-    # Create atomic lock
-    logger.info(f"Acquiring lock for {wo_id}...")
-    if not create_lock(lock_path, wo_id):
-        logger.error(f"Failed to acquire lock for {wo_id}")
-        return 1
-    logger.info(f"✓ Lock acquired: {lock_path}")
+    # Initialize transaction (NEW)
+    transaction = Transaction(wo_id=wo_id, operations=[])
 
-    # Update WO metadata
-    owner = args.owner or getpass.getuser()
-    wo["owner"] = owner
-    wo["status"] = "running"
-    wo["started_at"] = datetime.now(timezone.utc).isoformat()
-
-    # Auto-generate branch and worktree if not specified
-    branch = wo.get("branch")
-    worktree = wo.get("worktree")
-
-    if branch is None or worktree is None:
-        auto_branch = get_branch_name(wo_id)
-        auto_worktree = get_worktree_path(wo_id, root)
-        logger.info(f"Auto-generated configuration:")
-        logger.info(f"  branch: {auto_branch}")
-        logger.info(f"  worktree: {auto_worktree}")
-
-        if branch is None:
-            branch = auto_branch
-            wo["branch"] = branch
-        if worktree is None:
-            worktree = str(auto_worktree.relative_to(root))
-            wo["worktree"] = worktree
-
-    # Create worktree
     try:
-        logger.info(f"Creating worktree for {wo_id}...")
-        create_worktree(root, wo_id, branch, Path(worktree))
-    except Exception as e:
-        logger.error(f"Failed to create worktree: {e}")
-        # Rollback: remove lock and move WO back to pending
-        lock_path.unlink()
-        logger.info(f"Rolled back: lock removed, WO remains in pending")
-        return 1
+        # Step 1: Acquire lock
+        logger.info(f"Acquiring lock for {wo_id}...")
+        if not create_lock(lock_path, wo_id):
+            logger.error(f"Failed to acquire lock")
+            return 1
 
-    # Move WO to running
-    running_path = running_dir / f"{wo_id}.yaml"
-    write_yaml(running_path, wo)
-    job_path.unlink()
-    logger.info(f"✓ Work order moved to running: {running_path}")
+        logger.info(f"✓ Lock acquired: {lock_path}")
+        transaction = transaction.add_operation(RollbackOperation(
+            name="acquire_lock",
+            description="Remove acquired lock",
+            rollback_type="remove_lock"
+        ))
+
+        # Step 2: Update WO metadata
+        owner = args.owner or getpass.getuser()
+        wo["owner"] = owner
+        wo["status"] = "running"
+        wo["started_at"] = datetime.now(timezone.utc).isoformat()
+
+        # Auto-generate branch and worktree if not specified
+        branch = wo.get("branch")
+        worktree = wo.get("worktree")
+
+        if branch is None or worktree is None:
+            auto_branch = get_branch_name(wo_id)
+            auto_worktree = get_worktree_path(wo_id, root)
+            logger.info(f"Auto-generated configuration:")
+            logger.info(f"  branch: {auto_branch}")
+            logger.info(f"  worktree: {auto_worktree}")
+
+            if branch is None:
+                branch = auto_branch
+                wo["branch"] = branch
+            if worktree is None:
+                worktree = str(auto_worktree.relative_to(root))
+                wo["worktree"] = worktree
+
+        # Step 3: Create worktree (WRAP WITH TRANSACTION)
+        try:
+            logger.info(f"Creating worktree for {wo_id}...")
+            create_worktree(root, wo_id, branch, Path(worktree))
+
+            # Add rollback operations
+            transaction = transaction.add_operation(RollbackOperation(
+                name="create_worktree",
+                description=f"Remove worktree at {worktree}",
+                rollback_type="remove_worktree"
+            ))
+            transaction = transaction.add_operation(RollbackOperation(
+                name="create_branch",
+                description=f"Remove branch {branch}",
+                rollback_type="remove_branch"
+            ))
+        except Exception as e:
+            logger.error(f"Failed to create worktree: {e}")
+            logger.info("Executing rollback...")
+            all_succeeded, failed_ops = execute_rollback(transaction, root)
+            if all_succeeded:
+                logger.info("✓ Rollback completed")
+            else:
+                logger.error(f"✗ Rollback partially failed: {failed_ops}")
+            return 1
+
+        # Step 4: Move WO to running (WRAP WITH TRANSACTION)
+        running_path = running_dir / f"{wo_id}.yaml"
+
+        transaction = transaction.add_operation(RollbackOperation(
+            name="move_wo_running",
+            description="Move WO back to pending and reset metadata",
+            rollback_type="move_wo_to_pending"
+        ))
+
+        try:
+            write_yaml(running_path, wo)
+            job_path.unlink()
+            logger.info(f"✓ Work order moved to running: {running_path}")
+        except Exception as e:
+            logger.error(f"Failed to move WO to running: {e}")
+            logger.info("Executing rollback...")
+            all_succeeded, failed_ops = execute_rollback(transaction, root)
+            if all_succeeded:
+                logger.info("✓ Rollback completed")
+            else:
+                logger.error(f"✗ Rollback partially failed: {failed_ops}")
+            return 1
+
+        # Commit transaction (all operations successful)
+        transaction = transaction.commit()
+        logger.info(f"✓ Transaction committed for WO {wo_id}")
+
+    except Exception as e:
+        logger.error(f"Unexpected error during WO take: {e}")
+        logger.info("Executing rollback...")
+        all_succeeded, failed_ops = execute_rollback(transaction, root)
+        if all_succeeded:
+            logger.info("✓ Rollback completed")
+        else:
+            logger.error(f"✗ Rollback partially failed: {failed_ops}")
+        return 1
 
     # Success message
     print("\n" + "━" * 50)
