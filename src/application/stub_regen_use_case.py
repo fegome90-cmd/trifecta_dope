@@ -2,6 +2,7 @@
 
 import hashlib
 from pathlib import Path
+from typing import Any
 
 
 class StubRegenUseCase:
@@ -113,7 +114,7 @@ Planned features for v2 symbol navigation:
 
     def _detect_modules(self, segment_path: Path) -> list[dict]:
         """Detect module structure from src/ directory."""
-        modules = []
+        modules: list[dict] = []
         src_dir = segment_path / "src"
 
         if not src_dir.exists():
@@ -137,7 +138,7 @@ Planned features for v2 symbol navigation:
     def _compute_hash(self, segment_path: Path) -> str:
         """Compute hash of segment for determinism."""
         # Hash based on directory structure and key files
-        hasher = hashlib.md5()
+        hasher = hashlib.md5(usedforsecurity=False)
 
         # Hash directory listing
         try:
@@ -158,7 +159,12 @@ Planned features for v2 symbol navigation:
         ctx_dir = target_path / "_ctx"
         generated_dir = ctx_dir / "generated"
 
-        result = {"regen_ok": True, "stubs": [], "warnings": [], "errors": []}
+        result: dict[str, Any] = {
+            "regen_ok": True,
+            "stubs": [],
+            "warnings": [],
+            "errors": [],
+        }
 
         # Create generated dir if it doesn't exist
         try:

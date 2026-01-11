@@ -138,7 +138,7 @@ class NoteRenderer:
             if finding.metadata.pattern_family:
                 meta["pattern_family"] = finding.metadata.pattern_family
             if finding.metadata.fix_lean_lines:
-                meta["fix_lean_lines"] = finding.metadata.fix_lean_lines
+                meta["fix_lean_lines"] = str(finding.metadata.fix_lean_lines)
             if finding.metadata.adr:
                 meta["adr"] = finding.metadata.adr
             meta["detected_at"] = finding.metadata.detected_at or finding.created.isoformat()
@@ -277,7 +277,7 @@ class NoteRenderer:
 
         # Related
         if finding.related:
-            related_items = []
+            related_items: list[str] = []
             if finding.related.blocks:
                 related_items.extend(f"[[{id}]]" for id in finding.related.blocks)
             if finding.related.blocked_by:

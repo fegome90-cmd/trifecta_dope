@@ -253,9 +253,9 @@ class ObsidianNote:
 
     def render(self) -> str:
         """Render the full note with frontmatter and content."""
-        import yaml
+        import yaml  # type: ignore
 
-        frontmatter_str = yaml.dump(self.frontmatter, sort_keys=False, default_flow_style=False)
+        frontmatter_str = yaml.dump(self.frontmatter, sort_keys=False, default_flow_style=False)  # type: ignore
 
         return f"---\n{frontmatter_str}---\n\n{self.content}"
 

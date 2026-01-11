@@ -49,7 +49,7 @@ class RuleMetadata:
         effort: Default effort estimate
     """
 
-    priority: Literal["P1", "P2", "P3", "P4", "P5"]
+    priority: Literal["P0", "P1", "P2", "P3", "P4", "P5"]
     category: str
     pattern_family: str
     adr: str | None
@@ -195,7 +195,7 @@ class HookifyExtractor:
     def _priority_meets_min(
         self,
         priority: Literal["P0", "P1", "P2", "P3", "P4", "P5"],
-        min_priority: Literal["P1", "P2", "P3", "P4", "P5"],
+        min_priority: Literal["P0", "P1", "P2", "P3", "P4", "P5"],
     ) -> bool:
         """Check if priority meets minimum threshold.
 

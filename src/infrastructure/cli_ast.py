@@ -1,4 +1,4 @@
-import typer
+import typer  # type: ignore
 import time
 import json
 from pathlib import Path
@@ -7,7 +7,7 @@ from src.infrastructure.telemetry import Telemetry
 from src.domain.result import Ok, Err
 from src.application.symbol_selector import SymbolQuery
 from src.application.ast_parser import SkeletonMapBuilder, ParseResult
-from src.domain.ast_cache import AstCache, InMemoryLRUCache, SQLiteCache, NullCache
+from src.domain.ast_cache import AstCache, InMemoryLRUCache, SQLiteCache
 
 ast_app = typer.Typer(help="AST & Parsing Commands")
 
