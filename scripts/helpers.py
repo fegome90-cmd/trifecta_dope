@@ -462,3 +462,79 @@ def check_lock_validity(lock_path: Path, max_age_seconds: int = 3600) -> tuple[b
     except Exception as e:
         logger.error(f"Unexpected error reading lock: {type(e).__name__}: {e}")
         return False, None
+
+
+def execute_rollback(transaction, root: Path) -> tuple[bool, list[str]]:
+    """
+    Execute rollback for a failed transaction using BEST-EFFORT strategy.
+
+    **BEST-EFFORT ROLLBACK:**
+    Continues attempting rollback even if individual operations fail.
+    This maximizes cleanup but may leave partial state.
+
+    Args:
+        transaction: Transaction with operations to rollback
+        root: Repository root path
+
+    Returns:
+        Tuple of (all_succeeded, failed_operations)
+        - all_succeeded: True only if ALL rollbacks succeeded
+        - failed_operations: List of operation names that failed
+    """
+    if transaction.is_committed:
+        logger.warning("Transaction already committed, no rollback needed")
+        return True, []
+
+    logger.info(f"Executing BEST-EFFORT rollback for WO {transaction.wo_id}")
+    failed_ops = []
+
+    # Execute rollbacks in reverse order (LIFO)
+    for op in reversed(transaction.operations):
+        logger.info(f"Rolling back: {op.name} - {op.description}")
+
+        try:
+            if op.rollback_type == "remove_lock":
+                lock_path = root / "_ctx" / "jobs" / "running" / f"{transaction.wo_id}.lock"
+                if lock_path.exists():
+                    lock_path.unlink()
+                    logger.info(f"✓ Removed lock: {lock_path}")
+
+            elif op.rollback_type == "move_wo_to_pending":
+                running_path = root / "_ctx" / "jobs" / "running" / f"{transaction.wo_id}.yaml"
+                pending_path = root / "_ctx" / "jobs" / "pending" / f"{transaction.wo_id}.yaml"
+
+                if running_path.exists():
+                    wo_data = yaml.safe_load(running_path.read_text())
+                    wo_data["status"] = "pending"
+                    wo_data["started_at"] = None
+                    wo_data["owner"] = None
+
+                    pending_path.write_text(yaml.safe_dump(wo_data, sort_keys=False))
+                    running_path.unlink()
+                    logger.info(f"✓ Moved WO back to pending: {transaction.wo_id}")
+
+            elif op.rollback_type == "remove_worktree":
+                worktree_path = root / ".worktrees" / transaction.wo_id
+                if worktree_path.exists():
+                    cleanup_worktree(root, transaction.wo_id)
+                    logger.info(f"✓ Removed worktree: {worktree_path}")
+
+            elif op.rollback_type == "remove_branch":
+                branch = get_branch_name(transaction.wo_id)
+                run_command(["git", "branch", "-D", branch], cwd=root, check=False)
+                logger.info(f"✓ Removed branch: {branch}")
+
+        except Exception as e:
+            error_msg = f"{op.name}: {type(e).__name__}: {e}"
+            logger.error(f"✗ Rollback failed: {error_msg}")
+            failed_ops.append(error_msg)
+            # CONTINUE anyway - best-effort cleanup
+
+    # Report final status
+    if failed_ops:
+        logger.warning(f"Rollback completed with {len(failed_ops)} failures: {failed_ops}")
+        logger.warning(f"Manual intervention may be required for WO {transaction.wo_id}")
+        return False, failed_ops
+    else:
+        logger.info(f"✓ Rollback completed successfully for WO {transaction.wo_id}")
+        return True, []
