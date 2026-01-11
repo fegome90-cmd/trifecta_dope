@@ -68,5 +68,6 @@ TRIFECTA_AST_PERSIST = 1
 
 [dependency-groups]
 dev = [
+    "mypy>=1.19.1",
     "pytest-env>=1.2.0",
 ]

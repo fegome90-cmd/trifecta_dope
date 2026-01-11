@@ -11,16 +11,22 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-# Import from worktree version
-import sys
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / ".worktrees" / "wo0013-ast-adoption-observability"))
-
 from eval.scripts.analyze_adoption_telemetry import (
     analyze_backend_distribution,
     analyze_cache_effectiveness,
     analyze_lock_contention,
     filter_events_by_days,
     scan_db_growth,
+    BackendDistributionResult,
+    BackendStats,
+    CacheEffectivenessStats,
+    LockContentionResult,
+    LockWaitStats,
+    TimeoutStats,
+    DbGrowthResult,
+    DbFileInfo,
+    TelemetryEvent,
+    AnalysisPeriod,
     CACHE_DIR_NAME,
     CACHE_SUBDIR_NAME,
     CACHE_DB_PATTERN,
@@ -103,10 +109,12 @@ def test_scan_db_growth_handles_deleted_files(mock_segment_path, caplog):
         result = scan_db_growth(mock_segment_path)
 
     # Should continue processing and return partial results
-    assert result["db_exists"] is True
-    assert result["file_count"] == 2  # Still counts all files from glob
-    assert len(result["files"]) == 1  # But only one successfully processed
-    assert result["files"][0]["name"] == "ast_cache_abc123.db"
+    assert isinstance(result, DbGrowthResult)
+    assert result.db_exists is True
+    # file_count now represents successfully processed files (not glob results)
+    assert result.file_count == 1
+    assert len(result.files) == 1
+    assert result.files[0].name == "ast_cache_abc123.db"
 
     # Should log warning for deleted file
     assert any("deleted during scan" in record.message.lower() for record in caplog.records)
@@ -116,33 +124,38 @@ def test_scan_db_growth_empty_cache_dir(mock_segment_path):
     """Test edge case: Cache directory exists but no .db files."""
     result = scan_db_growth(mock_segment_path)
 
-    assert result["db_exists"] is True
-    assert result["file_count"] == 0
-    assert result["total_size_mb"] == 0
-    assert result["files"] == []
+    assert isinstance(result, DbGrowthResult)
+    assert result.db_exists is True
+    assert result.file_count == 0
+    assert result.total_size_mb == 0
+    assert result.files == []
 
 
 def test_scan_db_growth_cache_dir_not_exists(tmp_path):
     """Test edge case: Cache directory doesn't exist."""
     result = scan_db_growth(tmp_path)
 
-    assert result["db_exists"] is False
-    assert result["file_count"] == 0
-    assert result["total_size_mb"] == 0
-    assert result["files"] == []
+    assert isinstance(result, DbGrowthResult)
+    assert result.db_exists is False
+    assert result.file_count == 0
+    assert result.total_size_mb == 0
+    assert result.files == []
 
 
 def test_analyze_lock_contention_empty_events():
     """Test edge case: Empty events list for lock contention."""
     result = analyze_lock_contention([])
 
-    assert result["lock_waits"]["total_waits"] == 0
-    assert result["lock_waits"]["avg_wait_ms"] == 0
-    assert result["lock_waits"]["p50_wait_ms"] == 0
-    assert result["lock_waits"]["p95_wait_ms"] == 0
-    assert result["lock_waits"]["max_wait_ms"] == 0
-    assert result["timeouts"]["count"] == 0
-    assert result["timeouts"]["rate_percent"] == 0
+    assert isinstance(result, LockContentionResult)
+    assert isinstance(result.lock_waits, LockWaitStats)
+    assert isinstance(result.timeouts, TimeoutStats)
+    assert result.lock_waits.total_waits == 0
+    assert result.lock_waits.avg_wait_ms == 0
+    assert result.lock_waits.p50_wait_ms == 0
+    assert result.lock_waits.p95_wait_ms == 0
+    assert result.lock_waits.max_wait_ms == 0
+    assert result.timeouts.count == 0
+    assert result.timeouts.rate_percent == 0
 
 
 def test_analyze_lock_contention_single_wait():
@@ -154,11 +167,13 @@ def test_analyze_lock_contention_single_wait():
     result = analyze_lock_contention(events)
 
     # With single value, all percentiles should equal that value
-    assert result["lock_waits"]["total_waits"] == 1
-    assert result["lock_waits"]["avg_wait_ms"] == 42
-    assert result["lock_waits"]["p50_wait_ms"] == 42
-    assert result["lock_waits"]["p95_wait_ms"] == 42
-    assert result["lock_waits"]["max_wait_ms"] == 42
+    assert isinstance(result, LockContentionResult)
+    assert isinstance(result.lock_waits, LockWaitStats)
+    assert result.lock_waits.total_waits == 1
+    assert result.lock_waits.avg_wait_ms == 42
+    assert result.lock_waits.p50_wait_ms == 42
+    assert result.lock_waits.p95_wait_ms == 42
+    assert result.lock_waits.max_wait_ms == 42
 
 
 def test_constants_defined():
@@ -177,10 +192,11 @@ def test_analyze_backend_distribution_empty_events():
     """Test edge case: Empty events for backend distribution."""
     result = analyze_backend_distribution([])
 
-    assert result["total_runs"] == 0
-    assert result["by_backend"] == {}
-    # adoption_rate is NOT included when total_runs == 0
-    assert "adoption_rate" not in result
+    assert isinstance(result, BackendDistributionResult)
+    assert result.total_runs == 0
+    assert result.by_backend == {}
+    # adoption_rate is included when total_runs == 0 (defaults to 0.0)
+    assert result.adoption_rate == 0.0
 
 
 def test_analyze_backend_distribution_counts_correctly(sample_events):
@@ -192,12 +208,14 @@ def test_analyze_backend_distribution_counts_correctly(sample_events):
     result = analyze_backend_distribution(sample_events)
 
     # All 6 events have backend field
-    assert result["total_runs"] == 6
-    assert result["by_backend"]["FileLockedAstCache"]["count"] == 5
-    assert result["by_backend"]["InMemoryLRUCache"]["count"] == 1
-    assert result["by_backend"]["FileLockedAstCache"]["percentage"] == 83.3
-    assert result["by_backend"]["InMemoryLRUCache"]["percentage"] == 16.7
-    assert result["adoption_rate"] == 83.3
+    assert isinstance(result, BackendDistributionResult)
+    assert result.total_runs == 6
+    assert isinstance(result.by_backend["FileLockedAstCache"], BackendStats)
+    assert result.by_backend["FileLockedAstCache"].count == 5
+    assert result.by_backend["InMemoryLRUCache"].count == 1
+    assert result.by_backend["FileLockedAstCache"].percentage == 83.3
+    assert result.by_backend["InMemoryLRUCache"].percentage == 16.7
+    assert result.adoption_rate == 83.3
 
 
 def test_analyze_backend_distribution_unknown_backend():
@@ -209,9 +227,11 @@ def test_analyze_backend_distribution_unknown_backend():
 
     result = analyze_backend_distribution(events)
 
-    assert result["total_runs"] == 2
-    assert result["by_backend"]["Unknown"]["count"] == 1
-    assert result["by_backend"]["FileLockedAstCache"]["count"] == 1
+    assert isinstance(result, BackendDistributionResult)
+    assert result.total_runs == 2
+    assert isinstance(result.by_backend["Unknown"], BackendStats)
+    assert result.by_backend["Unknown"].count == 1
+    assert result.by_backend["FileLockedAstCache"].count == 1
 
 
 def test_analyze_cache_effectiveness_no_hits_misses():
@@ -233,10 +253,11 @@ def test_analyze_cache_effectiveness_calculates_hit_rate(sample_events):
 
     # FileLockedAstCache: 1 hit, 1 miss = 50% hit rate
     assert "FileLockedAstCache" in result
-    assert result["FileLockedAstCache"]["hits"] == 1
-    assert result["FileLockedAstCache"]["misses"] == 1
-    assert result["FileLockedAstCache"]["total_operations"] == 2
-    assert result["FileLockedAstCache"]["hit_rate"] == 0.5
+    assert isinstance(result["FileLockedAstCache"], CacheEffectivenessStats)
+    assert result["FileLockedAstCache"].hits == 1
+    assert result["FileLockedAstCache"].misses == 1
+    assert result["FileLockedAstCache"].total_operations == 2
+    assert result["FileLockedAstCache"].hit_rate == 0.5
 
 
 def test_filter_events_by_days_filters_correctly():
@@ -255,3 +276,97 @@ def test_filter_events_by_days_filters_correctly():
 
     assert len(result) == 1
     assert result[0]["ts"] == recent_event
+
+
+# ============================================================================
+# Dataclass Validation Tests
+# ============================================================================
+
+def test_telemetry_event_empty_ts_raises():
+    """Test TelemetryEvent validation: empty ts raises ValueError."""
+    with pytest.raises(ValueError, match="ts cannot be empty"):
+        TelemetryEvent(ts="", cmd="ast.symbols")
+
+
+def test_telemetry_event_empty_cmd_raises():
+    """Test TelemetryEvent validation: empty cmd raises ValueError."""
+    with pytest.raises(ValueError, match="cmd cannot be empty"):
+        TelemetryEvent(ts="2026-01-09T12:00:00Z", cmd="")
+
+
+def test_telemetry_event_with_valid_fields():
+    """Test TelemetryEvent with valid fields creates instance."""
+    event = TelemetryEvent(
+        ts="2026-01-09T12:00:00Z",
+        cmd="ast.symbols",
+        result={"backend": "FileLockedAstCache", "status": "ok"},
+        timing_ms=42
+    )
+    assert event.ts == "2026-01-09T12:00:00Z"
+    assert event.cmd == "ast.symbols"
+    assert event.timing_ms == 42
+
+
+def test_analysis_period_invalid_days_raises():
+    """Test AnalysisPeriod validation: days < 1 raises ValueError."""
+    with pytest.raises(ValueError, match="days_analyzed must be >= 1"):
+        AnalysisPeriod(
+            start="2026-01-01T00:00:00Z",
+            end="2026-01-08T00:00:00Z",
+            days_analyzed=0,
+            total_events=100,
+            segment_path="/path"
+        )
+
+
+def test_analysis_period_negative_events_raises():
+    """Test AnalysisPeriod validation: negative total_events raises ValueError."""
+    with pytest.raises(ValueError, match="total_events must be >= 0"):
+        AnalysisPeriod(
+            start="2026-01-01T00:00:00Z",
+            end="2026-01-08T00:00:00Z",
+            days_analyzed=7,
+            total_events=-1,
+            segment_path="/path"
+        )
+
+
+def test_backend_stats_negative_count_raises():
+    """Test BackendStats validation: negative count raises ValueError."""
+    with pytest.raises(ValueError, match="count must be >= 0"):
+        BackendStats(count=-1, percentage=50.0)
+
+
+def test_backend_stats_percentage_out_of_range_low_raises():
+    """Test BackendStats validation: percentage < 0 raises ValueError."""
+    with pytest.raises(ValueError, match="percentage must be 0-100"):
+        BackendStats(count=10, percentage=-0.1)
+
+
+def test_backend_stats_percentage_out_of_range_high_raises():
+    """Test BackendStats validation: percentage > 100 raises ValueError."""
+    with pytest.raises(ValueError, match="percentage must be 0-100"):
+        BackendStats(count=10, percentage=100.1)
+
+
+def test_cache_effectiveness_stats_hit_rate_mismatch_raises():
+    """Test CacheEffectivenessStats validation: hit_rate mismatch raises ValueError."""
+    with pytest.raises(ValueError, match="hit_rate.*!= calculated"):
+        CacheEffectivenessStats(
+            hits=1,
+            misses=1,
+            total_operations=2,
+            hit_rate=0.9  # Should be 0.5
+        )
+
+
+def test_cache_effectiveness_stats_negative_operations_raises():
+    """Test CacheEffectivenessStats validation: negative values raises ValueError."""
+    # Note: hits validation happens first, so we get hits error not total_operations error
+    with pytest.raises(ValueError, match="hits must be >= 0"):
+        CacheEffectivenessStats(
+            hits=-1,
+            misses=0,
+            total_operations=-1,
+            hit_rate=0.0
+        )
