@@ -1,4 +1,3 @@
-import copy
 from src.domain.anchor_extractor import extract_anchors
 
 def classify_query(query: str, anchors_cfg: dict, aliases_cfg: dict) -> dict:
@@ -51,11 +50,7 @@ def expand_query(query: str, analysis: dict, anchors_cfg: dict) -> dict:
     added_strong: list[str] = []
     added_weak: list[str] = []
     reasons: list[str] = []
-    
-    # Helper para cargar config safe
-    strong_cfg = anchors_cfg.get("anchors", {}).get("strong", {})
-    # weak_cfg = anchors_cfg.get("anchors", {}).get("weak", {}) # Unused for now
-    
+
     # Detección de intención documental en tokens existentes
     # Usamos los weak anchors detectados en analysis
     existing_weak = analysis["anchors"]["weak"]

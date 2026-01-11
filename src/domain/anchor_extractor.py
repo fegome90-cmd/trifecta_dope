@@ -1,4 +1,3 @@
-import re
 
 def extract_anchors(query: str, anchors_cfg: dict, aliases_cfg: dict) -> dict:
     """
