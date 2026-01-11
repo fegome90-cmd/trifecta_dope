@@ -138,7 +138,7 @@ Planned features for v2 symbol navigation:
     def _compute_hash(self, segment_path: Path) -> str:
         """Compute hash of segment for determinism."""
         # Hash based on directory structure and key files
-        hasher = hashlib.md5()
+        hasher = hashlib.md5(usedforsecurity=False)
 
         # Hash directory listing
         try:

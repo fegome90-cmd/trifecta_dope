@@ -445,7 +445,7 @@ class BuildContextPackUseCase:
             # Stable ID: doc:sha1(doc + "\n" + title_path_norm + "\n" + text_sha256)[:10]
             title_path_norm = file_path.name
             id_input = f"{doc_type}\n{title_path_norm}\n{sha256}"
-            content_hash = hashlib.sha1(id_input.encode()).hexdigest()[:10]
+            content_hash = hashlib.sha1(id_input.encode(), usedforsecurity=False).hexdigest()[:10]
             chunk_id = f"{doc_type}:{content_hash}"
 
             chunk = ContextChunk(
