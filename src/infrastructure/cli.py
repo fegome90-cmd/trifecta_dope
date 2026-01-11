@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 from typing import Literal, Optional, Tuple
 
-import typer
+import typer  # type: ignore
 
 # AST/LSP Integration (Phase 2a/2b)
 from src.infrastructure.cli_ast import ast_app

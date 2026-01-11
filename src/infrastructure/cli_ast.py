@@ -1,4 +1,4 @@
-import typer
+import typer  # type: ignore
 import time
 import json
 from pathlib import Path

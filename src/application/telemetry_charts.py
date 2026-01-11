@@ -172,7 +172,7 @@ def generate_chart(segment_path, chart_type: str = "hits", days: int = 7) -> str
         from datetime import datetime
         from collections import defaultdict
 
-        daily_hits = defaultdict(int)
+        daily_hits: dict[str, int] = defaultdict(int)
         for event in events:
             if event["cmd"] == "ctx.search":
                 try:

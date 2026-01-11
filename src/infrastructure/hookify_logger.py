@@ -281,10 +281,10 @@ class HookifyEvidenceLogger:
         Uses unique temp filename to avoid collisions.
         """
         # Use tempfile.mkstemp for unique temp filename
-        fd, temp_path = tempfile.mkstemp(
+        fd, temp_path_str = tempfile.mkstemp(
             dir=self.evidence_path.parent, prefix=self.evidence_path.name + ".", suffix=".tmp"
         )
-        temp_path = Path(temp_path)
+        temp_path = Path(temp_path_str)
 
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as f:
@@ -316,7 +316,7 @@ class HookifyEvidenceLogger:
 
         return removed
 
-    def stats(self) -> dict[str, int]:
+    def stats(self) -> dict[str, int | dict[str, int]]:
         """Get statistics about violations.
 
         Returns:
@@ -324,7 +324,7 @@ class HookifyEvidenceLogger:
         """
         violations = self._load_all()
 
-        stats = {
+        stats: dict[str, int | dict[str, int]] = {
             "total": len(violations),
             "open": 0,
             "resolved": 0,
@@ -333,7 +333,11 @@ class HookifyEvidenceLogger:
         }
 
         for v in violations:
-            stats[v.status] = stats.get(v.status, 0) + 1
-            stats["by_rule"][v.rule_name] = stats["by_rule"].get(v.rule_name, 0) + 1
+            current_count = stats.get(v.status, 0)
+            assert isinstance(current_count, int)
+            stats[v.status] = current_count + 1
+            by_rule = stats["by_rule"]
+            assert isinstance(by_rule, dict)
+            by_rule[v.rule_name] = by_rule.get(v.rule_name, 0) + 1
 
         return stats

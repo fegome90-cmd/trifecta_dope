@@ -7,7 +7,7 @@ import signal
 import fcntl
 import subprocess
 from pathlib import Path
-from typing import Optional, Dict
+from typing import Any, Optional, Dict
 from src.infrastructure.lsp_client import LSPClient
 from src.infrastructure.telemetry import Telemetry
 from src.infrastructure.segment_utils import resolve_segment_root, compute_segment_id
@@ -39,7 +39,7 @@ class LSPDaemonServer:
         self.telemetry = Telemetry(self.root)
         self.lsp_client = LSPClient(self.root, self.telemetry)
 
-        self._lock_fp = None
+        self._lock_fp: Any = None
 
     def start(self):
         """Main Daemon Entrypoint"""
@@ -243,7 +243,7 @@ class LSPDaemonClient:
             f = s.makefile("r")
             line = f.readline()
             if line:
-                return json.loads(line)
+                return json.loads(line)  # type: ignore[no-any-return]
         except Exception:
             return {"status": "error", "message": "Connection Failed"}
         finally:
@@ -252,7 +252,7 @@ class LSPDaemonClient:
 
     def is_ready(self) -> bool:
         resp = self.send({"method": "status"})
-        return resp.get("data", {}).get("state") == "READY"
+        return resp.get("data", {}).get("state") == "READY"  # type: ignore[no-any-return]
 
     def request(self, method: str, params: Dict) -> Optional[Dict]:
         resp = self.send({"method": "request", "params": {"method": method, "params": params}})

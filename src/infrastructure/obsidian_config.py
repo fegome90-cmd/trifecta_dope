@@ -21,7 +21,7 @@ import os
 from pathlib import Path
 from typing import Optional
 
-import yaml
+import yaml  # type: ignore
 
 from src.domain.obsidian_models import ObsidianConfig
 
@@ -156,13 +156,15 @@ class ObsidianConfigManager:
         # TRIFECTA_OBSIDIAN_MIN_PRIORITY
         env_priority = os.environ.get(f"{self.ENV_PREFIX}MIN_PRIORITY")
         if env_priority:
+            from typing import cast, Literal
+
             valid = {"P0", "P1", "P2", "P3", "P4", "P5"}
             if env_priority not in valid:
                 raise ValueError(
                     f"Invalid TRIFECTA_OBSIDIAN_MIN_PRIORITY: {env_priority}. "
                     f"Must be one of {valid}"
                 )
-            min_priority = env_priority  # type: ignore
+            min_priority = cast(Literal["P0", "P1", "P2", "P3", "P4", "P5"], env_priority)
         else:
             min_priority = config.min_priority
 

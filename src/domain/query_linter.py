@@ -48,9 +48,9 @@ def expand_query(query: str, analysis: dict, anchors_cfg: dict) -> dict:
             "reasons": []
         }
         
-    added_strong = []
-    added_weak = []
-    reasons = []
+    added_strong: list[str] = []
+    added_weak: list[str] = []
+    reasons: list[str] = []
     
     # Helper para cargar config safe
     strong_cfg = anchors_cfg.get("anchors", {}).get("strong", {})

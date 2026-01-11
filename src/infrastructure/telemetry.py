@@ -72,7 +72,7 @@ def _sanitize_event(event: dict) -> dict:
 
 
 class Telemetry:
-    def __init__(self, root: Path = None, level: str = "full"):
+    def __init__(self, root: Path | None = None, level: str = "full"):
         # KILL SWITCH: Detect pre-commit or explicit off mode
         # Priority:
         # 1. PRE_COMMIT=1 or level="off" => Complete NO-OP (no dirs, no writes)

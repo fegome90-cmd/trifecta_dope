@@ -126,7 +126,7 @@ class PlanUseCase:
             # Check schema version (T9.3.2: support v3 with nl_triggers)
             schema_version = data.get("schema_version", 1)
             if schema_version >= 2:
-                return data.get("features", {})
+                return data.get("features", {})  # type: ignore[no-any-return]
         except Exception:
             pass
 
@@ -136,10 +136,10 @@ class PlanUseCase:
         """Simple YAML parser for aliases.yaml structure."""
         # This is a minimal YAML parser for our specific structure
         # For production, use proper YAML library
-        import yaml
+        import yaml  # type: ignore
 
         try:
-            return yaml.safe_load(content)
+            return yaml.safe_load(content)  # type: ignore
         except ImportError:
             # Fallback: return empty dict if yaml not available
             return {}
@@ -616,7 +616,7 @@ class PlanUseCase:
         available_features = set(features.keys())
 
         # Initialize result
-        result = {
+        result: dict[str, Any] = {
             "selected_feature": None,
             "plan_hit": False,
             "selected_by": None,  # "feature" (L1) | "nl_trigger" (L2) | "alias" (L3) | "fallback" (L4)
@@ -830,7 +830,8 @@ class PlanUseCase:
             # T9.3.3: Include L2 matching details
             if result.get("l2_warning"):
                 telemetry_attrs["l2_warning"] = result["l2_warning"]
-            if result.get("l2_score") > 0:
+            l2_score = result.get("l2_score")
+            if l2_score is not None and l2_score > 0:
                 telemetry_attrs["l2_score"] = result["l2_score"]
             if result.get("l2_match_mode"):
                 telemetry_attrs["l2_match_mode"] = result["l2_match_mode"]
