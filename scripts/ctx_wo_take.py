@@ -26,7 +26,9 @@ from helpers import (
 
 # Import domain entities
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-from domain.wo_transactions import Transaction, RollbackOperation
+from domain.wo_entities import WorkOrder, WOState, Priority, WOValidationError
+from domain.wo_transactions import Transaction, RollbackOperation, RollbackType
+from domain.result import Ok, Err
 
 
 def load_yaml(path: Path):
@@ -61,9 +63,12 @@ def get_completed_wo_ids(root: Path) -> set[str]:
     }
 
 
-def validate_dependencies(wo_data: dict, root: Path) -> tuple[bool, str | None]:
+def validate_dependencies_using_domain(wo_data: dict, root: Path) -> tuple[bool, str | None]:
     """
-    Validate WO dependencies are satisfied.
+    Validate WO dependencies using the domain's validation logic.
+
+    This function creates a WorkOrder entity and calls its validate_dependencies
+    method, avoiding duplication of validation logic.
 
     Args:
         wo_data: WO YAML data
@@ -72,17 +77,44 @@ def validate_dependencies(wo_data: dict, root: Path) -> tuple[bool, str | None]:
     Returns:
         Tuple of (is_valid, error_message)
     """
-    dependencies = wo_data.get("dependencies", [])
-    if not dependencies:
-        return True, None
+    # Convert string priority to Priority enum if needed
+    priority_str = wo_data.get("priority", "medium")
+    priority = Priority(priority_str.lower()) if isinstance(priority_str, str) else priority_str
 
+    # Convert dependencies list to tuple if needed
+    deps_list = wo_data.get("dependencies", [])
+    dependencies = tuple(deps_list) if isinstance(deps_list, list) else deps_list
+
+    try:
+        # Create WorkOrder entity (this validates structure via __post_init__)
+        wo = WorkOrder(
+            id=wo_data["id"],
+            epic_id=wo_data.get("epic_id", ""),
+            title=wo_data.get("title", ""),
+            priority=priority,
+            status=WOState(wo_data.get("status", "pending")),
+            owner=wo_data.get("owner"),
+            dod_id=wo_data.get("dod_id", ""),
+            dependencies=dependencies,
+            started_at=None,  # Not needed for dependency validation
+            finished_at=None,
+            branch=None,
+            worktree=None,
+        )
+    except ValueError as e:
+        return False, str(e)
+
+    # Get completed WO IDs
     completed_ids = get_completed_wo_ids(root)
-    unsatisfied = [dep for dep in dependencies if dep not in completed_ids]
 
-    if unsatisfied:
-        return False, f"Dependencies not satisfied: {', '.join(unsatisfied)}"
+    # Use domain's validation method
+    result = wo.validate_dependencies(completed_ids)
 
-    return True, None
+    if isinstance(result, Ok):
+        return True, None
+    else:
+        error = result.unwrap_err()
+        return False, error.message
 
 
 def main():
@@ -186,9 +218,9 @@ Examples:
         logger.error(f"Unknown epic_id: {wo.get('epic_id')}")
         return 1
 
-    # Validate dependencies (NEW)
+    # Validate dependencies using domain logic
     if not args.force:
-        deps_valid, deps_error = validate_dependencies(wo, root)
+        deps_valid, deps_error = validate_dependencies_using_domain(wo, root)
         if not deps_valid:
             logger.error(f"Dependency validation failed: {deps_error}")
             logger.error("Use --force to override (not recommended)")
