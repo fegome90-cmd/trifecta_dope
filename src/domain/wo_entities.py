@@ -2,12 +2,17 @@
 Work Order domain entities and business rules.
 Pure domain module - no IO, no external dependencies.
 """
+import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Optional
 
 from src.domain.result import Result, Ok, Err
+
+
+# Pattern for valid WO IDs (WO-XXXX format)
+WO_ID_PATTERN = re.compile(r"^WO-\d{4}$", re.IGNORECASE)
 
 
 class WOState(Enum):
@@ -17,6 +22,17 @@ class WOState(Enum):
     DONE = "done"
     FAILED = "failed"
     PARTIAL = "partial"  # NEW: Support partial completion
+
+
+class Priority(StrEnum):
+    """Valid priority levels for Work Orders.
+
+    Ordered from highest to lowest urgency.
+    """
+    CRITICAL = "critical"
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
 
 
 @dataclass(frozen=True)
@@ -33,15 +49,51 @@ class WorkOrder:
     id: str
     epic_id: str
     title: str
-    priority: str
+    priority: Priority
     status: WOState
     owner: Optional[str]
     dod_id: str
-    dependencies: list[str]
+    dependencies: tuple[str, ...]
     started_at: Optional[datetime]
     finished_at: Optional[datetime]
     branch: Optional[str]
     worktree: Optional[str]
+
+    def __post_init__(self) -> None:
+        """Validate WorkOrder invariants after construction.
+
+        Raises:
+            ValueError: If any invariant is violated
+        """
+        # Validate ID format (WO-XXXX)
+        if not self.id or not WO_ID_PATTERN.match(self.id):
+            raise ValueError(f"Invalid WO ID format: '{self.id}'. Expected format: WO-XXXX")
+
+        # Validate DoD ID is non-empty
+        if not self.dod_id or not self.dod_id.strip():
+            raise ValueError(f"DoD ID cannot be empty: '{self.dod_id}'")
+
+        # Validate title is non-empty
+        if not self.title or not self.title.strip():
+            raise ValueError(f"Title cannot be empty for WO: {self.id}")
+
+        # Validate no self-dependencies
+        if self.id in self.dependencies:
+            raise ValueError(f"WO cannot depend on itself: {self.id} has self-dependency")
+
+        # Validate temporal consistency: if RUNNING, must have started_at
+        if self.status == WOState.RUNNING and self.started_at is None:
+            raise ValueError(f"WO {self.id} has status RUNNING but no started_at timestamp")
+
+        # Validate temporal consistency: if DONE/FAILED/PARTIAL, must have finished_at
+        if self.status in (WOState.DONE, WOState.FAILED, WOState.PARTIAL):
+            if self.finished_at is None:
+                raise ValueError(f"WO {self.id} has status {self.status.value} but no finished_at timestamp")
+            # Ensure finished_at is after started_at
+            if self.started_at and self.finished_at < self.started_at:
+                raise ValueError(
+                    f"WO {self.id} finished_at ({self.finished_at}) is before started_at ({self.started_at})"
+                )
 
     def can_transition_to(self, new_state: WOState) -> Result[None, WOValidationError]:
         """Validate state transition is legal."""
