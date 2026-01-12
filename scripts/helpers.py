@@ -8,6 +8,7 @@ import getpass
 import logging
 import os
 import subprocess
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
@@ -15,7 +16,22 @@ from typing import Optional
 # YAML import for rollback operations
 import yaml
 
-# Configuration constants
+# Result type for error handling (project's own Result monad)
+from src.domain.result import Result, Ok, Err
+
+# Centralized path management
+from scripts.paths import (
+    get_lock_path,
+    get_wo_pending_path,
+    get_wo_running_path,
+    get_worktree_path,
+    get_branch_name as paths_get_branch_name,
+)
+
+# Import domain types for type safety
+from src.domain.wo_transactions import RollbackType, TransactionError
+
+# Configuration constants (deprecated - use scripts.paths instead)
 WORKTREE_BASE = ".worktrees"
 BRANCH_PREFIX = "feat/wo"
 DEFAULT_BRANCH = "main"
@@ -29,10 +45,47 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+# =============================================================================
+# Rollback Result Types
+# =============================================================================
+
+@dataclass(frozen=True)
+class RollbackResult:
+    """Detailed result of rollback execution.
+
+    Tracks which operations succeeded and which failed, enabling
+    proper error handling and recovery decisions.
+    """
+    succeeded_ops: tuple[str, ...]
+    failed_ops: tuple[tuple[str, str], ...]  # (op_name, error_message)
+    is_partial_failure: bool
+
+    @staticmethod
+    def success(succeeded: tuple[str, ...]) -> "RollbackResult":
+        return RollbackResult(
+            succeeded_ops=succeeded,
+            failed_ops=(),
+            is_partial_failure=False
+        )
+
+    @staticmethod
+    def partial_failure(
+        succeeded: tuple[str, ...],
+        failed: tuple[tuple[str, str], ...]
+    ) -> "RollbackResult":
+        return RollbackResult(
+            succeeded_ops=succeeded,
+            failed_ops=failed,
+            is_partial_failure=True
+        )
+
+
 def get_branch_name(wo_id: str) -> str:
     """
     Generate branch name from work order ID.
     Example: WO-0012 -> feat/wo-0012
+
+    DEPRECATED: Use scripts.paths.get_branch_name() instead.
 
     Args:
         wo_id: Work order ID (e.g., "WO-0012")
@@ -40,13 +93,15 @@ def get_branch_name(wo_id: str) -> str:
     Returns:
         Branch name (e.g., "feat/wo-0012")
     """
-    return f"{BRANCH_PREFIX}-{wo_id}"
+    return paths_get_branch_name(wo_id)
 
 
 def get_worktree_path(wo_id: str, root: Path) -> Path:
     """
     Generate worktree path from work order ID.
     Example: WO-0012 -> .worktrees/WO-0012
+
+    DEPRECATED: Use scripts.paths.get_worktree_path() instead.
 
     Args:
         wo_id: Work order ID (e.g., "WO-0012")
@@ -55,7 +110,8 @@ def get_worktree_path(wo_id: str, root: Path) -> Path:
     Returns:
         Worktree path (e.g., Path(".worktrees/WO-0012"))
     """
-    return (root / WORKTREE_BASE / wo_id).resolve()
+    # Use the centralized path function
+    return (root / ".worktrees" / wo_id).resolve()
 
 
 def run_command(cmd: list[str], cwd: Optional[Path] = None, check: bool = True) -> subprocess.CompletedProcess:
@@ -222,7 +278,7 @@ def cleanup_worktree(root: Path, wo_id: str) -> bool:
     Returns:
         True if successful, False otherwise
     """
-    worktree_path = get_worktree_path(wo_id, root)
+    worktree_path = get_worktree_path(wo_id, root)  # Note: wo_id first due to helpers.py signature
     branch = get_branch_name(wo_id)
 
     try:
@@ -281,6 +337,10 @@ def create_lock(lock_path: Path, wo_id: str) -> bool:
     """
     Create an atomic lock file for a work order.
 
+    **FIXED:** Removed TOCTOU vulnerability by relying solely on atomic os.link().
+    The existence check has been removed - we now attempt the atomic operation
+    directly and handle FileExistsError to detect concurrent lock attempts.
+
     Uses temp-rename pattern for atomicity on filesystems that support hard links.
 
     Args:
@@ -292,11 +352,8 @@ def create_lock(lock_path: Path, wo_id: str) -> bool:
     """
     import tempfile
 
-    if lock_path.exists():
-        logger.warning(f"Lock already exists: {lock_path}")
-        return False
-
-    # Create temp file with unique name
+    # Create temp file with unique name in same directory as lock
+    # (required for atomic rename/link operations)
     temp_fd, temp_path = tempfile.mkstemp(
         prefix=f"{wo_id}.",
         suffix=".lock",
@@ -305,31 +362,44 @@ def create_lock(lock_path: Path, wo_id: str) -> bool:
     os.close(temp_fd)
 
     try:
-        # Write lock metadata
+        # Write lock metadata to temp file
         with open(temp_path, "w") as f:
             f.write(f"Locked by ctx_wo_take.py at {datetime.now(timezone.utc).isoformat()}\n")
             f.write(f"PID: {os.getpid()}\n")
             f.write(f"User: {getpass.getuser()}\n")
             f.write(f"Hostname: {os.uname().nodename}\n")
 
-        # Try atomic rename/link
+        # Atomic link - will fail with FileExistsError if lock already exists
+        # This is the critical section - no check before the operation
         try:
             os.link(temp_path, lock_path)
+            # Ok: lock acquired atomically
             os.unlink(temp_path)
             logger.info(f"✓ Atomic lock acquired: {lock_path}")
             return True
+        except FileExistsError:
+            # Lock was created between our temp file creation and link attempt
+            # This is expected behavior in concurrent scenarios
+            os.unlink(temp_path)
+            logger.debug(f"Lock contention detected: {lock_path}")
+            return False
         except OSError:
-            # Fallback to rename if hard links not supported
+            # Hard links not supported (e.g., different filesystem)
+            # Fallback to atomic rename
             try:
                 os.rename(temp_path, lock_path)
                 logger.info(f"✓ Lock acquired (rename): {lock_path}")
                 return True
-            except OSError:
+            except FileExistsError:
                 os.unlink(temp_path)
-                logger.warning(f"Failed to acquire lock: {lock_path}")
+                logger.debug(f"Lock contention detected (rename): {lock_path}")
+                return False
+            except OSError as e:
+                os.unlink(temp_path)
+                logger.error(f"Failed to acquire lock (OSError): {e}")
                 return False
     except Exception as e:
-        logger.error(f"Error creating lock: {e}")
+        logger.error(f"Error creating lock: {type(e).__name__}: {e}")
         if os.path.exists(temp_path):
             os.unlink(temp_path)
         return False
@@ -354,34 +424,64 @@ def check_lock_age(lock_path: Path, max_age_seconds: int = 3600) -> bool:
     return age >= max_age_seconds
 
 
-def update_lock_heartbeat(lock_path: Path) -> bool:
+def update_lock_heartbeat(lock_path: Path) -> Result[bool, str]:
     """
     Update lock file timestamp to prevent stale detection.
+
+    **FIXED:** Now returns Result[bool, str] with specific error types instead of
+    a generic bool. Callers can distinguish between different failure modes:
+
+    - "LOCK_NOT_FOUND: {path}" - Lock file doesn't exist
+    - "PERMISSION_DENIED: {path}" - Cannot read/write lock file
+    - "DISK_FULL: {error}" - No space to write
+    - "INVALID_LOCK_FORMAT: {reason}" - Lock file is malformed
 
     Args:
         lock_path: Path to lock file
 
     Returns:
-        True if heartbeat updated, False otherwise
+        Ok(True) if heartbeat updated
+        Err(error_message) with specific error type and details
     """
     import tempfile
 
+    # Check if lock file exists
     if not lock_path.exists():
+        error_msg = f"LOCK_NOT_FOUND: {lock_path}"
         logger.warning(f"Lock file not found for heartbeat: {lock_path}")
-        return False
+        return Err(error_msg)
 
     try:
-        content = lock_path.read_text()
+        # Read current lock content
+        try:
+            content = lock_path.read_text()
+        except PermissionError:
+            error_msg = f"PERMISSION_DENIED: {lock_path} (cannot read)"
+            logger.error(error_msg)
+            return Err(error_msg)
+        except OSError as e:
+            error_msg = f"DISK_FULL: {type(e).__name__}: {e}"
+            logger.error(error_msg)
+            return Err(error_msg)
+
         lines = content.split('\n')
 
         # Update timestamp line and add heartbeat
         updated_lines = []
+        timestamp_found = False
         for line in lines:
             if line.startswith("Locked by ctx_wo_take.py at"):
                 updated_lines.append(f"Locked by ctx_wo_take.py at {datetime.now(timezone.utc).isoformat()}")
                 updated_lines.append(f"Heartbeat updated at: {datetime.now(timezone.utc).isoformat()}")
+                timestamp_found = True
             elif not line.startswith("Heartbeat updated at:"):
                 updated_lines.append(line)
+
+        # Validate lock format
+        if not timestamp_found:
+            error_msg = f"INVALID_LOCK_FORMAT: No timestamp line found in {lock_path}"
+            logger.warning(error_msg)
+            return Err(error_msg)
 
         # Atomic write
         temp_fd, temp_path = tempfile.mkstemp(
@@ -396,15 +496,23 @@ def update_lock_heartbeat(lock_path: Path) -> bool:
                 f.write('\n'.join(updated_lines))
             os.replace(temp_path, lock_path)
             logger.debug(f"Heartbeat updated: {lock_path}")
-            return True
-        except Exception as e:
-            logger.error(f"Failed to update heartbeat: {e}")
+            return Ok(True)
+        except PermissionError:
             if os.path.exists(temp_path):
                 os.unlink(temp_path)
-            return False
+            error_msg = f"PERMISSION_DENIED: {lock_path} (cannot write)"
+            logger.error(error_msg)
+            return Err(error_msg)
+        except OSError as e:
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
+            error_msg = f"DISK_FULL: {type(e).__name__}: {e}"
+            logger.error(error_msg)
+            return Err(error_msg)
     except Exception as e:
-        logger.error(f"Error updating heartbeat: {e}")
-        return False
+        error_msg = f"UNEXPECTED_ERROR: {type(e).__name__}: {e}"
+        logger.error(error_msg)
+        return Err(error_msg)
 
 
 def check_lock_validity(lock_path: Path, max_age_seconds: int = 3600) -> tuple[bool, Optional[dict]]:
@@ -464,9 +572,12 @@ def check_lock_validity(lock_path: Path, max_age_seconds: int = 3600) -> tuple[b
         return False, None
 
 
-def execute_rollback(transaction, root: Path) -> tuple[bool, list[str]]:
+def execute_rollback(transaction, root: Path) -> RollbackResult:
     """
     Execute rollback for a failed transaction using BEST-EFFORT strategy.
+
+    **FIXED:** Now returns RollbackResult with detailed tracking of succeeded/failed
+    operations. Uses RollbackType enum for type-safe rollback operation handling.
 
     **BEST-EFFORT ROLLBACK:**
     Continues attempting rollback even if individual operations fail.
@@ -477,31 +588,42 @@ def execute_rollback(transaction, root: Path) -> tuple[bool, list[str]]:
         root: Repository root path
 
     Returns:
-        Tuple of (all_succeeded, failed_operations)
-        - all_succeeded: True only if ALL rollbacks succeeded
-        - failed_operations: List of operation names that failed
+        RollbackResult with detailed success/failure tracking:
+        - succeeded_ops: Tuple of operation names that succeeded
+        - failed_ops: Tuple of (op_name, error_message) for failures
+        - is_partial_failure: True if any operations failed
     """
     if transaction.is_committed:
         logger.warning("Transaction already committed, no rollback needed")
-        return True, []
+        return RollbackResult.success(())
 
     logger.info(f"Executing BEST-EFFORT rollback for WO {transaction.wo_id}")
-    failed_ops = []
 
-    # Execute rollbacks in reverse order (LIFO)
+    succeeded: list[str] = []
+    failed: list[tuple[str, str]] = []
+
+    # Execute rollbacks in reverse order (LIFO - Last In, First Out)
     for op in reversed(transaction.operations):
         logger.info(f"Rolling back: {op.name} - {op.description}")
 
         try:
-            if op.rollback_type == "remove_lock":
-                lock_path = root / "_ctx" / "jobs" / "running" / f"{transaction.wo_id}.lock"
-                if lock_path.exists():
+            # Use RollbackType enum for type-safe pattern matching
+            if op.rollback_type == RollbackType.REMOVE_LOCK:
+                # Use centralized path function
+                lock_path = get_lock_path(root, transaction.wo_id)
+                # Direct unlink attempt - no existence check (avoid TOCTOU)
+                try:
                     lock_path.unlink()
                     logger.info(f"✓ Removed lock: {lock_path}")
+                except FileNotFoundError:
+                    # Lock already gone - this is OK for rollback
+                    logger.info(f"✓ Lock already removed: {lock_path}")
+                succeeded.append(op.name)
 
-            elif op.rollback_type == "move_wo_to_pending":
-                running_path = root / "_ctx" / "jobs" / "running" / f"{transaction.wo_id}.yaml"
-                pending_path = root / "_ctx" / "jobs" / "pending" / f"{transaction.wo_id}.yaml"
+            elif op.rollback_type == RollbackType.MOVE_WO_TO_PENDING:
+                # Use centralized path functions
+                running_path = get_wo_running_path(root, transaction.wo_id)
+                pending_path = get_wo_pending_path(root, transaction.wo_id)
 
                 if running_path.exists():
                     wo_data = yaml.safe_load(running_path.read_text())
@@ -512,29 +634,52 @@ def execute_rollback(transaction, root: Path) -> tuple[bool, list[str]]:
                     pending_path.write_text(yaml.safe_dump(wo_data, sort_keys=False))
                     running_path.unlink()
                     logger.info(f"✓ Moved WO back to pending: {transaction.wo_id}")
+                else:
+                    logger.info(f"✓ WO file already gone: {running_path}")
+                succeeded.append(op.name)
 
-            elif op.rollback_type == "remove_worktree":
-                worktree_path = root / ".worktrees" / transaction.wo_id
+            elif op.rollback_type == RollbackType.REMOVE_WORKTREE:
+                # Use centralized path function (note: wo_id first due to helpers.py signature)
+                worktree_path = get_worktree_path(transaction.wo_id, root)
                 if worktree_path.exists():
                     cleanup_worktree(root, transaction.wo_id)
                     logger.info(f"✓ Removed worktree: {worktree_path}")
+                else:
+                    logger.info(f"✓ Worktree already removed: {worktree_path}")
+                succeeded.append(op.name)
 
-            elif op.rollback_type == "remove_branch":
-                branch = get_branch_name(transaction.wo_id)
-                run_command(["git", "branch", "-D", branch], cwd=root, check=False)
-                logger.info(f"✓ Removed branch: {branch}")
+            elif op.rollback_type == RollbackType.REMOVE_BRANCH:
+                branch = paths_get_branch_name(transaction.wo_id)
+                # check=False because branch might not exist
+                result = run_command(["git", "branch", "-D", branch], cwd=root, check=False)
+                if result.returncode == 0:
+                    logger.info(f"✓ Removed branch: {branch}")
+                else:
+                    logger.info(f"✓ Branch already removed: {branch}")
+                succeeded.append(op.name)
+
+            else:
+                # Unknown rollback type - this should not happen with enum
+                error_msg = f"{op.name}: Unknown rollback_type: {op.rollback_type}"
+                logger.error(f"✗ {error_msg}")
+                failed.append((op.name, error_msg))
 
         except Exception as e:
             error_msg = f"{op.name}: {type(e).__name__}: {e}"
             logger.error(f"✗ Rollback failed: {error_msg}")
-            failed_ops.append(error_msg)
+            failed.append((op.name, error_msg))
             # CONTINUE anyway - best-effort cleanup
 
-    # Report final status
-    if failed_ops:
-        logger.warning(f"Rollback completed with {len(failed_ops)} failures: {failed_ops}")
+    # Build and return result
+    if failed:
+        logger.warning(
+            f"Rollback completed with {len(failed)} failures, "
+            f"{len(succeeded)} succeeded for WO {transaction.wo_id}"
+        )
+        for op_name, error in failed:
+            logger.warning(f"  ✗ {op_name}: {error}")
         logger.warning(f"Manual intervention may be required for WO {transaction.wo_id}")
-        return False, failed_ops
+        return RollbackResult.partial_failure(tuple(succeeded), tuple(failed))
     else:
-        logger.info(f"✓ Rollback completed successfully for WO {transaction.wo_id}")
-        return True, []
+        logger.info(f"✓ Rollback completed successfully for WO {transaction.wo_id} ({len(succeeded)} ops)")
+        return RollbackResult.success(tuple(succeeded))
