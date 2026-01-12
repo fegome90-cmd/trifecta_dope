@@ -1,0 +1,16 @@
+{"timestamp": "2026-01-02T14:47:56.202954Z", "command": "uv run trifecta --help", "returncode": 0, "success": true}
+{"timestamp": "2026-01-02T14:47:56.628140Z", "command": "uv run trifecta ctx sync -s .", "returncode": 0, "success": true}
+{"timestamp": "2026-01-02T14:47:56.776608Z", "command": "uv run trifecta ctx search -s . -q context", "returncode": 0, "success": true}
+{"timestamp": "2026-01-02T14:47:56.909659Z", "command": "uv run trifecta ctx get -s . --ids prime:abc --pd-report", "returncode": 0, "success": true, "pd_report": {"v": "1", "stop_reason": "complete", "chunks_returned": "0", "chunks_requested": "1", "chars_returned_total": "0", "strong_hit": "0", "support": "0"}}
+{"timestamp": "2026-01-02T14:57:06.571426+00:00", "command": "uv run trifecta --help", "returncode": 0, "success": true}
+{"timestamp": "2026-01-02T14:57:07.003080+00:00", "command": "uv run trifecta ctx sync -s .", "returncode": 0, "success": true}
+{"timestamp": "2026-01-02T14:57:07.148309+00:00", "command": "uv run trifecta ctx search -s . -q context", "returncode": 0, "success": true}
+{"timestamp": "2026-01-02T14:57:07.322565+00:00", "command": "uv run trifecta ctx get -s . --ids skill:03ba77a5e8 prime:363a719791 --pd-report", "returncode": 2, "success": false, "error_info": {"stderr_preview": "Usage: trifecta ctx get [OPTIONS]\nTry 'trifecta ctx get --help' for help.\n\u256d\u2500 Error \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\u2502 Got unexpected extra argument (prime:363a71", "stdout_preview": ""}}
+{"timestamp": "2026-01-02T14:58:52.026645+00:00", "command": "uv run trifecta --help", "returncode": 0, "success": true}
+{"timestamp": "2026-01-02T14:58:52.432367+00:00", "command": "uv run trifecta ctx sync -s .", "returncode": 0, "success": true}
+{"timestamp": "2026-01-02T14:58:52.568538+00:00", "command": "uv run trifecta ctx search -s . -q context", "returncode": 0, "success": true}
+{"timestamp": "2026-01-02T14:58:52.690220+00:00", "command": "uv run trifecta ctx get -s . --ids skill:03ba77a5e8,prime:363a719791 --pd-report", "returncode": 0, "success": true, "pd_report": {"v": "1", "stop_reason": "complete", "chunks_returned": 2, "chunks_requested": 2, "chars_returned_total": 2232, "strong_hit": 0, "support": 0}}
+{"timestamp": "2026-01-02T15:06:11.082685+00:00", "command": "uv run trifecta --help", "returncode": 0, "success": true}
+{"timestamp": "2026-01-02T15:06:11.486598+00:00", "command": "uv run trifecta ctx sync -s .", "returncode": 0, "success": true}
+{"timestamp": "2026-01-02T15:06:11.621929+00:00", "command": "uv run trifecta ctx search -s . -q context", "returncode": 0, "success": true}
+{"timestamp": "2026-01-02T15:06:11.744833+00:00", "command": "uv run trifecta ctx get -s . --ids prime:363a719791,skill:03ba77a5e8 --pd-report", "returncode": 0, "success": true, "pd_report": {"v": "1", "stop_reason": "complete", "chunks_returned": 2, "chunks_requested": 2, "chars_returned_total": 2232, "strong_hit": 0, "support": 0}}

@@ -19,7 +19,7 @@
     "id": {"type": "string", "pattern": "^WO-[0-9]{4}$"},
     "epic_id": {"type": "string", "pattern": "^E-[0-9]{4}$"},
     "title": {"type": "string"},
-    "priority": {"type": "string", "pattern": "^P[0-3]$"},
+    "priority": {"type": "string", "pattern": "^(P[0-3]|critical|high|medium|low)$"},
     "status": {"type": "string", "enum": ["pending", "running", "done", "failed"]},
     "owner": {"type": ["string", "null"]},
     "branch": {"type": ["string", "null"]},
