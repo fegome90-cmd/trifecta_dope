@@ -23,12 +23,13 @@ class TestTransactionRecoveryScenarios:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             (root / "_ctx" / "jobs" / "running").mkdir(parents=True)
-            (root / ".worktrees" / "WO-RECOVERY").mkdir(parents=True)
+            (root / "_ctx" / "jobs" / "pending").mkdir(parents=True)  # Create pending directory
+            (root / ".worktrees" / "WO-0901").mkdir(parents=True)
 
             # Create a WO in running state
-            running_path = root / "_ctx" / "jobs" / "running" / "WO-RECOVERY.yaml"
+            running_path = root / "_ctx" / "jobs" / "running" / "WO-0901.yaml"
             wo_data = {
-                "id": "WO-RECOVERY",
+                "id": "WO-0901",
                 "status": "running",
                 "started_at": datetime.now(timezone.utc).isoformat(),
                 "owner": "testuser"
@@ -36,12 +37,12 @@ class TestTransactionRecoveryScenarios:
             running_path.write_text(yaml.safe_dump(wo_data, sort_keys=False))
 
             # Create a lock
-            lock_path = root / "_ctx" / "jobs" / "running" / "WO-RECOVERY.lock"
+            lock_path = root / "_ctx" / "jobs" / "running" / "WO-0901.lock"
             lock_path.write_text("test lock")
 
             # Simulate transaction that acquired worktree but failed before branch
             tx = Transaction(
-                wo_id="WO-RECOVERY",
+                wo_id="WO-0901",
                 operations=(
                     RollbackOperation(
                         name="remove_lock",
@@ -73,7 +74,7 @@ class TestTransactionRecoveryScenarios:
             assert not lock_path.exists(), "Lock should be removed"
             assert not running_path.exists(), "WO should be moved from running"
 
-            pending_path = root / "_ctx" / "jobs" / "pending" / "WO-RECOVERY.yaml"
+            pending_path = root / "_ctx" / "jobs" / "pending" / "WO-0901.yaml"
             assert pending_path.exists(), "WO should be in pending"
 
             # Verify WO state was reset
@@ -87,12 +88,13 @@ class TestTransactionRecoveryScenarios:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             (root / "_ctx" / "jobs" / "running").mkdir(parents=True)
-            (root / ".worktrees" / "WO-RECOVERY2").mkdir(parents=True)
+            (root / "_ctx" / "jobs" / "pending").mkdir(parents=True)  # Create pending directory
+            (root / ".worktrees" / "WO-0902").mkdir(parents=True)
 
             # Create WO in running state
-            running_path = root / "_ctx" / "jobs" / "running" / "WO-RECOVERY2.yaml"
+            running_path = root / "_ctx" / "jobs" / "running" / "WO-0902.yaml"
             wo_data = {
-                "id": "WO-RECOVERY2",
+                "id": "WO-0902",
                 "status": "running",
                 "started_at": datetime.now(timezone.utc).isoformat(),
                 "owner": "testuser"
@@ -101,7 +103,7 @@ class TestTransactionRecoveryScenarios:
 
             # Transaction with worktree and branch cleanup
             tx = Transaction(
-                wo_id="WO-RECOVERY2",
+                wo_id="WO-0902",
                 operations=(
                     RollbackOperation(
                         name="remove_worktree",
@@ -131,7 +133,7 @@ class TestTransactionRecoveryScenarios:
             assert len(result.succeeded_ops) == 3
 
             # Verify WO moved to pending
-            pending_path = root / "_ctx" / "jobs" / "pending" / "WO-RECOVERY2.yaml"
+            pending_path = root / "_ctx" / "jobs" / "pending" / "WO-0902.yaml"
             assert pending_path.exists()
 
     def test_partial_state_detection(self):
@@ -142,9 +144,9 @@ class TestTransactionRecoveryScenarios:
             (root / "_ctx" / "jobs" / "pending").mkdir(parents=True)
 
             # Scenario: WO is in running state but no lock exists (crashed after lock removal)
-            running_path = root / "_ctx" / "jobs" / "running" / "WO-PARTIAL.yaml"
+            running_path = root / "_ctx" / "jobs" / "running" / "WO-0903.yaml"
             wo_data = {
-                "id": "WO-PARTIAL",
+                "id": "WO-0903",
                 "status": "running",
                 "started_at": datetime.now(timezone.utc).isoformat(),
                 "owner": "testuser"
@@ -152,12 +154,12 @@ class TestTransactionRecoveryScenarios:
             running_path.write_text(yaml.safe_dump(wo_data, sort_keys=False))
 
             # No lock exists - WO is in inconsistent state
-            lock_path = root / "_ctx" / "jobs" / "running" / "WO-PARTIAL.lock"
+            lock_path = root / "_ctx" / "jobs" / "running" / "WO-0903.lock"
             assert not lock_path.exists()
 
             # Rollback should handle missing lock gracefully
             tx = Transaction(
-                wo_id="WO-PARTIAL",
+                wo_id="WO-0903",
                 operations=(
                     RollbackOperation(
                         name="remove_lock",
@@ -179,7 +181,7 @@ class TestTransactionRecoveryScenarios:
             assert len(result.succeeded_ops) == 2
 
             # Verify WO moved to pending
-            pending_path = root / "_ctx" / "jobs" / "pending" / "WO-PARTIAL.yaml"
+            pending_path = root / "_ctx" / "jobs" / "pending" / "WO-0903.yaml"
             assert pending_path.exists()
 
             pending_wo = yaml.safe_load(pending_path.read_text())
@@ -191,12 +193,12 @@ class TestTransactionRecoveryScenarios:
             root = Path(tmpdir)
             (root / "_ctx" / "jobs" / "running").mkdir(parents=True)
             (root / "_ctx" / "jobs" / "pending").mkdir(parents=True)
-            (root / ".worktrees" / "WO-INCOMPLETE").mkdir(parents=True)
+            (root / ".worktrees" / "WO-0904").mkdir(parents=True)
 
             # Scenario: Worktree exists, WO is running, but branch creation failed
-            running_path = root / "_ctx" / "jobs" / "running" / "WO-INCOMPLETE.yaml"
+            running_path = root / "_ctx" / "jobs" / "running" / "WO-0904.yaml"
             wo_data = {
-                "id": "WO-INCOMPLETE",
+                "id": "WO-0904",
                 "status": "running",
                 "started_at": datetime.now(timezone.utc).isoformat(),
                 "owner": "testuser"
@@ -205,7 +207,7 @@ class TestTransactionRecoveryScenarios:
 
             # Transaction with worktree and move operations
             tx = Transaction(
-                wo_id="WO-INCOMPLETE",
+                wo_id="WO-0904",
                 operations=(
                     RollbackOperation(
                         name="remove_worktree",
@@ -227,24 +229,27 @@ class TestTransactionRecoveryScenarios:
             assert len(result.succeeded_ops) == 2
 
             # Verify cleanup
-            pending_path = root / "_ctx" / "jobs" / "pending" / "WO-INCOMPLETE.yaml"
+            pending_path = root / "_ctx" / "jobs" / "pending" / "WO-0904.yaml"
             assert pending_path.exists()
 
     def test_rollback_with_multiple_failures(self):
         """Test rollback continues even when some operations fail."""
+        from unittest.mock import patch
+
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             (root / "_ctx" / "jobs" / "running").mkdir(parents=True)
             (root / "_ctx" / "jobs" / "pending").mkdir(parents=True)
+            (root / ".worktrees" / "WO-0905").mkdir(parents=True)  # Create worktree so cleanup_worktree is called
 
             # Create lock
-            lock_path = root / "_ctx" / "jobs" / "running" / "WO-MULTIFAIL.lock"
+            lock_path = root / "_ctx" / "jobs" / "running" / "WO-0905.lock"
             lock_path.write_text("test lock")
 
             # Create WO in running state
-            running_path = root / "_ctx" / "jobs" / "running" / "WO-MULTIFAIL.yaml"
+            running_path = root / "_ctx" / "jobs" / "running" / "WO-0905.yaml"
             wo_data = {
-                "id": "WO-MULTIFAIL",
+                "id": "WO-0905",
                 "status": "running",
                 "started_at": datetime.now(timezone.utc).isoformat(),
                 "owner": "testuser"
@@ -253,7 +258,7 @@ class TestTransactionRecoveryScenarios:
 
             # Transaction with operations where some will fail
             tx = Transaction(
-                wo_id="WO-MULTIFAIL",
+                wo_id="WO-0905",
                 operations=(
                     RollbackOperation(
                         name="remove_lock",  # Will succeed
@@ -261,7 +266,7 @@ class TestTransactionRecoveryScenarios:
                         rollback_type=RollbackType.REMOVE_LOCK
                     ),
                     RollbackOperation(
-                        name="cleanup_worktree",  # Will fail (no worktree exists)
+                        name="cleanup_worktree",  # Will fail (mocked)
                         description="Cleanup worktree",
                         rollback_type=RollbackType.REMOVE_WORKTREE
                     ),
@@ -273,7 +278,9 @@ class TestTransactionRecoveryScenarios:
                 )
             )
 
-            result = execute_rollback(tx, root)
+            # Mock cleanup_worktree to simulate failure (raise exception)
+            with patch("scripts.helpers.cleanup_worktree", side_effect=Exception("Simulated cleanup failure")):
+                result = execute_rollback(tx, root)
 
             # Should be partial failure (worktree cleanup failed)
             assert result.is_partial_failure is True
@@ -282,7 +289,7 @@ class TestTransactionRecoveryScenarios:
 
             # Verify successful operations completed
             assert not lock_path.exists()
-            pending_path = root / "_ctx" / "jobs" / "pending" / "WO-MULTIFAIL.yaml"
+            pending_path = root / "_ctx" / "jobs" / "pending" / "WO-0905.yaml"
             assert pending_path.exists()
 
     def test_committed_transaction_skip_rollback(self):
@@ -293,7 +300,7 @@ class TestTransactionRecoveryScenarios:
 
             # Committed transaction should not rollback
             tx = Transaction(
-                wo_id="WO-COMMITTED",
+                wo_id="WO-0906",
                 operations=(),
                 is_committed=True
             )
@@ -316,10 +323,10 @@ class TestStateConsistency:
             (root / "_ctx" / "jobs" / "pending").mkdir(parents=True)
 
             # Create WO in running state with all required fields
-            running_path = root / "_ctx" / "jobs" / "running" / "WO-CONSISTENT.yaml"
+            running_path = root / "_ctx" / "jobs" / "running" / "WO-0907.yaml"
             now = datetime.now(timezone.utc)
             wo_data = {
-                "id": "WO-CONSISTENT",
+                "id": "WO-0907",
                 "epic_id": "E-0001",
                 "title": "Consistent WO",
                 "priority": "medium",
@@ -329,13 +336,13 @@ class TestStateConsistency:
                 "dod_id": "DOD-DEFAULT",
                 "dependencies": [],
                 "finished_at": None,
-                "branch": "feat/wo-WO-CONSISTENT",
-                "worktree": ".worktrees/WO-CONSISTENT"
+                "branch": "feat/wo-WO-0907",
+                "worktree": ".worktrees/WO-0907"
             }
             running_path.write_text(yaml.safe_dump(wo_data, sort_keys=False))
 
             tx = Transaction(
-                wo_id="WO-CONSISTENT",
+                wo_id="WO-0907",
                 operations=(
                     RollbackOperation(
                         name="move_to_pending",
@@ -349,7 +356,7 @@ class TestStateConsistency:
             assert result.is_partial_failure is False
 
             # Verify WO can be reconstructed as valid WorkOrder
-            pending_path = root / "_ctx" / "jobs" / "pending" / "WO-CONSISTENT.yaml"
+            pending_path = root / "_ctx" / "jobs" / "pending" / "WO-0907.yaml"
             pending_wo = yaml.safe_load(pending_path.read_text())
 
             # Should be able to create WorkOrder with the pending data

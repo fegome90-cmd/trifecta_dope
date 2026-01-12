@@ -77,9 +77,26 @@ def validate_dependencies_using_domain(wo_data: dict, root: Path) -> tuple[bool,
     Returns:
         Tuple of (is_valid, error_message)
     """
+    # Legacy priority mapping for backward compatibility
+    LEGACY_PRIORITY_MAP = {
+        "p0": "critical",
+        "p1": "high",
+        "p2": "medium",
+        "p3": "low",
+        "P0": "critical",
+        "P1": "high",
+        "P2": "medium",
+        "P3": "low",
+    }
+
     # Convert string priority to Priority enum if needed
     priority_str = wo_data.get("priority", "medium")
-    priority = Priority(priority_str.lower()) if isinstance(priority_str, str) else priority_str
+    if isinstance(priority_str, str):
+        # Map legacy priority values to new enum values
+        normalized_priority = LEGACY_PRIORITY_MAP.get(priority_str, priority_str.lower())
+        priority = Priority(normalized_priority)
+    else:
+        priority = priority_str
 
     # Convert dependencies list to tuple if needed
     deps_list = wo_data.get("dependencies", [])
@@ -110,7 +127,7 @@ def validate_dependencies_using_domain(wo_data: dict, root: Path) -> tuple[bool,
     # Use domain's validation method
     result = wo.validate_dependencies(completed_ids)
 
-    if isinstance(result, Ok):
+    if result.is_ok():
         return True, None
     else:
         error = result.unwrap_err()
@@ -244,7 +261,7 @@ Examples:
             return 1
 
     # Initialize transaction (NEW)
-    transaction = Transaction(wo_id=wo_id, operations=[])
+    transaction = Transaction(wo_id=wo_id, operations=())
 
     try:
         # Step 1: Acquire lock
@@ -257,7 +274,7 @@ Examples:
         transaction = transaction.add_operation(RollbackOperation(
             name="acquire_lock",
             description="Remove acquired lock",
-            rollback_type="remove_lock"
+            rollback_type=RollbackType.REMOVE_LOCK
         ))
 
         # Step 2: Update WO metadata
@@ -293,21 +310,21 @@ Examples:
             transaction = transaction.add_operation(RollbackOperation(
                 name="create_worktree",
                 description=f"Remove worktree at {worktree}",
-                rollback_type="remove_worktree"
+                rollback_type=RollbackType.REMOVE_WORKTREE
             ))
             transaction = transaction.add_operation(RollbackOperation(
                 name="create_branch",
                 description=f"Remove branch {branch}",
-                rollback_type="remove_branch"
+                rollback_type=RollbackType.REMOVE_BRANCH
             ))
         except Exception as e:
             logger.error(f"Failed to create worktree: {e}")
             logger.info("Executing rollback...")
-            all_succeeded, failed_ops = execute_rollback(transaction, root)
-            if all_succeeded:
-                logger.info("✓ Rollback completed")
+            rollback_result = execute_rollback(transaction, root)
+            if rollback_result.is_partial_failure:
+                logger.error(f"✗ Rollback partially failed: {rollback_result.failed_ops}")
             else:
-                logger.error(f"✗ Rollback partially failed: {failed_ops}")
+                logger.info("✓ Rollback completed")
             return 1
 
         # Step 4: Move WO to running (WRAP WITH TRANSACTION)
@@ -316,7 +333,7 @@ Examples:
         transaction = transaction.add_operation(RollbackOperation(
             name="move_wo_running",
             description="Move WO back to pending and reset metadata",
-            rollback_type="move_wo_to_pending"
+            rollback_type=RollbackType.MOVE_WO_TO_PENDING
         ))
 
         try:
@@ -326,11 +343,11 @@ Examples:
         except Exception as e:
             logger.error(f"Failed to move WO to running: {e}")
             logger.info("Executing rollback...")
-            all_succeeded, failed_ops = execute_rollback(transaction, root)
-            if all_succeeded:
-                logger.info("✓ Rollback completed")
+            rollback_result = execute_rollback(transaction, root)
+            if rollback_result.is_partial_failure:
+                logger.error(f"✗ Rollback partially failed: {rollback_result.failed_ops}")
             else:
-                logger.error(f"✗ Rollback partially failed: {failed_ops}")
+                logger.info("✓ Rollback completed")
             return 1
 
         # Commit transaction (all operations successful)
