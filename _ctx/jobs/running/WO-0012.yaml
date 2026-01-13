@@ -3,10 +3,10 @@ id: WO-0012
 epic_id: E-0001
 title: "Enable AST Persistence Feature Flag (Test Environment ONLY)"
 priority: P1
-status: partial
+status: done
 owner: null
-verified_at_sha: null
-closed_at: null
+verified_at_sha: 4b92ccb
+closed_at: "2026-01-13T10:05:00-03:00"
 run_ids:
   - baseline-t1
   - wo-0012-t3
