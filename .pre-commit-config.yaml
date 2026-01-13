@@ -82,3 +82,9 @@ repos:
         files: '^(src/|scripts/|tests/|_ctx/|pyproject\.toml|uv\.lock|README\.md|skill\.md)'
         exclude: "_ctx/telemetry/|logs/|.*last_run\\.json|.*events\\.jsonl"
         verbose: true
+
+      - id: prevent-manual-wo-closure
+        name: Prevent manual WO closure
+        entry: scripts/prevent_manual_wo_closure.sh
+        language: script
+        files: ^_ctx/jobs/done/
