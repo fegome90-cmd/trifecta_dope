@@ -1,0 +1,10 @@
+{
+  "wo_id": "WO-TEST",
+  "status": "done",
+  "generated_at": "2025-01-13T17:00:00Z",
+  "tests_passed": true,
+  "failing_tests": [],
+  "lint_passed": true,
+  "artifact_verification": "complete",
+  "notes": "Test fixture - tests.log is missing"
+}

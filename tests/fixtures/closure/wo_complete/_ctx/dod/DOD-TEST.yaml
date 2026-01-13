@@ -1,0 +1,7 @@
+dod:
+  - id: DOD-TEST
+    name: "Test DoD"
+    requirements:
+      - "All tests pass"
+      - "Code reviewed"
+      - "Artifacts generated"
