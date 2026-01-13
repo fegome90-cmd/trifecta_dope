@@ -1,0 +1,51 @@
+version: 1
+id: WO-0015
+epic_id: E-SCALE
+title: "Repository Topology Scanner"
+priority: P1
+status: pending
+owner: null
+verified_at_sha: null
+closed_at: null
+
+scope:
+  allow:
+    - "src/application/topology_scanner.py"
+    - "tests/unit/test_topology_scanner.py"
+    - "docs/**"
+  deny:
+    - ".env*"
+    - "src/infrastructure/**"
+
+dod_id: DOD-DEFAULT
+
+governance:
+  must:
+    - "Use TDD"
+    - "Pure function with explicit Path input (no side effects)"
+    - "Commit (no --no-verify)"
+
+x_objective: |
+  Implement a topology scanner that recursively maps a directory tree,
+  identifying Python modules and packages. Uses WO-0014's ImportExtractor
+  to build an import graph (DAG) of the codebase.
+
+x_items:
+  - "Create `scan_topology(root: Path) -> TopologyMap` function"
+  - "TopologyMap includes: files, packages, import edges (RAW STRINGS, no resolution)"
+  - "Filter out: __pycache__, .venv, node_modules, .git"
+  - "Integration with ImportExtractor (WO-0014)"
+  - "CLARIFICATION: Does NOT resolve relative imports - stores raw module strings"
+  - "Use pytest tmp_path fixture for file system mocking"
+  - "Unit tests with mock directory structures"
+
+diff_budget:
+  max_files: 5
+  max_loc: 300
+
+stop_conditions:
+  max_iterations: 6
+  max_fail_verify: 2
+
+dependencies:
+  - WO-0014
