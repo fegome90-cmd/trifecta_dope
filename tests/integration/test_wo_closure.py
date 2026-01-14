@@ -115,11 +115,10 @@ class TestWoClosureWithFixtures:
         )
 
         # Note: This test may fail due to git/uv dependencies in the fixture
-        # The important part is verifying the test structure
-        handoff_dir = sandbox_root / "_ctx" / "handoff" / "WO-TEST"
-        # Just verify the fixture structure is correct
-        assert fixture_root.exists()
-        assert (fixture_root / "_ctx" / "jobs" / "running" / "WO-TEST.yaml").exists()
+        # Verify command executed and returned an exit code
+        assert result.returncode in (0, 1), f"Unexpected return code: {result.returncode}\nstdout: {result.stdout}\nstderr: {result.stderr}"
+        # Verify fixture structure was copied correctly
+        assert (sandbox_root / "_ctx" / "jobs" / "running" / "WO-TEST.yaml").exists()
 
     def test_wo_finish_invalid_dod_id(self, tmp_path):
         """Test error on unknown DoD catalog ID."""
@@ -253,4 +252,35 @@ x_objective: "Test"
 
         result = generate_artifacts("WO-TEST", sandbox_root, clean=False)
         # The code cleans existing .tmp dirs, so result should be Ok or different error
-        assert result is not None
+        # Use Result type checking instead of None check
+        assert result.is_ok() or result.is_err(), f"Expected Result type, got {type(result)}"
+        # Verify temp dir was handled (cleaned or error occurred)
+        temp_dir = handoff_dir.with_suffix(".tmp")
+        assert not temp_dir.exists() or result.is_err(), "Temp dir should be cleaned or error should occur"
+
+    def test_wo_finish_rejects_detached_head(self, tmp_path):
+        """Test CLI rejects WO finish when in detached HEAD state."""
+        fixture_root = repo_root() / "tests" / "fixtures" / "closure" / "wo_complete"
+        sandbox_root = tmp_path / "closure"
+        shutil.copytree(fixture_root, sandbox_root)
+
+        # Initialize git repo and create detached HEAD state
+        subprocess.run(["git", "init"], cwd=sandbox_root, capture_output=True)
+        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=sandbox_root, capture_output=True)
+        subprocess.run(["git", "config", "user.name", "Test"], cwd=sandbox_root, capture_output=True)
+        subprocess.run(["git", "checkout", "-b", "main"], cwd=sandbox_root, capture_output=True)
+        subprocess.run(["git", "add", "."], cwd=sandbox_root, capture_output=True)
+        subprocess.run(["git", "commit", "-m", "init"], cwd=sandbox_root, capture_output=True)
+        # Create detached HEAD by checking out a commit SHA
+        subprocess.run(["git", "checkout", "HEAD~0"], cwd=sandbox_root, capture_output=True)
+
+        result = subprocess.run(
+            ["python", "scripts/ctx_wo_finish.py", "WO-TEST", "--root", str(sandbox_root), "--skip-dod"],
+            capture_output=True,
+            text=True,
+            cwd=repo_root(),
+        )
+
+        assert result.returncode == 1, f"stdout: {result.stdout}\nstderr: {result.stderr}"
+        assert "detached" in result.stdout.lower() or "detached" in result.stderr.lower()
+
