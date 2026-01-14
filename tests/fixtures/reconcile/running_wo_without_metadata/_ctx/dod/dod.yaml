@@ -1,0 +1,9 @@
+version: 1
+dod:
+  - id: DOD-DEFAULT
+    title: "DoD"
+    required_artifacts: ["tests.log"]
+    required_checks:
+      - name: "verify"
+        commands: ["scripts/verify.sh"]
+    rules: ["rule"]

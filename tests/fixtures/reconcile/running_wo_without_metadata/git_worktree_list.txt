@@ -1,0 +1,2 @@
+/path/to/repo/main                                        abc123 [main]
+/path/to/repo/.worktrees/WO-9999                          def456 [feat/wo-WO-9999]

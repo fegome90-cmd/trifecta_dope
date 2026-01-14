@@ -3,7 +3,7 @@ Work Order domain entities and business rules.
 Pure domain module - no IO, no external dependencies.
 """
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum, StrEnum
 from typing import Optional
@@ -36,6 +36,19 @@ class Priority(StrEnum):
 
 
 @dataclass(frozen=True)
+class Governance:
+    """Governance metadata for work orders."""
+    must: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        """Validate Governance invariants."""
+        # Validate all must references are valid WO IDs
+        for dep in self.must:
+            if not dep or not WO_ID_PATTERN.match(dep):
+                raise ValueError(f"Invalid WO ID in governance.must: '{dep}'. Expected format: WO-XXXX")
+
+
+@dataclass(frozen=True)
 class WOValidationError:
     """WO validation error details."""
     code: str
@@ -54,10 +67,13 @@ class WorkOrder:
     owner: Optional[str]
     dod_id: str
     dependencies: tuple[str, ...]
-    started_at: Optional[datetime]
-    finished_at: Optional[datetime]
-    branch: Optional[str]
-    worktree: Optional[str]
+    governance: Optional[Governance] = None
+    run_ids: tuple[str, ...] = field(default_factory=tuple)
+    started_at: Optional[datetime] = None
+    finished_at: Optional[datetime] = None
+    closed_at: Optional[datetime] = None  # Separate from finished_at for closure tracking
+    branch: Optional[str] = None
+    worktree: Optional[str] = None
 
     def __post_init__(self) -> None:
         """Validate WorkOrder invariants after construction.

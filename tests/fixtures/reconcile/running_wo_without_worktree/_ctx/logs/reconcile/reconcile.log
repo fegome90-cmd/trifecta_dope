@@ -1,0 +1,7 @@
+timestamp: 2026-01-14T14:25:11.291688+00:00
+applied: True
+issues:
+- RUNNING_WO_WITHOUT_WORKTREE WO-0003 ['/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/jobs/running/WO-0003.yaml']
+- WORKTREE_WITHOUT_RUNNING_WO None ['HEAD']
+- WORKTREE_WITHOUT_RUNNING_WO None ['worktree']
+- WORKTREE_WITHOUT_RUNNING_WO None ['branch']

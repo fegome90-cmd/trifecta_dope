@@ -1,0 +1,19 @@
+version: 1
+id: WO-9999
+epic_id: E-0012
+title: "Test WO Without Metadata"
+priority: P1
+status: running
+owner: null
+scope:
+  allow:
+    - "tests/**"
+  deny: []
+
+dod_id: DOD-DEFAULT
+
+verify:
+  commands:
+    - "echo 'test'"
+
+dependencies: []

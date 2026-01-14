@@ -1,0 +1,177 @@
+version: 1
+id: WO-0018A
+epic_id: E-0012
+title: "Fix WO-0012 & Add Process Guards"
+priority: P1
+status: pending
+owner: null
+verified_at_sha: null
+closed_at: null
+run_ids:
+  - wo-0018a-fix
+  - wo-0018a-verify
+
+scope:
+  allow:
+    - "scripts/ctx_wo_finish.py"
+    - "scripts/prevent_manual_wo_closure.sh"
+    - ".pre-commit-config.yaml"
+    - "_ctx/jobs/done/WO-0012.yaml"
+    - "_ctx/jobs/running/WO-0012.yaml"
+    - "_ctx/handoff/WO-0012/**"
+  deny:
+    - "src/domain/**"
+    - "tests/**"
+
+dod_id: DOD-DEFAULT
+
+governance:
+  must:
+    - "Move WO-0012 back to running/ for proper closure"
+    - "Generate all required DoD artifacts"
+    - "Add fail-closed validation to ctx_wo_finish.py"
+    - "Add transaction wrapper with rollback"
+    - "Create pre-commit hook to prevent manual closure"
+    - "Use CLI trifecta for runs"
+    - "Update _ctx/session_trifecta_dope.md"
+    - "Update backlog.yaml"
+
+x_objective: |
+  Retroactively fix WO-0012 manual closure by generating proper DoD artifacts and re-closing via ctx_wo_finish.py.
+  Add process guards to prevent future manual WO closures from bypassing validation.
+
+x_phases:
+  1: "Move WO-0012 back to running"
+  2: "Enhance ctx_wo_finish.py"
+  3: "Generate DoD artifacts"
+  4: "Re-close WO-0012 properly"
+  5: "Add pre-commit hook"
+  6: "Verification"
+
+x_micro_tasks:
+  - id: T1
+    name: "T1: Move WO-0012 back to running"
+    status: pending
+    commands:
+      - "git mv _ctx/jobs/done/WO-0012.yaml _ctx/jobs/running/WO-0012.yaml"
+      - "rm -rf _ctx/handoff/WO-0012"
+    gates:
+      - "test -f _ctx/jobs/running/WO-0012.yaml"
+      - "test ! -d _ctx/handoff/WO-0012"
+    evidence:
+      - "_ctx/jobs/running/WO-0012.yaml"
+    commit: "chore(wo): move WO-0012 back to running for proper closure"
+
+  - id: T2
+    name: "T2: Enhance ctx_wo_finish.py with artifact generation"
+    status: pending
+    commands:
+      - "# Edit scripts/ctx_wo_finish.py"
+      - "# Add imports: json, subprocess, shutil, datetime, timezone, Path"
+      - "# Add: from src.domain.result import Result, Ok, Err"
+      - "# Add generate_artifacts() function with error handling"
+      - "# Add validate_dod() function with content validation"
+      - "# Add CLI flags: --generate-only, --clean, --skip-dod"
+    gates:
+      - "grep -q 'from src.domain.result import Result' scripts/ctx_wo_finish.py"
+      - "grep -q 'def generate_artifacts' scripts/ctx_wo_finish.py"
+      - "grep -q 'def validate_dod' scripts/ctx_wo_finish.py"
+      - "grep -q '--generate-only' scripts/ctx_wo_finish.py"
+    evidence:
+      - "scripts/ctx_wo_finish.py"
+    commit: "feat(wo): add artifact generation and validation to ctx_wo_finish.py"
+
+  - id: T3
+    name: "T3: Add transaction wrapper for atomic finish"
+    status: pending
+    commands:
+      - "# Edit scripts/ctx_wo_finish.py"
+      - "# Add finish_wo_transaction() function"
+      - "# Add git state validation (uncommitted changes, detached HEAD)"
+      - "# Add rollback logic based on ops_completed"
+    gates:
+      - "grep -q 'def finish_wo_transaction' scripts/ctx_wo_finish.py"
+      - "grep -q 'git.*status.*--porcelain' scripts/ctx_wo_finish.py"
+      - "grep -q 'ops_completed' scripts/ctx_wo_finish.py"
+    evidence:
+      - "scripts/ctx_wo_finish.py"
+    commit: "feat(wo): add transaction wrapper with rollback to ctx_wo_finish.py"
+
+  - id: T4
+    name: "T4: Generate DoD artifacts for WO-0012"
+    status: pending
+    commands:
+      - "python scripts/ctx_wo_finish.py WO-0012 --generate-only --clean"
+    gates:
+      - "test -d _ctx/handoff/WO-0012"
+      - "test -f _ctx/handoff/WO-0012/tests.log"
+      - "test -f _ctx/handoff/WO-0012/lint.log"
+      - "test -f _ctx/handoff/WO-0012/diff.patch"
+      - "test -f _ctx/handoff/WO-0012/handoff.md"
+      - "test -f _ctx/handoff/WO-0012/verdict.json"
+    evidence:
+      - "_ctx/handoff/WO-0012/tests.log"
+      - "_ctx/handoff/WO-0012/lint.log"
+      - "_ctx/handoff/WO-0012/diff.patch"
+      - "_ctx/handoff/WO-0012/handoff.md"
+      - "_ctx/handoff/WO-0012/verdict.json"
+    commit: "chore(wo): generate DoD artifacts for WO-0012"
+
+  - id: T5
+    name: "T5: Re-close WO-0012 properly"
+    status: pending
+    commands:
+      - "python scripts/ctx_wo_finish.py WO-0012 --result done"
+    gates:
+      - "test -f _ctx/jobs/done/WO-0012.yaml"
+      - "test ! -f _ctx/jobs/running/WO-0012.yaml"
+      - "grep -q 'status: done' _ctx/jobs/done/WO-0012.yaml"
+      - "grep -q 'verified_at_sha:' _ctx/jobs/done/WO-0012.yaml"
+      - "grep -q 'closed_at:' _ctx/jobs/done/WO-0012.yaml"
+    evidence:
+      - "_ctx/jobs/done/WO-0012.yaml"
+    commit: "chore(wo): properly close WO-0012 with DoD artifacts"
+
+  - id: T6
+    name: "T6: Add pre-commit hook"
+    status: pending
+    commands:
+      - "cat > scripts/prevent_manual_wo_closure.sh << 'EOF'"
+      - "#!/usr/bin/env bash"
+      - "CHANGED_FILES=$(git diff --cached --name-only)"
+      - "if echo \"$CHANGED_FILES\" | grep -q \"^_ctx/jobs/done/\"; then"
+      - "    if ! git diff --cached --name-only | grep -q \"scripts/ctx_wo_finish.py\"; then"
+      - "        echo \"ERROR: Manual edits to _ctx/jobs/done/ are prohibited.\""
+      - "        echo \"Use: python scripts/ctx_wo_finish.py WO-XXXX --result done\""
+      - "        exit 1"
+      - "    fi"
+      - "fi"
+      - "exit 0"
+      - "EOF"
+      - "chmod +x scripts/prevent_manual_wo_closure.sh"
+    gates:
+      - "test -x scripts/prevent_manual_wo_closure.sh"
+      - "grep -q 'prevent-manual-wo-closure' .pre-commit-config.yaml"
+    evidence:
+      - "scripts/prevent_manual_wo_closure.sh"
+      - ".pre-commit-config.yaml"
+    commit: "feat(wo): add pre-commit hook to prevent manual WO closure"
+
+  - id: T7
+    name: "T7: Verification"
+    status: pending
+    commands:
+      - "python scripts/ctx_wo_finish.py --help | grep generate-only"
+      - "python scripts/ctx_wo_finish.py --help | grep skip-dod"
+      - "cat _ctx/handoff/WO-0012/verdict.json | jq '.tests_passed'"
+      - "cat _ctx/handoff/WO-0012/verdict.json | jq '.failing_tests'"
+    gates:
+      - "python scripts/ctx_wo_finish.py --help | grep -q generate-only"
+      - "jq -e '.tests_passed == false' _ctx/handoff/WO-0012/verdict.json"
+      - "jq -e '.failing_tests | length == 2' _ctx/handoff/WO-0012/verdict.json"
+    evidence:
+      - "_ctx/handoff/WO-0012/verdict.json"
+    commit: "None"
+
+dependencies:
+  - None

@@ -1,0 +1,56 @@
+version: 1
+id: E-0012
+title: "WO System Compliance & Test Coverage"
+description: |
+  Fix WO-0012 manual closure retroactively, add process guards to prevent future bypasses,
+  and implement comprehensive test coverage for WO closure workflow.
+
+status: pending
+priority: P1
+
+wo_queue:
+  - WO-0018A # Fix WO-0012 & Add Process Guards
+  - WO-0018B # WO Closure Test Coverage
+  - WO-0018C # Documentation & Telemetry Cleanup
+
+x_phases:
+  - name: "WO-0018A: Fix & Guard"
+    status: pending
+    description: "Retro-fix WO-0012, add fail-closed validation, prevent manual closures"
+  - name: "WO-0018B: Test Coverage"
+    status: pending
+    description: "Add comprehensive tests for closure workflow (30+ tests)"
+  - name: "WO-0018C: Docs & Cleanup"
+    status: pending
+    description: "Feature flag docs, telemetry rotation, backlog update"
+
+x_context: |
+  **Background:**
+  WO-0012 was manually closed (commit c2ef040) by creating done/WO-0012.yaml directly,
+  bypassing ctx_wo_finish.py which validates DoD artifacts.
+
+  **Multi-Agent Review Findings:**
+  - Code Reviewer: 7 high-confidence implementation issues
+  - Test Analyzer: 11 test coverage gaps
+  - Silent Failure Hunter: 11 error handling issues
+  - Total: 25+ issues identified and fixed in plan
+
+  **Key Design Decisions:**
+  1. Document (don't hide) pre-existing test failures in verdict.json
+  2. Use real subprocess in tests, not mocks (matches existing patterns)
+  3. Atomic temp-dir pattern for artifact generation
+  4. Transaction wrapper with rollback for finish operation
+
+x_success_criteria:
+  - WO-0012 has proper DoD artifacts in _ctx/handoff/WO-0012/
+  - Future WO closures cannot bypass ctx_wo_finish.py validation
+  - Test suite covers all failure modes (≥80% coverage)
+  - Feature flag documentation enables onboarding
+  - Telemetry growth is controlled
+
+x_risks:
+  - WO-0018A modifies critical closure script (ctx_wo_finish.py)
+  - Pre-commit hook can be bypassed with --no-verify
+  - Test suite uses real subprocess (slower but more reliable)
+
+generated_at: "2026-01-13T11:30:00-03:00"
