@@ -21,7 +21,7 @@ dev = [
     "pytest-cov",
     "ruff",
     "pyrefly",
-    "pyright==1.1.407",
+    "pyright==1.1.408",
     "bandit[toml]>=1.7.0",  # Security scanner with TOML config support
     "safety>=2.0.0",  # Dependency vulnerability scanner
     # Type stubs for mypy
