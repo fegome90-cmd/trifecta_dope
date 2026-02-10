@@ -7,6 +7,7 @@ import argparse
 from datetime import datetime, timezone
 import getpass
 import json
+import os
 from pathlib import Path
 import sys
 import yaml
@@ -298,7 +299,10 @@ Examples:
                 branch = auto_branch
                 wo["branch"] = branch
             if worktree is None:
-                worktree = str(auto_worktree.relative_to(root))
+                # Worktree is outside repo - compute relative path from repo root
+                # Path.relative_to() would fail since worktree is not under repo
+                worktree = os.path.relpath(auto_worktree, root)
+                logger.info(f"  worktree (relative to repo): {worktree}")
                 wo["worktree"] = worktree
 
         # Step 3: Create worktree (WRAP WITH TRANSACTION)

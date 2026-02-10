@@ -18,6 +18,7 @@ Usage:
     worktree = get_worktree_path(repo_root(), "WO-0001")
 """
 
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -130,13 +131,34 @@ def get_worktree_path(root: Path, wo_id: str) -> Path:
     Returns:
         Path to the worktree in ../.worktrees/ (sibling of repo)
 
+    Raises:
+        FileNotFoundError: If parent directory doesn't exist
+        PermissionError: If parent directory is not writable
+
     Example:
         >>> repo_root = Path("/dev/trifecta_dope")
         >>> get_worktree_path(repo_root, "WO-0001")
         Path("/dev/.worktrees/WO-0001")
     """
-    # Use root.parent to place worktrees outside the repo
-    return root.parent / _WORKTREES_DIR / wo_id
+    parent = root.parent
+
+    # Validate parent directory exists
+    if not parent.exists():
+        raise FileNotFoundError(
+            f"Cannot create worktree outside repo: parent directory does not exist\n"
+            f"  Repository root: {root}\n"
+            f"  Expected parent: {parent}"
+        )
+
+    # Validate parent directory is writable
+    if not os.access(parent, os.W_OK):
+        raise PermissionError(
+            f"Cannot create worktree outside repo: parent directory is not writable\n"
+            f"  Parent directory: {parent}\n"
+            f"  Please check permissions: ls -la {parent.parent}"
+        )
+
+    return parent / _WORKTREES_DIR / wo_id
 
 
 def get_branch_name(wo_id: str) -> str:

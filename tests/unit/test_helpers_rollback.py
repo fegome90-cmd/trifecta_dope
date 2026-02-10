@@ -120,8 +120,10 @@ class TestRollbackExecution:
         # Mock cleanup_worktree to avoid actual git operations
         with patch("scripts.helpers.cleanup_worktree", return_value=True) as mock_cleanup:
             with tempfile.TemporaryDirectory() as tmpdir:
-                root = Path(tmpdir)
-                (root / ".worktrees" / "WO-TEST").mkdir(parents=True)
+                root = Path(tmpdir) / "repo"
+                root.mkdir()
+                # Worktrees are now OUTSIDE the repo (Nivel A integration)
+                (root.parent / ".worktrees" / "WO-TEST").mkdir(parents=True)
 
                 result = execute_rollback(tx, root)
                 assert result.is_partial_failure is False
