@@ -137,7 +137,9 @@ class TestRenderEnhancedError:
             command_path="trifecta load",
             suggested_flags=[],
         )
-        assert "❌ Error: No such option: --dry-run" in result
+        # Accept both Unicode and ASCII fallback
+        assert ("❌ Error: No such option: --dry-run" in result or
+                "[ERROR] Error: No such option: --dry-run" in result)
 
     def test_renders_suggested_flags(self):
         """Should render suggested flags section."""
@@ -190,7 +192,9 @@ class TestHandleInvalidOptionError:
 
         result = handle_invalid_option_error(error_msg, sys.argv)
 
-        assert "❌ Error: No such option: --dry-run" in result
+        # Accept both Unicode and ASCII fallback
+        assert ("❌ Error: No such option: --dry-run" in result or
+                "[ERROR] Error: No such option: --dry-run" in result)
         assert "trifecta load --help" in result
         assert "Ejemplo de uso:" in result
 
@@ -211,7 +215,9 @@ class TestHandleInvalidOptionError:
 
         result = handle_invalid_option_error(error_msg, sys.argv)
 
-        assert "❌ Error: No such option: --max-steps" in result
+        # Accept both Unicode and ASCII fallback
+        assert ("❌ Error: No such option: --max-steps" in result or
+                "[ERROR] Error: No such option: --max-steps" in result)
         assert "trifecta ctx plan --help" in result
 
     def test_returns_original_if_no_flag_found(self):

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import sys
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 import click
 
@@ -132,7 +132,8 @@ def _get_type_name(param_type: Any) -> str:
     if isinstance(param_type, click.types.ParamType):
         return param_type.name.upper()
     elif hasattr(param_type, "__name__"):
-        return param_type.__name__.upper()
+        name = getattr(param_type, "__name__", "")
+        return str(name).upper()
     else:
         return str(param_type).upper()
 
@@ -228,7 +229,9 @@ class CommandIntrospector:
         if hasattr(root_command, "registered_groups"):
             from typer.main import get_command
 
-            self._root = get_command(root_command)
+            # Runtime check ensures root_command is Typer-compatible
+            # Type ignore: mypy can't infer Typer from click.Command + registered_groups
+            self._root = get_command(root_command)  # type: ignore[arg-type]
         else:
             self._root = root_command
         self._cache: dict[str, list[OptionSpec]] = {}

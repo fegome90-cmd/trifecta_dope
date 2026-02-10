@@ -11,7 +11,10 @@ Fail-closed: If introspection fails, returns helpful message without suggestions
 from __future__ import annotations
 
 import difflib
+import os
+import sys
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Optional
 
 from src.cli.introspection import (
@@ -200,8 +203,9 @@ def render_enhanced_error(
     """
     lines = []
 
-    # Header with error
-    lines.append(f"❌ Error: No such option: {invalid_flag}")
+    # Header with error (cross-platform icon)
+    error_icon = _get_error_icon()
+    lines.append(f"{error_icon} Error: No such option: {invalid_flag}")
     lines.append("")
 
     # Suggested similar flags
@@ -268,9 +272,163 @@ def handle_invalid_option_error(error_message: str, argv: list[str]) -> str:
     suggested_flags = find_similar_flags(invalid_flag, valid_flags)
 
     # Render enhanced error
-    return render_enhanced_error(
+    enhanced_error = render_enhanced_error(
         invalid_flag=invalid_flag,
         command_path=command_path,
         suggested_flags=suggested_flags,
         original_error=error_message,
     )
+
+    # Emit telemetry event
+    _emit_invalid_option_telemetry(
+        command_path=command_path,
+        invalid_flag=invalid_flag,
+        suggested_flags=suggested_flags,
+        argv=argv,
+    )
+
+    return enhanced_error
+
+
+# Telemetry support
+
+_telemetry_instance = None
+
+
+def _get_telemetry():
+    """Get or create the telemetry instance (lazy import)."""
+    global _telemetry_instance
+    if _telemetry_instance is None:
+        try:
+            from src.infrastructure.telemetry import Telemetry
+
+            _telemetry_instance = Telemetry()
+        except Exception:
+            # Fail silently if telemetry is not available
+            pass
+    return _telemetry_instance
+
+
+def _is_tty() -> bool:
+    """Check if running in a TTY."""
+    return sys.stdout.isatty()
+
+
+def _get_platform() -> str:
+    """Get platform string for telemetry."""
+    return sys.platform
+
+
+def _emit_invalid_option_telemetry(
+    command_path: str,
+    invalid_flag: str,
+    suggested_flags: list[tuple[str, float]],
+    argv: list[str],
+) -> None:
+    """Emit telemetry event for invalid option error."""
+    telemetry = _get_telemetry()
+    if telemetry is None:
+        return
+
+    # Check if --help was suggested
+    help_suggested = any(flag == "--help" for flag, _ in suggested_flags)
+
+    # Increment KPI counter
+    telemetry.incr("invalid_option_count")
+
+    # Emit event
+    telemetry.event(
+        cmd="invalid_option",
+        args={
+            "command_path": command_path,
+            "invalid_flag": invalid_flag,
+            "argv_len": len(argv),
+        },
+        result={
+            "suggestions_count": len(suggested_flags),
+            "help_suggested": help_suggested,
+            "had_match": len(suggested_flags) > 0,
+        },
+        timing_ms=0,  # Error handling is fast, no timing needed
+        platform=_get_platform(),
+        is_tty=_is_tty(),
+    )
+
+
+def emit_help_used_telemetry(command_path: str, argv: list[str]) -> None:
+    """Emit telemetry event when --help is used."""
+    telemetry = _get_telemetry()
+    if telemetry is None:
+        return
+
+    # Increment KPI counter
+    telemetry.incr("help_used_count")
+
+    # Emit event
+    telemetry.event(
+        cmd="help_used",
+        args={
+            "command_path": command_path,
+            "argv_len": len(argv),
+        },
+        result={},
+        timing_ms=0,
+        platform=_get_platform(),
+        is_tty=_is_tty(),
+    )
+
+
+def get_telemetry_kpis() -> dict:
+    """Get current KPI values from telemetry."""
+    telemetry = _get_telemetry()
+    if telemetry is None:
+        return {
+            "invalid_option_count": 0,
+            "help_used_count": 0,
+        }
+
+    return {
+        "invalid_option_count": telemetry.metrics.get("invalid_option_count", 0),
+        "help_used_count": telemetry.metrics.get("help_used_count", 0),
+    }
+
+
+def reset_telemetry() -> None:
+    """Reset the telemetry instance (useful for testing)."""
+    global _telemetry_instance
+    _telemetry_instance = None
+
+
+# Cross-platform support
+
+def _supports_unicode() -> bool:
+    """Check if the terminal supports Unicode characters.
+
+    Returns:
+        True if Unicode is supported, False otherwise (fallback to ASCII)
+    """
+    # Check if we're on a TTY
+    if not sys.stdout.isatty():
+        return False
+
+    # Check platform-specific encoding
+    encoding = sys.stdout.encoding or ""
+    if "utf" in encoding.lower():
+        return True
+
+    # Check environment variables
+    if os.environ.get("LANG", "").lower().find("utf") != -1:
+        return True
+
+    return False
+
+
+def _get_error_icon() -> str:
+    """Get the appropriate error icon for the terminal.
+
+    Returns:
+        Unicode error icon if supported, ASCII fallback otherwise
+    """
+    if _supports_unicode():
+        return "❌"
+    return "[ERROR]"
