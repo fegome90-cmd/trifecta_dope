@@ -1,7 +1,6 @@
 """Unit tests for invalid_option_handler module."""
 
 import sys
-import pytest
 
 from src.cli.invalid_option_handler import (
     extract_invalid_flag,
