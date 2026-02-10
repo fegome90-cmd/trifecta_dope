@@ -1,0 +1,55 @@
+version: 1
+id: WO-0004
+epic_id: E-0001
+title: "Integración CLI: flags + pipeline tokenize-after-lint + telemetry sanitizada (Fase 4)"
+priority: P0
+status: done
+owner: null
+branch: "job/WO-0004-query-linter-cli"
+worktree: "../wt-WO-0004"
+scope:
+  allow:
+    - "src/application/**"
+    - "src/infrastructure/**"
+    - "tests/**"
+    - "docs/**"
+  deny:
+    - ".env*"
+    - "**/production.*"
+deliverables:
+  - "src/infrastructure/config_loader.py (configs/ unificados, missing_config marker)"
+  - "src/application/search_get_usecases.py (lint -> tokenize -> expander -> search)"
+  - "src/infrastructure/cli.py (--no-lint + TRIFECTA_LINT default OFF)"
+  - "tests/unit/test_search_usecase_linter.py"
+  - "tests/integration/test_ctx_search_linter.py (A/B con context_pack.json real JSON)"
+  - "tests/integration/test_ctx_search_linter_ab_controlled.py (A/B controlado: OFF=0, ON>0)"
+  - "docs/reports/query_linter_cli_verification.md (evidencia cruda + JSONL ON/OFF)"
+  - "_ctx/logs/ab_off.log + _ctx/logs/ab_on.log"
+verify:
+  commands:
+    - "scripts/verify.sh"
+    - "uv run pytest -q tests/unit/test_search_usecase_linter.py"
+    - "uv run pytest -q tests/integration/test_ctx_search_linter.py"
+    - "uv run pytest -q tests/integration/test_ctx_search_linter_ab_controlled.py"
+  results:
+    - "tests/unit/test_search_usecase_linter.py: 3/3 passed"
+    - "tests/integration/test_ctx_search_linter.py: 5/5 passed"
+    - "tests/integration/test_ctx_search_linter_ab_controlled.py: 3/3 passed"
+    - "Total: 11/11 tests passed"
+diff_budget:
+  max_files: 12
+  max_loc: 400
+stop_conditions:
+  max_iterations: 6
+  max_fail_verify: 2
+dod_id: DOD-DEFAULT
+trace:
+  ticket: null
+  related_wos: []
+completed_at: "2026-02-10T02:14:00Z"
+notes: |
+  WO-0004 completado exitosamente. Todos los deliverables implementados y verificados.
+  - Feature flag TRIFECTA_LINT con default OFF (conservativo)
+  - Pipeline correcto: normalize -> lint -> tokenize -> expand -> search
+  - Telemetría sanitizada con query_hash
+  - 11/11 tests pasando

@@ -106,6 +106,12 @@ uv run trifecta ctx get --segment . --ids "infra:cache_v1,doc:design_p2" --mode 
 | **Env Precedence** | P5 | Unclear env vs flag precedence. | Explicit precedence table, single source of truth. |
 | **Secrets/Debug** | - | Hardcoded secrets, `console.log`, `pdb`. | Use env vars, remove debug code. |
 
+### 🚨 Protocol Violations Log (Process Errors)
+
+| Date | Protocol | Violation | Correction |
+|:-----|:---------|:----------|:-----------|
+| 2026-01-11 | Worktree Isolation | Executed WO fix in `main` worktree instead of isolated one. | Always run `using-git-worktrees` before starting WO tasks. |
+
 ---
 
 ## 📜 History

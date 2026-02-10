@@ -42,7 +42,7 @@ telemetry = [
 ]
 
 [project.scripts]
-trifecta = "src.infrastructure.cli:app"
+trifecta = "src.infrastructure.cli:main"
 
 [build-system]
 requires = ["hatchling"]

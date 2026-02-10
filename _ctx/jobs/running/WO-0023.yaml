@@ -1,0 +1,61 @@
+version: 1
+id: WO-0023
+epic_id: E-0001
+title: "Fase 2 - Hardening: Introspección runtime + Telemetry + Anti-alucinación"
+priority: P1
+status: pending
+owner: null
+scope:
+  allow:
+    - "src/cli/invalid_option_handler.py"
+    - "src/cli/introspection.py"
+    - "src/infrastructure/cli.py"
+    - "src/infrastructure/telemetry_cli.py"
+    - "tests/unit/cli/test_introspection.py"
+    - "tests/integration/test_cli_introspection.py"
+    - "tests/golden/cli_flags_*.json"
+    - "scripts/verify_cli_introspection.sh"
+    - "docs/reports/cli_fase2_hardening.md"
+  deny:
+    - ".env*"
+    - "**/production.*"
+    - "src/domain/**"
+    - "docs/backlog/**"
+verify:
+  commands:
+    - "uv run pytest tests/unit/cli/test_introspection.py -v"
+    - "uv run pytest tests/integration/test_cli_introspection.py -v"
+    - "bash scripts/verify_cli_introspection.sh WO-0023"
+    - "test -f docs/reports/cli_fase2_hardening.md"
+dod_id: DOD-DEFAULT
+dependencies:
+  - "WO-0022"
+x_objective: |
+  Fase 2 - Hardening del sistema de opciones inválidas.
+
+  Reemplazar el mapping estático de flags por introspección runtime de Click/Typer.
+  Implementar telemetry para medir KPIs reales (help_first_used, invalid_option_count).
+  Garantizar que el handler nunca "alucine" flags (fail-closed).
+
+  Fases:
+  0. Contrato y DoD por ítem
+  1. Introspección runtime (core) - extraer flags reales de Click
+  2. Handler determinista (anti-alucinación) - sugerencias ⊆ flags válidos
+  3. Telemetry mínima pero útil - eventos JSONL para KPIs
+  4. Tests de regresión - golden tests con snapshots runtime
+  5. Documentación y cierre - README + verify.sh
+
+  Principios:
+  - Una sola fuente de verdad (Click/Typer, no diccionarios)
+  - Gates automáticos (tests + verify.sh)
+  - Evidencia en telemetry (no "creo que...")
+  - Fail-closed (si no se puede resolver comando → no sugerir)
+  - Scope congelado: ctx, ctx sync, ctx build, create (mínimo ROI)
+
+deliverables:
+  - "src/cli/introspection.py - Introspección pura de Click"
+  - "src/cli/invalid_option_handler.py v2 - Con runtime flags"
+  - "src/infrastructure/telemetry_cli.py - Eventos JSONL"
+  - "tests/golden/cli_flags_*.json - Snapshots de flags por comando"
+  - "scripts/verify_cli_introspection.sh - Gate de verificación"
+  - "docs/reports/cli_fase2_hardening.md - Reporte de métricas"
