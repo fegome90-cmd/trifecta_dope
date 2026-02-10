@@ -49,6 +49,23 @@ epics:
     generated_at: "2026-01-06T16:10:00-03:00"
     x_curated_at: "2026-01-06T16:10:00-03:00"
 
+  - id: E-0002
+    title: "Code Quality & Technical Debt"
+    description: |
+      Address technical debt and code quality issues identified through
+      multi-review processes and integration testing.
+
+      Focus: Test coverage gaps, dead code removal, parameter consistency,
+      and validation improvements.
+
+    status: pending
+    priority: P1
+
+    wo_queue:
+      - WO-0011 # Fix multi-review findings from Nivel A integration
+
+    generated_at: "2026-02-10T12:45:00-03:00"
+
   - id: E-SCALE
     title: "Zero-Config Discovery for Massive Repos"
     description: |
