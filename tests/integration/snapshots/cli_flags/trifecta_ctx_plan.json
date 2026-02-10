@@ -1,0 +1,13 @@
+{
+  "flags": [
+    "--help",
+    "--json",
+    "--segment",
+    "--task",
+    "--telemetry",
+    "-h",
+    "-j",
+    "-s",
+    "-t"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "flags": [
+    "--help",
+    "--install-completion",
+    "--show-completion",
+    "-h"
+  ]
+}

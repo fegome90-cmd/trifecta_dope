@@ -1,0 +1,9 @@
+{
+  "flags": [
+    "--help",
+    "--segment",
+    "--telemetry",
+    "-h",
+    "-s"
+  ]
+}

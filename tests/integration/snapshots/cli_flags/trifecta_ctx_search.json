@@ -1,0 +1,14 @@
+{
+  "flags": [
+    "--help",
+    "--limit",
+    "--no-lint",
+    "--query",
+    "--segment",
+    "--telemetry",
+    "-h",
+    "-l",
+    "-q",
+    "-s"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "flags": [
+    "--budget-token-est",
+    "--help",
+    "--ids",
+    "--max-chunks",
+    "--mode",
+    "--pd-report",
+    "--query",
+    "--segment",
+    "--stop-on-evidence",
+    "--telemetry",
+    "-b",
+    "-h",
+    "-i",
+    "-m",
+    "-q",
+    "-s"
+  ]
+}
