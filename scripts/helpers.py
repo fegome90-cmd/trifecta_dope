@@ -99,19 +99,21 @@ def get_branch_name(wo_id: str) -> str:
 def get_worktree_path(wo_id: str, root: Path) -> Path:
     """
     Generate worktree path from work order ID.
-    Example: WO-0012 -> .worktrees/WO-0012
+    Example: WO-0012 -> ../.worktrees/WO-0012 (outside repo)
 
     DEPRECATED: Use scripts.paths.get_worktree_path() instead.
+    This wrapper maintains backward compatibility with old parameter order.
 
     Args:
         wo_id: Work order ID (e.g., "WO-0012")
         root: Repository root path
 
     Returns:
-        Worktree path (e.g., Path(".worktrees/WO-0012"))
+        Worktree path outside repository (e.g., Path("../.worktrees/WO-0012"))
     """
-    # Use the centralized path function
-    return (root / ".worktrees" / wo_id).resolve()
+    # Delegate to paths.py with correct parameter order (root, wo_id)
+    from scripts.paths import get_worktree_path as _paths_get_worktree_path
+    return _paths_get_worktree_path(root, wo_id)
 
 
 def run_command(cmd: list[str], cwd: Optional[Path] = None, check: bool = True) -> subprocess.CompletedProcess:

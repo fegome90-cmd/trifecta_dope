@@ -97,7 +97,8 @@ class WOOrchestrationTest:
         logger.info("Testing worktree path generation...")
 
         path = get_worktree_path(self.test_wo_id, self.repo_root)
-        expected = self.repo_root / ".worktrees" / self.test_wo_id
+        # Worktrees are now created OUTSIDE the repo (Nivel A integration)
+        expected = self.repo_root.parent / ".worktrees" / self.test_wo_id
 
         if path == expected.resolve():
             logger.info(f"✓ Worktree path: {path}")
