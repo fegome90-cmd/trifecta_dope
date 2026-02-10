@@ -70,6 +70,29 @@ Monitoring cache hit rate via telemetry:
 python scripts/telemetry_diagnostic.py | grep "ast.cache"
 ```
 
+### Telemetry Rotation
+
+To prevent unbounded growth of `_ctx/telemetry/events.jsonl`, a rotation script is available:
+
+```bash
+# Check rotation status (no action taken if within thresholds)
+python scripts/telemetry_rotate.py
+
+# Force rotation (skips confirmation)
+python scripts/telemetry_rotate.py --force
+
+# Use custom telemetry directory
+TRIFECTA_TELEMETRY_DIR=/custom/path python scripts/telemetry_rotate.py
+```
+
+**Thresholds:**
+- `MAX_EVENTS = 1000` - Rotates after 1000 events
+- `MAX_SIZE_MB = 10` - Rotates after 10 MB
+
+**Rotated files** are renamed with timestamp: `events.20260210_143022.12.5.jsonl.rotated`
+
+See: `scripts/telemetry_rotate.py`
+
 ### Rollback Procedure
 
 To rollback from persistent to ephemeral cache:

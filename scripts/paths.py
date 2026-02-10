@@ -9,12 +9,13 @@ Usage:
         get_lock_path,
         get_wo_pending_path,
         get_worktree_path,
+        repo_root,
         WORKTREE_BASE,
         RUNNING_DIR,
     )
 
-    lock_file = get_lock_path(repo_root, "WO-0001")
-    worktree = get_worktree_path(repo_root, "WO-0001")
+    lock_file = get_lock_path(repo_root(), "WO-0001")
+    worktree = get_worktree_path(repo_root(), "WO-0001")
 """
 
 from dataclasses import dataclass
@@ -26,7 +27,9 @@ from pathlib import Path
 # =============================================================================
 
 _CTX_DIR = Path("_ctx")
-_WORKTREES_DIR = Path(".worktrees")
+# Worktrees are created OUTSIDE the repo as siblings (e.g., ../.worktrees/WO-XXXX)
+# This follows Git conventions and is compatible with tools like Sidecar
+_WORKTREES_DIR = Path(".worktrees")  # Relative to parent directory
 
 # Job state directories
 _JOBS_BASE = _CTX_DIR / "jobs"
@@ -46,6 +49,7 @@ FAILED_DIR = _FAILED_DIR
 # =============================================================================
 # Path Builder Functions
 # =============================================================================
+
 
 def get_lock_path(root: Path, wo_id: str) -> Path:
     """Get the path to a WO's lock file.
@@ -115,14 +119,24 @@ def get_wo_failed_path(root: Path, wo_id: str) -> Path:
 def get_worktree_path(root: Path, wo_id: str) -> Path:
     """Get the path to a WO's worktree directory.
 
+    Worktrees are created OUTSIDE the repository as sibling directories.
+    This follows Git conventions and ensures compatibility with tools
+    like Sidecar that expect worktrees to be outside the main worktree.
+
     Args:
         root: Repository root directory
         wo_id: Work Order ID (e.g., "WO-0001")
 
     Returns:
-        Path to the worktree in .worktrees/
+        Path to the worktree in ../.worktrees/ (sibling of repo)
+
+    Example:
+        >>> repo_root = Path("/dev/trifecta_dope")
+        >>> get_worktree_path(repo_root, "WO-0001")
+        Path("/dev/.worktrees/WO-0001")
     """
-    return root / _WORKTREES_DIR / wo_id
+    # Use root.parent to place worktrees outside the repo
+    return root.parent / _WORKTREES_DIR / wo_id
 
 
 def get_branch_name(wo_id: str) -> str:
@@ -137,13 +151,32 @@ def get_branch_name(wo_id: str) -> str:
     return f"feat/wo-{wo_id}"
 
 
+def repo_root() -> Path:
+    """Find repository root by searching for pyproject.toml upwards.
+
+    Returns:
+        Path to repository root directory.
+
+    Raises:
+        FileNotFoundError: If pyproject.toml not found within 5 levels.
+    """
+    current = Path(__file__).resolve().parent
+    for _ in range(5):
+        if (current / "pyproject.toml").exists():
+            return current
+        current = current.parent
+    raise FileNotFoundError("Repository root not found (pyproject.toml missing)")
+
+
 # =============================================================================
 # Path Validation
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class PathValidationResult:
     """Result of path validation."""
+
     is_valid: bool
     error_message: str | None = None
     missing_paths: tuple[Path, ...] = ()
@@ -154,11 +187,7 @@ class PathValidationResult:
 
     @staticmethod
     def invalid(error: str, *missing: Path) -> "PathValidationResult":
-        return PathValidationResult(
-            is_valid=False,
-            error_message=error,
-            missing_paths=missing
-        )
+        return PathValidationResult(is_valid=False, error_message=error, missing_paths=missing)
 
 
 def validate_wo_paths(root: Path, wo_id: str) -> PathValidationResult:
@@ -185,8 +214,7 @@ def validate_wo_paths(root: Path, wo_id: str) -> PathValidationResult:
 
     if missing:
         return PathValidationResult.invalid(
-            f"Required WO directories missing for {wo_id}",
-            *missing
+            f"Required WO directories missing for {wo_id}", *missing
         )
 
     return PathValidationResult.valid()
