@@ -3,7 +3,7 @@ id: WO-0005
 epic_id: E-0001
 title: 'Evidence Gate global: suite completa pytest -q (Fase 5)'
 priority: P0
-status: running
+status: done
 owner: copilot-agent
 branch: job/WO-0005-evidence-gate
 worktree: ../wt-WO-0005
@@ -37,3 +37,6 @@ x_risks:
 - Parallel process locking (WAL mode not redundant)
 - Implicit segment_id logic in persisted keys
 started_at: '2026-02-10T02:25:30.215635+00:00'
+verified_at_sha: 12b9f2f7a283c798a19dca08ca1c4814c6389fde
+closed_at: '2026-02-10T07:40:42.291880+00:00'
+result: done
