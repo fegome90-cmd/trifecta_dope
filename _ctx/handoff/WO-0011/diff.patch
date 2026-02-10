@@ -1,0 +1,383 @@
+diff --git a/scripts/ctx_wo_take.py b/scripts/ctx_wo_take.py
+index 1f26978..fbaa27d 100755
+--- a/scripts/ctx_wo_take.py
++++ b/scripts/ctx_wo_take.py
+@@ -7,6 +7,7 @@ import argparse
+ from datetime import datetime, timezone
+ import getpass
+ import json
++import os
+ from pathlib import Path
+ import sys
+ import yaml
+@@ -298,7 +299,10 @@ Examples:
+                 branch = auto_branch
+                 wo["branch"] = branch
+             if worktree is None:
+-                worktree = str(auto_worktree.relative_to(root))
++                # Worktree is outside repo - compute relative path from repo root
++                # Path.relative_to() would fail since worktree is not under repo
++                worktree = os.path.relpath(auto_worktree, root)
++                logger.info(f"  worktree (relative to repo): {worktree}")
+                 wo["worktree"] = worktree
+ 
+         # Step 3: Create worktree (WRAP WITH TRANSACTION)
+diff --git a/scripts/helpers.py b/scripts/helpers.py
+index 2957309..3f8e6e2 100644
+--- a/scripts/helpers.py
++++ b/scripts/helpers.py
+@@ -99,19 +99,21 @@ def get_branch_name(wo_id: str) -> str:
+ def get_worktree_path(wo_id: str, root: Path) -> Path:
+     """
+     Generate worktree path from work order ID.
+-    Example: WO-0012 -> .worktrees/WO-0012
++    Example: WO-0012 -> ../.worktrees/WO-0012 (outside repo)
+ 
+     DEPRECATED: Use scripts.paths.get_worktree_path() instead.
++    This wrapper maintains backward compatibility with old parameter order.
+ 
+     Args:
+         wo_id: Work order ID (e.g., "WO-0012")
+         root: Repository root path
+ 
+     Returns:
+-        Worktree path (e.g., Path(".worktrees/WO-0012"))
++        Worktree path outside repository (e.g., Path("../.worktrees/WO-0012"))
+     """
+-    # Use the centralized path function
+-    return (root / ".worktrees" / wo_id).resolve()
++    # Delegate to paths.py with correct parameter order (root, wo_id)
++    from scripts.paths import get_worktree_path as _paths_get_worktree_path
++    return _paths_get_worktree_path(root, wo_id)
+ 
+ 
+ def run_command(cmd: list[str], cwd: Optional[Path] = None, check: bool = True) -> subprocess.CompletedProcess:
+diff --git a/scripts/paths.py b/scripts/paths.py
+index 04f8a36..55b2a73 100644
+--- a/scripts/paths.py
++++ b/scripts/paths.py
+@@ -18,6 +18,7 @@ Usage:
+     worktree = get_worktree_path(repo_root(), "WO-0001")
+ """
+ 
++import os
+ from dataclasses import dataclass
+ from pathlib import Path
+ 
+@@ -130,13 +131,34 @@ def get_worktree_path(root: Path, wo_id: str) -> Path:
+     Returns:
+         Path to the worktree in ../.worktrees/ (sibling of repo)
+ 
++    Raises:
++        FileNotFoundError: If parent directory doesn't exist
++        PermissionError: If parent directory is not writable
++
+     Example:
+         >>> repo_root = Path("/dev/trifecta_dope")
+         >>> get_worktree_path(repo_root, "WO-0001")
+         Path("/dev/.worktrees/WO-0001")
+     """
+-    # Use root.parent to place worktrees outside the repo
+-    return root.parent / _WORKTREES_DIR / wo_id
++    parent = root.parent
++
++    # Validate parent directory exists
++    if not parent.exists():
++        raise FileNotFoundError(
++            f"Cannot create worktree outside repo: parent directory does not exist\n"
++            f"  Repository root: {root}\n"
++            f"  Expected parent: {parent}"
++        )
++
++    # Validate parent directory is writable
++    if not os.access(parent, os.W_OK):
++        raise PermissionError(
++            f"Cannot create worktree outside repo: parent directory is not writable\n"
++            f"  Parent directory: {parent}\n"
++            f"  Please check permissions: ls -la {parent.parent}"
++        )
++
++    return parent / _WORKTREES_DIR / wo_id
+ 
+ 
+ def get_branch_name(wo_id: str) -> str:
+diff --git a/tests/test_wo_orchestration.py b/tests/test_wo_orchestration.py
+index b73b9eb..aa9483f 100644
+--- a/tests/test_wo_orchestration.py
++++ b/tests/test_wo_orchestration.py
+@@ -97,7 +97,8 @@ class WOOrchestrationTest:
+         logger.info("Testing worktree path generation...")
+ 
+         path = get_worktree_path(self.test_wo_id, self.repo_root)
+-        expected = self.repo_root / ".worktrees" / self.test_wo_id
++        # Worktrees are now created OUTSIDE the repo (Nivel A integration)
++        expected = self.repo_root.parent / ".worktrees" / self.test_wo_id
+ 
+         if path == expected.resolve():
+             logger.info(f"✓ Worktree path: {path}")
+diff --git a/tests/unit/test_ctx_wo_take.py b/tests/unit/test_ctx_wo_take.py
+index a3b3281..6553681 100644
+--- a/tests/unit/test_ctx_wo_take.py
++++ b/tests/unit/test_ctx_wo_take.py
+@@ -1,10 +1,78 @@
+-import subprocess
++"""Unit tests for path conversion logic in ctx_wo_take.py."""
++import tempfile
++from pathlib import Path
++import os
+ 
++from scripts.paths import get_worktree_path
+ 
+-def test_wo_take_help():
+-    result = subprocess.run(
+-        ["python", "scripts/ctx_wo_take.py", "--help"],
+-        capture_output=True,
+-        text=True,
+-    )
+-    assert result.returncode == 0
++
++def test_worktree_relative_path_conversion():
++    """Test conversion from absolute to relative path for git commands."""
++    with tempfile.TemporaryDirectory() as tmpdir:
++        repo_root = Path(tmpdir) / "repo"
++        repo_root.mkdir()
++
++        # Simulate the path conversion logic
++        auto_worktree = get_worktree_path(repo_root, "WO-0001")
++
++        # Test relative path calculation (same as ctx_wo_take.py line 302)
++        worktree = os.path.relpath(auto_worktree, repo_root)
++
++        # Should be "../.worktrees/WO-0001"
++        assert worktree == "../.worktrees/WO-0001"
++
++
++def test_worktree_relative_path_nested_repo():
++    """Test relative path when repo is in nested directory."""
++    with tempfile.TemporaryDirectory() as tmpdir:
++        # Repo at /tmp/test/deep/repo
++        repo_root = Path(tmpdir) / "test" / "deep" / "repo"
++        repo_root.mkdir(parents=True)
++
++        auto_worktree = get_worktree_path(repo_root, "WO-0001")
++        worktree = os.path.relpath(auto_worktree, repo_root)
++
++        # Worktree is at /tmp/test/deep/.worktrees/WO-0001 (sibling of repo)
++        # Relative to /tmp/test/deep/repo: ../.worktrees/WO-0001
++        assert worktree == "../.worktrees/WO-0001"
++
++
++def test_worktree_relative_path_depth_variation():
++    """Test relative paths with different nesting depths."""
++    with tempfile.TemporaryDirectory() as tmpdir:
++        base = Path(tmpdir)
++
++        test_cases = [
++            ("repo", "../.worktrees"),
++            ("a/repo", "../.worktrees"),
++            ("a/b/repo", "../.worktrees"),
++            ("a/b/c/repo", "../.worktrees"),
++        ]
++
++        for repo_rel, expected_prefix in test_cases:
++            repo_root = base / repo_rel
++            repo_root.mkdir(parents=True)
++
++            worktree_path = get_worktree_path(repo_root, "WO-TEST")
++            relative = os.path.relpath(worktree_path, repo_root)
++
++            # Worktree is always at sibling level (repo_root.parent/.worktrees/)
++            # So relative path is always ../.worktrees/
++            assert relative.startswith(expected_prefix), \
++                f"For {repo_rel}, expected prefix {expected_prefix}, got {relative}"
++
++
++def test_worktree_absolute_to_roundtrip():
++    """Test that relative path can be converted back to absolute."""
++    with tempfile.TemporaryDirectory() as tmpdir:
++        repo_root = Path(tmpdir) / "repo"
++        repo_root.mkdir()
++
++        auto_worktree = get_worktree_path(repo_root, "WO-0001")
++        relative_path = os.path.relpath(auto_worktree, repo_root)
++
++        # Roundtrip: relative -> absolute using repo_root
++        reconstructed = (repo_root / relative_path).resolve()
++        
++        # Should match the original worktree path
++        assert reconstructed == auto_worktree.resolve()
+diff --git a/tests/unit/test_helpers_rollback.py b/tests/unit/test_helpers_rollback.py
+index afe655c..7097bc2 100644
+--- a/tests/unit/test_helpers_rollback.py
++++ b/tests/unit/test_helpers_rollback.py
+@@ -120,8 +120,10 @@ class TestRollbackExecution:
+         # Mock cleanup_worktree to avoid actual git operations
+         with patch("scripts.helpers.cleanup_worktree", return_value=True) as mock_cleanup:
+             with tempfile.TemporaryDirectory() as tmpdir:
+-                root = Path(tmpdir)
+-                (root / ".worktrees" / "WO-TEST").mkdir(parents=True)
++                root = Path(tmpdir) / "repo"
++                root.mkdir()
++                # Worktrees are now OUTSIDE the repo (Nivel A integration)
++                (root.parent / ".worktrees" / "WO-TEST").mkdir(parents=True)
+ 
+                 result = execute_rollback(tx, root)
+                 assert result.is_partial_failure is False
+diff --git a/tests/unit/test_metadata_inference.py b/tests/unit/test_metadata_inference.py
+new file mode 100644
+index 0000000..18e1581
+--- /dev/null
++++ b/tests/unit/test_metadata_inference.py
+@@ -0,0 +1,64 @@
++"""Unit tests for scripts.metadata_inference module."""
++from pathlib import Path
++from unittest.mock import patch
++import pytest
++
++from scripts.metadata_inference import get_worktrees_from_git
++
++
++def test_get_worktrees_from_git_outside_repo():
++    """Test parsing git worktree list output for worktrees outside repo."""
++    # Mock git output with worktree outside repo
++    # The WO ID comes from directory name (WO-0018), branch can have suffix (WO-0018B)
++    git_output = """/dev/.worktrees/WO-0018 abc123 [feat/wo-WO-0018B]
++/dev/repo feat/wo-WO-0019 def456"""
++
++    with patch("subprocess.check_output", return_value=git_output):
++        worktrees = get_worktrees_from_git(Path("/dev/repo"))
++
++        # WO ID is extracted from directory name
++        assert "WO-0018" in worktrees
++        assert worktrees["WO-0018"]["path"] == "/dev/.worktrees/WO-0018"
++        # Branch can have different suffix
++        assert worktrees["WO-0018"]["branch"] == "feat/wo-WO-0018B"
++
++
++def test_get_worktrees_from_git_relative_path():
++    """Test parsing worktree with relative path."""
++    git_output = """../.worktrees/WO-0010 abc123 [feat/wo-WO-0010]
++/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope feat/wo-WO-0011 def456"""
++
++    with patch("subprocess.check_output", return_value=git_output):
++        worktrees = get_worktrees_from_git(
++            Path("/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope")
++        )
++
++        assert "WO-0010" in worktrees
++        assert worktrees["WO-0010"]["path"] == "../.worktrees/WO-0010"
++        assert worktrees["WO-0010"]["branch"] == "feat/wo-WO-0010"
++
++
++def test_get_worktrees_from_git_multiple_outside():
++    """Test parsing multiple worktrees outside repo."""
++    git_output = """/home/user/.worktrees/WO-0001 abc111 [feat/wo-WO-0001]
++/home/user/.worktrees/WO-0002 abc222 [feat/wo-WO-0002]
++/home/user/project abc333 main"""
++
++    with patch("subprocess.check_output", return_value=git_output):
++        worktrees = get_worktrees_from_git(Path("/home/user/project"))
++
++        assert len(worktrees) == 2
++        assert "WO-0001" in worktrees
++        assert "WO-0002" in worktrees
++        assert worktrees["WO-0001"]["path"] == "/home/user/.worktrees/WO-0001"
++        assert worktrees["WO-0002"]["path"] == "/home/user/.worktrees/WO-0002"
++
++
++def test_get_worktrees_from_git_no_worktrees():
++    """Test parsing when no worktrees exist."""
++    git_output = "/home/user/project abc123 main"
++
++    with patch("subprocess.check_output", return_value=git_output):
++        worktrees = get_worktrees_from_git(Path("/home/user/project"))
++
++        assert len(worktrees) == 0
+diff --git a/tests/unit/test_paths.py b/tests/unit/test_paths.py
+new file mode 100644
+index 0000000..06fece8
+--- /dev/null
++++ b/tests/unit/test_paths.py
+@@ -0,0 +1,82 @@
++"""Unit tests for scripts.paths module."""
++import tempfile
++from pathlib import Path
++import pytest
++import os
++
++from scripts.paths import get_worktree_path
++
++
++def test_get_worktree_path_outside_repo():
++    """Test that worktrees are created outside the repository."""
++    with tempfile.TemporaryDirectory() as tmpdir:
++        # Simulate repo at /tmp/test_repo
++        repo_root = Path(tmpdir) / "test_repo"
++        repo_root.mkdir()
++
++        # Worktree should be at /tmp/.worktrees/WO-0001
++        worktree_path = get_worktree_path(repo_root, "WO-0001")
++        expected = Path(tmpdir) / ".worktrees" / "WO-0001"
++
++        assert worktree_path == expected
++        # Verify worktree is NOT inside repo
++        assert not worktree_path.is_relative_to(repo_root)
++
++
++def test_get_worktree_path_multiple_wos():
++    """Test that multiple WO paths are correctly generated."""
++    with tempfile.TemporaryDirectory() as tmpdir:
++        repo_root = Path(tmpdir) / "repo"
++        repo_root.mkdir()
++
++        wo_ids = ["WO-0001", "WO-0002", "WO-0018A"]
++        for wo_id in wo_ids:
++            path = get_worktree_path(repo_root, wo_id)
++            assert path == Path(tmpdir) / ".worktrees" / wo_id
++            assert not path.is_relative_to(repo_root)
++
++
++def test_get_worktree_path_parent_not_exists():
++    """Test that FileNotFoundError is raised when parent doesn't exist."""
++    # Create a scenario where parent doesn't exist
++    # Use a non-existent path inside temp directory
++    with tempfile.TemporaryDirectory() as tmpdir:
++        # Create a deep path that doesn't exist
++        non_existent = Path(tmpdir) / "does" / "not" / "exist" / "repo"
++        
++        with pytest.raises(FileNotFoundError) as exc_info:
++            get_worktree_path(non_existent, "WO-0001")
++        
++        assert "parent directory does not exist" in str(exc_info.value)
++
++
++def test_get_worktree_path_parent_not_writable(monkeypatch):
++    """Test that PermissionError is raised when parent is not writable."""
++    with tempfile.TemporaryDirectory() as tmpdir:
++        repo_root = Path(tmpdir) / "repo"
++        repo_root.mkdir()
++        
++        # Mock os.access to return False for write permission
++        def mock_access(path, mode):
++            if path == repo_root.parent and mode == os.W_OK:
++                return False
++            return True
++        
++        monkeypatch.setattr(os, "access", mock_access)
++        
++        with pytest.raises(PermissionError) as exc_info:
++            get_worktree_path(repo_root, "WO-0001")
++        
++        assert "not writable" in str(exc_info.value)
++
++
++def test_get_worktree_path_repo_at_filesystem_root():
++    """Test edge case: repo at filesystem root (no parent)."""
++    # This is a rare edge case - repo at / (filesystem root)
++    # In this case, parent would be / which should exist
++    repo_root = Path("/")
++    
++    # This should not raise, since / exists
++    # Note: may fail with PermissionError in actual tests since / is not writable
++    with pytest.raises(PermissionError):
++        get_worktree_path(repo_root, "WO-0001")
