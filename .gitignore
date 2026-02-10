@@ -45,3 +45,7 @@ skills/third_party/
 tests/fixtures/demo_workspace/.trifecta/_ctx/telemetry/
 tmp_*
 venv/
+
+# Development tools
+.sidecar/
+.todos/
