@@ -1,6 +1,7 @@
 import json
 import re
 import subprocess
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -199,8 +200,8 @@ class BuildContextPackUseCase:
                     warning_msg = "prime_links_truncated_total"
                     if self.telemetry:
                         self.telemetry.incr(warning_msg)
-                    print(
-                        f"⚠️ Warning: Max links ({MAX_LINKS}) reached in Prime. Skipping remainder."
+                    sys.stderr.write(
+                        f"⚠️ Warning: Max links ({MAX_LINKS}) reached in Prime. Skipping remainder.\n"
                     )
                     break
 
@@ -213,8 +214,8 @@ class BuildContextPackUseCase:
                         if abs_path in visited_paths:
                             if self.telemetry:
                                 self.telemetry.incr("prime_links_cycle_total")
-                            print(
-                                f"⚠️ Warning: Cycle/Duplicate detected for '{path_str}'. Skipping."
+                            sys.stderr.write(
+                                f"⚠️ Warning: Cycle/Duplicate detected for '{path_str}'. Skipping.\n"
                             )
                             continue
 
@@ -229,7 +230,7 @@ class BuildContextPackUseCase:
                             if self.telemetry:
                                 self.telemetry.incr("prime_links_skipped_security_total")
                             error_msg = f"PROHIBITED: Reference '{path_str}' resolves outside segment or in forbidden path."
-                            print(f"❌ {error_msg}")
+                            sys.stderr.write(f"❌ {error_msg}\n")
                             raise ValueError(error_msg)
 
         return refs
@@ -245,12 +246,9 @@ class BuildContextPackUseCase:
                 or "src/" in path_str
                 or f.suffix in [".py", ".ts", ".js", ".go", ".rs"]
             ):
-                print(f"❌ PROHIBITED: Cannot index code files in pack: {f}", file=sys.stderr)
-                print(
-                    "Trifecta is Programming Context Calling (meta-first), not RAG.",
-                    file=sys.stderr,
-                )
-                print("Code access MUST be via curated prime links in meta-docs.", file=sys.stderr)
+                sys.stderr.write(f"❌ PROHIBITED: Cannot index code files in pack: {f}\n")
+                sys.stderr.write("Trifecta is Programming Context Calling (meta-first), not RAG.\n")
+                sys.stderr.write("Code access MUST be via curated prime links in meta-docs.\n")
                 # In UseCase, we raise ValueError instead of sys.exit
                 raise ValueError(f"Prohibited file in context pack: {f}")
 

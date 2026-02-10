@@ -14,7 +14,7 @@ ast_app = typer.Typer(help="AST & Parsing Commands")
 
 
 def _json_output(data: dict):
-    print(json.dumps(data, indent=2))
+    typer.echo(json.dumps(data, indent=2))
 
 
 def _get_telemetry(level: str = "lite") -> Optional[Telemetry]:

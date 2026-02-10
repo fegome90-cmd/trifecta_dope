@@ -5,9 +5,11 @@ This wrapper adds deterministic file locking around any AstCache implementation
 without modifying the underlying cache. Keeps OS concerns in infrastructure layer.
 """
 
-from typing import Any, Optional, TYPE_CHECKING
+from typing import Any, Optional, TYPE_CHECKING, Callable, TypeVar
 from pathlib import Path
 import time
+
+T = TypeVar("T")
 
 if TYPE_CHECKING:
     from src.domain.ast_cache import AstCache, CacheStats
@@ -45,7 +47,7 @@ class FileLockedAstCache:
         self._telemetry = telemetry
         self._timeout = timeout
 
-    def _with_lock(self, operation: str, func):
+    def _with_lock(self, operation: str, func: Callable[[], T]) -> T:
         """
         Execute function with file lock held.
 

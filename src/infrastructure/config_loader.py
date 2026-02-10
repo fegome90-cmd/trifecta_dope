@@ -26,7 +26,7 @@ class ConfigLoader:
         anchors_path = repo_root / "configs" / "anchors.yaml"
 
         if not anchors_path.exists():
-            print(f"[ConfigLoader] anchors.yaml not found at {anchors_path}", file=sys.stderr)
+            sys.stderr.write(f"[ConfigLoader] anchors.yaml not found at {anchors_path}\n")
             return {"_missing_config": True, "anchors": {}}
 
         try:
@@ -34,19 +34,18 @@ class ConfigLoader:
                 data = yaml.safe_load(f)
 
                 if not isinstance(data, dict) or "anchors" not in data:
-                    print(
-                        "[ConfigLoader] anchors.yaml invalid structure (missing 'anchors' key)",
-                        file=sys.stderr,
+                    sys.stderr.write(
+                        "[ConfigLoader] anchors.yaml invalid structure (missing 'anchors' key)\n"
                     )
                     return {"_missing_config": True, "anchors": {}}
 
                 return data
 
         except yaml.YAMLError as e:
-            print(f"[ConfigLoader] anchors.yaml YAML parse error: {e}", file=sys.stderr)
+            sys.stderr.write(f"[ConfigLoader] anchors.yaml YAML parse error: {e}\n")
             return {"_missing_config": True, "anchors": {}}
         except (IOError, OSError) as e:
-            print(f"[ConfigLoader] anchors.yaml read error: {e}", file=sys.stderr)
+            sys.stderr.write(f"[ConfigLoader] anchors.yaml read error: {e}\n")
             return {"_missing_config": True, "anchors": {}}
 
     @staticmethod
@@ -63,7 +62,7 @@ class ConfigLoader:
         aliases_path = repo_root / "configs" / "aliases.yaml"
 
         if not aliases_path.exists():
-            print(f"[ConfigLoader] aliases.yaml not found at {aliases_path}", file=sys.stderr)
+            sys.stderr.write(f"[ConfigLoader] aliases.yaml not found at {aliases_path}\n")
             return {"_missing_config": True, "aliases": []}
 
         try:
@@ -71,17 +70,16 @@ class ConfigLoader:
                 data = yaml.safe_load(f)
 
                 if not isinstance(data, dict) or "aliases" not in data:
-                    print(
-                        "[ConfigLoader] aliases.yaml invalid structure (missing 'aliases' key)",
-                        file=sys.stderr,
+                    sys.stderr.write(
+                        "[ConfigLoader] aliases.yaml invalid structure (missing 'aliases' key)\n"
                     )
                     return {"_missing_config": True, "aliases": []}
 
                 return data
 
         except yaml.YAMLError as e:
-            print(f"[ConfigLoader] aliases.yaml YAML parse error: {e}", file=sys.stderr)
+            sys.stderr.write(f"[ConfigLoader] aliases.yaml YAML parse error: {e}\n")
             return {"_missing_config": True, "aliases": []}
         except (IOError, OSError) as e:
-            print(f"[ConfigLoader] aliases.yaml read error: {e}", file=sys.stderr)
+            sys.stderr.write(f"[ConfigLoader] aliases.yaml read error: {e}\n")
             return {"_missing_config": True, "aliases": []}

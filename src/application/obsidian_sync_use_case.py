@@ -12,6 +12,7 @@ Following Trifecta Clean Architecture:
 
 from __future__ import annotations
 
+import sys
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -151,7 +152,7 @@ class SyncToObsidianUseCase:
             if batch_result.failed > 0:
                 # Log errors but don't fail the sync
                 for error in batch_result.errors:
-                    print(f"Warning: {error}")
+                    sys.stderr.write(f"Warning: {error}\n")
 
         duration_ms = int((time.time() - start_time) * 1000)
 

@@ -90,7 +90,7 @@ def test_prime_cycles_warning(temp_segment: Path, capsys: Any) -> None:
     assert result.is_ok(), f"Build failed: {result}"
 
     captured = capsys.readouterr()
-    assert "Warning: Cycle/Duplicate detected" in captured.out
+    assert "Warning: Cycle/Duplicate detected" in captured.err
 
 
 # T7.5 — Installer Contamination Check

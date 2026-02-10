@@ -2,6 +2,7 @@ import pytest
 import yaml
 from src.domain.query_linter import lint_query
 
+
 # Fixtures from real config files
 @pytest.fixture
 def anchors_cfg():
