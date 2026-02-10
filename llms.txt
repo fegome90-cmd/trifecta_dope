@@ -1,0 +1,66 @@
+# Trifecta Dope - LLM Reference
+
+## Quick Reference
+- Repo root: .
+- Segment: .
+- Default profile: impl_patch
+
+## Required Reading Order
+1. skill.md
+2. _ctx/prime_trifecta_dope.md
+3. _ctx/agent_trifecta_dope.md
+4. _ctx/session_trifecta_dope.md
+
+## Core Commands
+- make install
+- make ctx-sync SEGMENT=.
+- make ctx-search Q="Find documentation about X" SEGMENT=.
+- make gate-all
+- uv run trifecta ctx validate --segment .
+
+## Work Orders
+- Backlog: _ctx/backlog/backlog.yaml
+- Pending WOs: _ctx/jobs/pending/
+- Take WO: python scripts/ctx_wo_take.py WO-XXXX
+- Finish WO: python scripts/ctx_wo_finish.py WO-XXXX
+
+## Key Directories
+- src/domain/ (pure logic)
+- src/application/ (use cases)
+- src/infrastructure/ (IO, adapters)
+- skills/ (agent skills)
+- docs/ (contracts, ADRs, guides)
+- _ctx/ (context pack, jobs, telemetry)
+
+## Documentation
+- README.md
+- docs/CONTRACTS.md
+- docs/CLI_WORKFLOW.md
+- docs/backlog/WORKFLOW.md
+
+## Rules That Must Not Be Violated
+- No absolute paths in docs or commands
+- No silent fallback if ctx validate fails
+- No IO or async in domain layer
+- Log session intent and results in _ctx/session_trifecta_dope.md
+
+## Context Pack Workflow
+- Sync: uv run trifecta ctx sync --segment .
+- Search: uv run trifecta ctx search --segment . --query "instruction" --limit 6
+- Get: uv run trifecta ctx get --segment . --ids "..." --mode excerpt --budget-token-est 900
+- Validate: uv run trifecta ctx validate --segment .
+
+## Common Errors
+- SEGMENT_NOT_INITIALIZED: run ctx sync
+- stale_detected=true: stop, sync, validate
+- ModuleNotFoundError for src: use uv run python
+
+## Testing Gates
+- make test-unit
+- make test-integration
+- make test-acceptance
+- make gate-all
+
+## Telemetry
+- uv run trifecta telemetry report -s . --last 30
+- uv run trifecta telemetry chart -s . --type hits
