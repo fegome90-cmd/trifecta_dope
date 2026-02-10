@@ -4,64 +4,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-## ⚠️ CRITICAL: READ THIS FIRST BEFORE ANY TASK
-
-**DO NOT PROCEED WITH ANY TASK WITHOUT READING THESE CONTEXT FILES.**
-
-Assuming anything about this project without consulting these files is a breach of the work contract.
-
-### Agent Context Files (MANDATORY - READ THESE FIRST)
-
-These files contain **CURRENT PROJECT STATE, ACTIVE FEATURES, AND ARCHITECTURE DECISIONS**. Ignoring them will result in:
-- ✗ Breaking existing implementations
-- ✗ Duplicating work already done
-- ✗ Misunderstanding the current system state
-- ✗ Failing verification gates
-
-**READ IN THIS ORDER:**
-
-0. **[skill.md](skill.md)** ← START HERE FIRST (3 min read)
-   - **What**: Skills, roles, and core rules for this project
-   - **Why**: Know the mandatory patterns and commands to use
-   - **Contains**: Setup instructions, context cycle, session persistence
-   - **CRITICAL**: Skip this → you'll use wrong commands and waste cycles
-
-1. **[_ctx/agent_trifecta_dope.md](_ctx/agent_trifecta_dope.md)** ← THEN READ THIS (5 min read)
-   - **What**: Current implementation status and active features
-   - **Why**: Know what's ACTUALLY implemented vs. what's planned
-   - **Contains**: Tech stack versions, active patterns, completed work
-   - **CRITICAL**: Skip this → you'll duplicate work or break things
-
-2. **[_ctx/session_trifecta_dope.md](_ctx/session_trifecta_dope.md)** ← THEN READ THIS (2 min skim)
-   - **What**: Session history and continuation points
-   - **Why**: Understand what was done in the last session
-   - **Contains**: Previous decisions, known workarounds, open issues
-   - **CRITICAL**: Skip this → you'll miss workarounds and hit known bugs
-
-3. **[_ctx/prime_trifecta_dope.md](_ctx/prime_trifecta_dope.md)** ← REFERENCE THIS (1 min check)
-   - **What**: Architectural reference and system structure
-   - **Why**: Understand the fundamental system design
-   - **Contains**: Core patterns, layer separation, dependency rules
-   - **CRITICAL**: Skip this → you'll violate architectural constraints
-
-### If You Skip These Files
-
-⛔ **YOU WILL:**
-- Propose features that already exist
-- Break working implementations
-- Violate architectural patterns
-- Fail the verification gate
-- Use wrong commands and waste tokens
-- Waste time and tokens
-
-✅ **INSTEAD:**
-1. Read the 4 context files (11 min total)
-2. Then start your task
-3. Reference them constantly
-4. Update session_trifecta_dope.md when you finish
-
----
-
 ## Quick Start
 
 ```bash
@@ -142,12 +84,13 @@ See `docs/CONTRACTS.md` and architecture docs in `docs/adr/` for complete patter
 
 ## Source of Truth
 
-### Repository Documentation
 - **README.md** - Project overview, installation
 - **docs/CONTRACTS.md** - API contracts, schemas
 - **docs/CLI_WORKFLOW.md** - Official CLI usage
 - **docs/adr/** - Architecture decision records
 - **docs/backlog/** - Work Order system (WORKFLOW.md, OPERATIONS.md, TROUBLESHOOTING.md)
+- **_ctx/agent_trifecta_dope.md** - Active features, tech stack
+- **_ctx/session_trifecta_dope.md** - Session history, runbook
 
 ---
 
