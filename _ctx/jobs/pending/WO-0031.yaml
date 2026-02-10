@@ -1,0 +1,26 @@
+version: 1
+id: WO-0031
+epic_id: E-0004
+title: "Implement validate-references (bash + python parser)"
+priority: P2
+status: pending
+owner: null
+branch: null
+worktree: null
+scope:
+  allow:
+    - "skills/documentation/resources/validate-references.sh"
+    - "skills/documentation/resources/validate_references.py"
+    - "skills/documentation/resources/fixtures/**"
+  deny:
+    - "src/**"
+    - "tests/**"
+    - "_ctx/**"
+verify:
+  commands:
+    - "bash skills/documentation/resources/validate-references.sh"
+dod_id: DOD-DEFAULT
+dependencies: []
+deliverables:
+  - "skills/documentation/resources/validate-references.sh"
+  - "skills/documentation/resources/validate_references.py"

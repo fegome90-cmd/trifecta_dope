@@ -1,0 +1,29 @@
+version: 1
+id: WO-0034
+epic_id: E-0004
+title: "Update documentation skill references"
+priority: P2
+status: pending
+owner: null
+branch: null
+worktree: null
+scope:
+  allow:
+    - "skills/documentation/SKILL.md"
+    - "skills/documentation/resources/README.md"
+  deny:
+    - "src/**"
+    - "tests/**"
+    - "_ctx/**"
+verify:
+  commands:
+    - "bash skills/documentation/resources/verify_documentation.sh"
+dod_id: DOD-DEFAULT
+dependencies:
+  - "WO-0030"
+  - "WO-0031"
+  - "WO-0032"
+  - "WO-0033"
+deliverables:
+  - "skills/documentation/SKILL.md"
+  - "skills/documentation/resources/README.md"

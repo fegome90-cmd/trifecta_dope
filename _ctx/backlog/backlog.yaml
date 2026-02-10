@@ -1,5 +1,5 @@
 version: 1
-generated_at: "2026-02-10T07:55:00Z"
+generated_at: "2026-02-10T12:30:00Z"
 epics:
   - id: E-0001
     title: "AST Cache Operability"
@@ -85,3 +85,23 @@ epics:
     risks: []
     wo_queue:
       - WO-0024 # Runtime Introspection for Invalid Options
+
+  - id: E-0004
+    title: "Agent Documentation Automation"
+    outcome: |
+      Ensure agent documentation stays synchronized, validated, and robust by
+      introducing llms.txt, reference validation, context packs, and hook-based
+      automation that works reliably in worktrees.
+    owner: null
+    status: active
+    priority: P2
+    dependencies: []
+    risks:
+      - "Documentation drift if hooks are disabled"
+      - "Validation gaps if parser is too permissive"
+    wo_queue:
+      - WO-0030
+      - WO-0031
+      - WO-0032
+      - WO-0033
+      - WO-0034

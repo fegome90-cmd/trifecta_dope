@@ -1,7 +1,7 @@
-timestamp: 2026-02-10T09:09:27.534591+00:00
+timestamp: 2026-02-10T10:36:19.388093+00:00
 applied: True
 issues:
 - RUNNING_WO_WITHOUT_WORKTREE WO-0003 ['/workspaces/trifecta_dope/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/jobs/running/WO-0003.yaml']
-- WORKTREE_WITHOUT_RUNNING_WO None ['HEAD']
-- WORKTREE_WITHOUT_RUNNING_WO None ['branch']
 - WORKTREE_WITHOUT_RUNNING_WO None ['worktree']
+- WORKTREE_WITHOUT_RUNNING_WO None ['branch']
+- WORKTREE_WITHOUT_RUNNING_WO None ['HEAD']

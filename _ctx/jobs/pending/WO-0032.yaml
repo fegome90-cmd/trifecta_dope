@@ -1,0 +1,30 @@
+version: 1
+id: WO-0032
+epic_id: E-0004
+title: "Add documentation contexts and update-docs workflow"
+priority: P2
+status: pending
+owner: null
+branch: null
+worktree: null
+scope:
+  allow:
+    - "skills/documentation/resources/contexts/dev.md"
+    - "skills/documentation/resources/contexts/review.md"
+    - "skills/documentation/resources/contexts/research.md"
+    - "skills/documentation/resources/workflows/update-docs-workflow.md"
+  deny:
+    - "src/**"
+    - "tests/**"
+    - "_ctx/**"
+verify:
+  commands:
+    - "bash skills/documentation/resources/validate-references.sh"
+dod_id: DOD-DEFAULT
+dependencies:
+  - "WO-0031"
+deliverables:
+  - "skills/documentation/resources/contexts/dev.md"
+  - "skills/documentation/resources/contexts/review.md"
+  - "skills/documentation/resources/contexts/research.md"
+  - "skills/documentation/resources/workflows/update-docs-workflow.md"

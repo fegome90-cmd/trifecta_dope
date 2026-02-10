@@ -3,10 +3,10 @@ id: WO-0024
 epic_id: E-0002
 title: Runtime Introspection for Invalid Options (Anti-Deriva)
 priority: P1
-status: running
+status: done
 owner: vscode
-verified_at_sha: null
-closed_at: null
+verified_at_sha: ed160dc1c0ea8b927f9d5c1f81af0580ce474c92
+closed_at: '2026-02-10T10:29:57.525633+00:00'
 scope:
   allow:
   - src/cli/invalid_option_handler.py
@@ -148,3 +148,4 @@ x_expected_result: 'An agent that:
 started_at: '2026-02-10T08:51:56.722959+00:00'
 branch: feat/wo-WO-0024
 worktree: .worktrees/WO-0024
+result: done

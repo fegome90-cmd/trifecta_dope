@@ -85,14 +85,15 @@ Troubleshooting
 **Propósito**: Mejorar verify_documentation.sh con validación de paths reales
 
 **Nuevas Validaciones**:
-- ✅ Paths mencionados en CLAUDE.md/agents.md existen
-- ✅ Links son resolvibles (internas y externas)
-- ✅ CLAUDE.md ↔ agents.md sincronizados (mismos archivos obligatorios)
-- ✅ Timestamps "Last Updated" están frescos (< 30 días)
-- ✅ Secciones CRITICAL están PRIMERO en ambos archivos
+- ✅ Paths mencionados en CLAUDE.md/agents.md existen (FAIL)
+- ✅ Paths absolutos detectados (FAIL)
+- ✅ Secciones CRITICAL están PRIMERO en ambos archivos (FAIL)
+- ✅ CLAUDE.md ↔ agents.md sincronizados (mismos archivos obligatorios) (FAIL)
+- ⚠️ Timestamps "Last Updated" > 90 días (WARN)
+- ⚠️ Links externos no resueltos (WARN)
 
 **Ubicación**: `skills/documentation/resources/validate-references.sh`  
-**Type**: Executable bash script (~220 lines)
+**Type**: Bash wrapper + Python parser (stdlib)
 
 **Features**:
 ```bash
@@ -103,7 +104,7 @@ Exit Codes:
 Output:
   [✓] PASS: Architecture section found
   [✗] FAIL: Path /Users/... uses absolute path (not relative)
-  [⚠] WARN: Last updated 45 days ago (recommend refresh)
+  [⚠] WARN: Last updated 120 days ago (recommend refresh)
   
 Summary: 5 PASS, 2 FAIL, 1 WARN
 ```
@@ -178,24 +179,17 @@ cat skills/documentation/resources/contexts/review.md >> .claude-context
 
 #### 2.1 Crear `install-hooks.sh` - Setup de hooks
 
-**Propósito**: Instalar/actualizar hooks en .git/hooks
+**Propósito**: Instalar/actualizar hooks usando `core.hooksPath` (robusto en worktrees)
 
 **Script Logic**:
 ```bash
 #!/bin/bash
 # scripts/hooks/install-hooks.sh
 
-# 1. Detectar si es worktree o base repo
-if [[ -d .worktrees ]]; then
-    echo "Base repo detected"
-    HOOK_SOURCE="scripts/hooks"
-fi
+# 1. Set hooks path once (works in worktrees too)
+git config core.hooksPath scripts/hooks
 
-# 2. Crear simlinks en .git/hooks
-ln -sf ../../scripts/hooks/pre-commit .git/hooks/pre-commit
-ln -sf ../../scripts/hooks/post-commit .git/hooks/post-commit
-
-# 3. Hacer ejecutables
+# 2. Ensure hooks are executable
 chmod +x scripts/hooks/pre-commit
 chmod +x scripts/hooks/post-commit
 
@@ -218,6 +212,12 @@ echo "✅ Git hooks installed"
 # scripts/hooks/pre-commit
 
 set -e
+
+# Optional kill-switch
+if [[ "${TRIFECTA_HOOKS_DISABLE:-0}" == "1" ]]; then
+  echo "ℹ️  TRIFECTA_HOOKS_DISABLE=1, skipping hooks"
+  exit 0
+fi
 
 CHANGED_FILES=$(git diff --cached --name-only)
 
@@ -257,10 +257,10 @@ else
     echo "⚠️  ctx sync had issues (non-blocking, check _ctx/ manually)"
 fi
 
-# STEP 4: Auto-stage changes
+# STEP 4: Auto-stage changes (docs only)
 echo ""
 echo "4️⃣  Staging documentation changes..."
-git add CLAUDE.md agents.md llms.txt _ctx/ 2>/dev/null || true
+git add CLAUDE.md agents.md llms.txt skills/documentation/resources/guides/ 2>/dev/null || true
 echo "✅ Changes staged"
 
 echo ""
@@ -283,7 +283,7 @@ exit 0
 
 #### 2.3 Crear `run-doc-skill.sh` - Wrapper para ejecutar skill
 
-**Propósito**: Aplicar actualizaciones de documentación sin ser interactivo
+**Propósito**: Aplicar actualizaciones de documentación sin ser interactivo ni usar LLM
 
 **Logic**:
 
@@ -306,8 +306,8 @@ if echo "$CHANGED" | grep -q "pyproject.toml"; then
 fi
 
 if echo "$CHANGED" | grep -qE "skills/|agents/"; then
-    echo "🤖 Skill/agent changes detected, updating llms.txt..."
-    # Regenerate llms.txt skill section
+  echo "🤖 Skill/agent changes detected, updating llms.txt..."
+  # Regenerate llms.txt from repo tree (deterministic, sorted)
 fi
 
 # Add more detections as needed
@@ -378,8 +378,8 @@ La skill se ejecuta automáticamente vía pre-commit hook:
 - Detecta cambios en código
 - Ejecuta doc-skill
 - Valida referencias
-- Ejecuta ctx sync
-- Auto-stages cambios
+- Ejecuta ctx sync (WARN-only)
+- Auto-stages docs (no `_ctx/` por default)
 
 Agregar referencia a:
 
@@ -432,6 +432,7 @@ Automated documentation updates:
 - See HOOKS_GUIDE.md
 - Run scripts/hooks/install-hooks.sh in setup
 - Hooks execute on each commit
+- Disable with TRIFECTA_HOOKS_DISABLE=1 (if needed)
 ```
 
 ---
@@ -441,18 +442,15 @@ Automated documentation updates:
 ### **Arquitectura de Hooks**
 
 ```
-.git/
-└── hooks/
-    ├── pre-commit → ../../scripts/hooks/pre-commit (symlink)
-    └── post-commit → ../../scripts/hooks/post-commit (symlink)
+git config core.hooksPath scripts/hooks
 
 scripts/
 └── hooks/
-    ├── install-hooks.sh (setup script)
-    ├── pre-commit (main automation)
-    ├── run-doc-skill.sh (skill executor)
-    ├── post-commit (optional async)
-    └── README.md (documentation)
+  ├── install-hooks.sh (setup script)
+  ├── pre-commit (main automation)
+  ├── run-doc-skill.sh (skill executor)
+  ├── post-commit (optional async)
+  └── README.md (documentation)
 ```
 
 ### **Opciones Evaluadas**
@@ -495,16 +493,15 @@ uv run trifecta ctx sync --segment . || {
 
 ### **Problema 1: Hook en Worktree Context**
 
-**Issue**: Pre-commit se ejecuta en worktree, pero cambios deben sincronizarse a main repo
+**Issue**: `.git` es un archivo en worktrees, no un directorio con hooks.
 
-**Soluciones Evaluadas**:
-1. ❌ Hacer push desde hook (risky, puede romper repo)
-2. ✅ Auto-stage en worktree, dejar que ctx sync + push manual haga su trabajo
-3. ✅ Documentar que `git push` después de `git commit` sincroniza todo
+**Solución**: Usar `git config core.hooksPath scripts/hooks` (idempotente, funciona en worktrees).
 
 **Implementación**:
 ```bash
-# En worktree WO-XXXX:
+# En cualquier repo o worktree:
+git config core.hooksPath scripts/hooks
+```
 git commit -m "feat: update docs"
   → hook ejecuta doc-skill + ctx sync
   → cambios staged automáticamente
@@ -569,7 +566,7 @@ bash skills/documentation/resources/validate-references.sh || {
 ### **PASO 1: Crear archivos Phase 1** (2-3 horas)
 
 - [ ] **1.1** Crear `llms.txt` (120 lines)
-- [ ] **1.2** Crear `validate-references.sh` (220 lines, executable)
+- [ ] **1.2** Crear `validate-references.sh` + `validate_references.py` (wrapper bash + parser python)
 - [ ] **1.3** Crear `contexts/dev.md` (80 lines)
 - [ ] **1.4** Crear `contexts/review.md` (80 lines)
 - [ ] **1.5** Crear `contexts/research.md` (70 lines)
@@ -595,8 +592,8 @@ find skills/documentation -type f | wc -l
 **Validation**:
 ```bash
 bash scripts/hooks/install-hooks.sh
-ls -la .git/hooks/ | grep -E "pre-commit|post-commit"
-# Debe mostrar symlinks activos
+git config --get core.hooksPath
+# Debe imprimir: scripts/hooks
 ```
 
 ---
@@ -646,6 +643,7 @@ Skill se considera "DONE" cuando:
 - ✅ QUICKSTART.md es < 100 lines, se completa en 5 min
 - ✅ ADVANCED.md es > 100 lines, cubre patrones complejos
 - ✅ Git hooks instalan sin errores (`bash scripts/hooks/install-hooks.sh`)
+- ✅ `git config --get core.hooksPath` devuelve `scripts/hooks`
 - ✅ Pre-commit hook ejecuta sin bloquear (test: `git commit --allow-empty`)
 - ✅ SKILL.md + resources/README actualizados con referencias
 - ✅ HOOKS_GUIDE.md documenta flujo completo
@@ -654,16 +652,18 @@ Skill se considera "DONE" cuando:
 
 ## 📚 Artifacts Generados
 
-**Nuevos Archivos** (15 total):
+**Nuevos/Actualizados**:
 
 ```
+llms.txt (NUEVO, root)
+
 skills/documentation/
 ├── SKILL.md (updated)
-├── llms.txt (NUEVO)
 ├── IMPLEMENTATION_PLAN.md (este archivo)
 ├── resources/
 │   ├── README.md (updated)
 │   ├── validate-references.sh (NUEVO)
+│   ├── validate_references.py (NUEVO)
 │   ├── contexts/ (NUEVA CARPETA)
 │   │   ├── dev.md
 │   │   ├── review.md
@@ -697,19 +697,14 @@ scripts/
 
 ---
 
-## 📞 Preguntas Para Aclarar
+## ✅ Decisiones Cerradas (post-review)
 
-1. ¿Ejecutar ctx sync es **bloqueante** (exit 1) o solo **warning** (exit 0)?
-   - Recomendación: **Warning only** (non-blocking)
-
-2. ¿En worktrees, ejecutar hooks normalmente o solo en main branch?
-   - Recomendación: **Ejecutar siempre** (documentation applies everywhere)
-
-3. ¿Agregar GitHub Actions como gate pre-merge?
-   - Recomendación: **Sí, pero en FASE 3+** (después de local hooks funcionen)
-
-4. ¿Hacer validate-references.sh bloqueante o solo advertencia?
-   - Recomendación: **Bloqueante** (mejor prevenir durante commit)
+1. **llms.txt** vive en root (`./llms.txt`).
+2. Hooks usan `git config core.hooksPath scripts/hooks` (sin symlinks).
+3. **FAIL**: paths absolutos, paths inexistentes, CRITICAL fuera de orden, desync CLAUDE.md ↔ agents.md.
+4. **WARN**: timestamps > 90 dias, links externos no resueltos, ctx sync falla.
+5. Auto-stage solo docs (no `_ctx/` por default).
+6. `validate-references.sh` usa parser Python (stdlib) para robustez.
 
 ---
 
