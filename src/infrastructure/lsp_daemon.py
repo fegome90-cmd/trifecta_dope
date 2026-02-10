@@ -48,7 +48,7 @@ class LSPDaemonServer:
         try:
             fcntl.lockf(self._lock_fp, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except IOError:
-            print("Daemon already running.")
+            sys.stdout.write("Daemon already running.\n")
             return
 
         # 2. Write PID

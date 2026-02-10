@@ -52,12 +52,13 @@ class SearchUseCase:
         normalized_query = QueryNormalizer.normalize(query)
 
         # Apply Query Linter (anchor-based classification + expansion)
+        lint_plan: LinterPlan
         if enable_lint:
             repo_root = resolve_segment_root(target_path)
             anchors_cfg = ConfigLoader.load_anchors(repo_root)
             aliases_cfg = ConfigLoader.load_linter_aliases(repo_root)
 
-            lint_plan: LinterPlan = lint_query(normalized_query, anchors_cfg, aliases_cfg)
+            lint_plan = lint_query(normalized_query, anchors_cfg, aliases_cfg)
 
             # If config missing, force disabled state
             if anchors_cfg.get("_missing_config") or aliases_cfg.get("_missing_config"):
@@ -70,7 +71,7 @@ class SearchUseCase:
                     lint_plan["expanded_query"] if lint_plan["changed"] else normalized_query
                 )
         else:
-            lint_plan: LinterPlan = {
+            lint_plan = {
                 "original_query": normalized_query,
                 "query_class": "disabled",
                 "token_count": 0,

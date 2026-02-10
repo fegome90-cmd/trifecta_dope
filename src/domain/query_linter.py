@@ -59,13 +59,8 @@ def expand_query(query: str, analysis: dict, anchors_cfg: dict) -> dict:
     Función pura.
     """
     if analysis["query_class"] != "vague":
-        return {
-            "expanded_query": query,
-            "added_strong": [],
-            "added_weak": [],
-            "reasons": []
-        }
-        
+        return {"expanded_query": query, "added_strong": [], "added_weak": [], "reasons": []}
+
     added_strong: list[str] = []
     added_weak: list[str] = []
     reasons: list[str] = []
@@ -152,11 +147,13 @@ def lint_query(query: str, anchors_cfg: dict, aliases_cfg: dict) -> LinterPlan:
 
     q_class = analysis["query_class"]
 
+    changes: LinterChanges
+
     if q_class == "vague":
         expansion = expand_query(query, analysis, anchors_cfg)
         expanded_query = expansion["expanded_query"]
         changed = expanded_query != query
-        changes: LinterChanges = {
+        changes = {
             "added_strong": expansion["added_strong"],
             "added_weak": expansion["added_weak"],
             "reasons": expansion["reasons"],
@@ -164,7 +161,7 @@ def lint_query(query: str, anchors_cfg: dict, aliases_cfg: dict) -> LinterPlan:
     else:
         expanded_query = query
         changed = False
-        changes: LinterChanges = {
+        changes = {
             "added_strong": [],
             "added_weak": [],
             "reasons": [],

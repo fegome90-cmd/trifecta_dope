@@ -45,5 +45,5 @@ def maybe_emit_deprecated(
 
     if policy == "fail":
         # Force failure for CI/harness detection
-        print(f"TRIFECTA_DEPRECATED=fail: {deprecated_id}", file=sys.stderr)
+        sys.stderr.write(f"TRIFECTA_DEPRECATED=fail: {deprecated_id}\n")
         raise SystemExit(2)

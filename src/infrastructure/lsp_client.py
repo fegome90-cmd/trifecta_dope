@@ -3,6 +3,7 @@ import json
 import shutil
 import threading
 import os
+import sys
 from typing import Optional, Dict, Any
 from enum import Enum
 from pathlib import Path
@@ -101,7 +102,7 @@ class LSPClient:
                             err_out = stderr_data.decode("utf-8")
                     except Exception:
                         pass
-                print(f"DEBUG: LSP Start Failed: {e}. Stderr: {err_out}")
+                sys.stderr.write(f"DEBUG: LSP Start Failed: {e}. Stderr: {err_out}\n")
 
                 # Sanitize executable path for telemetry
                 exe_name = "unknown"
@@ -278,7 +279,7 @@ class LSPClient:
                         err_out = stderr_data.decode("utf-8")
                 except Exception:
                     pass
-            print(f"DEBUG: LSP Loop Exception: {e}. Stderr: {err_out}")
+            sys.stderr.write(f"DEBUG: LSP Loop Exception: {e}. Stderr: {err_out}\n")
             self._transition(LSPState.FAILED)
 
     def request(
