@@ -206,10 +206,10 @@ Examples:
     root = Path(args.root).resolve()
     wo_id = args.wo_id
 
-    # Validate WO ID format
+    # Validate WO ID format (supports WO-0018 and WO-0018A formats)
     import re
-    if not re.match(r"^WO-\d{4}$", wo_id):
-        logger.error(f"Invalid WO ID format: {wo_id} (expected: WO-XXXX)")
+    if not re.match(r"^WO-\d{4}[A-Z]?$", wo_id):
+        logger.error(f"Invalid WO ID format: {wo_id} (expected: WO-XXXX or WO-XXXXA)")
         return 1
 
     job_path = root / "_ctx" / "jobs" / "pending" / f"{wo_id}.yaml"

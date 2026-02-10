@@ -1,0 +1,38 @@
+version: 1
+id: WO-0018A
+epic_id: E-0012
+title: "Fix WO-0012 & Add Process Guards"
+priority: P1
+status: done
+# NOTE: Superseded by WO-0018B - all work merged via PR #22
+x_superseded_by: WO-0018B
+x_superseded_reason: "All commits merged to main via PR #22 (feat/wo-WO-0018B)"
+owner: felipe
+verified_at_sha: e18fe9a
+closed_at: 2026-02-10T14:28:30+00:00
+result: superseded
+run_ids:
+  - wo-0018a-fix
+  - wo-0018a-verify
+scope:
+  allow:
+    - "scripts/ctx_wo_finish.py"
+    - "scripts/prevent_manual_wo_closure.sh"
+    - ".pre-commit-config.yaml"
+    - "_ctx/jobs/done/WO-0012.yaml"
+    - "_ctx/jobs/running/WO-0012.yaml"
+    - "_ctx/handoff/WO-0012/**"
+  deny:
+    - "src/domain/**"
+    - "tests/**"
+dod_id: DOD-DEFAULT
+verify:
+  commands:
+    - "# See WO-0018B for actual implementation"
+governance:
+  must:
+    - "All work completed via WO-0018B"
+x_objective: |
+  Retroactively fix WO-0012 manual closure by generating proper DoD artifacts and re-closing via ctx_wo_finish.py.
+  Add process guards to prevent future manual WO closures from bypassing validation.
+  NOTE: All work superseded and completed via WO-0018B.

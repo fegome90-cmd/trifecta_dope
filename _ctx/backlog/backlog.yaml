@@ -1,24 +1,22 @@
 version: 1
-generated_at: "2026-02-10T12:30:00Z"
 epics:
   - id: E-0001
     title: "AST Cache Operability"
-    outcome: |
+    description: |
       Make AST cache operational via configuration (flags/env vars) with full observability.
 
       Goal: Transition from "works when injected" to production-ready persistence
       with telemetry, deterministic locking, and fail-closed testing.
-    owner: null
-    status: done
+
+    status: complete
     priority: P0
-    dependencies: []
-    risks: []
+
     wo_queue:
-      - WO-0026 # Telemetry Integration (done)
-      - WO-0027 # File Locks via Wrapper (done)
-      - WO-0028 # Soak Harness & Evidence (done)
+      - WO-P2.1 # Telemetry Integration (done)
+      - WO-P2.2 # File Locks via Wrapper (done)
+      - WO-P3.0 # Soak Harness & Evidence (done)
       - WO-0012 # Persistence Feature Flag (partial - test env only)
-      - WO-0025 # Dev CLI Persistence Default (done)
+      - WO-0012.1 # Dev CLI Persistence Default (done)
       - WO-0013 # AST Persist Adoption Observability (pending)
 
     x_legacy_wo_queue:
@@ -47,61 +45,24 @@ epics:
       - "P2.4: Resource Monitoring"
       - "P2.5: TTL & Eviction"
 
-    x_generated_at: "2026-01-06T16:10:00-03:00"
+    generated_at: "2026-01-06T16:10:00-03:00"
     x_curated_at: "2026-01-06T16:10:00-03:00"
 
-  - id: E-0003
+  - id: E-SCALE
     title: "Zero-Config Discovery for Massive Repos"
-    outcome: |
+    description: |
       Enable Trifecta to auto-discover segment boundaries in large codebases
       like /agent_h without manual configuration.
 
       Goal: `trifecta ctx discover --root /path` generates trifecta_config.json
-    owner: null
-    status: paused
+
+    status: pending
     priority: P1
-    dependencies: []
-    risks: []
+
     wo_queue:
       - WO-0014 # Import Extractor
       - WO-0015 # Topology Scanner
       - WO-0016 # Segment Clusterer
       - WO-0017 # CLI Integration
 
-  - id: E-0002
-    title: "CLI UX Improvements with Runtime Introspection"
-    outcome: |
-      Improve CLI user experience through runtime introspection of Click/Typer
-      commands, providing deterministic error handling, telemetry, and
-      regression-proof flag discovery.
-
-      Goal: Replace static mappings with runtime introspection for invalid
-      option handling, ensuring suggestions are always accurate and
-      automatically updated when commands change.
-    owner: null
-    status: active
-    priority: P1
-    dependencies: []
-    risks: []
-    wo_queue:
-      - WO-0024 # Runtime Introspection for Invalid Options
-
-  - id: E-0004
-    title: "Agent Documentation Automation"
-    outcome: |
-      Ensure agent documentation stays synchronized, validated, and robust by
-      introducing llms.txt, reference validation, context packs, and hook-based
-      automation that works reliably in worktrees.
-    owner: null
-    status: active
-    priority: P2
-    dependencies: []
-    risks:
-      - "Documentation drift if hooks are disabled"
-      - "Validation gaps if parser is too permissive"
-    wo_queue:
-      - WO-0030
-      - WO-0031
-      - WO-0032
-      - WO-0033
-      - WO-0034
+    generated_at: "2026-01-13T09:30:00-03:00"
