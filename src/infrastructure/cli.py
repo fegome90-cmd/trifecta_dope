@@ -2,15 +2,20 @@
 
 import json
 import os
+import sys
 import time
+import traceback
 from pathlib import Path
 from typing import Literal, Optional, Tuple
 
+import click
 import typer  # type: ignore
+from click.exceptions import UsageError
 
 # AST/LSP Integration (Phase 2a/2b)
 from src.infrastructure.cli_ast import ast_app
 
+from src.cli.invalid_option_handler import handle_invalid_option_error
 from src.application.search_get_usecases import GetChunkUseCase, SearchUseCase
 from src.application.telemetry_charts import generate_chart
 from src.application.telemetry_reports import export_data, generate_report
@@ -33,17 +38,41 @@ from src.infrastructure.templates import TemplateRenderer
 from src.application.obsidian_sync_use_case import create_sync_use_case
 from src.infrastructure.obsidian_config import ObsidianConfigManager
 
+
+class TrifectaGroup(typer.core.TyperGroup):
+    """Custom Typer Group with enhanced error handling for invalid options."""
+
+    def __call__(self, *args, **kwargs):
+        """Override to catch and enhance invalid option errors."""
+        try:
+            return self.main(*args, **kwargs)
+        except UsageError as e:
+            # Handle invalid option errors with enhanced messaging
+            error_msg = str(e)
+            if "no such option" in error_msg.lower():
+                enhanced_msg = handle_invalid_option_error(error_msg, sys.argv)
+                typer.echo(enhanced_msg, err=True)
+                sys.exit(2)
+            # Re-raise other usage errors
+            raise
+
+
 app = typer.Typer(
     name="trifecta",
     help="Trifecta Context Engine v2.0 - Agentic Context Management (PCC).",
+    rich_markup_mode="rich",
+    cls=TrifectaGroup,
 )
 
 app.add_typer(ast_app, name="ast")
 
-ctx_app = typer.Typer(help="Manage Trifecta Context Packs (ctx.search, ctx.get).")
-session_app = typer.Typer(help="Session logging commands")
-telemetry_app = typer.Typer(help="Telemetry analysis commands")
-obsidian_app = typer.Typer(help="Obsidian vault integration for findings")
+ctx_app = typer.Typer(
+    help="Manage Trifecta Context Packs (ctx.search, ctx.get).",
+    cls=TrifectaGroup,
+)
+session_app = typer.Typer(help="Session logging commands", cls=TrifectaGroup)
+telemetry_app = typer.Typer(help="Telemetry analysis commands", cls=TrifectaGroup)
+obsidian_app = typer.Typer(help="Obsidian vault integration for findings", cls=TrifectaGroup)
 
 app.add_typer(ctx_app, name="ctx")
 app.add_typer(session_app, name="session")
@@ -51,7 +80,7 @@ app.add_typer(telemetry_app, name="telemetry")
 app.add_typer(obsidian_app, name="obsidian")
 
 # Legacy Burn-Down
-legacy_app = typer.Typer(help="Legacy Burn-Down commands")
+legacy_app = typer.Typer(help="Legacy Burn-Down commands", cls=TrifectaGroup)
 app.add_typer(legacy_app, name="legacy")
 
 HELP_SEGMENT = "Target segment path (e.g., 'debug_terminal' or '.')"
@@ -1596,7 +1625,46 @@ def obsidian_validate() -> None:
         raise typer.Exit(code=1)
 
 
+def main() -> None:
+    """Main entry point with custom error handling for invalid options."""
+    try:
+        # Use standalone_mode=False to capture exceptions
+        # Note: typer.Exit is converted to a return value when standalone_mode=False
+        exit_code = app(standalone_mode=False)
+
+        # If app returned a non-zero exit code, exit with it
+        if exit_code is not None and exit_code != 0:
+            sys.exit(exit_code)
+
+    except UsageError as e:
+        # Handle Click UsageError (includes "No such option" errors)
+        error_msg = str(e)
+
+        # Check if this is an invalid option error
+        if "no such option" in error_msg.lower():
+            enhanced_msg = handle_invalid_option_error(error_msg, sys.argv)
+            typer.echo(enhanced_msg, err=True)
+            sys.exit(2)
+
+        # For other usage errors, show the original message
+        typer.echo(f"Error: {error_msg}", err=True)
+        sys.exit(2)
+    except click.exceptions.Exit as e:
+        # Handle Click/typer.Exit exceptions (inherited from SystemExit)
+        if e.exit_code != 0:
+            sys.exit(e.exit_code)
+    except SystemExit as e:
+        # Handle normal exit codes
+        if e.code is not None and e.code != 0:
+            sys.exit(e.code)
+    except Exception as e:
+        # Handle unexpected errors with traceback for debugging
+        typer.echo(f"Error: {e}", err=True)
+        typer.echo(traceback.format_exc(), err=True)
+        sys.exit(1)
+
+
 if __name__ == "__main__":
-    app()
+    main()
 # Audit Trigger
 # Audit Trigger Code
