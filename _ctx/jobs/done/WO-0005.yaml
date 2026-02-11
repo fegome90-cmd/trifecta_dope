@@ -7,7 +7,6 @@ status: done
 owner: copilot-agent
 branch: job/WO-0005-evidence-gate
 worktree: ../wt-WO-0005
-x_phase: P0 Audit (AST Persistence)
 scope:
   allow:
   - tests/**
@@ -18,17 +17,18 @@ scope:
   deny:
   - .env*
   - '**/production.*'
+verify:
+  commands:
+  - scripts/verify.sh
+  - uv run pytest -q
+dod_id: DOD-DEFAULT
+x_phase: P0 Audit (AST Persistence)
 deliverables:
 - docs/reports/wo0005_p0_ast_inventory.md (Inventory)
 - tests/integration/test_ast_sqlite_cache_roundtrip.py (Contracts)
 - _ctx/logs/wo0005_p0_ast/ (Evidence)
 - _ctx/logs/gate_fail_head.log
 - _ctx/logs/gate_base_commit.txt
-verify:
-  commands:
-  - scripts/verify.sh
-  - uv run pytest -q
-dod_id: DOD-DEFAULT
 trace:
   ticket: null
   related_wos: []

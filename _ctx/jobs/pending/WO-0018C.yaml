@@ -1,167 +1,162 @@
 version: 1
 id: WO-0018C
 epic_id: E-0012
-title: "Documentation & Telemetry Cleanup"
+title: Documentation & Telemetry Cleanup
 priority: P2
 status: pending
 owner: null
+scope:
+  allow:
+  - docs/ops/feature_flags.md
+  - scripts/telemetry_rotate.py
+  - _ctx/backlog/backlog.yaml
+  deny:
+  - src/**
+  - tests/**
+  - scripts/ctx_wo_finish.py
+dod_id: DOD-DEFAULT
+dependencies: []
 verified_at_sha: null
 closed_at: null
 run_ids:
-  - wo-0018c-docs
-
-scope:
-  allow:
-    - "docs/ops/feature_flags.md"
-    - "scripts/telemetry_rotate.py"
-    - "_ctx/backlog/backlog.yaml"
-  deny:
-    - "src/**"
-    - "tests/**"
-    - "scripts/ctx_wo_finish.py"
-
-dod_id: DOD-DEFAULT
-
+- wo-0018c-docs
 governance:
   must:
-    - "Create feature_flags.md documentation"
-    - "Create telemetry rotation script"
-    - "Update backlog.yaml with WO-0012 completion"
-    - "Use CLI trifecta for runs"
-    - "Update _ctx/session_trifecta_dope.md"
-    - "Update backlog.yaml"
+  - Create feature_flags.md documentation
+  - Create telemetry rotation script
+  - Update backlog.yaml with WO-0012 completion
+  - Use CLI trifecta for runs
+  - Update _ctx/session_trifecta_dope.md
+  - Update backlog.yaml
+x_objective: 'Create missing feature flag documentation and implement telemetry rotation to control growth.
 
-x_objective: |
-  Create missing feature flag documentation and implement telemetry rotation to control growth.
   Update backlog to reflect WO-0012 proper completion.
 
+  '
 x_phases:
-  1: "Create feature_flags.md"
-  2: "Create telemetry rotation script"
-  3: "Update backlog.yaml"
-
+  1: Create feature_flags.md
+  2: Create telemetry rotation script
+  3: Update backlog.yaml
 x_micro_tasks:
-  - id: T1
-    name: "T1: Create feature_flags.md"
-    status: pending
-    commands:
-      - "mkdir -p docs/ops"
-      - "cat > docs/ops/feature_flags.md << 'EOF'"
-      - "# Feature Flags"
-      - ""
-      - "## Overview"
-      - "This document describes all feature flags available in Trifecta."
-      - ""
-      - "## TRIFECTA_AST_PERSIST"
-      - ""
-      - "**Purpose**: Enable AST cache persistence across CLI runs"
-      - ""
-      - "**Behavior**:"
-      - "- When `1`: AST cache persisted to `~/.trifecta/cache/ast_cache_*.db`"
-      - "- When `0`: AST cache is ephemeral (in-memory only, cleared after each run)"
-      - ""
-      - "**Default**:"
-      - "- Test environment: `1` (set via `pytest-env` in `pyproject.toml`)"
-      - "- Dev CLI: `0` (ephemeral by default for manual runs)"
-      - "- Production: `0` (ephemeral for production workloads)"
-      - ""
-      - "**Usage**:"
-      - '```bash'
-      - "# Enable persistence"
-      - "TRIFECTA_AST_PERSIST=1 uv run trifecta ctx sync --segment ."
-      - ""
-      - "# Disable persistence (ephemeral)"
-      - "TRIFECTA_AST_PERSIST=0 uv run trifecta ctx sync --segment ."
-      - '```'
-      - ""
-      - "**Rollback Procedure**:"
-      - "If AST persistence causes issues, disable immediately:"
-      - '```bash'
-      - "export TRIFECTA_AST_PERSIST=0"
-      - "# Or for single command"
-      - "TRIFECTA_AST_PERSIST=0 uv run trifecta <command>"
-      - '```'"
-      - ""
-      - "**Telemetry**: Events logged to `_ctx/telemetry/events.jsonl` with `ast.cache.hit` and `ast.cache.miss` metrics."
-      - ""
-      - "**Related**: WO-0012 (AST Persistence Feature Flag), WO-0012.1 (Dev CLI Persistence Default)"
-      - ""
-      - "---"
-      - ""
-      - "## Future Feature Flags"
-      - ""
-      - "*(Reserved for future feature flags)*"
-      - "EOF"
-    gates:
-      - "test -f docs/ops/feature_flags.md"
-      - "grep -q 'TRIFECTA_AST_PERSIST' docs/ops/feature_flags.md"
-      - "grep -q 'Rollback Procedure' docs/ops/feature_flags.md"
-    evidence:
-      - "docs/ops/feature_flags.md"
-    commit: "docs(ops): add feature flags documentation"
-
-  - id: T2
-    name: "T2: Create telemetry rotation script"
-    status: pending
-    commands:
-      - "cat > scripts/telemetry_rotate.py << 'EOF'"
-      - '"\"\"Rotate telemetry files to prevent unbounded growth.\"\"\"'"
-      - ""
-      - "from pathlib import Path"
-      - ""
-      - "MAX_EVENTS = 1000  # Rotate after 1000 events"
-      - "MAX_SIZE_MB = 10   # Rotate after 10MB"
-      - ""
-      - "def rotate_telemetry(telemetry_file: Path, max_events: int = MAX_EVENTS, max_size_mb: int = MAX_SIZE_MB) -> None:"
-      - '    """Rotate telemetry file if it exceeds thresholds."""'
-      - "    if not telemetry_file.exists():"
-      - "        return"
-      - ""
-      - "    size_mb = telemetry_file.stat().st_size / (1024 * 1024)"
-      - "    if size_mb > max_size_mb:"
-      - "        _rotate_file(telemetry_file, reason=\"size\")"
-      - "        return"
-      - ""
-      - "    if telemetry_file.suffix == \".jsonl\":"
-      - "        event_count = sum(1 for _ in telemetry_file.read_text().splitlines())"
-      - "        if event_count > max_events:"
-      - "            _rotate_file(telemetry_file, reason=\"event_count\")"
-      - "            return"
-      - ""
-      - "def _rotate_file(file: Path, reason: str) -> None:"
-      - '    """Rotate file with timestamp suffix."""'
-      - "    from datetime import datetime, timezone"
-      - ""
-      - "    timestamp = datetime.now(timezone.utc).strftime(\"%Y%m%d_%H%M%S\")"
-      - "    rotated = file.with_suffix(f\".{timestamp}.{reason}.jsonl.rotated\")"
-      - "    file.rename(rotated)"
-      - "    print(f\"Rotated {file.name} ({reason}): {rotated.name}\")"
-      - ""
-      - "if __name__ == \"__main__\":"
-      - "    import sys"
-      - "    telemetry_file = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(\"_ctx/telemetry/events.jsonl\")"
-      - "    rotate_telemetry(telemetry_file)"
-      - "EOF"
-    gates:
-      - "test -f scripts/telemetry_rotate.py"
-      - "python scripts/telemetry_rotate.py --help 2>&1 || true"  # Script has no --help, just test it runs
-    evidence:
-      - "scripts/telemetry_rotate.py"
-    commit: "feat(ops): add telemetry rotation script"
-
-  - id: T3
-    name: "T3: Update backlog.yaml for WO-0012"
-    status: pending
-    commands:
-      - "# Edit _ctx/backlog/backlog.yaml"
-      - "# Update line 18 from:"
-      - "# - WO-0012 # Persistence Feature Flag (partial - test env only)"
-      - "# To:"
-      - "# - WO-0012 # Persistence Feature Flag (done - test env only, verified 4b92ccb)"
-    gates:
-      - "grep 'WO-0012' _ctx/backlog/backlog.yaml | grep -q 'done.*verified 4b92ccb'"
-    evidence:
-      - "_ctx/backlog/backlog.yaml"
-    commit: "chore(backlog): update WO-0012 status to done"
-
-dependencies: []
+- id: T1
+  name: 'T1: Create feature_flags.md'
+  status: pending
+  commands:
+  - mkdir -p docs/ops
+  - cat > docs/ops/feature_flags.md << 'EOF'
+  - '# Feature Flags'
+  - ''
+  - '## Overview'
+  - This document describes all feature flags available in Trifecta.
+  - ''
+  - '## TRIFECTA_AST_PERSIST'
+  - ''
+  - '**Purpose**: Enable AST cache persistence across CLI runs'
+  - ''
+  - '**Behavior**:'
+  - '- When `1`: AST cache persisted to `~/.trifecta/cache/ast_cache_*.db`'
+  - '- When `0`: AST cache is ephemeral (in-memory only, cleared after each run)'
+  - ''
+  - '**Default**:'
+  - '- Test environment: `1` (set via `pytest-env` in `pyproject.toml`)'
+  - '- Dev CLI: `0` (ephemeral by default for manual runs)'
+  - '- Production: `0` (ephemeral for production workloads)'
+  - ''
+  - '**Usage**:'
+  - '```bash'
+  - '# Enable persistence'
+  - TRIFECTA_AST_PERSIST=1 uv run trifecta ctx sync --segment .
+  - ''
+  - '# Disable persistence (ephemeral)'
+  - TRIFECTA_AST_PERSIST=0 uv run trifecta ctx sync --segment .
+  - '```'
+  - ''
+  - '**Rollback Procedure**:'
+  - 'If AST persistence causes issues, disable immediately:'
+  - '```bash'
+  - export TRIFECTA_AST_PERSIST=0
+  - '# Or for single command'
+  - TRIFECTA_AST_PERSIST=0 uv run trifecta <command>
+  - '```'
+  - ''
+  - '**Telemetry**: Events logged to `_ctx/telemetry/events.jsonl` with `ast.cache.hit` and `ast.cache.miss`
+    metrics.'
+  - ''
+  - '**Related**: WO-0012 (AST Persistence Feature Flag), WO-0012.1 (Dev CLI Persistence Default)'
+  - ''
+  - '---'
+  - ''
+  - '## Future Feature Flags'
+  - ''
+  - '*(Reserved for future feature flags)*'
+  - EOF
+  gates:
+  - test -f docs/ops/feature_flags.md
+  - grep -q 'TRIFECTA_AST_PERSIST' docs/ops/feature_flags.md
+  - grep -q 'Rollback Procedure' docs/ops/feature_flags.md
+  evidence:
+  - docs/ops/feature_flags.md
+  commit: 'docs(ops): add feature flags documentation'
+- id: T2
+  name: 'T2: Create telemetry rotation script'
+  status: pending
+  commands:
+  - cat > scripts/telemetry_rotate.py << 'EOF'
+  - '"""Rotate telemetry files to prevent unbounded growth."""'
+  - ''
+  - from pathlib import Path
+  - ''
+  - 'MAX_EVENTS = 1000  # Rotate after 1000 events'
+  - 'MAX_SIZE_MB = 10   # Rotate after 10MB'
+  - ''
+  - 'def rotate_telemetry(telemetry_file: Path, max_events: int = MAX_EVENTS, max_size_mb: int = MAX_SIZE_MB)
+    -> None:'
+  - '    """Rotate telemetry file if it exceeds thresholds."""'
+  - '    if not telemetry_file.exists():'
+  - '        return'
+  - ''
+  - '    size_mb = telemetry_file.stat().st_size / (1024 * 1024)'
+  - '    if size_mb > max_size_mb:'
+  - '        _rotate_file(telemetry_file, reason="size")'
+  - '        return'
+  - ''
+  - '    if telemetry_file.suffix == ".jsonl":'
+  - '        event_count = sum(1 for _ in telemetry_file.read_text().splitlines())'
+  - '        if event_count > max_events:'
+  - '            _rotate_file(telemetry_file, reason="event_count")'
+  - '            return'
+  - ''
+  - 'def _rotate_file(file: Path, reason: str) -> None:'
+  - '    """Rotate file with timestamp suffix."""'
+  - '    from datetime import datetime, timezone'
+  - ''
+  - '    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")'
+  - '    rotated = file.with_suffix(f".{timestamp}.{reason}.jsonl.rotated")'
+  - '    file.rename(rotated)'
+  - '    print(f"Rotated {file.name} ({reason}): {rotated.name}")'
+  - ''
+  - 'if __name__ == "__main__":'
+  - '    import sys'
+  - '    telemetry_file = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("_ctx/telemetry/events.jsonl")'
+  - '    rotate_telemetry(telemetry_file)'
+  - EOF
+  gates:
+  - test -f scripts/telemetry_rotate.py
+  - python scripts/telemetry_rotate.py --help 2>&1 || true
+  evidence:
+  - scripts/telemetry_rotate.py
+  commit: 'feat(ops): add telemetry rotation script'
+- id: T3
+  name: 'T3: Update backlog.yaml for WO-0012'
+  status: pending
+  commands:
+  - '# Edit _ctx/backlog/backlog.yaml'
+  - '# Update line 18 from:'
+  - '# - WO-0012 # Persistence Feature Flag (partial - test env only)'
+  - '# To:'
+  - '# - WO-0012 # Persistence Feature Flag (done - test env only, verified 4b92ccb)'
+  gates:
+  - grep 'WO-0012' _ctx/backlog/backlog.yaml | grep -q 'done.*verified 4b92ccb'
+  evidence:
+  - _ctx/backlog/backlog.yaml
+  commit: 'chore(backlog): update WO-0012 status to done'

@@ -1,7 +1,7 @@
 version: 1
 id: WO-0030
 epic_id: E-0004
-title: "Create llms.txt and onboarding guides"
+title: Create llms.txt and onboarding guides
 priority: P2
 status: pending
 owner: null
@@ -9,19 +9,19 @@ branch: null
 worktree: null
 scope:
   allow:
-    - "llms.txt"
-    - "skills/documentation/resources/guides/QUICKSTART.md"
-    - "skills/documentation/resources/guides/ADVANCED.md"
+  - llms.txt
+  - skills/documentation/resources/guides/QUICKSTART.md
+  - skills/documentation/resources/guides/ADVANCED.md
   deny:
-    - "src/**"
-    - "tests/**"
-    - "_ctx/**"
+  - src/**
+  - tests/**
+  - _ctx/**
 verify:
   commands:
-    - "bash skills/documentation/resources/verify_documentation.sh"
+  - bash skills/documentation/resources/verify_documentation.sh
 dod_id: DOD-DEFAULT
 dependencies: []
 deliverables:
-  - "llms.txt"
-  - "skills/documentation/resources/guides/QUICKSTART.md"
-  - "skills/documentation/resources/guides/ADVANCED.md"
+- llms.txt
+- skills/documentation/resources/guides/QUICKSTART.md
+- skills/documentation/resources/guides/ADVANCED.md

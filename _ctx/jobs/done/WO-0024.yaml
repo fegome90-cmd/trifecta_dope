@@ -5,8 +5,8 @@ title: Runtime Introspection for Invalid Options (Anti-Deriva)
 priority: P1
 status: done
 owner: vscode
-verified_at_sha: ed160dc1c0ea8b927f9d5c1f81af0580ce474c92
-closed_at: '2026-02-10T10:29:57.525633+00:00'
+branch: feat/wo-WO-0024
+worktree: .worktrees/WO-0024
 scope:
   allow:
   - src/cli/invalid_option_handler.py
@@ -21,7 +21,6 @@ scope:
   deny:
   - .env*
   - src/application/**
-dod_id: DOD-DEFAULT
 verify:
   commands:
   - uv run pytest tests/unit/cli/test_invalid_option_handler.py
@@ -31,6 +30,11 @@ verify:
   - uv run mypy src/cli/ --strict
   - uv run ruff check src/cli/
   - uv run ruff format src/cli/
+dod_id: DOD-DEFAULT
+dependencies:
+- WO-0022
+verified_at_sha: ed160dc1c0ea8b927f9d5c1f81af0580ce474c92
+closed_at: '2026-02-10T10:29:57.525633+00:00'
 governance:
   must:
   - "Use TDD: Write tests BEFORE implementation (RED \u2192 GREEN)"
@@ -38,8 +42,7 @@ governance:
   - Commit (no --no-verify)
   - One PR per phase or commits tagged by phase (phase1/..., phase2/...)
   - Run verify.sh before commit (no excuses)
-x_objective: 'Replace static flag mappings with runtime Click/Typer introspection
-  to
+x_objective: 'Replace static flag mappings with runtime Click/Typer introspection to
 
   provide deterministic, regression-proof invalid option handling with
 
@@ -54,33 +57,29 @@ x_objective: 'Replace static flag mappings with runtime Click/Typer introspectio
 
   '
 x_items:
-- 'Define DoD per item: 100% runtime flag discovery, handler only suggests real flags,
-  telemetry emits events, regression tests cover ''add flag and it appears automatically'',
-  verify.sh passes'
+- 'Define DoD per item: 100% runtime flag discovery, handler only suggests real flags, telemetry emits
+  events, regression tests cover ''add flag and it appears automatically'', verify.sh passes'
 - 'Freeze scope: only ctx, ctx sync, ctx build, create (minimum with highest ROI)'
-- 'Implement introspect_options(command) -> List[OptionSpec] extracting from Click:
-  param.opts, param.secondary_opts, param.name, param.required, param.nargs, param.multiple,
-  param.type'
-- Implement valid_flags_for(argv/command_path) using real command tree, resolving
-  current command (subcommands included), producing set of valid flags
+- 'Implement introspect_options(command) -> List[OptionSpec] extracting from Click: param.opts, param.secondary_opts,
+  param.name, param.required, param.nargs, param.multiple, param.type'
+- Implement valid_flags_for(argv/command_path) using real command tree, resolving current command (subcommands
+  included), producing set of valid flags
 - "Gate: if command cannot be resolved \u2192 fail-closed (no invented suggestions)"
-- 'Rewrite invalid_option_handler to: parse invalid token, get valid_flags_for(command_actual),
-  suggest by simple distance (prefix, levenshtein if exists in repo), NEVER suggest
-  flags outside the set, if set is empty: output ''No suggestions available'' (fail-closed)'
+- 'Rewrite invalid_option_handler to: parse invalid token, get valid_flags_for(command_actual), suggest
+  by simple distance (prefix, levenshtein if exists in repo), NEVER suggest flags outside the set, if
+  set is empty: output ''No suggestions available'' (fail-closed)'
 - 'Gate: test that verifies ''no leaks'': no suggestion can be outside valid_flags'
-- 'Emit JSONL events: help_used (command_path, argv_len, is_tty, platform), invalid_option
-  (command_path, invalid_token, suggestions_count, had_match, platform)'
-- 'Add aggregated counters (KPI): help_first_used (first time per session), invalid_option_count
-  (per session)'
+- 'Emit JSONL events: help_used (command_path, argv_len, is_tty, platform), invalid_option (command_path,
+  invalid_token, suggestions_count, had_match, platform)'
+- 'Add aggregated counters (KPI): help_first_used (first time per session), invalid_option_count (per
+  session)'
 - 'Gate: unit tests for ''event emitted'' with mandatory minimum payload'
 - 'Golden test: for each target command, snapshot of real flags (derived runtime)'
-- "Regression: add dummy flag in test command \u2192 introspection detects it without\
-  \ mapping changes"
+- "Regression: add dummy flag in test command \u2192 introspection detects it without mapping changes"
 - "Handler: input with typo \u2192 suggestions \u2286 valid flags"
 - 'Gate: pytest -q passes + coverage of these modules'
 - 'README snippet in invalid_option_handler.py: contract, invariants, examples, fail-closed'
-- "Cross-platform: automatic ASCII fallback (detect Windows/CI/encoding \u2192 degrade\
-  \ symbols)"
+- "Cross-platform: automatic ASCII fallback (detect Windows/CI/encoding \u2192 degrade symbols)"
 - 'Final gate: scripts/verify.sh WO-0024 generates report and PASS'
 diff_budget:
   max_files: 10
@@ -88,8 +87,6 @@ diff_budget:
 stop_conditions:
   max_iterations: 10
   max_fail_verify: 3
-dependencies:
-- WO-0022
 x_phases:
 - name: 'Phase 0: Contract and Scope'
   status: pending
@@ -129,8 +126,7 @@ x_phases:
   - 'Final gate: verify.sh PASS'
 x_discipline_rules:
 - Each change must have test or explicit reason why not applicable
-- 'Do not touch anything outside scope (if ''would also improve X'' appears: create
-  backlog, do not implement)'
+- 'Do not touch anything outside scope (if ''would also improve X'' appears: create backlog, do not implement)'
 - One PR per phase or commits tagged by phase (phase1/..., phase2/...)
 - 'Before commit: run verify local (no excuses)'
 x_expected_result: 'An agent that:
@@ -146,6 +142,4 @@ x_expected_result: 'An agent that:
 
   '
 started_at: '2026-02-10T08:51:56.722959+00:00'
-branch: feat/wo-WO-0024
-worktree: .worktrees/WO-0024
 result: done

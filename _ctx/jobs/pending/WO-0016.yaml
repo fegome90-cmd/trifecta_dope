@@ -1,52 +1,48 @@
 version: 1
 id: WO-0016
 epic_id: E-SCALE
-title: "Segment Clustering Algorithm"
+title: Segment Clustering Algorithm
 priority: P2
 status: pending
 owner: null
-verified_at_sha: null
-closed_at: null
-
 scope:
   allow:
-    - "src/application/segment_clusterer.py"
-    - "tests/unit/test_segment_clusterer.py"
-    - "docs/**"
+  - src/application/segment_clusterer.py
+  - tests/unit/test_segment_clusterer.py
+  - docs/**
   deny:
-    - ".env*"
-    - "src/infrastructure/**"
-
+  - .env*
+  - src/infrastructure/**
 dod_id: DOD-DEFAULT
-
+dependencies:
+- WO-0015
+verified_at_sha: null
+closed_at: null
 governance:
   must:
-    - "Use TDD"
-    - "Pure function (no IO)"
-    - "Commit (no --no-verify)"
+  - Use TDD
+  - Pure function (no IO)
+  - Commit (no --no-verify)
+x_objective: 'MVP: Implement folder-based segment clustering.
 
-x_objective: |
-  MVP: Implement folder-based segment clustering.
   Each top-level folder = one segment.
+
   Identify entry-points (__main__, cli.py, app.py).
+
 
   OUT OF SCOPE: Import coupling analysis (deferred to future WO).
 
+  '
 x_items:
-  - "Create `cluster_segments(topology: TopologyMap) -> list[SegmentCandidate]`"
-  - "SegmentCandidate: {name, root, files, entry_point}"
-  - "MVP: Each top-level folder = one segment"
-  - "Detect entry points (__main__.py, cli.py, app.py, main.py)"
-  - "OUT OF SCOPE: Coupling-based refinement (future WO)"
-  - "Unit tests with synthetic TopologyMap inputs"
-
+- 'Create `cluster_segments(topology: TopologyMap) -> list[SegmentCandidate]`'
+- 'SegmentCandidate: {name, root, files, entry_point}'
+- 'MVP: Each top-level folder = one segment'
+- Detect entry points (__main__.py, cli.py, app.py, main.py)
+- 'OUT OF SCOPE: Coupling-based refinement (future WO)'
+- Unit tests with synthetic TopologyMap inputs
 diff_budget:
   max_files: 4
   max_loc: 250
-
 stop_conditions:
   max_iterations: 6
   max_fail_verify: 2
-
-dependencies:
-  - WO-0015
