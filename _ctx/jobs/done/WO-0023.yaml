@@ -3,7 +3,7 @@ id: WO-0023
 epic_id: E-0001
 title: "Fase 2 - Hardening: Introspecci\xF3n runtime + Telemetry + Anti-alucinaci\xF3n"
 priority: P1
-status: pending
+status: done
 owner: null
 scope:
   allow:

@@ -1,5 +1,5 @@
 version: 1
-id: WO-0010
+id: WO-0010-legacy
 epic_id: E-0001
 title: 'Field Exercises v1: Real-World Query A/B Evaluation'
 priority: P1
