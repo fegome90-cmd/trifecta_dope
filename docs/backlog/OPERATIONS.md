@@ -20,6 +20,25 @@ cd .worktrees/WO-XXXX
 python scripts/ctx_wo_finish.py WO-XXXX   # Complete WO
 ```
 
+## WO Hygiene Quickstart
+
+```bash
+# 1) Lint WO contracts (strict)
+make wo-lint
+
+# 2) Emit machine-readable findings
+make wo-lint-json
+
+# 3) Check canonical format (no writes)
+make wo-fmt-check
+
+# 4) Apply canonical format
+make wo-fmt
+
+# 5) Run full verification gate (includes WO fail-closed)
+bash scripts/verify.sh --check-only
+```
+
 ## Daily Workflow
 
 ### Morning Routine
