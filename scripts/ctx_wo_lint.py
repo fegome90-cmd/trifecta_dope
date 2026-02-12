@@ -16,6 +16,7 @@ from jsonschema import validate
 CANONICAL_JOB_STATES = ("pending", "running", "done", "failed")
 SEVERITY_ERROR = "ERROR"
 SEVERITY_WARN = "WARN"
+SEVERITY_INFO = "INFO"
 
 
 @dataclass(frozen=True)
@@ -36,6 +37,10 @@ def _w(code: str, message: str, file: Path, path: str = "", hint: str = "") -> F
     return Finding(SEVERITY_WARN, code, message, str(file), path, hint)
 
 
+def _i(code: str, message: str, file: Path, path: str = "", hint: str = "") -> Finding:
+    return Finding(SEVERITY_INFO, code, message, str(file), path, hint)
+
+
 def _load_yaml(path: Path) -> tuple[dict[str, Any] | None, list[Finding]]:
     try:
         data = yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -52,39 +57,48 @@ def _load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _iter_wo_files(root: Path) -> list[Path]:
+def _iter_wo_files(root: Path) -> tuple[list[Path], list[Path]]:
     paths: list[Path] = []
+    skipped_legacy: list[Path] = []
     for state in CANONICAL_JOB_STATES:
         job_dir = root / "_ctx" / "jobs" / state
         if not job_dir.exists():
             continue
         for path in sorted(job_dir.glob("WO-*.yaml")):
             if "legacy" in path.parts:
+                skipped_legacy.append(path)
                 continue
             if path.name.endswith("_job.yaml") or path.name.endswith("-legacy.yaml"):
+                skipped_legacy.append(path)
                 continue
             paths.append(path)
-    return paths
+    return paths, skipped_legacy
 
 
-def _load_epic_ids(root: Path) -> set[str]:
+def _load_epic_ids(root: Path) -> tuple[set[str], list[Finding]]:
     backlog_path = root / "_ctx" / "backlog" / "backlog.yaml"
-    data = yaml.safe_load(backlog_path.read_text(encoding="utf-8")) or {}
+    data, findings = _load_yaml(backlog_path)
+    if data is None:
+        return set(), findings
     epics = data.get("epics", [])
-    return {e.get("id") for e in epics if isinstance(e, dict) and e.get("id")}
+    return {e.get("id") for e in epics if isinstance(e, dict) and e.get("id")}, findings
 
 
-def _load_dod_ids(root: Path) -> set[str]:
+def _load_dod_ids(root: Path) -> tuple[set[str], list[Finding]]:
     dod_dir = root / "_ctx" / "dod"
     ids: set[str] = set()
+    findings: list[Finding] = []
     if not dod_dir.exists():
-        return ids
+        return ids, findings
     for path in sorted(dod_dir.glob("*.yaml")):
-        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        data, file_findings = _load_yaml(path)
+        findings.extend(file_findings)
+        if data is None:
+            continue
         for entry in data.get("dod", []):
             if isinstance(entry, dict) and entry.get("id"):
                 ids.add(entry["id"])
-    return ids
+    return ids, findings
 
 
 def _state_from_path(path: Path) -> str | None:
@@ -188,11 +202,22 @@ def run(root: Path, strict: bool) -> list[Finding]:
     findings: list[Finding] = []
     schema_path = root / "docs" / "backlog" / "schema" / "work_order.schema.json"
     wo_schema = _load_json(schema_path)
-    epic_ids = _load_epic_ids(root)
-    dod_ids = _load_dod_ids(root)
+    epic_ids, epic_findings = _load_epic_ids(root)
+    dod_ids, dod_findings = _load_dod_ids(root)
+    findings.extend(epic_findings)
+    findings.extend(dod_findings)
 
     seen_ids: set[str] = set()
-    wo_paths = _iter_wo_files(root)
+    wo_paths, skipped_legacy = _iter_wo_files(root)
+    for skipped in skipped_legacy:
+        findings.append(
+            _i(
+                "WOI01",
+                "legacy WO file skipped by strict canonical scan",
+                skipped,
+                hint="Migrate legacy file to canonical WO format or keep as archived compatibility.",
+            )
+        )
     known_wo_ids = {path.stem for path in wo_paths}
     for wo_path in wo_paths:
         wo, load_findings = _load_yaml(wo_path)
@@ -237,7 +262,8 @@ def main() -> int:
             print(f"[{finding.severity}] {finding.code}{location} {finding.file}: {finding.message}{hint}")
         errors = sum(1 for f in findings if f.severity == SEVERITY_ERROR)
         warnings = sum(1 for f in findings if f.severity == SEVERITY_WARN)
-        print(f"Summary: {errors} error(s), {warnings} warning(s)")
+        infos = sum(1 for f in findings if f.severity == SEVERITY_INFO)
+        print(f"Summary: {errors} error(s), {warnings} warning(s), {infos} info(s)")
 
     has_errors = any(f.severity == SEVERITY_ERROR for f in findings)
     return 1 if has_errors else 0

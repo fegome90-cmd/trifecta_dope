@@ -72,7 +72,7 @@ wo-lint:
 	$(UV) python scripts/ctx_wo_lint.py --strict
 
 wo-lint-json:
-	$(UV) python scripts/ctx_wo_lint.py --json --strict
+	@$(UV) python scripts/ctx_wo_lint.py --json --strict
 
 wo-fmt:
 	$(UV) python scripts/ctx_wo_fmt.py --write

@@ -88,7 +88,7 @@ def test_wo_lint_ignores_legacy_paths(tmp_path: Path) -> None:
     (root / "_ctx" / "jobs" / "pending" / "WO-0001.yaml").write_text(
         _valid_wo("pending"), encoding="utf-8"
     )
-    (root / "_ctx" / "jobs" / "legacy" / "WO-9999.yaml").write_text("invalid: [", encoding="utf-8")
+    (root / "_ctx" / "jobs" / "done" / "WO-9999_job.yaml").write_text("invalid: [", encoding="utf-8")
 
     result = subprocess.run(
         [sys.executable, "scripts/ctx_wo_lint.py", "--root", str(root), "--json"],
@@ -99,7 +99,8 @@ def test_wo_lint_ignores_legacy_paths(tmp_path: Path) -> None:
 
     assert result.returncode == 0
     findings = json.loads(result.stdout)
-    assert findings == []
+    assert any(f["code"] == "WOI01" and f["severity"] == "INFO" for f in findings)
+    assert not any(f["severity"] == "ERROR" for f in findings)
 
 
 def test_wo_lint_flags_pending_missing_verify_commands(tmp_path: Path) -> None:
@@ -227,3 +228,43 @@ def test_wo_lint_accepts_alphanumeric_legacy_id(tmp_path: Path) -> None:
     assert result.returncode == 0
     findings = json.loads(result.stdout)
     assert findings == []
+
+
+def test_wo_lint_reports_malformed_backlog_yaml(tmp_path: Path) -> None:
+    root = _bootstrap_repo(tmp_path)
+    (root / "_ctx" / "backlog" / "backlog.yaml").write_text("epics: [", encoding="utf-8")
+    (root / "_ctx" / "jobs" / "pending" / "WO-0001.yaml").write_text(
+        _valid_wo("pending"),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [sys.executable, "scripts/ctx_wo_lint.py", "--root", str(root), "--json"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    findings = json.loads(result.stdout)
+    assert any(f["code"] == "YAML000" for f in findings)
+
+
+def test_wo_lint_reports_malformed_dod_yaml(tmp_path: Path) -> None:
+    root = _bootstrap_repo(tmp_path)
+    (root / "_ctx" / "dod" / "DOD-DEFAULT.yaml").write_text("dod: [", encoding="utf-8")
+    (root / "_ctx" / "jobs" / "pending" / "WO-0001.yaml").write_text(
+        _valid_wo("pending"),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [sys.executable, "scripts/ctx_wo_lint.py", "--root", str(root), "--json"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    findings = json.loads(result.stdout)
+    assert any(f["code"] == "YAML000" for f in findings)
