@@ -1,6 +1,7 @@
 """
 Tests for helpers heartbeat functionality.
 """
+
 import tempfile
 from pathlib import Path
 
@@ -16,7 +17,9 @@ class TestHeartbeat:
 
         with tempfile.TemporaryDirectory() as tmpdir:
             lock_path = Path(tmpdir) / "test.lock"
-            lock_path.write_text("Locked by ctx_wo_take.py at 2025-01-01T00:00:00Z\nPID: 12345\nUser: test\n")
+            lock_path.write_text(
+                "Locked by ctx_wo_take.py at 2025-01-01T00:00:00Z\nPID: 12345\nUser: test\n"
+            )
 
             result = update_lock_heartbeat(lock_path)
             assert isinstance(result, Ok)

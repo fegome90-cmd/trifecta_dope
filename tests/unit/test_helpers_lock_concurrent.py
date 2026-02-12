@@ -4,6 +4,7 @@ Concurrent lock acquisition tests.
 Tests the atomic lock creation behavior under concurrent access.
 Uses both multiprocessing (realistic) and threading (fast smoke tests) approaches.
 """
+
 import sys
 import tempfile
 import time
@@ -21,7 +22,7 @@ class TestConcurrentLockAcquisition:
 
     @pytest.mark.skipif(
         sys.version_info >= (3, 14),
-        reason="Multiprocessing tests have pickling issues on Python 3.14+"
+        reason="Multiprocessing tests have pickling issues on Python 3.14+",
     )
     def test_two_processes_lock_acquisition_multiprocess(self):
         """Test that only one of two processes acquires the lock (multiprocessing)."""
@@ -57,7 +58,7 @@ class TestConcurrentLockAcquisition:
 
     @pytest.mark.skipif(
         sys.version_info >= (3, 14),
-        reason="Multiprocessing tests have pickling issues on Python 3.14+"
+        reason="Multiprocessing tests have pickling issues on Python 3.14+",
     )
     def test_concurrent_lock_contention_multiprocess(self):
         """Test 10 processes contending for same lock - only 1 wins (multiprocessing)."""
@@ -92,7 +93,9 @@ class TestConcurrentLockAcquisition:
 
             # Exactly one should have acquired the lock
             acquired_count = sum(1 for _, acquired in results_list if acquired)
-            assert acquired_count == 1, f"Expected 1 acquisition, got {acquired_count} out of {len(results_list)} attempts"
+            assert acquired_count == 1, (
+                f"Expected 1 acquisition, got {acquired_count} out of {len(results_list)} attempts"
+            )
 
     def test_lock_timeout_after_stale_threading(self):
         """Test stale lock (>1 hour old) can be replaced (threading)."""
@@ -105,6 +108,7 @@ class TestConcurrentLockAcquisition:
             lock_path.write_text("test lock content")
             old_time = time.time() - 3700  # More than 1 hour ago
             import os
+
             os.utime(lock_path, (old_time, old_time))
 
             # Lock should be detected as stale
@@ -119,14 +123,13 @@ class TestConcurrentLockAcquisition:
 
             # Create initial lock with timestamp
             lock_path.write_text(
-                "Locked by ctx_wo_take.py at 2025-01-01T00:00:00Z\n"
-                "PID: 12345\n"
-                "User: test\n"
+                "Locked by ctx_wo_take.py at 2025-01-01T00:00:00Z\nPID: 12345\nUser: test\n"
             )
 
             # Make it appear stale (older than 1 hour)
             stale_time = time.time() - 3700
             import os
+
             os.utime(lock_path, (stale_time, stale_time))
 
             # Should be detected as stale
@@ -135,6 +138,7 @@ class TestConcurrentLockAcquisition:
             # Update heartbeat
             result = update_lock_heartbeat(lock_path)
             from src.domain.result import Ok
+
             assert isinstance(result, Ok), "Heartbeat update should succeed"
 
             # Should no longer be stale
@@ -194,9 +198,9 @@ class TestLockAtomicity:
             assert "User:" in content
             assert "Hostname:" in content
             # All lines should end with newline
-            for line in content.split('\n'):
+            for line in content.split("\n"):
                 if line:  # Skip empty last line
-                    assert ':' in line or line.startswith("Locked by"), f"Invalid line: {line}"
+                    assert ":" in line or line.startswith("Locked by"), f"Invalid line: {line}"
 
 
 class TestLockRecovery:
@@ -232,6 +236,7 @@ class TestLockRecovery:
             lock_path.write_text("test lock")
             ancient_time = time.time() - 10000  # Very old
             import os
+
             os.utime(lock_path, (ancient_time, ancient_time))
 
             # Should be detected as stale

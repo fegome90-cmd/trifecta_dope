@@ -1,4 +1,5 @@
 """Unit tests for scripts.metadata_inference module."""
+
 from pathlib import Path
 from unittest.mock import patch
 

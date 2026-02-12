@@ -2,6 +2,7 @@
 Transaction management for WO operations.
 Pure domain logic - defines rollback operations.
 """
+
 from dataclasses import dataclass
 from enum import StrEnum
 
@@ -12,6 +13,7 @@ class RollbackType(StrEnum):
     Each represents a compensating action that can undo
     a previously executed operation.
     """
+
     REMOVE_LOCK = "remove_lock"
     MOVE_WO_TO_PENDING = "move_wo_to_pending"
     REMOVE_WORKTREE = "remove_worktree"
@@ -27,6 +29,7 @@ class TransactionError(Exception):
 @dataclass(frozen=True)
 class RollbackOperation:
     """Represents a rollback operation."""
+
     name: str
     description: str
     rollback_type: RollbackType
@@ -35,6 +38,7 @@ class RollbackOperation:
 @dataclass(frozen=True)
 class Transaction:
     """Transaction with rollback capability."""
+
     wo_id: str
     operations: tuple[RollbackOperation, ...]
     is_committed: bool = False
@@ -51,9 +55,7 @@ class Transaction:
                 f"Committed transactions are immutable."
             )
         return Transaction(
-            wo_id=self.wo_id,
-            operations=self.operations + (op,),
-            is_committed=self.is_committed
+            wo_id=self.wo_id, operations=self.operations + (op,), is_committed=self.is_committed
         )
 
     def commit(self) -> "Transaction":
@@ -67,14 +69,9 @@ class Transaction:
         """
         if self.is_committed:
             raise TransactionError(
-                f"Transaction for WO {self.wo_id} is already committed. "
-                f"Cannot commit twice."
+                f"Transaction for WO {self.wo_id} is already committed. Cannot commit twice."
             )
-        return Transaction(
-            wo_id=self.wo_id,
-            operations=self.operations,
-            is_committed=True
-        )
+        return Transaction(wo_id=self.wo_id, operations=self.operations, is_committed=True)
 
     def needs_rollback(self) -> bool:
         """Check if transaction needs rollback."""

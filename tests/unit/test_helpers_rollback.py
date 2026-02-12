@@ -3,6 +3,7 @@ Tests for helpers rollback functionality.
 
 Tests the rollback execution with RollbackResult tracking and RollbackType enum.
 """
+
 import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -29,11 +30,9 @@ class TestRollbackExecution:
                 wo_id="WO-TEST",
                 operations=(
                     RollbackOperation(
-                        name="test",
-                        description="Test",
-                        rollback_type=RollbackType.REMOVE_LOCK
+                        name="test", description="Test", rollback_type=RollbackType.REMOVE_LOCK
                     ),
-                )
+                ),
             )
 
             result = execute_rollback(tx, root)
@@ -72,7 +71,7 @@ class TestRollbackExecution:
                 "id": "WO-TEST",
                 "status": "running",
                 "started_at": "2025-01-01T00:00:00Z",
-                "owner": "testuser"
+                "owner": "testuser",
             }
             running_path.write_text(yaml.safe_dump(wo_data, sort_keys=False))
 
@@ -82,9 +81,9 @@ class TestRollbackExecution:
                     RollbackOperation(
                         name="move_to_pending",
                         description="Move WO to pending",
-                        rollback_type=RollbackType.MOVE_WO_TO_PENDING
+                        rollback_type=RollbackType.MOVE_WO_TO_PENDING,
                     ),
-                )
+                ),
             )
 
             result = execute_rollback(tx, root)
@@ -112,9 +111,9 @@ class TestRollbackExecution:
                 RollbackOperation(
                     name="cleanup_worktree",
                     description="Remove worktree",
-                    rollback_type=RollbackType.REMOVE_WORKTREE
+                    rollback_type=RollbackType.REMOVE_WORKTREE,
                 ),
-            )
+            ),
         )
 
         # Mock cleanup_worktree to avoid actual git operations
@@ -140,9 +139,9 @@ class TestRollbackExecution:
                 RollbackOperation(
                     name="delete_branch",
                     description="Remove branch",
-                    rollback_type=RollbackType.REMOVE_BRANCH
+                    rollback_type=RollbackType.REMOVE_BRANCH,
                 ),
-            )
+            ),
         )
 
         # Mock run_command to avoid actual git operations
@@ -165,16 +164,16 @@ class TestRollbackExecution:
                 RollbackOperation(
                     name="good_op",
                     description="Good operation",
-                    rollback_type=RollbackType.REMOVE_LOCK
+                    rollback_type=RollbackType.REMOVE_LOCK,
                 ),
                 RollbackOperation(
                     name="bad_op",
                     description="Bad operation with unknown rollback type",
                     # Use an invalid rollback type by directly setting a value
                     # that's not in the enum - this will trigger a failure
-                    rollback_type="unknown_invalid_type"  # type: ignore
+                    rollback_type="unknown_invalid_type",  # type: ignore
                 ),
-            )
+            ),
         )
 
         with tempfile.TemporaryDirectory() as tmpdir:

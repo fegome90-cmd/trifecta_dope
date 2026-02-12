@@ -2,6 +2,7 @@
 Work Order domain entities and business rules.
 Pure domain module - no IO, no external dependencies.
 """
+
 import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -17,6 +18,7 @@ WO_ID_PATTERN = re.compile(r"^WO-\d{4}$", re.IGNORECASE)
 
 class WOState(Enum):
     """Canonical WO states."""
+
     PENDING = "pending"
     RUNNING = "running"
     DONE = "done"
@@ -29,6 +31,7 @@ class Priority(StrEnum):
 
     Ordered from highest to lowest urgency.
     """
+
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
@@ -38,6 +41,7 @@ class Priority(StrEnum):
 @dataclass(frozen=True)
 class Governance:
     """Governance metadata for work orders."""
+
     must: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
@@ -45,12 +49,15 @@ class Governance:
         # Validate all must references are valid WO IDs
         for dep in self.must:
             if not dep or not WO_ID_PATTERN.match(dep):
-                raise ValueError(f"Invalid WO ID in governance.must: '{dep}'. Expected format: WO-XXXX")
+                raise ValueError(
+                    f"Invalid WO ID in governance.must: '{dep}'. Expected format: WO-XXXX"
+                )
 
 
 @dataclass(frozen=True)
 class WOValidationError:
     """WO validation error details."""
+
     code: str
     message: str
     wo_id: Optional[str] = None
@@ -59,6 +66,7 @@ class WOValidationError:
 @dataclass(frozen=True)
 class WorkOrder:
     """Work Order entity (immutable)."""
+
     id: str
     epic_id: str
     title: str
@@ -104,7 +112,9 @@ class WorkOrder:
         # Validate temporal consistency: if DONE/FAILED/PARTIAL, must have finished_at
         if self.status in (WOState.DONE, WOState.FAILED, WOState.PARTIAL):
             if self.finished_at is None:
-                raise ValueError(f"WO {self.id} has status {self.status.value} but no finished_at timestamp")
+                raise ValueError(
+                    f"WO {self.id} has status {self.status.value} but no finished_at timestamp"
+                )
             # Ensure finished_at is after started_at
             if self.started_at and self.finished_at < self.started_at:
                 raise ValueError(
@@ -122,22 +132,26 @@ class WorkOrder:
         }
         allowed = valid_transitions.get(self.status, [])
         if new_state not in allowed:
-            return Err(WOValidationError(
-                code="INVALID_STATE_TRANSITION",
-                message=f"Cannot transition from {self.status.value} to {new_state.value}",
-                wo_id=self.id
-            ))
+            return Err(
+                WOValidationError(
+                    code="INVALID_STATE_TRANSITION",
+                    message=f"Cannot transition from {self.status.value} to {new_state.value}",
+                    wo_id=self.id,
+                )
+            )
         return Ok(None)
 
     def validate_dependencies(self, completed_wo_ids: set[str]) -> Result[None, WOValidationError]:
         """Validate that all dependencies are satisfied."""
         unsatisfied = [dep for dep in self.dependencies if dep not in completed_wo_ids]
         if unsatisfied:
-            return Err(WOValidationError(
-                code="UNSATISFIED_DEPENDENCIES",
-                message=f"Dependencies not satisfied: {', '.join(unsatisfied)}",
-                wo_id=self.id
-            ))
+            return Err(
+                WOValidationError(
+                    code="UNSATISFIED_DEPENDENCIES",
+                    message=f"Dependencies not satisfied: {', '.join(unsatisfied)}",
+                    wo_id=self.id,
+                )
+            )
         return Ok(None)
 
     def is_stale(self, max_age_seconds: int = 3600) -> bool:

@@ -400,6 +400,7 @@ def reset_telemetry() -> None:
 
 # Cross-platform support
 
+
 def _supports_unicode() -> bool:
     """Check if the terminal supports Unicode characters.
 

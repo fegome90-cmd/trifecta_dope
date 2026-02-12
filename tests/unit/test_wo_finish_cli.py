@@ -3,9 +3,9 @@ Unit tests for ctx_wo_finish.py CLI arguments.
 
 Tests CLI interface and argument parsing.
 """
+
 import subprocess
 from pathlib import Path
-
 
 
 def repo_root() -> Path:
@@ -39,7 +39,11 @@ class TestWoFinishCLIArguments:
         )
         assert result.returncode == 0
         assert "--result" in result.stdout
-        assert "{done,failed}" in result.stdout or "done" in result.stdout and "failed" in result.stdout
+        assert (
+            "{done,failed}" in result.stdout
+            or "done" in result.stdout
+            and "failed" in result.stdout
+        )
 
     def test_cli_generate_only_flag(self):
         """Test CLI --generate-only flag exists and is documented."""
@@ -144,7 +148,14 @@ x_micro_tasks: []
         (dod_dir / "DOD-TEST.yaml").write_text(dod_content)
 
         result = subprocess.run(
-            ["python", "scripts/ctx_wo_finish.py", "WO-TEST", "--root", str(tmp_path), "--generate-only"],
+            [
+                "python",
+                "scripts/ctx_wo_finish.py",
+                "WO-TEST",
+                "--root",
+                str(tmp_path),
+                "--generate-only",
+            ],
             capture_output=True,
             text=True,
             cwd=repo_root(),
@@ -174,12 +185,21 @@ x_micro_tasks: []
 
         # Initialize git repo
         subprocess.run(["git", "init"], cwd=tmp_path, capture_output=True)
-        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=tmp_path, capture_output=True)
+        subprocess.run(
+            ["git", "config", "user.email", "test@test.com"], cwd=tmp_path, capture_output=True
+        )
         subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, capture_output=True)
         subprocess.run(["git", "checkout", "-b", "main"], cwd=tmp_path, capture_output=True)
 
         result = subprocess.run(
-            ["python", "scripts/ctx_wo_finish.py", "WO-TEST", "--root", str(tmp_path), "--skip-dod"],
+            [
+                "python",
+                "scripts/ctx_wo_finish.py",
+                "WO-TEST",
+                "--root",
+                str(tmp_path),
+                "--skip-dod",
+            ],
             capture_output=True,
             text=True,
             cwd=repo_root(),
@@ -209,16 +229,26 @@ x_micro_tasks: []
 
         # Initialize git repo
         subprocess.run(["git", "init"], cwd=tmp_path, capture_output=True)
-        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=tmp_path, capture_output=True)
+        subprocess.run(
+            ["git", "config", "user.email", "test@test.com"], cwd=tmp_path, capture_output=True
+        )
         subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, capture_output=True)
         subprocess.run(["git", "checkout", "-b", "main"], cwd=tmp_path, capture_output=True)
 
         result = subprocess.run(
-            ["python", "scripts/ctx_wo_finish.py", "WO-TEST", "--root", str(tmp_path), "--result", "failed", "--skip-dod"],
+            [
+                "python",
+                "scripts/ctx_wo_finish.py",
+                "WO-TEST",
+                "--root",
+                str(tmp_path),
+                "--result",
+                "failed",
+                "--skip-dod",
+            ],
             capture_output=True,
             text=True,
             cwd=repo_root(),
         )
         # Testing the CLI accepts --result failed
         assert result is not None
-

@@ -191,8 +191,7 @@ class TestRegressionNoDummyFlags:
 
             # No empty flags
             assert "" not in flags, (
-                f"Empty flag found for {command_path}. "
-                "This suggests a regression in introspection."
+                f"Empty flag found for {command_path}. This suggests a regression in introspection."
             )
 
 

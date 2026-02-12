@@ -2,6 +2,7 @@ import subprocess
 from pathlib import Path
 from unittest.mock import patch
 import sys
+
 sys.path.insert(0, "scripts")
 
 from ctx_reconcile_state import check_running_metadata
@@ -107,7 +108,7 @@ def test_check_running_metadata_all_present():
         "owner": "testuser",
         "branch": "feat/wo-WO-0001",
         "worktree": ".worktrees/WO-0001",
-        "started_at": "2026-01-13T12:00:00"
+        "started_at": "2026-01-13T12:00:00",
     }
     root = Path("/fake/root")
     issue = check_running_metadata(wo, Path("/fake/wo.yaml"), set(), root)
@@ -124,8 +125,10 @@ def test_check_running_metadata_missing_all_fields():
     root = Path("/fake/root")
     worktrees = {"/fake/root/.worktrees/WO-0001"}
 
-    with patch("scripts.metadata_inference.check_lock_validity") as mock_lock, \
-         patch("scripts.metadata_inference.get_worktrees_from_git") as mock_git:
+    with (
+        patch("scripts.metadata_inference.check_lock_validity") as mock_lock,
+        patch("scripts.metadata_inference.get_worktrees_from_git") as mock_git,
+    ):
         # Mock lock metadata
         mock_lock.return_value = (True, {"user": "testuser"})
         # Mock git worktrees
@@ -133,14 +136,16 @@ def test_check_running_metadata_missing_all_fields():
             "WO-0001": {
                 "path": ".worktrees/WO-0001",
                 "branch": "feat/wo-WO-0001",
-                "commit": "abc123"
+                "commit": "abc123",
             }
         }
 
         # Create mock lock file
         with patch("scripts.metadata_inference.Path") as mock_path:
             mock_path.return_value.exists.return_value = True
-            mock_path.return_value.read_text.return_value = "Locked by ctx_wo_take.py at 2026-01-13T12:00:00\nUser: testuser\n"
+            mock_path.return_value.read_text.return_value = (
+                "Locked by ctx_wo_take.py at 2026-01-13T12:00:00\nUser: testuser\n"
+            )
             mock_path.return_value.stat.return_value.st_mtime = 1705166400
 
             issue = check_running_metadata(wo, Path("/fake/wo.yaml"), worktrees, root)
@@ -162,8 +167,10 @@ def test_check_running_metadata_cannot_infer():
     }
     root = Path("/fake/root")
 
-    with patch("scripts.metadata_inference.check_lock_validity") as mock_lock, \
-         patch("scripts.metadata_inference.get_worktrees_from_git") as mock_git:
+    with (
+        patch("scripts.metadata_inference.check_lock_validity") as mock_lock,
+        patch("scripts.metadata_inference.get_worktrees_from_git") as mock_git,
+    ):
         # Mock lock as invalid
         mock_lock.return_value = (False, None)
         # Mock git as empty

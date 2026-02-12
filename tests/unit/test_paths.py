@@ -1,4 +1,5 @@
 """Unit tests for scripts.paths module."""
+
 import tempfile
 from pathlib import Path
 import pytest
@@ -43,10 +44,10 @@ def test_get_worktree_path_parent_not_exists():
     with tempfile.TemporaryDirectory() as tmpdir:
         # Create a deep path that doesn't exist
         non_existent = Path(tmpdir) / "does" / "not" / "exist" / "repo"
-        
+
         with pytest.raises(FileNotFoundError) as exc_info:
             get_worktree_path(non_existent, "WO-0001")
-        
+
         assert "parent directory does not exist" in str(exc_info.value)
 
 
@@ -55,18 +56,18 @@ def test_get_worktree_path_parent_not_writable(monkeypatch):
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir) / "repo"
         repo_root.mkdir()
-        
+
         # Mock os.access to return False for write permission
         def mock_access(path, mode):
             if path == repo_root.parent and mode == os.W_OK:
                 return False
             return True
-        
+
         monkeypatch.setattr(os, "access", mock_access)
-        
+
         with pytest.raises(PermissionError) as exc_info:
             get_worktree_path(repo_root, "WO-0001")
-        
+
         assert "not writable" in str(exc_info.value)
 
 
@@ -75,7 +76,7 @@ def test_get_worktree_path_repo_at_filesystem_root():
     # This is a rare edge case - repo at / (filesystem root)
     # In this case, parent would be / which should exist
     repo_root = Path("/")
-    
+
     # This should not raise, since / exists
     # Note: may fail with PermissionError in actual tests since / is not writable
     with pytest.raises(PermissionError):

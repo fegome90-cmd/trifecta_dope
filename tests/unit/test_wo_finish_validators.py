@@ -3,6 +3,7 @@ Unit tests for ctx_wo_finish.py validator functions.
 
 Tests pure functions in isolation without subprocess calls.
 """
+
 import json
 import subprocess
 import sys
@@ -240,6 +241,7 @@ x_micro_tasks: []
 
         import subprocess
         import ctx_wo_finish
+
         timeout_exc = subprocess.TimeoutExpired("pytest", 300)
 
         def mock_run(cmd, **kwargs):
@@ -280,6 +282,7 @@ x_micro_tasks: []
 
         import subprocess
         import ctx_wo_finish
+
         timeout_exc = subprocess.TimeoutExpired("ruff", 60)
 
         def mock_run(cmd, **kwargs):
@@ -325,6 +328,7 @@ x_micro_tasks: []
 
         import subprocess
         import ctx_wo_finish
+
         timeout_exc = subprocess.TimeoutExpired("git", 30)
 
         def mock_run(cmd, **kwargs):
@@ -362,15 +366,13 @@ class TestValidateDod:
         handoff_dir.mkdir(parents=True)
 
         # Create all required artifacts
-        (handoff_dir / "tests.log").write_text("================================ test session starts ====\n5 passed")
+        (handoff_dir / "tests.log").write_text(
+            "================================ test session starts ====\n5 passed"
+        )
         (handoff_dir / "lint.log").write_text("All checks passed!")
         (handoff_dir / "diff.patch").write_text("diff --git a/test.txt")
         (handoff_dir / "handoff.md").write_text("# Handoff\n\n## Summary")
-        verdict = {
-            "wo_id": "WO-TEST",
-            "status": "done",
-            "generated_at": "2025-01-13T17:00:00Z"
-        }
+        verdict = {"wo_id": "WO-TEST", "status": "done", "generated_at": "2025-01-13T17:00:00Z"}
         (handoff_dir / "verdict.json").write_text(json.dumps(verdict))
 
         result = validate_dod("WO-TEST", tmp_path)
@@ -489,7 +491,10 @@ class TestValidateDod:
         result = validate_dod("WO-TEST", tmp_path)
 
         assert result.is_err()
-        assert "interrupted" in result.unwrap_err().lower() or "generation" in result.unwrap_err().lower()
+        assert (
+            "interrupted" in result.unwrap_err().lower()
+            or "generation" in result.unwrap_err().lower()
+        )
 
     def test_validate_dod_path_is_file_not_directory(self, tmp_path):
         """Test validation fails when handoff path is a file, not directory."""
@@ -514,6 +519,7 @@ class TestLoadYaml:
         yaml_file.write_text("key: value\nlist:\n  - item1\n  - item2\n")
 
         from ctx_wo_finish import load_yaml
+
         result = load_yaml(yaml_file)
 
         assert result["key"] == "value"
@@ -529,6 +535,7 @@ class TestLoadDodCatalog:
         dod_dir.mkdir(parents=True)
 
         from ctx_wo_finish import load_dod_catalog
+
         result = load_dod_catalog(tmp_path)
 
         assert result == {}
@@ -545,6 +552,7 @@ class TestLoadDodCatalog:
 """)
 
         from ctx_wo_finish import load_dod_catalog
+
         result = load_dod_catalog(tmp_path)
 
         assert "DOD-TEST1" in result
@@ -560,6 +568,7 @@ class TestFinishWoTransaction:
         # Don't create running WO
 
         from ctx_wo_finish import finish_wo_transaction
+
         result = finish_wo_transaction("WO-TEST", tmp_path, "done")
 
         assert result.is_err()
@@ -583,11 +592,14 @@ x_objective: "Test"
 
         # Initialize git repo for git state validation
         subprocess.run(["git", "init"], cwd=tmp_path, capture_output=True)
-        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=tmp_path, capture_output=True)
+        subprocess.run(
+            ["git", "config", "user.email", "test@test.com"], cwd=tmp_path, capture_output=True
+        )
         subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, capture_output=True)
         subprocess.run(["git", "checkout", "-b", "main"], cwd=tmp_path, capture_output=True)
 
         from ctx_wo_finish import finish_wo_transaction
+
         result = finish_wo_transaction("WO-TEST", tmp_path, "done")
 
         # May fail due to git state, but we're testing the function is called
@@ -619,6 +631,7 @@ x_objective: "Test"
         monkeypatch.setattr("subprocess.run", lambda *a, **k: mock_result)
 
         from ctx_wo_finish import finish_wo_transaction
+
         result = finish_wo_transaction("WO-TEST", tmp_path, "done")
 
         assert result.is_err()
@@ -659,6 +672,7 @@ x_objective: "Test"
         monkeypatch.setattr("subprocess.check_output", mock_check_output)
 
         from ctx_wo_finish import finish_wo_transaction
+
         result = finish_wo_transaction("WO-TEST", tmp_path, "done")
 
         assert result.is_ok()
@@ -698,6 +712,7 @@ x_objective: "Test"
         monkeypatch.setattr("subprocess.check_output", mock_check_output)
 
         from ctx_wo_finish import finish_wo_transaction
+
         result = finish_wo_transaction("WO-TEST", tmp_path, "failed")
 
         assert result.is_ok()
@@ -743,6 +758,7 @@ x_objective: "Test"
         monkeypatch.setattr(Path, "write_text", failing_write)
 
         from ctx_wo_finish import finish_wo_transaction
+
         result = finish_wo_transaction("WO-TEST", tmp_path, "done")
 
         # Should fail with rollback message
@@ -779,6 +795,7 @@ x_objective: "Test"
         monkeypatch.setattr("subprocess.run", mock_subprocess_run)
 
         from ctx_wo_finish import finish_wo_transaction
+
         result = finish_wo_transaction("WO-TEST", tmp_path, "done")
 
         assert result.is_ok()
@@ -822,6 +839,7 @@ x_objective: "Test"
         monkeypatch.setattr(Path, "unlink", failing_unlink)
 
         from ctx_wo_finish import finish_wo_transaction
+
         result = finish_wo_transaction("WO-TEST", tmp_path, "done")
 
         # Should fail with rollback message
@@ -854,10 +872,14 @@ x_micro_tasks: []
 
         # Mock generate_artifacts to return Ok
         from src.domain.result import Ok
-        monkeypatch.setattr("ctx_wo_finish.generate_artifacts", lambda *a, **k: Ok(tmp_path / "handoff"))
+
+        monkeypatch.setattr(
+            "ctx_wo_finish.generate_artifacts", lambda *a, **k: Ok(tmp_path / "handoff")
+        )
 
         import sys
         from ctx_wo_finish import main
+
         sys.argv = ["ctx_wo_finish.py", "WO-TEST", "--root", str(tmp_path), "--generate-only"]
 
         exit_code = main()
@@ -893,10 +915,12 @@ x_objective: "Test"
 
         monkeypatch.setattr("subprocess.run", mock_subprocess_run)
         from src.domain.result import Ok
+
         monkeypatch.setattr("ctx_wo_finish.finish_wo_transaction", lambda *a, **k: Ok(None))
 
         import sys
         from ctx_wo_finish import main
+
         sys.argv = ["ctx_wo_finish.py", "WO-TEST", "--root", str(tmp_path), "--skip-dod"]
 
         exit_code = main()
@@ -920,11 +944,13 @@ x_objective: "Test"
 
         # Mock validate_dod to return Err
         from src.domain.result import Err
+
         monkeypatch.setattr("ctx_wo_finish.validate_dod", lambda *a, **k: Err("Validation failed"))
 
         import sys
         from io import StringIO
         from ctx_wo_finish import main
+
         sys.argv = ["ctx_wo_finish.py", "WO-TEST", "--root", str(tmp_path)]
         old_stdout = sys.stdout
         sys.stdout = StringIO()
@@ -959,6 +985,7 @@ x_objective: "Test"
         def mock_finish(wo_id, root, result_status):
             finish_calls.append(result_status)
             from src.domain.result import Ok
+
             return Ok(None)
 
         # Mock git
@@ -973,11 +1000,21 @@ x_objective: "Test"
         monkeypatch.setattr("subprocess.run", mock_subprocess_run)
         monkeypatch.setattr("ctx_wo_finish.finish_wo_transaction", mock_finish)
         from src.domain.result import Err
+
         monkeypatch.setattr("ctx_wo_finish.validate_dod", lambda *a, **k: Err("Skip"))
 
         import sys
         from ctx_wo_finish import main
-        sys.argv = ["ctx_wo_finish.py", "WO-TEST", "--root", str(tmp_path), "--skip-dod", "--result", "failed"]
+
+        sys.argv = [
+            "ctx_wo_finish.py",
+            "WO-TEST",
+            "--root",
+            str(tmp_path),
+            "--skip-dod",
+            "--result",
+            "failed",
+        ]
 
         exit_code = main()
 
@@ -1007,13 +1044,22 @@ x_micro_tasks: []
         def mock_generate(wo_id, root, clean=False):
             generate_calls.append(clean)
             from src.domain.result import Ok
+
             return Ok(tmp_path)
 
         monkeypatch.setattr("ctx_wo_finish.generate_artifacts", mock_generate)
 
         import sys
         from ctx_wo_finish import main
-        sys.argv = ["ctx_wo_finish.py", "WO-TEST", "--root", str(tmp_path), "--generate-only", "--clean"]
+
+        sys.argv = [
+            "ctx_wo_finish.py",
+            "WO-TEST",
+            "--root",
+            str(tmp_path),
+            "--generate-only",
+            "--clean",
+        ]
 
         exit_code = main()
 
@@ -1025,6 +1071,7 @@ x_micro_tasks: []
         """Test main() with no wo_id prints help and exits 0."""
         import sys
         from ctx_wo_finish import main
+
         sys.argv = ["ctx_wo_finish.py", "--root", str(tmp_path)]
 
         exit_code = main()
@@ -1036,6 +1083,7 @@ x_micro_tasks: []
         # Don't create any WO file
         import sys
         from ctx_wo_finish import main
+
         sys.argv = ["ctx_wo_finish.py", "WO-NONEXISTENT", "--root", str(tmp_path)]
 
         exit_code = main()
@@ -1059,6 +1107,7 @@ x_objective: "Test"
 
         import sys
         from ctx_wo_finish import main
+
         sys.argv = ["ctx_wo_finish.py", "WO-TEST", "--root", str(tmp_path), "--skip-dod"]
 
         exit_code = main()
@@ -1082,10 +1131,14 @@ x_objective: "Test"
 
         # Mock generate_artifacts to return Err
         from src.domain.result import Err
-        monkeypatch.setattr("ctx_wo_finish.generate_artifacts", lambda *a, **k: Err("Generation failed"))
+
+        monkeypatch.setattr(
+            "ctx_wo_finish.generate_artifacts", lambda *a, **k: Err("Generation failed")
+        )
 
         import sys
         from ctx_wo_finish import main
+
         sys.argv = ["ctx_wo_finish.py", "WO-TEST", "--root", str(tmp_path), "--generate-only"]
 
         exit_code = main()
@@ -1109,11 +1162,15 @@ x_objective: "Test"
 
         # Mock validate_dod to succeed and finish_wo_transaction to fail
         from src.domain.result import Ok, Err
+
         monkeypatch.setattr("ctx_wo_finish.validate_dod", lambda *a, **k: Ok(None))
-        monkeypatch.setattr("ctx_wo_finish.finish_wo_transaction", lambda *a, **k: Err("Transaction failed"))
+        monkeypatch.setattr(
+            "ctx_wo_finish.finish_wo_transaction", lambda *a, **k: Err("Transaction failed")
+        )
 
         import sys
         from ctx_wo_finish import main
+
         sys.argv = ["ctx_wo_finish.py", "WO-TEST", "--root", str(tmp_path)]
 
         exit_code = main()

@@ -1,4 +1,5 @@
 """Unit tests for path conversion logic in ctx_wo_take.py."""
+
 import tempfile
 from pathlib import Path
 import os
@@ -58,8 +59,9 @@ def test_worktree_relative_path_depth_variation():
 
             # Worktree is always at sibling level (repo_root.parent/.worktrees/)
             # So relative path is always ../.worktrees/
-            assert relative.startswith(expected_prefix), \
+            assert relative.startswith(expected_prefix), (
                 f"For {repo_rel}, expected prefix {expected_prefix}, got {relative}"
+            )
 
 
 def test_worktree_absolute_to_roundtrip():
@@ -73,6 +75,6 @@ def test_worktree_absolute_to_roundtrip():
 
         # Roundtrip: relative -> absolute using repo_root
         reconstructed = (repo_root / relative_path).resolve()
-        
+
         # Should match the original worktree path
         assert reconstructed == auto_worktree.resolve()
