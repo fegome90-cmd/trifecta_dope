@@ -69,18 +69,26 @@ def test_ctx_sync_succeeds_after_initialization(tmp_path: Path):
     assert "Traceback" not in combined, combined
 
 
-def test_ctx_sync_succeeds_with_valid_prime(tmp_path: Path):
-    """ctx sync must succeed when prime file exists (manual setup for now)."""
+def test_ctx_sync_succeeds_with_valid_north_star_files(tmp_path: Path):
+    """ctx sync must succeed when minimal North Star files exist."""
     segment = tmp_path / "test_segment"
     segment.mkdir()
 
-    # Manually create minimal structure
-    # TODO: Replace with create→refresh-prime when bug fixed
+    # Manually create minimal valid structure
+    (segment / "skill.md").write_text("# Skill\n")
+    (segment / "AGENTS.md").write_text("# Constitution\n\nRule 1: Be strict.\n")
+
     ctx_dir = segment / "_ctx"
     ctx_dir.mkdir()
 
+    agent_file = ctx_dir / "agent_test_segment.md"
+    agent_file.write_text("# Agent\n")
+
     prime_file = ctx_dir / "prime_test_segment.md"
     prime_file.write_text(f"# Prime: test_segment\n\n> **REPO_ROOT**: `{segment}`\n")
+
+    session_file = ctx_dir / "session_test_segment.md"
+    session_file.write_text("# Session\n")
 
     (segment / "pyproject.toml").write_text("[project]\nname='test_segment'\nversion='0.0.1'\n")
 
@@ -148,3 +156,20 @@ def test_create_from_different_cwd(tmp_path: Path):
     # Verify correct files exist
     expected_prime = target_ctx / "prime_remote_segment.md"
     assert expected_prime.exists(), f"Prime not found: {expected_prime}"
+
+
+def test_create_allows_immediate_ctx_reset(tmp_path: Path):
+    """create should produce enough state so ctx reset --force works immediately."""
+    segment = tmp_path / "reset_ready_segment"
+    segment.mkdir()
+
+    (segment / "pyproject.toml").write_text(
+        "[project]\nname='reset_ready_segment'\nversion='0.0.1'\n"
+    )
+
+    p_create = run_trifecta("create", "-s", str(segment), cwd=segment)
+    assert p_create.returncode == 0, p_create.stdout + "\n" + p_create.stderr
+
+    p_reset = run_trifecta("ctx", "reset", "-s", str(segment), "--force", cwd=segment)
+    combined = (p_reset.stdout or "") + "\n" + (p_reset.stderr or "")
+    assert p_reset.returncode == 0, combined

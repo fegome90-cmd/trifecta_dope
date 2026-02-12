@@ -119,6 +119,15 @@ def _get_lint_enabled(no_lint_flag: bool) -> bool:
     return False  # Conservative default: OFF until explicitly enabled
 
 
+def _classify_north_star_precondition(errors: list[str]) -> str:
+    """Classify structural precondition errors into stable Error Card codes."""
+    if any("ambiguous" in err.lower() for err in errors):
+        return "NORTH_STAR_AMBIGUOUS"
+    if any("missing context file: _ctx/prime_" in err.lower() for err in errors):
+        return "SEGMENT_NOT_INITIALIZED"
+    return "NORTH_STAR_MISSING"
+
+
 def _get_dependencies(
     segment: str, telemetry: Optional[Telemetry] = None
 ) -> Tuple[TemplateRenderer, FileSystemAdapter, Optional[Telemetry]]:
@@ -229,63 +238,125 @@ def build(
     from src.infrastructure.validators import (
         detect_legacy_context_files,
         validate_agents_constitution,
-        validate_segment_fp,
+        validate_segment_structure_with_segment_id,
     )
+    from src.infrastructure.segment_state import resolve_segment_state
+    from src.application.exceptions import InvalidConfigScopeError, InvalidSegmentPathError
+    from src.cli.error_cards import render_error_card
 
-    segment_root = Path(segment)
     telemetry = _get_telemetry(segment, telemetry_level)
     start_time = time.time()
+    _, file_system, _ = _get_dependencies(segment, telemetry)
+
+    try:
+        state = resolve_segment_state(segment, file_system)
+    except InvalidSegmentPathError as e:
+        error_card = render_error_card(
+            error_code="INVALID_SEGMENT_PATH",
+            error_class="PRECONDITION",
+            cause=str(e),
+            next_steps=[
+                "Verify the segment path exists and is a directory",
+                "Use absolute path or run from the segment root",
+            ],
+            verify_cmd=f"trifecta ctx build -s {segment}",
+        )
+        telemetry.event(
+            "ctx.build",
+            {"segment": segment},
+            {"status": "error", "error_code": "INVALID_SEGMENT_PATH"},
+            int((time.time() - start_time) * 1000),
+        )
+        telemetry.flush()
+        typer.echo(error_card, err=True)
+        raise typer.Exit(code=1)
+    except InvalidConfigScopeError as e:
+        error_card = render_error_card(
+            error_code="INVALID_CONFIG_SCOPE",
+            error_class="PRECONDITION",
+            cause=str(e),
+            next_steps=[
+                "Fix _ctx/trifecta_config.json repo_root to match segment root",
+                "Or remove config and re-run create/sync",
+            ],
+            verify_cmd=f"trifecta ctx build -s {segment}",
+        )
+        telemetry.event(
+            "ctx.build",
+            {"segment": segment},
+            {"status": "error", "error_code": "INVALID_CONFIG_SCOPE"},
+            int((time.time() - start_time) * 1000),
+        )
+        telemetry.flush()
+        typer.echo(error_card, err=True)
+        raise typer.Exit(code=1)
 
     # FP Gate: North Star Strict Validation
-    match validate_segment_fp(segment_root):
-        case Err(errors):
-            typer.echo("❌ Validation Failed (North Star Gate):")
-            for err in errors:
-                typer.echo(f"   - {err}")
-            telemetry.event(
-                "ctx.build",
-                {"segment": segment},
-                {"status": "validation_failed", "errors": len(errors)},
-                int((time.time() - start_time) * 1000),
-            )
-            telemetry.flush()
-            raise typer.Exit(code=1)
-        case Ok(_):
-            # 1. Fail-Closed: AGENTS.md Constitution
-            match validate_agents_constitution(segment_root):
-                case Err(errors):
-                    typer.echo("❌ Constitution Failed (AGENTS.md):")
-                    for err in errors:
-                        typer.echo(f"   - {err}")
-                    telemetry.event(
-                        "ctx.build",
-                        {"segment": segment},
-                        {"status": "constitution_failed", "errors": len(errors)},
-                        int((time.time() - start_time) * 1000),
-                    )
-                    telemetry.flush()
-                    raise typer.Exit(code=1)
-                case Ok(_):
-                    pass
-
-            # 2. Check for legacy file errors (Blocking)
-            legacy = detect_legacy_context_files(segment_root)
-            if legacy:
-                typer.echo("❌ Legacy context files detected (Fail-Closed):")
-                for lf in legacy:
-                    typer.echo(f"   - _ctx/{lf} (rename to suffix format: rule 3+1)")
+    validation = validate_segment_structure_with_segment_id(
+        state.segment_root_resolved, state.segment_id
+    )
+    if not validation.valid:
+        errors = validation.errors
+        code = _classify_north_star_precondition(errors)
+        error_card = render_error_card(
+            error_code=code,
+            error_class="PRECONDITION",
+            cause="; ".join(errors),
+            next_steps=[
+                "Ensure _ctx contains exactly one agent_*.md, prime_*.md, session_*.md",
+                f"Expected suffix for this segment: {state.segment_id}",
+            ],
+            verify_cmd=f"trifecta ctx build -s {segment}",
+        )
+        typer.echo(error_card, err=True)
+        telemetry.event(
+            "ctx.build",
+            {
+                "segment": segment,
+                "segment_id_resolved": state.segment_id,
+                "segment_root_resolved": str(state.segment_root_resolved),
+                "segment_state_source": state.source_of_truth,
+            },
+            {"status": "validation_failed", "error_code": code, "errors": len(errors)},
+            int((time.time() - start_time) * 1000),
+        )
+        telemetry.flush()
+        raise typer.Exit(code=1)
+    else:
+        # 1. Fail-Closed: AGENTS.md Constitution
+        match validate_agents_constitution(state.segment_root_resolved):
+            case Err(errors):
+                typer.echo("❌ Constitution Failed (AGENTS.md):")
+                for err in errors:
+                    typer.echo(f"   - {err}")
                 telemetry.event(
                     "ctx.build",
                     {"segment": segment},
-                    {"status": "legacy_files_error", "count": len(legacy)},
+                    {"status": "constitution_failed", "errors": len(errors)},
                     int((time.time() - start_time) * 1000),
                 )
                 telemetry.flush()
                 raise typer.Exit(code=1)
+            case Ok(_):
+                pass
 
-    _, file_system, _ = _get_dependencies(segment, telemetry)
+        # 2. Check for legacy file errors (Blocking)
+        legacy = detect_legacy_context_files(state.segment_root_resolved)
+        if legacy:
+            typer.echo("❌ Legacy context files detected (Fail-Closed):")
+            for lf in legacy:
+                typer.echo(f"   - _ctx/{lf} (rename to suffix format: rule 3+1)")
+            telemetry.event(
+                "ctx.build",
+                {"segment": segment},
+                {"status": "legacy_files_error", "count": len(legacy)},
+                int((time.time() - start_time) * 1000),
+            )
+            telemetry.flush()
+            raise typer.Exit(code=1)
+
     use_case = BuildContextPackUseCase(file_system, telemetry)
-    segment_fs = segment_root.resolve()
+    segment_fs = state.segment_root_resolved
 
     try:
         match use_case.execute(segment_fs):
@@ -293,7 +364,12 @@ def build(
                 typer.echo(pack)
                 telemetry.event(
                     "ctx.build",
-                    {"segment": segment},
+                    {
+                        "segment": segment,
+                        "segment_id_resolved": state.segment_id,
+                        "segment_root_resolved": str(state.segment_root_resolved),
+                        "segment_state_source": state.source_of_truth,
+                    },
                     {"status": "ok"},
                     int((time.time() - start_time) * 1000),
                 )
@@ -303,7 +379,12 @@ def build(
                     typer.echo(f"   - {err}")
                 telemetry.event(
                     "ctx.build",
-                    {"segment": segment},
+                    {
+                        "segment": segment,
+                        "segment_id_resolved": state.segment_id,
+                        "segment_root_resolved": str(state.segment_root_resolved),
+                        "segment_state_source": state.source_of_truth,
+                    },
                     {"status": "build_error", "errors": len(errors)},
                     int((time.time() - start_time) * 1000),
                 )
@@ -312,7 +393,12 @@ def build(
     except Exception as e:
         telemetry.event(
             "ctx.build",
-            {"segment": segment},
+            {
+                "segment": segment,
+                "segment_id_resolved": state.segment_id,
+                "segment_root_resolved": str(state.segment_root_resolved),
+                "segment_state_source": state.source_of_truth,
+            },
             {"status": "error", "error": str(e)},
             int((time.time() - start_time) * 1000),
         )
@@ -971,18 +1057,108 @@ def sync(
     telemetry_level: str = typer.Option("lite", "--telemetry", help=HELP_TELEMETRY),
 ) -> None:
     """Macro: Build + Validate."""
+    from src.application.exceptions import (
+        InvalidConfigScopeError,
+        InvalidSegmentPathError,
+        PrimeFileNotFoundError,
+    )
+    from src.cli.error_cards import render_error_card
+    from src.infrastructure.segment_state import resolve_segment_state
+    from src.infrastructure.validators import validate_segment_structure_with_segment_id
+
     telemetry = _get_telemetry(segment, telemetry_level)
     start_time = time.time()
     _, file_system, _ = _get_dependencies(segment, telemetry)
 
     try:
+        state = resolve_segment_state(segment, file_system)
+    except InvalidSegmentPathError as e:
+        error_card = render_error_card(
+            error_code="INVALID_SEGMENT_PATH",
+            error_class="PRECONDITION",
+            cause=str(e),
+            next_steps=[
+                "Verify the segment path exists and is a directory",
+                "Use absolute path or run from the segment root",
+            ],
+            verify_cmd=f"trifecta ctx sync -s {segment}",
+        )
+        telemetry.event(
+            "ctx.sync",
+            {"segment": segment},
+            {"status": "error", "error_code": "INVALID_SEGMENT_PATH"},
+            int((time.time() - start_time) * 1000),
+        )
+        telemetry.flush()
+        typer.echo(error_card, err=True)
+        raise typer.Exit(1)
+    except InvalidConfigScopeError as e:
+        error_card = render_error_card(
+            error_code="INVALID_CONFIG_SCOPE",
+            error_class="PRECONDITION",
+            cause=str(e),
+            next_steps=[
+                "Fix _ctx/trifecta_config.json repo_root to match segment root",
+                "Or remove config and re-run create/sync",
+            ],
+            verify_cmd=f"trifecta ctx sync -s {segment}",
+        )
+        telemetry.event(
+            "ctx.sync",
+            {"segment": segment},
+            {"status": "error", "error_code": "INVALID_CONFIG_SCOPE"},
+            int((time.time() - start_time) * 1000),
+        )
+        telemetry.flush()
+        typer.echo(error_card, err=True)
+        raise typer.Exit(1)
+
+    validation = validate_segment_structure_with_segment_id(
+        state.segment_root_resolved, state.segment_id
+    )
+    if not validation.valid:
+        errors = validation.errors
+        code = _classify_north_star_precondition(errors)
+        if code == "SEGMENT_NOT_INITIALIZED":
+            next_steps = [
+                f"trifecta create -s {segment}",
+                f"trifecta refresh-prime -s {segment}",
+            ]
+        else:
+            next_steps = [
+                "Ensure _ctx contains exactly one agent_*.md, prime_*.md, session_*.md",
+                f"Expected suffix for this segment: {state.segment_id}",
+            ]
+        error_card = render_error_card(
+            error_code=code,
+            error_class="PRECONDITION",
+            cause="; ".join(errors),
+            next_steps=next_steps,
+            verify_cmd=f"trifecta ctx sync -s {segment}",
+        )
+        telemetry.event(
+            "ctx.sync",
+            {
+                "segment": segment,
+                "segment_id_resolved": state.segment_id,
+                "segment_root_resolved": str(state.segment_root_resolved),
+                "segment_state_source": state.source_of_truth,
+            },
+            {"status": "error", "error_code": code, "errors": len(errors)},
+            int((time.time() - start_time) * 1000),
+        )
+        telemetry.flush()
+        typer.echo(error_card, err=True)
+        raise typer.Exit(1)
+
+    try:
         typer.echo("🔄 Running build...")
         build_uc = BuildContextPackUseCase(file_system, telemetry)
-        build_uc.execute(Path(segment).resolve())
+        build_uc.execute(state.segment_root_resolved)
 
         typer.echo("✅ Build complete. Validating...")
         validate_uc = ValidateContextPackUseCase(file_system, telemetry)
-        result = validate_uc.execute(Path(segment).resolve())
+        result = validate_uc.execute(state.segment_root_resolved)
 
         # Format ValidationResult for display
         if result.passed:
@@ -998,7 +1174,7 @@ def sync(
             # Regenerate stubs
             typer.echo("🔄 Regenerating stubs...")
             stub_regen_uc = StubRegenUseCase(telemetry)
-            stub_result = stub_regen_uc.execute(Path(segment).resolve())
+            stub_result = stub_regen_uc.execute(state.segment_root_resolved)
 
             if stub_result["stubs"]:
                 typer.echo(f"   ✅ Regenerated: {', '.join(stub_result['stubs'])}")
@@ -1010,12 +1186,17 @@ def sync(
 
             if not stub_result["regen_ok"]:
                 typer.echo("   ⚠️  Stub regeneration had errors:")
-                for e in stub_result["errors"]:
-                    typer.echo(f"      - {e}")
+                for err in stub_result["errors"]:
+                    typer.echo(f"      - {err}")
 
         telemetry.event(
             "ctx.sync",
-            {"segment": segment},
+            {
+                "segment": segment,
+                "segment_id_resolved": state.segment_id,
+                "segment_root_resolved": str(state.segment_root_resolved),
+                "segment_state_source": state.source_of_truth,
+            },
             {"status": "ok"},
             int((time.time() - start_time) * 1000),
         )
@@ -1023,14 +1204,8 @@ def sync(
         if not result.passed:
             raise typer.Exit(code=1)
 
-    # Type-based error classification (preferred - robust)
     except Exception as e:
-        from src.application.exceptions import PrimeFileNotFoundError
-
         if isinstance(e, PrimeFileNotFoundError):
-            # Prime file missing - emit SEGMENT_NOT_INITIALIZED Error Card
-            from src.cli.error_cards import render_error_card
-
             error_card = render_error_card(
                 error_code="SEGMENT_NOT_INITIALIZED",
                 error_class="PRECONDITION",
@@ -1043,7 +1218,12 @@ def sync(
             )
             telemetry.event(
                 "ctx.sync",
-                {"segment": segment},
+                {
+                    "segment": segment,
+                    "segment_id_resolved": state.segment_id,
+                    "segment_root_resolved": str(state.segment_root_resolved),
+                    "segment_state_source": state.source_of_truth,
+                },
                 {"status": "error", "error_code": "SEGMENT_NOT_INITIALIZED"},
                 int((time.time() - start_time) * 1000),
             )
@@ -1052,7 +1232,6 @@ def sync(
 
         # Substring fallback for backward compatibility (deprecated)
         elif isinstance(e, FileNotFoundError) and "Expected prime file not found" in str(e):
-            from src.cli.error_cards import render_error_card
             from src.infrastructure.deprecations import maybe_emit_deprecated
 
             # Track deprecated usage (policy: off|warn|fail via env var)
@@ -1073,7 +1252,12 @@ def sync(
             )
             telemetry.event(
                 "ctx.sync",
-                {"segment": segment},
+                {
+                    "segment": segment,
+                    "segment_id_resolved": state.segment_id,
+                    "segment_root_resolved": str(state.segment_root_resolved),
+                    "segment_state_source": state.source_of_truth,
+                },
                 {"status": "error", "error_code": "SEGMENT_NOT_INITIALIZED"},
                 int((time.time() - start_time) * 1000),
             )
@@ -1084,7 +1268,12 @@ def sync(
         else:
             telemetry.event(
                 "ctx.sync",
-                {"segment": segment},
+                {
+                    "segment": segment,
+                    "segment_id_resolved": state.segment_id,
+                    "segment_root_resolved": str(state.segment_root_resolved),
+                    "segment_state_source": state.source_of_truth,
+                },
                 {"status": "error"},
                 int((time.time() - start_time) * 1000),
             )
@@ -1110,7 +1299,7 @@ def ctx_reset(
     try:
         if not force:
             typer.echo(
-                "⚠️  WARNING: This will overwrite skill.md, agent.md, session.md, readme_tf.md"
+                "⚠️  WARNING: This will overwrite skill.md, _ctx/agent_<segment>.md, _ctx/prime_<segment>.md, _ctx/session_<segment>.md, readme_tf.md"
             )
             typer.echo("Press Ctrl+C to cancel, or Enter to continue...")
             input()
@@ -1128,9 +1317,15 @@ def ctx_reset(
             typer.echo("❌ No trifecta_config.json found. Use 'trifecta create' for new segments.")
             raise typer.Exit(1)
 
+        segment_id = config.segment_id
         (Path(segment) / "skill.md").write_text(template_renderer.render_skill(config))
-        (Path(segment) / "_ctx" / "agent.md").write_text(template_renderer.render_agent(config))
-        (Path(segment) / "_ctx" / f"session_{config.segment}.md").write_text(
+        (Path(segment) / "_ctx" / f"agent_{segment_id}.md").write_text(
+            template_renderer.render_agent(config)
+        )
+        (Path(segment) / "_ctx" / f"prime_{segment_id}.md").write_text(
+            template_renderer.render_prime(config, [])
+        )
+        (Path(segment) / "_ctx" / f"session_{segment_id}.md").write_text(
             template_renderer.render_session(config)
         )
         (Path(segment) / "readme_tf.md").write_text(template_renderer.render_readme(config))
@@ -1180,15 +1375,23 @@ def create(
     Generates:
     - skill.md (Rules & Roles)
     - _ctx/prime_{segment}.md (Reading list)
-    - _ctx/agent.md (Tech stack)
+    - _ctx/agent_{segment}.md (Tech stack)
     - _ctx/session_{segment}.md (Runbook)
+    - _ctx/trifecta_config.json (SSOT segment config)
+    - AGENTS.md (Constitution gate seed)
     - readme_tf.md (Documentation)
+
+    Postcondition:
+    - Segment is left in state SCAFFOLDED+CONFIGURED:
+      `ctx build` and `ctx reset --force` must not fail due to missing bootstrap artifacts.
     """
     # FIXED: -s is now path to target directory (consistent with ctx sync/search/get)
     # Segment ID derived from directory name
     target_dir = Path(segment).resolve()
 
     template_renderer, _, _ = _get_dependencies(str(target_dir))
+    telemetry = _get_telemetry(str(target_dir), "lite")
+    start_time = time.time()
 
     if not target_dir.exists():
         target_dir.mkdir(parents=True)
@@ -1207,11 +1410,13 @@ def create(
     )
 
     files = {
+        "AGENTS.md": "# AGENTS\n\nRead skill.md and _ctx files before running commands.\n",
         "skill.md": template_renderer.render_skill(config),
         "readme_tf.md": template_renderer.render_readme(config),
         f"_ctx/prime_{segment_id}.md": template_renderer.render_prime(config, []),
         f"_ctx/agent_{segment_id}.md": template_renderer.render_agent(config),
         f"_ctx/session_{segment_id}.md": template_renderer.render_session(config),
+        "_ctx/trifecta_config.json": json.dumps(config.model_dump(), indent=2) + "\n",
     }
 
     try:
@@ -1222,6 +1427,16 @@ def create(
                 not full_path.exists()
             ):  # Don't overwrite unless force? Removed overwrite flag previously.
                 full_path.write_text(content)
+
+        required_bootstrap = [
+            target_dir / "AGENTS.md",
+            target_dir / "skill.md",
+            target_dir / "_ctx" / "trifecta_config.json",
+            target_dir / "_ctx" / f"agent_{segment_id}.md",
+            target_dir / "_ctx" / f"prime_{segment_id}.md",
+            target_dir / "_ctx" / f"session_{segment_id}.md",
+        ]
+        missing_bootstrap = [str(p.relative_to(target_dir)) for p in required_bootstrap if not p.exists()]
 
         # Verify line count of skill.md
         skill_lines = len(files["skill.md"].splitlines())
@@ -1238,10 +1453,33 @@ def create(
             .split("## Quick Commands (CLI)")[1]
             .split("```")[1]
         )
+        telemetry.event(
+            "ctx.create",
+            {
+                "segment": str(target_dir),
+                "segment_bootstrap_version": 2,
+            },
+            {
+                "status": "ok",
+                "bootstrap_missing_artifacts_count": len(missing_bootstrap),
+            },
+            int((time.time() - start_time) * 1000),
+        )
 
     except Exception as e:
+        telemetry.event(
+            "ctx.create",
+            {
+                "segment": str(target_dir),
+                "segment_bootstrap_version": 2,
+            },
+            {"status": "error"},
+            int((time.time() - start_time) * 1000),
+        )
         typer.echo(_format_error(e, "Creation Error"), err=True)
         raise typer.Exit(1)
+    finally:
+        telemetry.flush()
 
 
 @app.command("validate-trifecta", hidden=True, help="[DEPRECATED] Use 'ctx validate' instead.")

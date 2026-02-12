@@ -29,3 +29,31 @@ class PrimeFileNotFoundError(FileNotFoundError):
             )
 
         super().__init__(message)
+
+
+class InvalidSegmentPathError(FileNotFoundError):
+    """Raised when --segment path cannot be resolved to an existing directory."""
+
+    def __init__(self, segment_input: str, resolved_path: Path, message: str | None = None):
+        self.segment_input = segment_input
+        self.resolved_path = resolved_path
+        if message is None:
+            message = (
+                f"Invalid segment path: input='{segment_input}' "
+                f"resolved='{resolved_path}' (path does not exist or is not a directory)"
+            )
+        super().__init__(message)
+
+
+class InvalidConfigScopeError(ValueError):
+    """Raised when trifecta_config.json repo_root does not match resolved segment root."""
+
+    def __init__(self, config_repo_root: Path, resolved_segment_root: Path, message: str | None = None):
+        self.config_repo_root = config_repo_root
+        self.resolved_segment_root = resolved_segment_root
+        if message is None:
+            message = (
+                f"Invalid config scope: repo_root='{config_repo_root}' "
+                f"does not match resolved segment root='{resolved_segment_root}'"
+            )
+        super().__init__(message)
