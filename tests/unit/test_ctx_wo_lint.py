@@ -88,7 +88,9 @@ def test_wo_lint_ignores_legacy_paths(tmp_path: Path) -> None:
     (root / "_ctx" / "jobs" / "pending" / "WO-0001.yaml").write_text(
         _valid_wo("pending"), encoding="utf-8"
     )
-    (root / "_ctx" / "jobs" / "done" / "WO-9999_job.yaml").write_text("invalid: [", encoding="utf-8")
+    (root / "_ctx" / "jobs" / "done" / "WO-9999_job.yaml").write_text(
+        "invalid: [", encoding="utf-8"
+    )
 
     result = subprocess.run(
         [sys.executable, "scripts/ctx_wo_lint.py", "--root", str(root), "--json"],
