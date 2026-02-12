@@ -82,3 +82,20 @@ jobs:
 
       - name: Run mypy type checker
         run: uv run mypy src/
+
+      - name: Run WO formatter check
+        run: make wo-fmt-check
+
+      - name: Run WO lint
+        run: make wo-lint
+
+      - name: Export WO lint JSON telemetry
+        run: |
+          mkdir -p _ctx/telemetry
+          make wo-lint-json > _ctx/telemetry/wo_lint.json
+
+      - name: Upload WO lint telemetry artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wo-lint-json
+          path: _ctx/telemetry/wo_lint.json

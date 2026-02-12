@@ -11,7 +11,7 @@
 #   WO_ID        - Work Order ID for report generation (optional)
 #   --check-only - Skip report generation, only run checks
 #
-# VERIFICATION GATE DEFINITION (10 gates):
+# VERIFICATION GATE DEFINITION (11 gates):
 #   1. Unit tests (pytest tests/unit/)
 #   2. Integration tests (pytest tests/integration/)
 #   3. Acceptance tests (pytest tests/acceptance/ -m "not slow")
@@ -21,7 +21,8 @@
 #   7. Debug code scan (print/breakpoint/pdb) - BLOCKING
 #   8. Sensitive files scan (git tracked) - BLOCKING
 #   9. Untracked files check (git) - NON-BLOCKING WARN
-#  10. Backlog validation (ctx_backlog_validate.py) - NON-BLOCKING WARN
+#  10. Work Order hygiene (wo-fmt-check + wo-lint) - BLOCKING
+#  11. Backlog validation (ctx_backlog_validate.py) - NON-BLOCKING WARN
 #
 # Additional (non-blocking info):
 #   - Change size analysis (WARN if >1000 lines)
@@ -110,7 +111,7 @@ echo ""
 # ============================================================
 # Gate 1: Unit Tests (BLOCKING)
 # ============================================================
-section "📋 Step 1/10: Unit Tests"
+section "📋 Step 1/11: Unit Tests"
 if uv run pytest -q tests/unit/; then
   pass "Unit tests passed"
 else
@@ -122,7 +123,7 @@ echo ""
 # ============================================================
 # Gate 2: Integration Tests (BLOCKING)
 # ============================================================
-section "🔗 Step 2/10: Integration Tests"
+section "🔗 Step 2/11: Integration Tests"
 if uv run pytest -q tests/integration/; then
   pass "Integration tests passed"
 else
@@ -134,7 +135,7 @@ echo ""
 # ============================================================
 # Gate 3: Acceptance Tests (BLOCKING)
 # ============================================================
-section "🎯 Step 3/10: Acceptance Tests (fast)"
+section "🎯 Step 3/11: Acceptance Tests (fast)"
 if uv run pytest -q tests/acceptance/ -m "not slow"; then
   pass "Acceptance tests passed"
 else
@@ -146,7 +147,7 @@ echo ""
 # ============================================================
 # Gate 4: Linting (BLOCKING)
 # ============================================================
-section "🔍 Step 4/10: Linting (ruff check)"
+section "🔍 Step 4/11: Linting (ruff check)"
 if uv run ruff check src/ tests/; then
   pass "Linting passed"
 else
@@ -158,7 +159,7 @@ echo ""
 # ============================================================
 # Gate 5: Formatting (BLOCKING)
 # ============================================================
-section "🎨 Step 5/10: Formatting (ruff format --check)"
+section "🎨 Step 5/11: Formatting (ruff format --check)"
 if uv run ruff format --check src/ tests/; then
   pass "Formatting passed"
 else
@@ -171,7 +172,7 @@ echo ""
 # ============================================================
 # Gate 6: Type Checking (BLOCKING if configured, else SKIP)
 # ============================================================
-section "🧠 Step 6/10: Type Checking (mypy)"
+section "🧠 Step 6/11: Type Checking (mypy)"
 if command -v mypy >/dev/null 2>&1 && [[ -f "pyproject.toml" ]]; then
   if uv run mypy --config-file pyproject.toml src/; then
     pass "Type checking passed"
@@ -189,7 +190,7 @@ echo ""
 # Decision: BLOCKING because it's a gate that catches real issues.
 # If you want this as WARN, change set_fail → set_warn.
 # ============================================================
-section "🐛 Step 7/10: Debug Code Scan"
+section "🐛 Step 7/11: Debug Code Scan"
 # Exclude tests/ by default; adjust pattern if stricter needed.
 # Also exclude print statements with emojis (UI output like ✅, ❌, ⚠️)
 DEBUG_PATTERN='(^|[^A-Za-z0-9_])(print\s*\(|breakpoint\s*\(|pdb\.set_trace\s*\()'
@@ -209,7 +210,7 @@ echo ""
 # Gate 8: Sensitive Files Scan (BLOCKING)
 # Prevents accidental commit of .env, secrets, credentials.
 # ============================================================
-section "🔒 Step 8/10: Sensitive Files Scan"
+section "🔒 Step 8/11: Sensitive Files Scan"
 SENSITIVE_IN_GIT=false
 SENSITIVE_FILES=(
   ".env"
@@ -244,7 +245,7 @@ echo ""
 # Gate 9: Untracked Files (NON-BLOCKING WARN)
 # Flags build artifacts, temp files, etc. not .gitignore'd.
 # ============================================================
-section "📁 Step 9/10: Untracked Files"
+section "📁 Step 9/11: Untracked Files"
 if in_git_repo; then
   UNTRACKED="$(git ls-files --others --exclude-standard || true)"
   if [[ -z "$UNTRACKED" ]]; then
@@ -262,11 +263,24 @@ fi
 echo ""
 
 # ============================================================
-# Gate 10: Backlog Validation (NON-BLOCKING WARN)
+# Gate 10: Work Order Hygiene (BLOCKING)
+# Fail-closed for WO consistency.
+# ============================================================
+section "🧷 Step 10/11: Work Order Hygiene"
+if make wo-fmt-check && make wo-lint; then
+  pass "Work Order hygiene passed"
+else
+  fail "Work Order hygiene failed"
+  set_fail
+fi
+echo ""
+
+# ============================================================
+# Gate 11: Backlog Validation (NON-BLOCKING WARN)
 # Decision: By design non-blocking to allow structural issues
 # during development. If should FAIL on errors, change set_warn → set_fail.
 # ============================================================
-section "📊 Step 10/10: Backlog Validation"
+section "📊 Step 11/11: Backlog Validation"
 if uv run python3 scripts/ctx_backlog_validate.py --strict; then
   pass "Backlog validation passed"
 else
