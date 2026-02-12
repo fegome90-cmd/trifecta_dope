@@ -88,3 +88,17 @@ repos:
         entry: scripts/prevent_manual_wo_closure.sh
         language: script
         files: ^_ctx/jobs/done/
+
+      - id: wo-fmt-check
+        name: Work Order format check
+        entry: uv run python scripts/ctx_wo_fmt.py --check
+        language: system
+        pass_filenames: false
+        files: ^_ctx/jobs/(pending|running|done|failed)/WO-.*\.ya?ml$
+
+      - id: wo-lint
+        name: Work Order lint
+        entry: uv run python scripts/ctx_wo_lint.py --strict
+        language: system
+        pass_filenames: false
+        files: ^_ctx/jobs/(pending|running|done|failed)/WO-.*\.ya?ml$

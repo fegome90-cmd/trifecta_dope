@@ -1,0 +1,44 @@
+version: 1
+id: WO-0035
+epic_id: E-0003
+title: ADR - TD Middleware Scope (Decision Record)
+priority: P0
+status: done
+owner: felipe_gonzalez
+branch: feat/wo-WO-0035
+worktree: ../.worktrees/WO-0035
+scope:
+  allow:
+  - _ctx/docs/adr/**
+  - docs/adr/**
+  deny:
+  - src/**
+  - internal/**
+verify:
+  commands:
+  - test -f _ctx/docs/adr/td-middleware-scope.md || test -f docs/adr/td-middleware-scope.md
+  - 'grep -q ''Status: Accepted'' _ctx/docs/adr/td-middleware-scope.md docs/adr/td-middleware-scope.md
+    || true'
+dod_id: DOD-DEFAULT
+created_at: '2026-02-11T17:29:30Z'
+finished_at: '2026-02-11T17:30:00Z'
+objective: 'Create Architecture Decision Record documenting TD middleware scope,
+
+  shared types decision, and guardrails strategy.
+
+  '
+diff_budget:
+  max_files: 5
+  max_loc: 200
+  rationale: Single ADR document
+stop_conditions:
+  max_iterations: 3
+  max_verify_failures: 2
+claim_links:
+  requirements:
+  - C-TD-004
+  assumptions:
+  - A-TD-001
+  - A-TD-003
+  constraints:
+  - CN-TD-003

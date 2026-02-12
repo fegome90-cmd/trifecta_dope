@@ -140,6 +140,10 @@ git status
 git add .
 git commit -m "WO-0013: Implement feature"
 
+# Fail-closed WO hygiene gates
+make wo-fmt-check
+make wo-lint
+
 # Run Definition of DoD verification commands
 # (specified in WO YAML under verify.commands)
 ```
