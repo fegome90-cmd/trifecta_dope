@@ -35,6 +35,21 @@ The WO system provides atomic, isolated development environments for each work o
 
 ### 1. Creation (Pending)
 
+### WO ID Policy
+
+- Canonical pattern: `WO-[A-Za-z0-9.-]+`
+- Valid examples:
+  - `WO-0018C`
+  - `WO-0020-formatter`
+  - `WO-P2.1`
+- Rejected examples:
+  - `0018` (missing `WO-`)
+  - `WO 0018` (space)
+  - `WO/0018` (slash)
+
+This policy is intentionally broader than `WO-XXXX` to support historical and
+active IDs already present in `_ctx/jobs/**`.
+
 **Create WO YAML in `_ctx/jobs/pending/WO-XXXX.yaml`:**
 
 ```yaml
