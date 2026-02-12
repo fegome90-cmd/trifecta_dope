@@ -55,8 +55,10 @@ class TestInvalidOptionTelemetry:
         result = handle_invalid_option_error(error_msg, argv)
 
         # Verify error message is enhanced (accept both Unicode and ASCII fallback)
-        assert ("❌ Error: No such option: --dry-run" in result or
-                "[ERROR] Error: No such option: --dry-run" in result)
+        assert (
+            "❌ Error: No such option: --dry-run" in result
+            or "[ERROR] Error: No such option: --dry-run" in result
+        )
 
         # Verify telemetry event was written
         events_file = telemetry_dir / "events.jsonl"

@@ -7,20 +7,14 @@ Tests the integration between:
 - ctx_wo_take.py (WO take workflow)
 """
 
-import os
 import sys
-import tempfile
-import shutil
 from pathlib import Path
-from datetime import datetime, timezone
-import subprocess
-import yaml
 
 # Add scripts to path
 scripts_dir = Path(__file__).parent.parent / "scripts"
 sys.path.insert(0, str(scripts_dir))
 
-from helpers import (
+from helpers import (  # noqa: E402
     get_branch_name,
     get_worktree_path,
     create_worktree,
@@ -173,7 +167,7 @@ class WOOrchestrationTest:
                 worktree_path=None,  # Auto-generate
             )
 
-            logger.info(f"✓ Worktree created:")
+            logger.info("✓ Worktree created:")
             logger.info(f"  Branch: {branch}")
             logger.info(f"  Path: {worktree_path}")
 
@@ -190,9 +184,7 @@ class WOOrchestrationTest:
 
             # Verify branch exists
             result = run_command(
-                ["git", "rev-parse", "--verify", branch],
-                cwd=self.repo_root,
-                check=False
+                ["git", "rev-parse", "--verify", branch], cwd=self.repo_root, check=False
             )
             if result.returncode != 0:
                 logger.error(f"✗ Branch {branch} not created")
@@ -222,7 +214,7 @@ class WOOrchestrationTest:
 
             # Verify our test worktree is in the list
             test_path = str(get_worktree_path(self.test_wo_id, self.repo_root))
-            found = any(test_path in wt.get('worktree', '') for wt in worktrees)
+            found = any(test_path in wt.get("worktree", "") for wt in worktrees)
 
             if found:
                 logger.info("✓ Test worktree found in list")
@@ -269,10 +261,7 @@ class WOOrchestrationTest:
 
     def run_all(self) -> dict:
         """Run all tests and return results."""
-        results = {
-            "setup": self.setup(),
-            "tests": {}
-        }
+        results = {"setup": self.setup(), "tests": {}}
 
         if not results["setup"]:
             logger.error("Setup failed, skipping tests")

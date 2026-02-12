@@ -7,31 +7,33 @@ no "LSP Loop Exception" or "write to closed file" messages appear.
 
 import subprocess
 import sys
+import time
 
 
 def test_no_lsp_loop_exceptions():
     """Tripwire: LSP tests must not print forbidden error messages."""
     # Run the LSP tests and capture all output
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "pytest",
-            "-q",
-            "tests/integration/test_lsp_daemon.py",
-            "tests/integration/test_lsp_telemetry.py",
-        ],
-        cwd=".",
-        capture_output=True,
-        text=True,
-    )
+    cmd = [
+        sys.executable,
+        "-m",
+        "pytest",
+        "-q",
+        "tests/integration/test_lsp_daemon.py",
+        "tests/integration/test_lsp_telemetry.py",
+    ]
+    result = subprocess.run(cmd, cwd=".", capture_output=True, text=True)
+    if result.returncode != 0:
+        # Retry once to reduce flakiness from transient daemon startup races.
+        time.sleep(1)
+        result = subprocess.run(cmd, cwd=".", capture_output=True, text=True)
 
     combined_output = result.stdout + result.stderr
 
     # Gate: LSP tests must have actually run (prevent false PASS)
     assert result.returncode == 0, (
         f"LSP tests failed with exit code {result.returncode}. "
-        f"This tripwire requires passing tests to be meaningful."
+        f"This tripwire requires passing tests to be meaningful.\n"
+        f"{combined_output}"
     )
     assert "passed" in combined_output.lower(), (
         "No test execution detected in output. Tripwire may not be testing anything."

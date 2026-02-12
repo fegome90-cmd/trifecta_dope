@@ -8,6 +8,38 @@ def test_real_wo_validates_and_can_be_taken(tmp_path):
     fixture_root = repo_root / "tests" / "fixtures" / "ctx"
     sandbox_root = tmp_path / "ctx"
     shutil.copytree(fixture_root, sandbox_root)
+    subprocess.run(["git", "init"], cwd=sandbox_root, check=True, capture_output=True, text=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.com"],
+        cwd=sandbox_root,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        ["git", "config", "user.name", "Test User"],
+        cwd=sandbox_root,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        ["git", "checkout", "-b", "main"],
+        cwd=sandbox_root,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        ["git", "add", "."], cwd=sandbox_root, check=True, capture_output=True, text=True
+    )
+    subprocess.run(
+        ["git", "commit", "-m", "fixture baseline"],
+        cwd=sandbox_root,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
 
     result = subprocess.run(
         [

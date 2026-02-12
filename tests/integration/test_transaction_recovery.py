@@ -4,6 +4,7 @@ Transaction recovery tests.
 Tests recovery scenarios for failed/crashed WO transactions.
 Focuses on detecting and cleaning up inconsistent states.
 """
+
 import tempfile
 import yaml
 from pathlib import Path
@@ -12,7 +13,7 @@ from unittest.mock import patch, MagicMock
 
 from src.domain.wo_entities import WorkOrder, WOState, Priority
 from src.domain.wo_transactions import Transaction, RollbackOperation, RollbackType
-from scripts.helpers import execute_rollback, RollbackResult
+from scripts.helpers import execute_rollback
 
 
 class TestTransactionRecoveryScenarios:
@@ -24,7 +25,7 @@ class TestTransactionRecoveryScenarios:
             root = Path(tmpdir)
             (root / "_ctx" / "jobs" / "running").mkdir(parents=True)
             (root / "_ctx" / "jobs" / "pending").mkdir(parents=True)  # Create pending directory
-            (root / ".worktrees" / "WO-0901").mkdir(parents=True)
+            (root.parent / ".worktrees" / "WO-0901").mkdir(parents=True, exist_ok=True)
 
             # Create a WO in running state
             running_path = root / "_ctx" / "jobs" / "running" / "WO-0901.yaml"
@@ -32,7 +33,7 @@ class TestTransactionRecoveryScenarios:
                 "id": "WO-0901",
                 "status": "running",
                 "started_at": datetime.now(timezone.utc).isoformat(),
-                "owner": "testuser"
+                "owner": "testuser",
             }
             running_path.write_text(yaml.safe_dump(wo_data, sort_keys=False))
 
@@ -47,19 +48,19 @@ class TestTransactionRecoveryScenarios:
                     RollbackOperation(
                         name="remove_lock",
                         description="Remove lock file",
-                        rollback_type=RollbackType.REMOVE_LOCK
+                        rollback_type=RollbackType.REMOVE_LOCK,
                     ),
                     RollbackOperation(
                         name="cleanup_worktree",
                         description="Remove worktree directory",
-                        rollback_type=RollbackType.REMOVE_WORKTREE
+                        rollback_type=RollbackType.REMOVE_WORKTREE,
                     ),
                     RollbackOperation(
                         name="move_to_pending",
                         description="Move WO back to pending",
-                        rollback_type=RollbackType.MOVE_WO_TO_PENDING
+                        rollback_type=RollbackType.MOVE_WO_TO_PENDING,
                     ),
-                )
+                ),
             )
 
             # Mock cleanup_worktree to avoid git operations
@@ -89,7 +90,7 @@ class TestTransactionRecoveryScenarios:
             root = Path(tmpdir)
             (root / "_ctx" / "jobs" / "running").mkdir(parents=True)
             (root / "_ctx" / "jobs" / "pending").mkdir(parents=True)  # Create pending directory
-            (root / ".worktrees" / "WO-0902").mkdir(parents=True)
+            (root.parent / ".worktrees" / "WO-0902").mkdir(parents=True, exist_ok=True)
 
             # Create WO in running state
             running_path = root / "_ctx" / "jobs" / "running" / "WO-0902.yaml"
@@ -97,7 +98,7 @@ class TestTransactionRecoveryScenarios:
                 "id": "WO-0902",
                 "status": "running",
                 "started_at": datetime.now(timezone.utc).isoformat(),
-                "owner": "testuser"
+                "owner": "testuser",
             }
             running_path.write_text(yaml.safe_dump(wo_data, sort_keys=False))
 
@@ -108,19 +109,19 @@ class TestTransactionRecoveryScenarios:
                     RollbackOperation(
                         name="remove_worktree",
                         description="Remove worktree",
-                        rollback_type=RollbackType.REMOVE_WORKTREE
+                        rollback_type=RollbackType.REMOVE_WORKTREE,
                     ),
                     RollbackOperation(
                         name="remove_branch",
                         description="Delete branch",
-                        rollback_type=RollbackType.REMOVE_BRANCH
+                        rollback_type=RollbackType.REMOVE_BRANCH,
                     ),
                     RollbackOperation(
                         name="move_to_pending",
                         description="Move WO to pending",
-                        rollback_type=RollbackType.MOVE_WO_TO_PENDING
+                        rollback_type=RollbackType.MOVE_WO_TO_PENDING,
                     ),
-                )
+                ),
             )
 
             # Mock git operations
@@ -149,7 +150,7 @@ class TestTransactionRecoveryScenarios:
                 "id": "WO-0903",
                 "status": "running",
                 "started_at": datetime.now(timezone.utc).isoformat(),
-                "owner": "testuser"
+                "owner": "testuser",
             }
             running_path.write_text(yaml.safe_dump(wo_data, sort_keys=False))
 
@@ -164,14 +165,14 @@ class TestTransactionRecoveryScenarios:
                     RollbackOperation(
                         name="remove_lock",
                         description="Remove lock (already gone)",
-                        rollback_type=RollbackType.REMOVE_LOCK
+                        rollback_type=RollbackType.REMOVE_LOCK,
                     ),
                     RollbackOperation(
                         name="move_to_pending",
                         description="Move WO to pending",
-                        rollback_type=RollbackType.MOVE_WO_TO_PENDING
+                        rollback_type=RollbackType.MOVE_WO_TO_PENDING,
                     ),
-                )
+                ),
             )
 
             result = execute_rollback(tx, root)
@@ -193,7 +194,7 @@ class TestTransactionRecoveryScenarios:
             root = Path(tmpdir)
             (root / "_ctx" / "jobs" / "running").mkdir(parents=True)
             (root / "_ctx" / "jobs" / "pending").mkdir(parents=True)
-            (root / ".worktrees" / "WO-0904").mkdir(parents=True)
+            (root.parent / ".worktrees" / "WO-0904").mkdir(parents=True, exist_ok=True)
 
             # Scenario: Worktree exists, WO is running, but branch creation failed
             running_path = root / "_ctx" / "jobs" / "running" / "WO-0904.yaml"
@@ -201,7 +202,7 @@ class TestTransactionRecoveryScenarios:
                 "id": "WO-0904",
                 "status": "running",
                 "started_at": datetime.now(timezone.utc).isoformat(),
-                "owner": "testuser"
+                "owner": "testuser",
             }
             running_path.write_text(yaml.safe_dump(wo_data, sort_keys=False))
 
@@ -212,14 +213,14 @@ class TestTransactionRecoveryScenarios:
                     RollbackOperation(
                         name="remove_worktree",
                         description="Cleanup worktree",
-                        rollback_type=RollbackType.REMOVE_WORKTREE
+                        rollback_type=RollbackType.REMOVE_WORKTREE,
                     ),
                     RollbackOperation(
                         name="move_to_pending",
                         description="Reset to pending",
-                        rollback_type=RollbackType.MOVE_WO_TO_PENDING
+                        rollback_type=RollbackType.MOVE_WO_TO_PENDING,
                     ),
-                )
+                ),
             )
 
             with patch("scripts.helpers.cleanup_worktree", return_value=True):
@@ -240,7 +241,9 @@ class TestTransactionRecoveryScenarios:
             root = Path(tmpdir)
             (root / "_ctx" / "jobs" / "running").mkdir(parents=True)
             (root / "_ctx" / "jobs" / "pending").mkdir(parents=True)
-            (root / ".worktrees" / "WO-0905").mkdir(parents=True)  # Create worktree so cleanup_worktree is called
+            (root.parent / ".worktrees" / "WO-0905").mkdir(
+                parents=True, exist_ok=True
+            )  # Create worktree so cleanup_worktree is called
 
             # Create lock
             lock_path = root / "_ctx" / "jobs" / "running" / "WO-0905.lock"
@@ -252,7 +255,7 @@ class TestTransactionRecoveryScenarios:
                 "id": "WO-0905",
                 "status": "running",
                 "started_at": datetime.now(timezone.utc).isoformat(),
-                "owner": "testuser"
+                "owner": "testuser",
             }
             running_path.write_text(yaml.safe_dump(wo_data, sort_keys=False))
 
@@ -263,23 +266,26 @@ class TestTransactionRecoveryScenarios:
                     RollbackOperation(
                         name="remove_lock",  # Will succeed
                         description="Remove lock",
-                        rollback_type=RollbackType.REMOVE_LOCK
+                        rollback_type=RollbackType.REMOVE_LOCK,
                     ),
                     RollbackOperation(
                         name="cleanup_worktree",  # Will fail (mocked)
                         description="Cleanup worktree",
-                        rollback_type=RollbackType.REMOVE_WORKTREE
+                        rollback_type=RollbackType.REMOVE_WORKTREE,
                     ),
                     RollbackOperation(
                         name="move_to_pending",  # Will succeed
                         description="Move to pending",
-                        rollback_type=RollbackType.MOVE_WO_TO_PENDING
+                        rollback_type=RollbackType.MOVE_WO_TO_PENDING,
                     ),
-                )
+                ),
             )
 
             # Mock cleanup_worktree to simulate failure (raise exception)
-            with patch("scripts.helpers.cleanup_worktree", side_effect=Exception("Simulated cleanup failure")):
+            with patch(
+                "scripts.helpers.cleanup_worktree",
+                side_effect=Exception("Simulated cleanup failure"),
+            ):
                 result = execute_rollback(tx, root)
 
             # Should be partial failure (worktree cleanup failed)
@@ -299,11 +305,7 @@ class TestTransactionRecoveryScenarios:
             (root / "_ctx" / "jobs" / "done").mkdir(parents=True)
 
             # Committed transaction should not rollback
-            tx = Transaction(
-                wo_id="WO-0906",
-                operations=(),
-                is_committed=True
-            )
+            tx = Transaction(wo_id="WO-0906", operations=(), is_committed=True)
 
             result = execute_rollback(tx, root)
 
@@ -337,7 +339,7 @@ class TestStateConsistency:
                 "dependencies": [],
                 "finished_at": None,
                 "branch": "feat/wo-WO-0907",
-                "worktree": ".worktrees/WO-0907"
+                "worktree": ".worktrees/WO-0907",
             }
             running_path.write_text(yaml.safe_dump(wo_data, sort_keys=False))
 
@@ -347,9 +349,9 @@ class TestStateConsistency:
                     RollbackOperation(
                         name="move_to_pending",
                         description="Move WO to pending",
-                        rollback_type=RollbackType.MOVE_WO_TO_PENDING
+                        rollback_type=RollbackType.MOVE_WO_TO_PENDING,
                     ),
-                )
+                ),
             )
 
             result = execute_rollback(tx, root)
@@ -372,7 +374,7 @@ class TestStateConsistency:
                 started_at=None,
                 finished_at=None,
                 branch=None,
-                worktree=None
+                worktree=None,
             )
 
             assert wo.status == WOState.PENDING

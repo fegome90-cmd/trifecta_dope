@@ -10,9 +10,8 @@ Fail-closed: If introspection fails, return empty set (no hallucination).
 
 from __future__ import annotations
 
-import sys
 from dataclasses import dataclass
-from typing import Any, Optional, cast
+from typing import Any, Optional
 
 import click
 
@@ -122,7 +121,7 @@ def _extract_option_spec(param: click.Option) -> Optional[OptionSpec]:
             is_flag=is_flag,
             multiple=param.multiple,
         )
-    except Exception as e:
+    except Exception:
         # Fail-closed: if we can't parse, skip this option
         return None
 

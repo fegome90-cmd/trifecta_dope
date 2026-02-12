@@ -4,12 +4,10 @@ Integration tests for WO closure workflow (ctx_wo_finish.py).
 Tests use subprocess to call the script directly (no mocks).
 Fixtures from tests/fixtures/closure/ provide test environments.
 """
-import json
+
 import shutil
 import subprocess
 from pathlib import Path
-
-import pytest
 
 
 def repo_root() -> Path:
@@ -107,7 +105,14 @@ class TestWoClosureWithFixtures:
         shutil.copytree(fixture_root, sandbox_root)
 
         result = subprocess.run(
-            ["python", "scripts/ctx_wo_finish.py", "WO-TEST", "--root", str(sandbox_root), "--generate-only"],
+            [
+                "python",
+                "scripts/ctx_wo_finish.py",
+                "WO-TEST",
+                "--root",
+                str(sandbox_root),
+                "--generate-only",
+            ],
             capture_output=True,
             text=True,
             check=False,
@@ -116,7 +121,9 @@ class TestWoClosureWithFixtures:
 
         # Note: This test may fail due to git/uv dependencies in the fixture
         # Verify command executed and returned an exit code
-        assert result.returncode in (0, 1), f"Unexpected return code: {result.returncode}\nstdout: {result.stdout}\nstderr: {result.stderr}"
+        assert result.returncode in (0, 1), (
+            f"Unexpected return code: {result.returncode}\nstdout: {result.stdout}\nstderr: {result.stderr}"
+        )
         # Verify fixture structure was copied correctly
         assert (sandbox_root / "_ctx" / "jobs" / "running" / "WO-TEST.yaml").exists()
 
@@ -137,7 +144,14 @@ x_objective: "Test"
         (running_dir / "WO-BAD.yaml").write_text(wo_content)
 
         result = subprocess.run(
-            ["python", "scripts/ctx_wo_finish.py", "WO-BAD", "--root", str(tmp_path), "--generate-only"],
+            [
+                "python",
+                "scripts/ctx_wo_finish.py",
+                "WO-BAD",
+                "--root",
+                str(tmp_path),
+                "--generate-only",
+            ],
             capture_output=True,
             text=True,
             cwd=repo_root(),
@@ -153,6 +167,7 @@ x_objective: "Test"
 
         # Import and call validate_dod directly
         import sys
+
         sys.path.insert(0, str(repo_root() / "scripts"))
         from ctx_wo_finish import validate_dod
 
@@ -167,6 +182,7 @@ x_objective: "Test"
         shutil.copytree(fixture_root, sandbox_root)
 
         import sys
+
         sys.path.insert(0, str(repo_root() / "scripts"))
         from ctx_wo_finish import validate_dod
 
@@ -182,6 +198,7 @@ x_objective: "Test"
         shutil.copytree(fixture_root, sandbox_root)
 
         import sys
+
         sys.path.insert(0, str(repo_root() / "scripts"))
         from ctx_wo_finish import validate_dod
 
@@ -196,6 +213,7 @@ x_objective: "Test"
         shutil.copytree(fixture_root, sandbox_root)
 
         import sys
+
         sys.path.insert(0, str(repo_root() / "scripts"))
         from ctx_wo_finish import validate_dod
 
@@ -210,6 +228,7 @@ x_objective: "Test"
         shutil.copytree(fixture_root, sandbox_root)
 
         import sys
+
         sys.path.insert(0, str(repo_root() / "scripts"))
         from ctx_wo_finish import validate_dod
 
@@ -228,6 +247,7 @@ x_objective: "Test"
         tests_log.write_text(error_content)
 
         import sys
+
         sys.path.insert(0, str(repo_root() / "scripts"))
         from ctx_wo_finish import validate_dod
 
@@ -247,6 +267,7 @@ x_objective: "Test"
         temp_dir.mkdir(parents=True)
 
         import sys
+
         sys.path.insert(0, str(repo_root() / "scripts"))
         from ctx_wo_finish import generate_artifacts
 
@@ -256,7 +277,9 @@ x_objective: "Test"
         assert result.is_ok() or result.is_err(), f"Expected Result type, got {type(result)}"
         # Verify temp dir was handled (cleaned or error occurred)
         temp_dir = handoff_dir.with_suffix(".tmp")
-        assert not temp_dir.exists() or result.is_err(), "Temp dir should be cleaned or error should occur"
+        assert not temp_dir.exists() or result.is_err(), (
+            "Temp dir should be cleaned or error should occur"
+        )
 
     def test_wo_finish_rejects_detached_head(self, tmp_path):
         """Test CLI rejects WO finish when in detached HEAD state."""
@@ -266,8 +289,12 @@ x_objective: "Test"
 
         # Initialize git repo and create detached HEAD state
         subprocess.run(["git", "init"], cwd=sandbox_root, capture_output=True)
-        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=sandbox_root, capture_output=True)
-        subprocess.run(["git", "config", "user.name", "Test"], cwd=sandbox_root, capture_output=True)
+        subprocess.run(
+            ["git", "config", "user.email", "test@test.com"], cwd=sandbox_root, capture_output=True
+        )
+        subprocess.run(
+            ["git", "config", "user.name", "Test"], cwd=sandbox_root, capture_output=True
+        )
         subprocess.run(["git", "checkout", "-b", "main"], cwd=sandbox_root, capture_output=True)
         subprocess.run(["git", "add", "."], cwd=sandbox_root, capture_output=True)
         subprocess.run(["git", "commit", "-m", "init"], cwd=sandbox_root, capture_output=True)
@@ -275,7 +302,14 @@ x_objective: "Test"
         subprocess.run(["git", "checkout", "HEAD~0"], cwd=sandbox_root, capture_output=True)
 
         result = subprocess.run(
-            ["python", "scripts/ctx_wo_finish.py", "WO-TEST", "--root", str(sandbox_root), "--skip-dod"],
+            [
+                "python",
+                "scripts/ctx_wo_finish.py",
+                "WO-TEST",
+                "--root",
+                str(sandbox_root),
+                "--skip-dod",
+            ],
             capture_output=True,
             text=True,
             cwd=repo_root(),
@@ -283,4 +317,3 @@ x_objective: "Test"
 
         assert result.returncode == 1, f"stdout: {result.stdout}\nstderr: {result.stderr}"
         assert "detached" in result.stdout.lower() or "detached" in result.stderr.lower()
-

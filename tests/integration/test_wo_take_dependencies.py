@@ -1,6 +1,7 @@
 """
 Integration tests for WO take dependency validation.
 """
+
 import tempfile
 from pathlib import Path
 import yaml
@@ -18,10 +19,7 @@ class TestWOTakeDependencies:
             (repo / "_ctx" / "jobs" / "done").mkdir(parents=True)
 
             # Create a completed WO
-            wo_done = {
-                "id": "WO-0001",
-                "status": "done"
-            }
+            wo_done = {"id": "WO-0001", "status": "done"}
             (repo / "_ctx" / "jobs" / "done" / "WO-0001.yaml").write_text(yaml.safe_dump(wo_done))
 
             # WO with unsatisfied dependency (include all required fields)
@@ -33,7 +31,7 @@ class TestWOTakeDependencies:
                 "status": "pending",
                 "owner": None,
                 "dod_id": "DOD-DEFAULT",
-                "dependencies": ["WO-0001", "WO-9999"]  # WO-9999 doesn't exist
+                "dependencies": ["WO-0001", "WO-9999"],  # WO-9999 doesn't exist
             }
 
             is_valid, error = validate_dependencies_using_domain(wo_data, repo)
@@ -51,7 +49,9 @@ class TestWOTakeDependencies:
             # Create completed WOs
             for wo_id in ["WO-0001", "WO-0002"]:
                 wo_done = {"id": wo_id, "status": "done"}
-                (repo / "_ctx" / "jobs" / "done" / f"{wo_id}.yaml").write_text(yaml.safe_dump(wo_done))
+                (repo / "_ctx" / "jobs" / "done" / f"{wo_id}.yaml").write_text(
+                    yaml.safe_dump(wo_done)
+                )
 
             # WO with all satisfied dependencies (include all required fields)
             wo_data = {
@@ -62,7 +62,7 @@ class TestWOTakeDependencies:
                 "status": "pending",
                 "owner": None,
                 "dod_id": "DOD-DEFAULT",
-                "dependencies": ["WO-0001", "WO-0002"]
+                "dependencies": ["WO-0001", "WO-0002"],
             }
 
             is_valid, error = validate_dependencies_using_domain(wo_data, repo)
@@ -80,7 +80,9 @@ class TestWOTakeDependencies:
             # Create some completed WOs
             for wo_id in ["WO-0001", "WO-0002", "WO-0003"]:
                 wo_done = {"id": wo_id, "status": "done"}
-                (repo / "_ctx" / "jobs" / "done" / f"{wo_id}.yaml").write_text(yaml.safe_dump(wo_done))
+                (repo / "_ctx" / "jobs" / "done" / f"{wo_id}.yaml").write_text(
+                    yaml.safe_dump(wo_done)
+                )
 
             completed_ids = get_completed_wo_ids(repo)
             assert completed_ids == {"WO-0001", "WO-0002", "WO-0003"}
