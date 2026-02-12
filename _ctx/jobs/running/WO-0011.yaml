@@ -6,6 +6,7 @@ priority: P1
 status: running
 owner: felipe_gonzalez
 branch: feat/wo-WO-0011
+worktree: ../.worktrees/WO-0011
 scope:
   allow:
   - scripts/paths.py
@@ -104,4 +105,3 @@ x_micro_tasks:
   evidence:
   - Integration tests updated with correct paths
 started_at: '2026-02-10T15:47:37.629636+00:00'
-worktree: ../.worktrees/WO-0011

@@ -1,0 +1,25 @@
+version: 1
+id: WO-0012.1
+epic_id: E-0001
+title: Dev CLI Persistence Default
+priority: P1
+status: done
+owner: null
+branch: null
+worktree: null
+scope:
+  allow:
+  - scripts/**
+  - docs/**
+  deny:
+  - src/domain/**
+verify:
+  commands:
+  - uv run pytest -q tests/integration/test_ctx_pipeline_real_wo.py
+dod_id: DOD-DEFAULT
+dependencies:
+- WO-0012
+verified_at_sha: null
+finished_at: null
+result: done
+x_objective: Enable AST persistence defaults for dev CLI paths while preserving rollback via env var override.
