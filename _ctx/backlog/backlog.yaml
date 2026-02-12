@@ -84,3 +84,74 @@ epics:
       - WO-0017 # CLI Integration
 
     generated_at: "2026-01-13T09:30:00-03:00"
+
+  - id: E-0003
+    title: "TD Middleware Integration"
+    description: |
+      Create Sidecar plugin (TD) for displaying and interacting with
+      active Trifecta Work Orders.
+
+      Goal: Sidecar shows active WO badge, keybindings (tw/to/tc),
+      path guardrails for security, shared types to prevent schema drift.
+
+    status: pending
+    priority: P0
+
+    wo_queue:
+      - WO-0035 # ADR - TD Middleware Scope
+      - WO-0036 # Shared Types Package
+      - WO-0037 # TD Plugin Core
+      - WO-0038 # Path Guardrails
+      - WO-0039 # Integration Tests
+
+    x_generated_at: "2026-02-11T17:30:00-03:00"
+
+  - id: E-0004
+    title: "Documentation Skill Workflow"
+    description: |
+      Consolidate documentation automation assets (guides, validation scripts,
+      contexts, and hooks) for maintainable doc operations.
+
+      Goal: keep docs workflows reproducible and verifiable.
+
+    status: pending
+    priority: P2
+
+    wo_queue:
+      - WO-0030
+      - WO-0031
+      - WO-0032
+      - WO-0033
+      - WO-0034
+
+    generated_at: "2026-02-12T00:00:00-03:00"
+
+  - id: E-0012
+    title: "WO Closure Hardening"
+    description: |
+      Harden Work Order closure workflow by adding guards, tests,
+      and cleanup follow-ups for process consistency.
+
+    status: complete
+    priority: P1
+
+    wo_queue:
+      - WO-0018A
+      - WO-0018B
+      - WO-0018C
+
+    generated_at: "2026-02-12T00:00:00-03:00"
+
+  - id: E-0013
+    title: "Legacy WO Migration"
+    description: |
+      Migrate legacy Work Orders to schema v1 compatibility and
+      enforce deterministic validation across states.
+
+    status: pending
+    priority: P2
+
+    wo_queue:
+      - WO-0019
+
+    generated_at: "2026-02-12T00:00:00-03:00"
