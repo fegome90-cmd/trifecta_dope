@@ -12,6 +12,8 @@ scope:
   - src/infrastructure/cli_ast.py
   - src/application/pr2_context_searcher.py
   - tests/integration/test_ast_cache_telemetry.py
+  deny:
+  - .env*
 verify:
   commands:
   - uv run pytest -q tests/integration/test_ast_cache_telemetry.py

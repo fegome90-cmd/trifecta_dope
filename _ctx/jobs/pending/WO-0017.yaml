@@ -14,6 +14,9 @@ scope:
   deny:
   - .env*
   - src/domain/**
+verify:
+  commands:
+  - uv run pytest -q tests/acceptance/test_cli_discover.py
 dod_id: DOD-DEFAULT
 dependencies:
 - WO-0016

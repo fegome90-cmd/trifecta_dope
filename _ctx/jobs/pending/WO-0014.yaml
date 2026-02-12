@@ -14,6 +14,9 @@ scope:
   deny:
   - .env*
   - src/infrastructure/**
+verify:
+  commands:
+  - uv run pytest -q tests/unit/test_import_extractor.py
 dod_id: DOD-DEFAULT
 dependencies: []
 verified_at_sha: null

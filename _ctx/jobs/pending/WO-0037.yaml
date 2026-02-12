@@ -1,0 +1,55 @@
+version: 1
+id: WO-0037
+epic_id: E-0003
+title: TD Plugin Core (internal/plugins/td/)
+priority: P0
+status: pending
+owner: null
+branch: null
+worktree: null
+scope:
+  allow:
+  - internal/plugins/td/**
+  - cmd/sidecar/main.go
+  deny:
+  - internal/plugins/trifecta/**
+  - internal/plugins/workspace/**
+verify:
+  commands:
+  - go build ./internal/plugins/td/...
+  - grep -q 'type Plugin struct' internal/plugins/td/plugin.go
+  - grep -q 'getActiveWO' internal/plugins/td/plugin.go
+dod_id: DOD-DEFAULT
+dependencies:
+- WO-0036
+objective: 'Implement TD plugin with:
+
+  - Active WO detection (newest running by created_at)
+
+  - Badge display: "TD [WO-XXXX]" or "TD [+N]"
+
+  - Keybindings: tw (toggle), to (open worktree)
+
+  - JSON loading with error handling
+
+  '
+diff_budget:
+  max_files: 15
+  max_loc: 600
+  rationale: Plugin implementation + main.go registration
+stop_conditions:
+  max_iterations: 6
+  max_verify_failures: 3
+claim_links:
+  requirements:
+  - C-TD-001
+  - C-TD-002
+  assumptions:
+  - A-TD-001
+  - A-TD-002
+  constraints:
+  - CN-TD-001
+x_keybindings:
+  tw: Toggle badge visibility
+  to: Open worktree (validates path first)
+  tc: Close worktree (future scope)

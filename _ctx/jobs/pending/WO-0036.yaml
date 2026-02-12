@@ -1,0 +1,56 @@
+version: 1
+id: WO-0036
+epic_id: E-0003
+title: Shared Types Package (internal/trifectaindex/)
+priority: P0
+status: pending
+owner: null
+branch: null
+worktree: null
+scope:
+  allow:
+  - internal/trifectaindex/**
+  - internal/plugin/plugin.go
+  deny:
+  - internal/plugins/trifecta/**
+  - cmd/**
+verify:
+  commands:
+  - go build ./internal/trifectaindex/...
+  - grep -q 'package trifectaindex' internal/trifectaindex/types.go
+  - grep -q 'Validate()' internal/trifectaindex/types.go
+dod_id: DOD-DEFAULT
+dependencies:
+- WO-0035
+objective: 'Create shared types package in Sidecar at internal/trifectaindex/
+
+  containing WOIndex, WorkOrder, WOStatus, and validation logic.
+
+  '
+diff_budget:
+  max_files: 10
+  max_loc: 400
+  rationale: Types package + validation logic
+stop_conditions:
+  max_iterations: 4
+  max_verify_failures: 2
+claim_links:
+  requirements:
+  - C-TD-004
+  assumptions:
+  - A-TD-001
+  constraints:
+  - CN-TD-003
+x_implementation_notes: 'Package must export:
+
+  - WOStatus (pending/running/done/failed)
+
+  - WOIndex struct
+
+  - WorkOrder struct
+
+  - Validate() error method
+
+  - ExpectedVersion, ExpectedSchema constants
+
+  '

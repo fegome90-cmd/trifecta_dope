@@ -10,6 +10,8 @@ scope:
   - src/infrastructure/file_locked_cache.py
   - src/infrastructure/factories.py
   - tests/integration/test_ast_cache_file_locks.py
+  deny:
+  - .env*
 verify:
   commands:
   - uv run pytest -q tests/integration/test_ast_cache_file_locks.py

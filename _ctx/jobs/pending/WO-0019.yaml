@@ -15,7 +15,8 @@ scope:
   - tests/**
   - src/infrastructure/**
 verify:
-  commands: []
+  commands:
+  - python3 scripts/schema_validation.py --root .
 dod_id: DOD-DEFAULT
 dependencies:
 - WO-0018B

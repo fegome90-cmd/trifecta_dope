@@ -1,6 +1,21 @@
+version: 1
+id: WO-0021-verdict-generator
+epic_id: E-0013
 title: Implement Missing Verdict Generator (WO-0005)
 priority: medium
 status: pending
+owner: null
+scope:
+  allow:
+  - scripts/**
+  - docs/**
+  deny:
+  - src/**
+  - tests/**
+verify:
+  commands:
+  - test -f scripts/verify.sh
+dod_id: DOD-DEFAULT
 description: Implement verdict_generator.sh for MELT metrics generation.
 context: WO-0005 was skipped. Re-evaluate if validation_report.txt supersedes this.
 steps:
