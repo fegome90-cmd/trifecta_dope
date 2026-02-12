@@ -1,7 +1,7 @@
 version: 1
 id: WO-0033
 epic_id: E-0004
-title: "Add git hooks automation for doc updates"
+title: Add git hooks automation for doc updates
 priority: P2
 status: pending
 owner: null
@@ -9,25 +9,25 @@ branch: null
 worktree: null
 scope:
   allow:
-    - "scripts/hooks/install-hooks.sh"
-    - "scripts/hooks/pre-commit"
-    - "scripts/hooks/run-doc-skill.sh"
-    - "scripts/hooks/post-commit"
-    - "skills/documentation/resources/HOOKS_GUIDE.md"
+  - scripts/hooks/install-hooks.sh
+  - scripts/hooks/pre-commit
+  - scripts/hooks/run-doc-skill.sh
+  - scripts/hooks/post-commit
+  - skills/documentation/resources/HOOKS_GUIDE.md
   deny:
-    - "src/**"
-    - "tests/**"
-    - "_ctx/**"
+  - src/**
+  - tests/**
+  - _ctx/**
 verify:
   commands:
-    - "bash scripts/hooks/install-hooks.sh"
-    - "git config --get core.hooksPath"
+  - bash scripts/hooks/install-hooks.sh
+  - git config --get core.hooksPath
 dod_id: DOD-DEFAULT
 dependencies:
-  - "WO-0031"
+- WO-0031
 deliverables:
-  - "scripts/hooks/install-hooks.sh"
-  - "scripts/hooks/pre-commit"
-  - "scripts/hooks/run-doc-skill.sh"
-  - "scripts/hooks/post-commit"
-  - "skills/documentation/resources/HOOKS_GUIDE.md"
+- scripts/hooks/install-hooks.sh
+- scripts/hooks/pre-commit
+- scripts/hooks/run-doc-skill.sh
+- scripts/hooks/post-commit
+- skills/documentation/resources/HOOKS_GUIDE.md

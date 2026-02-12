@@ -1,0 +1,58 @@
+version: 1
+id: WO-0039
+epic_id: E-0003
+title: Integration Tests (internal/plugins/td/)
+priority: P1
+status: pending
+owner: null
+branch: null
+worktree: null
+scope:
+  allow:
+  - internal/plugins/td/*_test.go
+  - testdata/td/**
+  deny:
+  - internal/trifectaindex/**
+  - cmd/**
+verify:
+  commands:
+  - go test ./internal/plugins/td/... -v -run TestIntegration
+  - go test ./internal/plugins/td/... -v -run TestActiveWO
+  - go test ./internal/plugins/td/... -v -run TestKeybindings
+dod_id: DOD-DEFAULT
+dependencies:
+- WO-0038
+objective: 'Create integration tests verifying:
+
+  - Plugin loads real Trifecta JSON export
+
+  - Active WO correctly identified
+
+  - Multiple running WOs handled with counter
+
+  - Keybindings trigger correct actions
+
+  - Error handling for missing/invalid JSON
+
+  '
+diff_budget:
+  max_files: 8
+  max_loc: 400
+  rationale: Integration tests + testdata fixtures
+stop_conditions:
+  max_iterations: 5
+  max_verify_failures: 3
+claim_links:
+  requirements:
+  - C-TD-001
+  - C-TD-002
+  - C-TD-003
+  assumptions:
+  - A-TD-002
+  constraints:
+  - CN-TD-001
+x_test_fixtures:
+- testdata/td/wo_worktrees.json (valid single running)
+- testdata/td/wo_worktrees_multi.json (multiple running)
+- testdata/td/wo_worktrees_empty.json (no active)
+- testdata/td/wo_worktrees_invalid.json (schema error)

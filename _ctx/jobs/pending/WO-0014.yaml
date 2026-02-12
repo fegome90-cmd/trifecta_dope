@@ -1,48 +1,41 @@
 version: 1
 id: WO-0014
 epic_id: E-SCALE
-title: "Import Extractor using stdlib AST"
+title: Import Extractor using stdlib AST
 priority: P1
 status: pending
 owner: null
-verified_at_sha: null
-closed_at: null
-
 scope:
   allow:
-    - "src/application/import_extractor.py"
-    - "src/domain/discovery_models.py" # NEW: ImportInfo dataclass
-    - "tests/unit/test_import_extractor.py"
-    - "docs/**"
+  - src/application/import_extractor.py
+  - src/domain/discovery_models.py
+  - tests/unit/test_import_extractor.py
+  - docs/**
   deny:
-    - ".env*"
-    - "src/infrastructure/**"
-
+  - .env*
+  - src/infrastructure/**
+verify:
+  commands:
+  - uv run pytest -q tests/unit/test_import_extractor.py
 dod_id: DOD-DEFAULT
-
+dependencies: []
+verified_at_sha: null
+closed_at: null
 governance:
   must:
-    - "Use TDD: Write tests BEFORE implementation (RED → GREEN)"
-    - "Pure function only (no IO in domain)"
-    - "Commit (no --no-verify)"
-
-x_objective: |
-  Implement a pure function that extracts `import` and `from X import Y` 
-  statements from a Python file using stdlib `ast.walk`.
-  Returns a list of module dependencies (relative and absolute).
-
+  - "Use TDD: Write tests BEFORE implementation (RED \u2192 GREEN)"
+  - Pure function only (no IO in domain)
+  - Commit (no --no-verify)
+x_objective: "Implement a pure function that extracts `import` and `from X import Y` \nstatements from\
+  \ a Python file using stdlib `ast.walk`.\nReturns a list of module dependencies (relative and absolute).\n"
 x_items:
-  - "Create `extract_imports(source: str) -> list[ImportInfo]` function"
-  - "Handle: `import X`, `from X import Y`, `from . import Z` (relative)"
-  - "Unit tests for each import type"
-  - "Edge case: dynamic imports (`__import__`) logged as warning, not extracted"
-
+- 'Create `extract_imports(source: str) -> list[ImportInfo]` function'
+- 'Handle: `import X`, `from X import Y`, `from . import Z` (relative)'
+- Unit tests for each import type
+- 'Edge case: dynamic imports (`__import__`) logged as warning, not extracted'
 diff_budget:
   max_files: 4
   max_loc: 200
-
 stop_conditions:
   max_iterations: 5
   max_fail_verify: 2
-
-dependencies: []

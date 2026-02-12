@@ -1,0 +1,18 @@
+{
+  "wo_id": "WO-0011",
+  "status": "done",
+  "verdict": "PASS",
+  "timestamp": "2025-02-10T12:55:00Z",
+  "dod_satisfied": true,
+  "checks": {
+    "tests_pass": true,
+    "lint_pass": true,
+    "code_review_approved": true,
+    "committed": true,
+    "pushed": true,
+    "handoff_complete": true
+  },
+  "summary": "All 8 microtasks completed. 26/26 tests passing. Code review approved with no CRITICAL or HIGH issues.",
+  "commit_sha": "378c431",
+  "branch": "feat/wo-WO-0011"
+}

@@ -1,60 +1,49 @@
 version: 1
 id: WO-0022
 epic_id: E-0001
-title: "Fase 0 - Baseline y contrato: CLI opciones inválidas"
+title: "Fase 0 - Baseline y contrato: CLI opciones inv\xE1lidas"
 priority: P1
 status: done
 owner: null
 scope:
   allow:
-    - "docs/reports/cli_baseline_fase0.md"
-    - "_ctx/logs/WO-0022_*.log"
-    - "tests/integration/test_cli_invalid_options.py"
-    - "tests/unit/cli/test_invalid_option_handler.py"
-    - "src/cli/error_cards.py"
-    - "src/cli/invalid_option_handler.py"
-    - "src/infrastructure/cli.py"
-    - "pyproject.toml"
+  - docs/reports/cli_baseline_fase0.md
+  - _ctx/logs/WO-0022_*.log
+  - tests/integration/test_cli_invalid_options.py
+  - tests/unit/cli/test_invalid_option_handler.py
+  - src/cli/error_cards.py
+  - src/cli/invalid_option_handler.py
+  - src/infrastructure/cli.py
+  - pyproject.toml
   deny:
-    - ".env*"
-    - "**/production.*"
+  - .env*
+  - '**/production.*'
 verify:
   commands:
-    - "test -f docs/reports/cli_baseline_fase0.md"
-    - "test -f _ctx/logs/WO-0022_test_results_final.log"
-    - "test -f _ctx/logs/WO-0022_dry_run_enhanced.log"
-    - "test -f src/cli/invalid_option_handler.py"
-    - "uv run pytest tests/integration/test_cli_invalid_options.py -v"
+  - test -f docs/reports/cli_baseline_fase0.md
+  - test -f _ctx/logs/WO-0022_test_results_final.log
+  - test -f _ctx/logs/WO-0022_dry_run_enhanced.log
+  - test -f src/cli/invalid_option_handler.py
+  - uv run pytest tests/integration/test_cli_invalid_options.py -v
 dod_id: DOD-DEFAULT
 dependencies: []
 evidence_logs:
-  - "_ctx/logs/WO-0022_test_results_final.log"
-  - "_ctx/logs/WO-0022_dry_run_enhanced.log"
-  - "_ctx/logs/WO-0022_dry_run_error.log"
-  - "_ctx/logs/WO-0022_max_steps_error.log"
-finished_at: "2026-02-10T00:00:00Z"
-verified_at_sha: "306f6430b850da52875c89681cc8328057e18fdf"
+- _ctx/logs/WO-0022_test_results_final.log
+- _ctx/logs/WO-0022_dry_run_enhanced.log
+- _ctx/logs/WO-0022_dry_run_error.log
+- _ctx/logs/WO-0022_max_steps_error.log
+finished_at: '2026-02-10T00:00:00Z'
+verified_at_sha: 306f6430b850da52875c89681cc8328057e18fdf
 x_dependencies: []
 x_evidence_logs: []
-x_objective: |
-  Fase 0 - Baseline y contrato para mejorar manejo de opciones inválidas en CLI.
-
-  0.1 Definir el "contrato de éxito":
-  - KPI primario: invalid_option_count por sesión → objetivo 0 en sesiones normales
-  - KPI secundario: help_first_used (o list_first_used) → objetivo ≥80% cuando hay flags raros
-  - DoD global: cuando se comete un error de opción inválida, el CLI entrega 
-    instrucción accionable (help + ejemplos) y el agente converge sin repetir
-
-  0.2 Capturar evidencia actual:
-  - Guardar 2-3 ejemplos reales (logs) donde aparezcan:
-    * No such option: --dry-run
-    * No such option: --max-steps
-  - Dataset para tests / regresión
-
-  IMPLEMENTADO:
-  1. src/cli/invalid_option_handler.py - Módulo de fuzzy matching y mensajes mejorados
-  2. src/infrastructure/cli.py - Integración con Typer usando main() wrapper
-  3. tests/integration/test_cli_invalid_options.py - Tests de regresión (8 tests)
-  4. tests/unit/cli/test_invalid_option_handler.py - Unit tests (25 tests)
-
-  Salida de fase: implementación completa + 33 tests pasando
+x_objective: "Fase 0 - Baseline y contrato para mejorar manejo de opciones inv\xE1lidas en CLI.\n\n0.1\
+  \ Definir el \"contrato de \xE9xito\":\n- KPI primario: invalid_option_count por sesi\xF3n \u2192 objetivo\
+  \ 0 en sesiones normales\n- KPI secundario: help_first_used (o list_first_used) \u2192 objetivo \u2265\
+  80% cuando hay flags raros\n- DoD global: cuando se comete un error de opci\xF3n inv\xE1lida, el CLI\
+  \ entrega \n  instrucci\xF3n accionable (help + ejemplos) y el agente converge sin repetir\n\n0.2 Capturar\
+  \ evidencia actual:\n- Guardar 2-3 ejemplos reales (logs) donde aparezcan:\n  * No such option: --dry-run\n\
+  \  * No such option: --max-steps\n- Dataset para tests / regresi\xF3n\n\nIMPLEMENTADO:\n1. src/cli/invalid_option_handler.py\
+  \ - M\xF3dulo de fuzzy matching y mensajes mejorados\n2. src/infrastructure/cli.py - Integraci\xF3n\
+  \ con Typer usando main() wrapper\n3. tests/integration/test_cli_invalid_options.py - Tests de regresi\xF3\
+  n (8 tests)\n4. tests/unit/cli/test_invalid_option_handler.py - Unit tests (25 tests)\n\nSalida de fase:\
+  \ implementaci\xF3n completa + 33 tests pasando\n"

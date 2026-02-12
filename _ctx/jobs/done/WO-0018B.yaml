@@ -5,42 +5,44 @@ title: WO Closure Test Coverage
 priority: P1
 status: done
 owner: felipe
-verified_at_sha: c2bb56b
-closed_at: "2026-01-14T11:28:00-03:00"
-run_ids:
-  - wo-0018b-tests
+branch: feat/wo-WO-0018B
+worktree: .worktrees/WO-0018B
 scope:
   allow:
-    - tests/integration/test_wo_closure.py
-    - tests/unit/test_wo_finish_validators.py
-    - tests/unit/test_wo_finish_cli.py
-    - tests/fixtures/closure/**
+  - tests/integration/test_wo_closure.py
+  - tests/unit/test_wo_finish_validators.py
+  - tests/unit/test_wo_finish_cli.py
+  - tests/fixtures/closure/**
   deny:
-    - src/domain/**
-    - scripts/ctx_wo_finish.py
-dod_id: DOD-DEFAULT
+  - src/domain/**
+  - scripts/ctx_wo_finish.py
 verify:
   commands:
-    - uv run pytest tests/unit/test_wo_finish_validators.py tests/integration/test_wo_closure.py
-      -v
-    - uv run pytest --cov=scripts/ctx_wo_finish.py --cov-report=term-missing
+  - uv run pytest tests/unit/test_wo_finish_validators.py tests/integration/test_wo_closure.py -v
+  - uv run pytest --cov=scripts/ctx_wo_finish.py --cov-report=term-missing
+dod_id: DOD-DEFAULT
+dependencies:
+- WO-0018A
+verified_at_sha: c2bb56b
+closed_at: '2026-01-14T11:28:00-03:00'
+run_ids:
+- wo-0018b-tests
 governance:
   must:
-    - Create integration tests with real subprocess (no mocks)
-    - Create unit tests for validators
-    - Create tests for CLI argument parsing
-    - Create comprehensive fixtures
-    - "Achieve \u226580% coverage for ctx_wo_finish.py (PARTIAL: 52% achieved)"
-    - Use CLI trifecta for runs
-    - Update _ctx/session_trifecta_dope.md
-    - Update backlog.yaml
-x_objective:
-  "Add comprehensive test coverage for WO closure workflow covering all
-  failure modes, edge cases,
+  - Create integration tests with real subprocess (no mocks)
+  - Create unit tests for validators
+  - Create tests for CLI argument parsing
+  - Create comprehensive fixtures
+  - "Achieve \u226580% coverage for ctx_wo_finish.py (PARTIAL: 52% achieved)"
+  - Use CLI trifecta for runs
+  - Update _ctx/session_trifecta_dope.md
+  - Update backlog.yaml
+x_objective: 'Add comprehensive test coverage for WO closure workflow covering all failure modes, edge
+  cases,
 
   and integration scenarios identified in the multi-agent review.
 
-  "
+  '
 x_phases:
   1: Create test file structure
   2: Create integration tests
@@ -48,96 +50,91 @@ x_phases:
   4: Create fixtures
   5: Verify coverage
 x_micro_tasks:
-  - id: T1
-    name: "T1: Create test file structure"
-    status: done
-    commands:
-      - touch tests/integration/test_wo_closure.py
-      - touch tests/unit/test_wo_finish_validators.py
-      - touch tests/unit/test_wo_finish_cli.py
-      - mkdir -p tests/fixtures/closure/wo_complete/_ctx/{jobs/running,jobs/dod,handoff/WO-TEST}
-      - mkdir -p tests/fixtures/closure/wo_missing_tests/_ctx/handoff/WO-TEST
-      - mkdir -p tests/fixtures/closure/wo_empty_tests/_ctx/handoff/WO-TEST
-      - mkdir -p tests/fixtures/closure/wo_malformed_verdict/_ctx/handoff/WO-TEST
-      - mkdir -p tests/fixtures/closure/wo_no_handoff/_ctx
-    gates:
-      - test -f tests/integration/test_wo_closure.py
-      - test -f tests/unit/test_wo_finish_validators.py
-      - test -f tests/unit/test_wo_finish_cli.py
-      - test -d tests/fixtures/closure/wo_complete
-    evidence:
-      - tests/integration/test_wo_closure.py
-      - tests/unit/test_wo_finish_validators.py
-      - tests/unit/test_wo_finish_cli.py
-      - tests/fixtures/closure/
-    commit: "test(wo): create test file structure for WO closure coverage"
-  - id: T2
-    name: "T2: Create integration tests (15 tests)"
-    status: done
-    commands:
-      - "# Add tests to tests/integration/test_wo_closure.py"
-      - "# Pattern: real subprocess, temp git repos (no mocks)"
-    gates:
-      - grep -c 'def test_wo_finish' tests/integration/test_wo_closure.py | grep -q '^1[0-5]$'
-    evidence:
-      - tests/integration/test_wo_closure.py
-    commit: "test(wo): add integration tests for WO closure workflow"
-  - id: T3
-    name: "T3: Create unit tests for validators (12 tests)"
-    status: done
-    commands:
-      - "# Add tests to tests/unit/test_wo_finish_validators.py"
-      - "# Cover: validate_dod, generate_artifacts, edge cases"
-    gates:
-      - grep -c 'def test_' tests/unit/test_wo_finish_validators.py | grep -q '^1[0-9]$|^20$'
-    evidence:
-      - tests/unit/test_wo_finish_validators.py
-    commit: "test(wo): add unit tests for WO finish validators"
-  - id: T4
-    name: "T4: Create CLI argument tests (5 tests)"
-    status: done
-    commands:
-      - "# Add tests to tests/unit/test_wo_finish_cli.py"
-      - "# Cover: --help, --result, --generate-only, --clean, --skip-dod"
-    gates:
-      - grep -c 'def test_' tests/unit/test_wo_finish_cli.py | grep -q '^[5-9]$'
-    evidence:
-      - tests/unit/test_wo_finish_cli.py
-    commit: "test(wo): add CLI argument tests"
-  - id: T5
-    name: "T5: Create comprehensive fixtures"
-    status: done
-    commands:
-      - "# Populate wo_complete fixture with all artifacts"
-      - "# Create wo_missing_tests (missing tests.log)"
-      - "# Create wo_empty_tests (0-byte tests.log)"
-      - "# Create wo_malformed_verdict (invalid JSON)"
-      - "# Create wo_no_handoff (no handoff directory)"
-    gates:
-      - test -f tests/fixtures/closure/wo_complete/_ctx/handoff/WO-TEST/tests.log
-      - test -f tests/fixtures/closure/wo_complete/_ctx/handoff/WO-TEST/verdict.json
-      - test ! -f tests/fixtures/closure/wo_missing_tests/_ctx/handoff/WO-TEST/tests.log
-      - test -f tests/fixtures/closure/wo_empty_tests/_ctx/handoff/WO-TEST/tests.log
-      - test -s tests/fixtures/closure/wo_empty_tests/_ctx/handoff/WO-TEST/tests.log ||
-        [ ! -s tests/fixtures/closure/wo_empty_tests/_ctx/handoff/WO-TEST/tests.log ]
-    evidence:
-      - tests/fixtures/closure/**
-    commit: "test(wo): create comprehensive WO closure fixtures"
-  - id: T6
-    name: "T6: Verify coverage \u226580%"
-    status: done
-    commands:
-      - uv run pytest tests/unit/test_wo_finish_validators.py tests/integration/test_wo_closure.py
-        -v
-      - uv run pytest --cov=scripts/ctx_wo_finish.py --cov-report=term-missing
-    gates:
-      - uv run pytest --cov=scripts/ctx_wo_finish.py --cov-report=term | grep -q 'TOTAL.*[8-9][0-9]%'
-    evidence:
-      - .coverage
-      - pytest output
-    commit: None
-dependencies:
-  - WO-0018A
-started_at: "2026-01-14T01:58:22.418424+00:00"
-branch: feat/wo-WO-0018B
-worktree: .worktrees/WO-0018B
+- id: T1
+  name: 'T1: Create test file structure'
+  status: done
+  commands:
+  - touch tests/integration/test_wo_closure.py
+  - touch tests/unit/test_wo_finish_validators.py
+  - touch tests/unit/test_wo_finish_cli.py
+  - mkdir -p tests/fixtures/closure/wo_complete/_ctx/{jobs/running,jobs/dod,handoff/WO-TEST}
+  - mkdir -p tests/fixtures/closure/wo_missing_tests/_ctx/handoff/WO-TEST
+  - mkdir -p tests/fixtures/closure/wo_empty_tests/_ctx/handoff/WO-TEST
+  - mkdir -p tests/fixtures/closure/wo_malformed_verdict/_ctx/handoff/WO-TEST
+  - mkdir -p tests/fixtures/closure/wo_no_handoff/_ctx
+  gates:
+  - test -f tests/integration/test_wo_closure.py
+  - test -f tests/unit/test_wo_finish_validators.py
+  - test -f tests/unit/test_wo_finish_cli.py
+  - test -d tests/fixtures/closure/wo_complete
+  evidence:
+  - tests/integration/test_wo_closure.py
+  - tests/unit/test_wo_finish_validators.py
+  - tests/unit/test_wo_finish_cli.py
+  - tests/fixtures/closure/
+  commit: 'test(wo): create test file structure for WO closure coverage'
+- id: T2
+  name: 'T2: Create integration tests (15 tests)'
+  status: done
+  commands:
+  - '# Add tests to tests/integration/test_wo_closure.py'
+  - '# Pattern: real subprocess, temp git repos (no mocks)'
+  gates:
+  - grep -c 'def test_wo_finish' tests/integration/test_wo_closure.py | grep -q '^1[0-5]$'
+  evidence:
+  - tests/integration/test_wo_closure.py
+  commit: 'test(wo): add integration tests for WO closure workflow'
+- id: T3
+  name: 'T3: Create unit tests for validators (12 tests)'
+  status: done
+  commands:
+  - '# Add tests to tests/unit/test_wo_finish_validators.py'
+  - '# Cover: validate_dod, generate_artifacts, edge cases'
+  gates:
+  - grep -c 'def test_' tests/unit/test_wo_finish_validators.py | grep -q '^1[0-9]$|^20$'
+  evidence:
+  - tests/unit/test_wo_finish_validators.py
+  commit: 'test(wo): add unit tests for WO finish validators'
+- id: T4
+  name: 'T4: Create CLI argument tests (5 tests)'
+  status: done
+  commands:
+  - '# Add tests to tests/unit/test_wo_finish_cli.py'
+  - '# Cover: --help, --result, --generate-only, --clean, --skip-dod'
+  gates:
+  - grep -c 'def test_' tests/unit/test_wo_finish_cli.py | grep -q '^[5-9]$'
+  evidence:
+  - tests/unit/test_wo_finish_cli.py
+  commit: 'test(wo): add CLI argument tests'
+- id: T5
+  name: 'T5: Create comprehensive fixtures'
+  status: done
+  commands:
+  - '# Populate wo_complete fixture with all artifacts'
+  - '# Create wo_missing_tests (missing tests.log)'
+  - '# Create wo_empty_tests (0-byte tests.log)'
+  - '# Create wo_malformed_verdict (invalid JSON)'
+  - '# Create wo_no_handoff (no handoff directory)'
+  gates:
+  - test -f tests/fixtures/closure/wo_complete/_ctx/handoff/WO-TEST/tests.log
+  - test -f tests/fixtures/closure/wo_complete/_ctx/handoff/WO-TEST/verdict.json
+  - test ! -f tests/fixtures/closure/wo_missing_tests/_ctx/handoff/WO-TEST/tests.log
+  - test -f tests/fixtures/closure/wo_empty_tests/_ctx/handoff/WO-TEST/tests.log
+  - test -s tests/fixtures/closure/wo_empty_tests/_ctx/handoff/WO-TEST/tests.log || [ ! -s tests/fixtures/closure/wo_empty_tests/_ctx/handoff/WO-TEST/tests.log
+    ]
+  evidence:
+  - tests/fixtures/closure/**
+  commit: 'test(wo): create comprehensive WO closure fixtures'
+- id: T6
+  name: "T6: Verify coverage \u226580%"
+  status: done
+  commands:
+  - uv run pytest tests/unit/test_wo_finish_validators.py tests/integration/test_wo_closure.py -v
+  - uv run pytest --cov=scripts/ctx_wo_finish.py --cov-report=term-missing
+  gates:
+  - uv run pytest --cov=scripts/ctx_wo_finish.py --cov-report=term | grep -q 'TOTAL.*[8-9][0-9]%'
+  evidence:
+  - .coverage
+  - pytest output
+  commit: None
+started_at: '2026-01-14T01:58:22.418424+00:00'

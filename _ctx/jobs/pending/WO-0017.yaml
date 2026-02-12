@@ -1,53 +1,52 @@
 version: 1
 id: WO-0017
 epic_id: E-SCALE
-title: "CLI trifecta ctx discover Command"
+title: CLI trifecta ctx discover Command
 priority: P2
 status: pending
 owner: null
-verified_at_sha: null
-closed_at: null
-
 scope:
   allow:
-    - "src/infrastructure/cli_ctx.py"
-    - "src/application/discover_use_case.py"
-    - "tests/acceptance/test_cli_discover.py"
-    - "docs/**"
+  - src/infrastructure/cli_ctx.py
+  - src/application/discover_use_case.py
+  - tests/acceptance/test_cli_discover.py
+  - docs/**
   deny:
-    - ".env*"
-    - "src/domain/**"
-
+  - .env*
+  - src/domain/**
+verify:
+  commands:
+  - uv run pytest -q tests/acceptance/test_cli_discover.py
 dod_id: DOD-DEFAULT
-
+dependencies:
+- WO-0016
+verified_at_sha: null
+closed_at: null
 governance:
   must:
-    - "Use TDD"
-    - "Follow existing CLI patterns (Typer)"
-    - "Commit (no --no-verify)"
+  - Use TDD
+  - Follow existing CLI patterns (Typer)
+  - Commit (no --no-verify)
+x_objective: 'Expose Zero-Config Discovery via CLI:
 
-x_objective: |
-  Expose Zero-Config Discovery via CLI:
   `trifecta ctx discover --root /path/to/repo`
 
+
   Outputs a suggested trifecta_config.json (or prints to stdout with --dry-run).
+
   Uses WO-0015 and WO-0016 internally.
 
+  '
 x_items:
-  - "Create `DiscoverUseCase` orchestrating Scanner + Clusterer"
-  - "Add `trifecta ctx discover` subcommand"
-  - "Options: --root, --dry-run (stdout), --output (file)"
-  - "Output format: trifecta_config.json schema"
-  - "Acceptance test: Use dedicated fixture directory (tests/fixtures/mock_repo/)"
-  - "DO NOT rely on trifecta_dope repo state for tests"
-
+- Create `DiscoverUseCase` orchestrating Scanner + Clusterer
+- Add `trifecta ctx discover` subcommand
+- 'Options: --root, --dry-run (stdout), --output (file)'
+- 'Output format: trifecta_config.json schema'
+- 'Acceptance test: Use dedicated fixture directory (tests/fixtures/mock_repo/)'
+- DO NOT rely on trifecta_dope repo state for tests
 diff_budget:
   max_files: 6
   max_loc: 300
-
 stop_conditions:
   max_iterations: 6
   max_fail_verify: 2
-
-dependencies:
-  - WO-0016

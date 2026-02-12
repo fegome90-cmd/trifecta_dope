@@ -1,0 +1,55 @@
+version: 1
+id: WO-0038
+epic_id: E-0003
+title: Path Guardrails (Validation + Security)
+priority: P0
+status: pending
+owner: null
+branch: null
+worktree: null
+scope:
+  allow:
+  - internal/plugins/td/**
+  - internal/plugins/td/*_test.go
+  deny:
+  - cmd/**
+  - internal/plugins/trifecta/**
+verify:
+  commands:
+  - go test ./internal/plugins/td/... -v -run TestResolveWorktreePath
+  - go test ./internal/plugins/td/... -v -run TestPathTraversal
+  - go test ./internal/plugins/td/... -v -run TestInvalidWOID
+dod_id: DOD-DEFAULT
+dependencies:
+- WO-0037
+objective: 'Implement path validation preventing traversal attacks:
+
+  - Only ../.worktrees/ prefix allowed
+
+  - Path resolved against repo_root
+
+  - Validation that result stays under parent/.worktrees/
+
+  - Unit tests for edge cases
+
+  '
+diff_budget:
+  max_files: 12
+  max_loc: 350
+  rationale: Validation logic + comprehensive tests
+stop_conditions:
+  max_iterations: 5
+  max_verify_failures: 3
+claim_links:
+  requirements:
+  - C-TD-003
+  assumptions:
+  - A-TD-002
+  constraints:
+  - CN-TD-002
+x_validation_rules:
+- Path must start with ../.worktrees/
+- WO ID format validation (WO-XXXX, WO-XXA)
+- Resolve against ctx.WorkDir (repo_root)
+- Verify result is under parent/.worktrees/
+- Reject ../../../etc and similar traversals
