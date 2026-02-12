@@ -2,7 +2,6 @@
 Tests for WO domain entities business logic.
 Pure domain logic - no mocks, no IO.
 """
-import pytest
 from datetime import datetime, timezone
 
 from src.domain.wo_entities import WorkOrder, WOState, Priority

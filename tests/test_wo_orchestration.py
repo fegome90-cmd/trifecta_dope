@@ -7,20 +7,14 @@ Tests the integration between:
 - ctx_wo_take.py (WO take workflow)
 """
 
-import os
 import sys
-import tempfile
-import shutil
 from pathlib import Path
-from datetime import datetime, timezone
-import subprocess
-import yaml
 
 # Add scripts to path
 scripts_dir = Path(__file__).parent.parent / "scripts"
 sys.path.insert(0, str(scripts_dir))
 
-from helpers import (
+from helpers import (  # noqa: E402
     get_branch_name,
     get_worktree_path,
     create_worktree,
@@ -173,7 +167,7 @@ class WOOrchestrationTest:
                 worktree_path=None,  # Auto-generate
             )
 
-            logger.info(f"✓ Worktree created:")
+            logger.info("✓ Worktree created:")
             logger.info(f"  Branch: {branch}")
             logger.info(f"  Path: {worktree_path}")
 

@@ -12,7 +12,7 @@ from unittest.mock import patch, MagicMock
 
 from src.domain.wo_entities import WorkOrder, WOState, Priority
 from src.domain.wo_transactions import Transaction, RollbackOperation, RollbackType
-from scripts.helpers import execute_rollback, RollbackResult
+from scripts.helpers import execute_rollback
 
 
 class TestTransactionRecoveryScenarios:
@@ -24,7 +24,7 @@ class TestTransactionRecoveryScenarios:
             root = Path(tmpdir)
             (root / "_ctx" / "jobs" / "running").mkdir(parents=True)
             (root / "_ctx" / "jobs" / "pending").mkdir(parents=True)  # Create pending directory
-            (root / ".worktrees" / "WO-0901").mkdir(parents=True)
+            (root.parent / ".worktrees" / "WO-0901").mkdir(parents=True, exist_ok=True)
 
             # Create a WO in running state
             running_path = root / "_ctx" / "jobs" / "running" / "WO-0901.yaml"
@@ -89,7 +89,7 @@ class TestTransactionRecoveryScenarios:
             root = Path(tmpdir)
             (root / "_ctx" / "jobs" / "running").mkdir(parents=True)
             (root / "_ctx" / "jobs" / "pending").mkdir(parents=True)  # Create pending directory
-            (root / ".worktrees" / "WO-0902").mkdir(parents=True)
+            (root.parent / ".worktrees" / "WO-0902").mkdir(parents=True, exist_ok=True)
 
             # Create WO in running state
             running_path = root / "_ctx" / "jobs" / "running" / "WO-0902.yaml"
@@ -193,7 +193,7 @@ class TestTransactionRecoveryScenarios:
             root = Path(tmpdir)
             (root / "_ctx" / "jobs" / "running").mkdir(parents=True)
             (root / "_ctx" / "jobs" / "pending").mkdir(parents=True)
-            (root / ".worktrees" / "WO-0904").mkdir(parents=True)
+            (root.parent / ".worktrees" / "WO-0904").mkdir(parents=True, exist_ok=True)
 
             # Scenario: Worktree exists, WO is running, but branch creation failed
             running_path = root / "_ctx" / "jobs" / "running" / "WO-0904.yaml"
@@ -240,7 +240,7 @@ class TestTransactionRecoveryScenarios:
             root = Path(tmpdir)
             (root / "_ctx" / "jobs" / "running").mkdir(parents=True)
             (root / "_ctx" / "jobs" / "pending").mkdir(parents=True)
-            (root / ".worktrees" / "WO-0905").mkdir(parents=True)  # Create worktree so cleanup_worktree is called
+            (root.parent / ".worktrees" / "WO-0905").mkdir(parents=True, exist_ok=True)  # Create worktree so cleanup_worktree is called
 
             # Create lock
             lock_path = root / "_ctx" / "jobs" / "running" / "WO-0905.lock"

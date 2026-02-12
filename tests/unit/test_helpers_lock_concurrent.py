@@ -8,7 +8,7 @@ import sys
 import tempfile
 import time
 from pathlib import Path
-from multiprocessing import Process, Queue, Value
+from multiprocessing import Process, Queue
 from threading import Thread
 
 import pytest

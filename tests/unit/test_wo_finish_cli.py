@@ -6,7 +6,6 @@ Tests CLI interface and argument parsing.
 import subprocess
 from pathlib import Path
 
-import pytest
 
 
 def repo_root() -> Path:

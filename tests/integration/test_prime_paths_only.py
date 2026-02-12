@@ -66,6 +66,10 @@ def test_prime_paths_strict_format():
         # Fallback: maybe relative to segment?
         if not real_path.exists():
             real_path = Path(path_str)  # Relative to cwd
+        # Backward compatibility: prime entries may include "<repo_name>/..."
+        if not real_path.exists() and "/" in path_str:
+            _, suffix = path_str.split("/", 1)
+            real_path = Path(suffix)
 
         assert real_path.exists(), f"Path does not exist on disk: {path_str} (Checked: {real_path})"
         assert real_path.is_file(), f"Path is not a file: {path_str}"

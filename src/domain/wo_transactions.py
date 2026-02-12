@@ -4,7 +4,6 @@ Pure domain logic - defines rollback operations.
 """
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Optional
 
 
 class RollbackType(StrEnum):

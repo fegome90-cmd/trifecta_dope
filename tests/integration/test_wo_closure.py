@@ -4,12 +4,10 @@ Integration tests for WO closure workflow (ctx_wo_finish.py).
 Tests use subprocess to call the script directly (no mocks).
 Fixtures from tests/fixtures/closure/ provide test environments.
 """
-import json
 import shutil
 import subprocess
 from pathlib import Path
 
-import pytest
 
 
 def repo_root() -> Path:

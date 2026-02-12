@@ -1,10 +1,10 @@
 import subprocess
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 import sys
 sys.path.insert(0, "scripts")
 
-from ctx_reconcile_state import check_running_metadata, repair_wo_metadata
+from ctx_reconcile_state import check_running_metadata
 
 
 def test_reconcile_detects_running_without_lock():

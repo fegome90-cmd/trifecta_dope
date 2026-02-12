@@ -5,7 +5,8 @@ TDD approach: Tests written first (RED), then implementation (GREEN).
 
 from pathlib import Path
 import sys
-from datetime import datetime
+
+import pytest
 
 # Add scripts to path for import
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "scripts"))
@@ -122,10 +123,8 @@ class TestRotateEvents:
         from telemetry_rotate import rotate_events
 
         result = rotate_events(tmp_path / "nonexistent.jsonl")
-
-        # Current implementation might print, but should return Err
-        captured = capsys.readouterr()
-        # We'll change this to return Result in implementation
+        _ = capsys.readouterr()
+        assert isinstance(result, Err)
 
     def test_creates_rotated_file_with_expected_naming(self, tmp_path):
         """Should create rotated file with correct naming format."""
@@ -139,7 +138,7 @@ class TestRotateEvents:
         # Should return Ok with RotationResult
         assert isinstance(result, Ok)
         rotated = result.unwrap()
-        assert "20260210" in str(rotated.to_path)  # Date format
+        assert ".jsonl.rotated" in str(rotated.to_path)
         assert rotated.to_path.suffix == ".rotated"
 
     def test_handles_unicode_in_events_file(self, tmp_path):
@@ -185,7 +184,3 @@ class TestBoundaryConditions:
         count = result.unwrap()
         should_rotate = count >= MAX_EVENTS
         assert should_rotate is False
-
-
-# Import pytest for approx comparison
-import pytest

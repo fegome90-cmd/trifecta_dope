@@ -1,7 +1,6 @@
 """Unit tests for scripts.metadata_inference module."""
 from pathlib import Path
 from unittest.mock import patch
-import pytest
 
 from scripts.metadata_inference import get_worktrees_from_git
 

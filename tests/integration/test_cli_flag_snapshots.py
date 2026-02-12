@@ -8,16 +8,11 @@ If these tests fail, it means the CLI flags have changed and the snapshots
 need to be updated (or the change is unintended).
 """
 
-import subprocess
 import json
 from pathlib import Path
 
 import pytest
 
-from src.cli.introspection import (
-    CommandIntrospector,
-    create_introspector,
-)
 from src.cli.invalid_option_handler import (
     get_valid_flags_for_command,
     reset_introspector,

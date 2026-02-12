@@ -14,7 +14,6 @@ import difflib
 import os
 import sys
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Optional
 
 from src.cli.introspection import (
