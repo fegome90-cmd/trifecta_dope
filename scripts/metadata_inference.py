@@ -219,8 +219,9 @@ def get_worktrees_from_git(root: Path) -> dict[str, dict]:
         else:
             branch = None
 
-        # Extract WO ID from path
-        wo_match = re.search(r"\.worktrees/(WO-\d{4}[A-Z]?)", worktree_path)
+        # Extract WO ID from path - supports suffix/slugs (WO-XXXX[-<slug>])
+        # Examples: WO-0001, WO-0018A, WO-0021-verdict-generator
+        wo_match = re.search(r"\.worktrees/(WO-[A-Za-z0-9.-]+)", worktree_path)
         if wo_match:
             wo_id = wo_match.group(1)
             result[wo_id] = {
