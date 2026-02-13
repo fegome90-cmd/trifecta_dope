@@ -9,7 +9,8 @@
     "title",
     "priority",
     "status",
-    "dod_id"
+    "dod_id",
+    "execution"
   ],
   "properties": {
     "version": {"type": "integer"},

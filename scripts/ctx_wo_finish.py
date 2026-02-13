@@ -20,6 +20,7 @@ from typing import Literal
 import yaml
 
 from src.domain.result import Result, Ok, Err
+from src.cli.error_cards import render_error_card
 
 
 # =============================================================================
@@ -35,6 +36,30 @@ REQUIRED_ARTIFACTS = ["tests.log", "lint.log", "diff.patch", "handoff.md", "verd
 
 def load_yaml(path: Path):
     return yaml.safe_load(path.read_text())
+
+
+def print_error_card(
+    *,
+    error_code: str,
+    cause: str,
+    next_steps: list[str],
+    verify_cmd: str,
+    error_class: str = "PRECONDITION",
+) -> None:
+    """Print a stable error card plus backward-compatible plain error line."""
+    card = render_error_card(
+        error_code=error_code,
+        error_class=error_class,
+        cause=cause,
+        next_steps=next_steps,
+        verify_cmd=verify_cmd,
+    )
+    print(card, file=sys.stderr)
+    print(f"ERROR: {cause}", file=sys.stderr)
+
+
+def _ctx_running_path(wo_id: str, root: Path) -> Path:
+    return root / "_ctx" / "jobs" / "running" / f"{wo_id}.yaml"
 
 
 def write_yaml(path: Path, data):
@@ -516,7 +541,16 @@ def main():
 
     root_result = resolve_runtime_root(args.root)
     if root_result.is_err():
-        print(f"ERROR: {root_result.unwrap_err()}")
+        print_error_card(
+            error_code="INVALID_SEGMENT_PATH",
+            error_class="VALIDATION",
+            cause=root_result.unwrap_err(),
+            next_steps=[
+                "Use a valid repository path with --root",
+                "Run from repo root or pass --root /abs/path/to/repo",
+            ],
+            verify_cmd="python scripts/ctx_wo_finish.py WO-XXXX --root .",
+        )
         return 1
     root = root_result.unwrap()
 
@@ -524,9 +558,28 @@ def main():
     if not running_path.exists():
         diagnostic = inspect_nonrunning_state(args.wo_id, root)
         if diagnostic:
-            print(f"ERROR: {diagnostic}")
+            card_code = "WO_STATE_CORRUPTED" if "Corrupted WO state detected" in diagnostic else "WO_NOT_RUNNING"
+            print_error_card(
+                error_code=card_code,
+                error_class="INTEGRITY",
+                cause=diagnostic,
+                next_steps=[
+                    "Run: uv run python scripts/ctx_reconcile_state.py --root . --json /tmp/reconcile_wo.json",
+                    f"Ensure {_ctx_running_path(args.wo_id, root)} exists before finish",
+                ],
+                verify_cmd=f"python scripts/ctx_wo_finish.py {args.wo_id} --root {root}",
+            )
             return 1
-        print(f"ERROR: missing WO {running_path}")
+        print_error_card(
+            error_code="WO_NOT_RUNNING",
+            error_class="PRECONDITION",
+            cause=f"missing WO {running_path}",
+            next_steps=[
+                "Take the WO first: python scripts/ctx_wo_take.py WO-XXXX",
+                "Verify _ctx/jobs/running contains WO YAML",
+            ],
+            verify_cmd=f"python scripts/ctx_wo_finish.py {args.wo_id} --root {root}",
+        )
         return 1
 
     # Load WO and DOD catalog
@@ -534,7 +587,16 @@ def main():
     dod_catalog = load_dod_catalog(root)
     dod = dod_catalog.get(wo.get("dod_id"))
     if not dod:
-        print(f"ERROR: unknown dod_id {wo.get('dod_id')}")
+        print_error_card(
+            error_code="DOD_VALIDATION_FAILED",
+            error_class="VALIDATION",
+            cause=f"unknown dod_id {wo.get('dod_id')}",
+            next_steps=[
+                "Fix dod_id in WO YAML or add DoD entry in _ctx/dod/*.yaml",
+                "Run: make wo-lint",
+            ],
+            verify_cmd=f"python scripts/ctx_wo_finish.py {args.wo_id} --root {root}",
+        )
         return 1
 
     # Handle generate-only mode
@@ -550,26 +612,89 @@ def main():
     if not args.skip_dod:
         result = validate_dod(args.wo_id, root)
         if result.is_err():
-            print(f"ERROR: {result.unwrap_err()}")
+            print_error_card(
+                error_code="DOD_VALIDATION_FAILED",
+                error_class="VALIDATION",
+                cause=result.unwrap_err(),
+                next_steps=[
+                    f"Regenerate artifacts: python scripts/ctx_wo_finish.py {args.wo_id} --root {root} --generate-only --clean",
+                    "Re-run with DoD enabled (without --skip-dod)",
+                ],
+                verify_cmd=f"python scripts/ctx_wo_finish.py {args.wo_id} --root {root}",
+            )
             return 1
 
     if not args.skip_verification:
         verify_result = run_verification_gate(args.wo_id, root)
         if verify_result.is_err():
-            print(f"ERROR: {verify_result.unwrap_err()}")
+            verify_cause = verify_result.unwrap_err()
+            card_code = (
+                "VERIFY_SCRIPT_MISSING"
+                if verify_cause.startswith("Verification script missing:")
+                else "VERIFY_GATE_FAILED"
+            )
+            print_error_card(
+                error_code=card_code,
+                error_class="GATE",
+                cause=verify_cause,
+                next_steps=[
+                    "Run verification directly: bash scripts/verify.sh WO-XXXX --root .",
+                    "Fix failing blocking gates before retrying finish",
+                ],
+                verify_cmd=f"python scripts/ctx_wo_finish.py {args.wo_id} --root {root}",
+            )
             return 1
 
     # Finish WO as transaction
     result_status = args.result or "done"
     result = finish_wo_transaction(args.wo_id, root, result_status)
     if result.is_err():
-        print(f"ERROR: {result.unwrap_err()}")
+        print_error_card(
+            error_code="WO_NOT_RUNNING",
+            error_class="TRANSACTION",
+            cause=result.unwrap_err(),
+            next_steps=[
+                "Ensure git state is clean and branch is not detached HEAD",
+                "Re-run finish command after resolving repository state",
+            ],
+            verify_cmd=f"python scripts/ctx_wo_finish.py {args.wo_id} --root {root}",
+        )
         return 1
 
     # Post-finish hook for Sidecar integration.
     update_worktree_index(root)
 
     print(f"WO {args.wo_id} finished successfully (status: {result_status})")
+
+    # Record in Trifecta Session Log
+    try:
+        summary = f"Finished Work Order {args.wo_id} (status: {result_status})"
+        commands = f"ctx_wo_finish.py {args.wo_id} --result {result_status}"
+        # Execute trifecta session append via subprocess
+        import subprocess
+
+        subprocess.run(
+            [
+                "uv",
+                "run",
+                "trifecta",
+                "session",
+                "append",
+                "--segment",
+                ".",
+                "--summary",
+                summary,
+                "--commands",
+                commands,
+            ],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except Exception:
+        pass
+
     return 0
 
 

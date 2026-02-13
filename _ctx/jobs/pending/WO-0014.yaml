@@ -5,6 +5,8 @@ title: Import Extractor using stdlib AST
 priority: P1
 status: pending
 owner: null
+branch: feat/wo-WO-0014
+worktree: ../.worktrees/WO-0014
 scope:
   allow:
   - src/application/import_extractor.py
@@ -18,7 +20,13 @@ verify:
   commands:
   - uv run pytest -q tests/unit/test_import_extractor.py
 dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - verify
+  segment: .
 dependencies: []
+started_at: '2026-02-13T20:09:58.298898+00:00'
 verified_at_sha: null
 closed_at: null
 governance:

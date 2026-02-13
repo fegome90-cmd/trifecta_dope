@@ -1,0 +1,23 @@
+version: 1
+id: WO-0040
+epic_id: E-LSP-CONTRACT
+title: "Fallback expl\xEDcito"
+priority: P0
+status: pending
+scope:
+  allow:
+  - src/infrastructure/lsp_client.py
+  deny:
+  - .env*
+verify:
+  commands:
+  - ls src/infrastructure/lsp_client.py
+dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - verify
+  segment: .
+objective: "Implementar fallback expl\xEDcito cuando el daemon LSP no est\xE1 disponible.\n"
+deliverables:
+- "L\xF3gica de fallback en src/infrastructure/lsp_client.py"

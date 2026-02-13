@@ -19,6 +19,11 @@ verify:
   - test -f docs/ops/feature_flags.md
   - test -f scripts/telemetry_rotate.py
 dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - verify
+  segment: .
 dependencies: []
 verified_at_sha: null
 closed_at: null

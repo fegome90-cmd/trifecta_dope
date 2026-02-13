@@ -1197,7 +1197,7 @@ x_objective: "Test"
 
         assert exit_code == 1
 
-    def test_main_verification_missing_script_fails(self, tmp_path):
+    def test_main_verification_missing_script_fails(self, tmp_path, capsys):
         """Test main() fails when verify.sh is missing and verification not skipped."""
         running_dir = tmp_path / "_ctx" / "jobs" / "running"
         running_dir.mkdir(parents=True)
@@ -1220,6 +1220,9 @@ x_objective: "Test"
         sys.argv = ["ctx_wo_finish.py", "WO-TEST", "--root", str(tmp_path), "--skip-dod"]
         exit_code = main()
         assert exit_code == 1
+        captured = capsys.readouterr()
+        combined = captured.out + captured.err
+        assert "TRIFECTA_ERROR_CODE: VERIFY_SCRIPT_MISSING" in combined
 
 
 class TestRootResolution:

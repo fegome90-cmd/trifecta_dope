@@ -19,6 +19,19 @@ verify:
   - uv run pytest -xvs tests/integration/test_ctx_sync_indexes_repo_content.py
   - bash scripts/gate_ctx_sync_repo_content.sh
 dod_id: DOD-REPRODUCIBILITY
+execution:
+  engine: trifecta
+  required_flow:
+  - verify
+  segment: .
+verified_at_sha: 1d80a878b486177e94491fda068028287eddd1d8
+evidence_logs:
+- _ctx/logs/wo0009/00_sha.txt
+- _ctx/logs/wo0009/01_locate_sync.log
+- _ctx/logs/wo0009/02_analysis_notes.md
+- _ctx/logs/wo0009_green_final/01_pytest_fail.log
+- _ctx/logs/wo0009_green_final/02_pytest_green.log
+- _ctx/logs/wo0009_green_final/03_gate_wo0007.log
 x_legacy: true
 x_branch: job/WO-0009-sync-repo-content
 x_worktree: ../wt-WO-0009
@@ -72,11 +85,3 @@ x_notes: 'Created to unblock WO-0008.
   Missing: user content from docs/, src/, etc.
 
   '
-verified_at_sha: 1d80a878b486177e94491fda068028287eddd1d8
-evidence_logs:
-- _ctx/logs/wo0009/00_sha.txt
-- _ctx/logs/wo0009/01_locate_sync.log
-- _ctx/logs/wo0009/02_analysis_notes.md
-- _ctx/logs/wo0009_green_final/01_pytest_fail.log
-- _ctx/logs/wo0009_green_final/02_pytest_green.log
-- _ctx/logs/wo0009_green_final/03_gate_wo0007.log

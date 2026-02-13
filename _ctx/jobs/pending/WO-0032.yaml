@@ -21,6 +21,11 @@ verify:
   commands:
   - bash skills/documentation/resources/validate-references.sh
 dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - verify
+  segment: .
 dependencies:
 - WO-0031
 deliverables:

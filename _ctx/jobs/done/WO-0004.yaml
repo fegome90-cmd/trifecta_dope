@@ -28,6 +28,14 @@ verify:
   - 'tests/integration/test_ctx_search_linter_ab_controlled.py: 3/3 passed'
   - 'Total: 11/11 tests passed'
 dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - verify
+  segment: .
+trace:
+  ticket: null
+  related_wos: []
 deliverables:
 - src/infrastructure/config_loader.py (configs/ unificados, missing_config marker)
 - src/application/search_get_usecases.py (lint -> tokenize -> expander -> search)
@@ -43,9 +51,6 @@ diff_budget:
 stop_conditions:
   max_iterations: 6
   max_fail_verify: 2
-trace:
-  ticket: null
-  related_wos: []
 completed_at: '2026-02-10T02:14:00Z'
 notes: "WO-0004 completado exitosamente. Todos los deliverables implementados y verificados.\n- Feature\
   \ flag TRIFECTA_LINT con default OFF (conservativo)\n- Pipeline correcto: normalize -> lint -> tokenize\

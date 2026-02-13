@@ -24,6 +24,7 @@ for item in "${CLOSED_WO_FILES[@]}"; do
     path="${item#*:}"
 
     if [[ "$status" != "A" && "$status" != R* ]]; then
+        echo "TRIFECTA_ERROR_CODE: MANUAL_WO_CLOSURE_BLOCKED"
         echo "ERROR: Manual edit detected in ${path} (status ${status})."
         echo "Only closure transitions are allowed."
         exit 1
@@ -32,23 +33,27 @@ for item in "${CLOSED_WO_FILES[@]}"; do
     wo_file="$(basename "$path")"
     wo_id="${wo_file%.yaml}"
     if ! echo "$CHANGED_STATUS" | grep -q "^D[[:space:]]_ctx/jobs/running/${wo_id}\.yaml$"; then
+        echo "TRIFECTA_ERROR_CODE: MANUAL_WO_CLOSURE_BLOCKED"
         echo "ERROR: ${path} added without deleting _ctx/jobs/running/${wo_file}."
         echo "Use: uv run python scripts/ctx_wo_finish.py ${wo_id} --result done"
         exit 1
     fi
 
     if [[ ! -f "$path" ]]; then
+        echo "TRIFECTA_ERROR_CODE: MANUAL_WO_CLOSURE_BLOCKED"
         echo "ERROR: staged file not found on disk: ${path}"
         exit 1
     fi
 
     target_state="$(echo "$path" | awk -F'/' '{print $3}')"
     if ! grep -q "^status:[[:space:]]*${target_state}[[:space:]]*$" "$path"; then
+        echo "TRIFECTA_ERROR_CODE: MANUAL_WO_CLOSURE_BLOCKED"
         echo "ERROR: ${path} has invalid status. Expected status: ${target_state}."
         exit 1
     fi
 
     if ! grep -q "^verified_at_sha:" "$path" || ! grep -q "^closed_at:" "$path"; then
+        echo "TRIFECTA_ERROR_CODE: MANUAL_WO_CLOSURE_BLOCKED"
         echo "ERROR: ${path} missing closure metadata (verified_at_sha/closed_at)."
         exit 1
     fi

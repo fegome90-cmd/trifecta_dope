@@ -11,7 +11,15 @@ scope:
   - eval/scripts/analyze_adoption_telemetry.py
   deny:
   - src/domain/**
+verify:
+  commands:
+  - '# No verification command provided (Legacy WO)'
 dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - verify
+  segment: .
 dependencies:
 - WO-0012.1
 verified_at_sha: c2bb56b

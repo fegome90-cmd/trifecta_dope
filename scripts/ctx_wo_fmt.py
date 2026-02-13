@@ -24,7 +24,17 @@ KEY_ORDER = (
     "scope",
     "verify",
     "dod_id",
+    "execution",
     "dependencies",
+    "trace",
+    "claim_links",
+    "objective",
+    "started_at",
+    "finished_at",
+    "result",
+    "commit_sha",
+    "verified_at_sha",
+    "evidence_logs",
 )
 
 

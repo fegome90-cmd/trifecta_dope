@@ -18,6 +18,11 @@ verify:
   - uv run pytest -q tests/integration/test_ast_cache_telemetry.py
   verified_at_sha: c2d0338
 dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - verify
+  segment: .
 dependencies:
 - WO-P2.1
 evidence_logs:

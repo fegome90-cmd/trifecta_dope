@@ -18,6 +18,11 @@ verify:
   commands:
   - uv run pytest -q tests/acceptance/test_cli_discover.py
 dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - verify
+  segment: .
 dependencies:
 - WO-0016
 verified_at_sha: null

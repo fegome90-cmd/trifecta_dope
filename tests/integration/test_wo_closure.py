@@ -41,7 +41,9 @@ class TestWoClosureCLI:
             cwd=repo_root(),
         )
         assert result.returncode == 1
-        assert "ERROR: missing WO" in result.stdout or "missing WO" in result.stdout
+        combined = result.stdout + result.stderr
+        assert "TRIFECTA_ERROR_CODE: WO_NOT_RUNNING" in combined
+        assert "missing WO" in combined
 
     def test_cli_help_argument(self):
         """Test CLI help argument."""
@@ -158,7 +160,9 @@ x_objective: "Test"
             cwd=repo_root(),
         )
         assert result.returncode == 1
-        assert "unknown dod_id" in result.stdout or "dod_id" in result.stdout
+        combined = result.stdout + result.stderr
+        assert "TRIFECTA_ERROR_CODE: DOD_VALIDATION_FAILED" in combined
+        assert "unknown dod_id" in combined or "dod_id" in combined
 
     def test_validate_dod_missing_directory(self, tmp_path):
         """Test validation fails when handoff directory doesn't exist."""

@@ -16,6 +16,11 @@ verify:
   commands:
   - test -f scripts/verify.sh
 dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - verify
+  segment: .
 description: Implement verdict_generator.sh for MELT metrics generation.
 context: WO-0005 was skipped. Re-evaluate if validation_report.txt supersedes this.
 steps:
