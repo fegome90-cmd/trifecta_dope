@@ -176,6 +176,22 @@ See `docs/CONTRACTS.md` and architecture docs in `docs/adr/` for complete patter
 
 The WO system provides isolated development environments using git worktrees.
 
+### Inarumen (WO Integrity Gate, Mandatory)
+
+Before taking or finishing WOs, run:
+
+```bash
+make wo-fmt-check
+make wo-lint
+make inarumen-check
+```
+
+- `ctx_wo_take.py` is fail-closed: invalid WOs do not move from `pending` to `running`, even with `--force`.
+- Use focused diagnosis for one WO:
+  `uv run python scripts/ctx_wo_lint.py --strict --json --wo-id WO-XXXX --root .`
+- Actionable skill for this workflow:
+  `skills/wo-lint-formatter/SKILL.md`
+
 ### Quick Workflow
 
 ```bash

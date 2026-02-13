@@ -3,10 +3,11 @@ name: wo-lint-formatter
 description: Use when working with Work Orders in trifecta_dope and you need to lint, format, or enforce WO integrity gates in local workflows, CI, or WO take/finish operations.
 ---
 
-# WO Lint Formatter
+# Inarumen (WO Lint Formatter)
 
 ## Overview
 Aplicar un flujo fail-closed para Work Orders (WO): formatear, validar contratos y bloquear avance de WOs inválidos antes de mover estado.
+Nombre del sistema: **Inarumen**.
 
 ## Quick Workflow
 1. Ejecutar formato determinista:
@@ -24,6 +25,11 @@ make wo-lint
 4. Generar evidencia JSON para CI/auditoría:
 ```bash
 make wo-lint-json > _ctx/telemetry/wo_lint.json
+```
+Alias operativos:
+```bash
+make inarumen-fix
+make inarumen-check
 ```
 
 ## Focused Lint (WO puntual)

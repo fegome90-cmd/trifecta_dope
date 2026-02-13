@@ -202,6 +202,29 @@ trifecta create --segment eval-harness --path eval/eval-harness/ --scan-docs eva
 trifecta validate --path eval/eval-harness/
 ```
 
+### Inarumen (WO Lint/Format, Fail-Closed)
+
+Para mantener Work Orders consistentes y bloqueantes:
+
+```bash
+make wo-fmt
+make wo-fmt-check
+make wo-lint
+make wo-lint-json > _ctx/telemetry/wo_lint.json
+# aliases de conveniencia
+make inarumen-fix
+make inarumen-check
+```
+
+Diagnóstico puntual por WO:
+
+```bash
+uv run python scripts/ctx_wo_lint.py --strict --json --wo-id WO-XXXX --root .
+```
+
+Guía accionable:
+- `skills/wo-lint-formatter/SKILL.md`
+
 ### Generar Context Pack (Programming Context Calling)
 
 El **Context Pack** es un índice estructurado que permite al agente:

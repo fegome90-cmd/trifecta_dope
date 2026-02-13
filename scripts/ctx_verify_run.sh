@@ -32,6 +32,14 @@ WO_PATH="$ROOT/_ctx/jobs/running/$WO_ID.yaml"
 if [[ ! -f "$WO_PATH" ]]; then
   WO_PATH="$ROOT/_ctx/jobs/pending/$WO_ID.yaml"
 fi
+export WO_PATH
+
+utc_now() {
+  python - <<'PY'
+from datetime import datetime, timezone
+print(datetime.now(timezone.utc).isoformat())
+PY
+}
 
 if [[ ! -f "$WO_PATH" ]]; then
   echo "ERROR: missing WO $WO_PATH"
@@ -41,36 +49,42 @@ fi
 LOG_DIR="$ROOT/_ctx/logs/$WO_ID"
 mkdir -p "$LOG_DIR"
 
-COMMANDS=$(python - <<'PY'
-import json
+if ! COMMANDS=$(python - <<'PY' 2>&1
 import os
 import sys
 from pathlib import Path
 import yaml
 
-wo_path = Path(os.environ["WO_PATH"])
-wo = yaml.safe_load(wo_path.read_text())
+try:
+    wo_path = Path(os.environ["WO_PATH"])
+    wo = yaml.safe_load(wo_path.read_text())
+except (yaml.YAMLError, OSError) as exc:
+    print(f"ERROR: failed to load verify.commands: {exc}", file=sys.stderr)
+    sys.exit(1)
+
+if wo is None or not isinstance(wo, dict):
+    print("ERROR: failed to load verify.commands: invalid WO payload", file=sys.stderr)
+    sys.exit(1)
+
 commands = wo.get("verify", {}).get("commands", [])
 if not commands:
-    print("ERROR: verify.commands is empty")
+    print("ERROR: verify.commands is empty", file=sys.stderr)
+    sys.exit(1)
+if not isinstance(commands, list) or not all(isinstance(cmd, str) for cmd in commands):
+    print("ERROR: verify.commands must be a list of strings", file=sys.stderr)
     sys.exit(1)
 print("\n".join(commands))
 PY
 )
-
-if [[ "$COMMANDS" == ERROR:* ]]; then
-  echo "$COMMANDS"
+then
+  echo "$COMMANDS" >&2
   exit 1
 fi
 
 python "$ROOT/scripts/ctx_scope_lint.py" "$WO_ID" --root "$ROOT"
 
 STATUS="PASS"
-START=$(python - <<'PY'
-from datetime import datetime, timezone
-print(datetime.now(timezone.utc).isoformat())
-PY
-)
+START="$(utc_now)"
 
 INDEX=0
 while IFS= read -r CMD; do
@@ -85,20 +99,22 @@ while IFS= read -r CMD; do
   fi
 done <<< "$COMMANDS"
 
-END=$(python - <<'PY'
-from datetime import datetime, timezone
-print(datetime.now(timezone.utc).isoformat())
-PY
-)
+END="$(utc_now)"
 
 GIT_SHA=$(git -C "$ROOT" rev-parse HEAD)
-python - <<PY
+if ! python - <<PY 2>&1
 import json
-import os
 from pathlib import Path
 import yaml
 
-wo = yaml.safe_load(Path("$WO_PATH").read_text())
+try:
+    wo = yaml.safe_load(Path("$WO_PATH").read_text())
+except (yaml.YAMLError, OSError) as exc:
+    raise SystemExit(f"ERROR: failed to write verdict.json: {exc}")
+
+if wo is None or not isinstance(wo, dict):
+    raise SystemExit("ERROR: failed to write verdict.json: invalid WO payload")
+
 verdict = {
     "wo_id": wo.get("id"),
     "epic_id": wo.get("epic_id"),
@@ -109,8 +125,14 @@ verdict = {
     "finished_at": "$END",
     "commands": "$COMMANDS".split("\n"),
 }
-Path("$LOG_DIR/verdict.json").write_text(json.dumps(verdict, indent=2))
+try:
+    Path("$LOG_DIR/verdict.json").write_text(json.dumps(verdict, indent=2))
+except OSError as exc:
+    raise SystemExit(f"ERROR: failed to write verdict.json: {exc}")
 PY
+then
+  exit 1
+fi
 
 if [[ "$STATUS" != "PASS" ]]; then
   exit 1
