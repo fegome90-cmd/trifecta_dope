@@ -40,6 +40,13 @@ Verification
 
 5. **No Silent Fallback** - Si `ctx validate` falla: STOP → `make ctx-sync` → re-validate
 
+6. **Inarumen (WO fail-closed)** - Antes de `ctx_wo_take`/`ctx_wo_finish`, ejecutar:
+   - `make wo-fmt-check`
+   - `make wo-lint`
+   - Alias: `make inarumen-check`
+   - Para un WO puntual: `uv run python scripts/ctx_wo_lint.py --strict --json --wo-id WO-XXXX --root .`
+   - Referencia operativa: `skills/wo-lint-formatter/SKILL.md`
+
 > ⚠️ Violaciones críticas: YAML long history, rutas absolutas, scripts legacy, fallback silencioso, pack stale
 
 ---
@@ -134,6 +141,11 @@ make gate-all            # Full test gate before commit
 | **Clear cache** | `trifecta ast clear-cache --segment .` |
 | **Chart telemetry** | `trifecta telemetry chart -s . --type hits` |
 | **Check git status** | `git status` (before each commit) |
+| **WO fmt check** | `make wo-fmt-check` |
+| **WO lint strict** | `make wo-lint` |
+| **WO lint JSON** | `make wo-lint-json > _ctx/telemetry/wo_lint.json` |
+| **Inarumen check** | `make inarumen-check` |
+| **Inarumen fix** | `make inarumen-fix` |
 
 ## Common Mistakes
 

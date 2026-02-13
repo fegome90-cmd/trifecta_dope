@@ -7,9 +7,9 @@ UV := uv run
 .PHONY: help install start \
 	test test-unit test-integration test-acceptance test-roadmap test-slow gate-all \
 	wo-lint wo-lint-json wo-fmt wo-fmt-check \
+	inarumen-check inarumen-fix \
 	audit \
 	ctx-sync ctx-search ctx-get ctx-stats \
-	wo-lint wo-lint-json wo-fmt wo-fmt-check \
 	create
 
 # Default Segment (current directory)
@@ -35,6 +35,8 @@ help:
 	@echo "  make wo-lint-json          Lint WO YAML and output JSON findings"
 	@echo "  make wo-fmt-check          Check canonical WO formatting"
 	@echo "  make wo-fmt                Apply canonical WO formatting"
+	@echo "  make inarumen-check        Run Inarumen gate (wo-fmt-check + wo-lint)"
+	@echo "  make inarumen-fix          Run Inarumen fix flow (wo-fmt + wo-lint)"
 	@echo ""
 	@echo "Context Operations (PCC):"
 	@echo "  make ctx-sync [SEGMENT=.]"
@@ -81,6 +83,10 @@ wo-fmt:
 wo-fmt-check:
 	$(UV) python scripts/ctx_wo_fmt.py --check
 
+inarumen-check: wo-fmt-check wo-lint
+
+inarumen-fix: wo-fmt wo-lint
+
 gate-all: test-unit test-integration test-acceptance
 	@echo "✅ GATE PASSED: Unit + Integration + Acceptance (Fast)"
 
@@ -111,18 +117,3 @@ ctx-stats:
 create:
 	@test -n "$(SEGMENT)" || (echo "SEGMENT is required"; exit 1)
 	$(UV) trifecta create --segment $(SEGMENT) --scope "$(SCOPE)"
-
-# =============================================================================
-# Work Order Lint / Format
-# =============================================================================
-wo-lint:
-	$(UV) python scripts/ctx_wo_lint.py --strict
-
-wo-lint-json:
-	$(UV) python scripts/ctx_wo_lint.py --strict --json
-
-wo-fmt:
-	$(UV) python scripts/ctx_wo_fmt.py --write
-
-wo-fmt-check:
-	$(UV) python scripts/ctx_wo_fmt.py --check
