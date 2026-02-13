@@ -8,7 +8,6 @@ This test verifies that:
 Run with: uv run pytest tests/integration/test_sidecar_integration.py -v
 """
 import json
-import os
 import subprocess
 import shutil
 from pathlib import Path
@@ -117,7 +116,7 @@ class TestSidecarIntegration:
             # Path can be relative (../.worktrees) or within repo
             path = wo["worktree_path"]
             # Just verify it's a string and not absolute
-            assert isinstance(path, str), f"worktree_path should be string"
+            assert isinstance(path, str), "worktree_path should be string"
             assert not path.startswith("/"), f"worktree_path should be relative, got: {path}"
 
     def test_repo_root_is_absolute(self, index_path: Path):
@@ -288,6 +287,7 @@ def test_take_finish_updates_index_in_isolated_repo(tmp_path: Path):
             "--root",
             str(root),
             "--skip-dod",
+            "--skip-verification",
             "--result",
             "done",
         ],
