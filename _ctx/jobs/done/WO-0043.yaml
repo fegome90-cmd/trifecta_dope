@@ -3,7 +3,7 @@ id: WO-0043
 epic_id: E-TESTS-CONTRACT
 title: Convertir 2 integration failures en gates de contrato
 priority: P0
-status: running
+status: done
 owner: felipe_gonzalez
 branch: feat/wo-WO-0043
 worktree: ../.worktrees/WO-0043
@@ -46,6 +46,7 @@ claim_links:
 objective: "Arreglar los 2 tests de integraci\xF3n que fallan y blindarlos como contratos estables.\n\
   Migrar de asserts fr\xE1giles (texto) a asserts de contrato (c\xF3digos estructurados).\n"
 started_at: '2026-02-13T18:02:36.936099+00:00'
+finished_at: '2026-02-13T20:26:00+00:00'
 deliverables:
 - 'test_naming_contract_integration.py: arreglado y usando TRIFECTA_ERROR_CODE'
 - 'test_repro_clean_sync_then_search.py: arreglado y usando error cards'
