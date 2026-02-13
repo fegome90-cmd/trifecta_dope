@@ -19,6 +19,7 @@ from ctx_wo_finish import (
     generate_artifacts,
     REQUIRED_ARTIFACTS,
     resolve_runtime_root,
+    run_verification_gate,
 )
 
 
@@ -1238,3 +1239,36 @@ class TestRootResolution:
         result = resolve_runtime_root("/definitely/not/a/real/path/for/trifecta")
         assert result.is_err()
         assert "INVALID_SEGMENT_PATH" in result.unwrap_err()
+
+
+class TestVerificationGate:
+    """Test verify.sh gate invocation contract."""
+
+    def test_run_verification_gate_passes_root_flag(self, tmp_path, monkeypatch):
+        """Verification gate must pass canonical --root to verify.sh."""
+        scripts_dir = tmp_path / "scripts"
+        scripts_dir.mkdir(parents=True)
+        (scripts_dir / "verify.sh").write_text("#!/usr/bin/env bash\nexit 0\n")
+
+        captured = {}
+
+        def mock_run(cmd, **kwargs):
+            captured["cmd"] = cmd
+            result = Mock()
+            result.returncode = 0
+            result.stdout = "ok"
+            result.stderr = ""
+            return result
+
+        import ctx_wo_finish
+
+        monkeypatch.setattr(ctx_wo_finish.subprocess, "run", mock_run)
+        result = run_verification_gate("WO-TEST", tmp_path)
+        assert result.is_ok()
+        assert captured["cmd"] == [
+            "bash",
+            str(tmp_path / "scripts" / "verify.sh"),
+            "WO-TEST",
+            "--root",
+            str(tmp_path),
+        ]

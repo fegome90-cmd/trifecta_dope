@@ -115,7 +115,7 @@ def run_verification_gate(wo_id: str, root: Path) -> Result[None, str]:
 
     try:
         result = subprocess.run(
-            ["bash", str(verify_script), wo_id],
+            ["bash", str(verify_script), wo_id, "--root", str(root)],
             cwd=root,
             capture_output=True,
             text=True,
