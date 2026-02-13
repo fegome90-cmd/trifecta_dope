@@ -150,15 +150,18 @@ def get_worktree_path(root: Path, wo_id: str) -> Path:
             f"  Expected parent: {parent}"
         )
 
-    # Validate parent directory is writable
-    if not os.access(parent, os.W_OK):
+    # Create .worktrees directory (fail-closed: validates with real mkdir)
+    worktrees_dir = parent / _WORKTREES_DIR
+    try:
+        worktrees_dir.mkdir(parents=True, exist_ok=True)
+    except OSError as e:
         raise PermissionError(
-            f"Cannot create worktree outside repo: parent directory is not writable\n"
+            f"Cannot create .worktrees directory: {e}\n"
             f"  Parent directory: {parent}\n"
-            f"  Please check permissions: ls -la {parent.parent}"
+            f"  Please check permissions"
         )
 
-    return parent / _WORKTREES_DIR / wo_id
+    return worktrees_dir / wo_id
 
 
 def get_branch_name(wo_id: str) -> str:

@@ -51,6 +51,24 @@ def load_dod_catalog(root: Path):
     return catalog
 
 
+def update_worktree_index(root: Path) -> None:
+    """Regenerate `_ctx/index/wo_worktrees.json` via export_wo_index.py."""
+    export_script = root / "scripts" / "export_wo_index.py"
+    if not export_script.exists():
+        print(f"WARNING: skipped index update (missing {export_script})")
+        return
+    try:
+        subprocess.run(
+            [sys.executable, str(export_script)],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except (subprocess.CalledProcessError, OSError) as e:
+        print(f"WARNING: failed to update index via export_wo_index.py: {e}")
+
+
 # =============================================================================
 # Artifact Generation
 # =============================================================================
@@ -442,6 +460,9 @@ def main():
     if result.is_err():
         print(f"ERROR: {result.unwrap_err()}")
         return 1
+
+    # Post-finish hook for Sidecar integration.
+    update_worktree_index(root)
 
     print(f"WO {args.wo_id} finished successfully (status: {result_status})")
     return 0

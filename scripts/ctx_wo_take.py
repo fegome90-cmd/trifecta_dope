@@ -198,6 +198,24 @@ def validate_wo_immediately(
 
     return True, findings
 
+def update_worktree_index(root: Path) -> None:
+    """Regenerate `_ctx/index/wo_worktrees.json` via export_wo_index.py."""
+    export_script = root / "scripts" / "export_wo_index.py"
+    if not export_script.exists():
+        logger.warning(f"Skipped index update: missing {export_script}")
+        return
+    try:
+        subprocess.run(
+            [sys.executable, str(export_script)],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        logger.debug("Updated worktree index via export_wo_index.py")
+    except (subprocess.CalledProcessError, OSError) as e:
+        logger.warning(f"Failed to update worktree index via export_wo_index.py: {e}")
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -451,14 +469,17 @@ Examples:
         transaction = transaction.commit()
         logger.info(f"✓ Transaction committed for WO {wo_id}")
 
+        # Update worktree index for Sidecar integration
+        update_worktree_index(root)
+
     except Exception as e:
         logger.error(f"Unexpected error during WO take: {e}")
         logger.info("Executing rollback...")
-        all_succeeded, failed_ops = execute_rollback(transaction, root)
-        if all_succeeded:
+        rollback_result = execute_rollback(transaction, root)
+        if not rollback_result.is_partial_failure:
             logger.info("✓ Rollback completed")
         else:
-            logger.error(f"✗ Rollback partially failed: {failed_ops}")
+            logger.error(f"✗ Rollback partially failed: {rollback_result.failed_ops}")
         return 1
 
     # Success message
