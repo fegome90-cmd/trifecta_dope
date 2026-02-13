@@ -9,7 +9,7 @@ Verification
 
 1. **skill.md** (este archivo) - Reglas y roles
 2. **[PRIME](./_ctx/prime_trifecta_dope.md)** - Docs obligatorios
-3. **[AGENT](./_ctx/agent.md)** - Stack técnico y gates
+3. **[AGENT](./_ctx/agent_trifecta_dope.md)** - Stack técnico y gates
 4. **[SESSION](./_ctx/session_trifecta_dope.md)** - Log de handoffs y estado actual
 
 > NO ejecutes código ni hagas cambios sin leer los 4 archivos.

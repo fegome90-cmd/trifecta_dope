@@ -7,9 +7,9 @@
 
 ## Required Reading Order
 1. skill.md
-2. _ctx/prime_trifecta_dope.md
-3. _ctx/agent_trifecta_dope.md
-4. _ctx/session_trifecta_dope.md
+2. _ctx/agent_trifecta_dope.md
+3. _ctx/session_trifecta_dope.md
+4. _ctx/prime_trifecta_dope.md
 
 ## Core Commands
 - make install
@@ -21,8 +21,8 @@
 ## Work Orders
 - Backlog: _ctx/backlog/backlog.yaml
 - Pending WOs: _ctx/jobs/pending/
-- Take WO: python scripts/ctx_wo_take.py WO-XXXX
-- Finish WO: python scripts/ctx_wo_finish.py WO-XXXX
+- Take WO: uv run python scripts/ctx_wo_take.py WO-XXXX
+- Finish WO: uv run python scripts/ctx_wo_finish.py WO-XXXX
 
 ## Key Directories
 - src/domain/ (pure logic)

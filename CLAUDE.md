@@ -1,6 +1,7 @@
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+It is Claude-specific; `agents.md` serves other agent runtimes.
 
 ---
 
@@ -123,16 +124,16 @@ The WO system provides isolated development environments using git worktrees.
 
 ```bash
 # List pending WOs
-python scripts/ctx_wo_take.py --list
+uv run python scripts/ctx_wo_take.py --list
 
 # Take WO (auto-creates branch + worktree)
-python scripts/ctx_wo_take.py WO-XXXX
+uv run python scripts/ctx_wo_take.py WO-XXXX
 
 # Navigate & work
 cd .worktrees/WO-XXXX
 
 # Complete WO
-python scripts/ctx_wo_finish.py WO-XXXX
+uv run python scripts/ctx_wo_finish.py WO-XXXX
 ```
 
 ### Key Scripts

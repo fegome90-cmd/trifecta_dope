@@ -42,6 +42,16 @@ El objetivo no es “traer más texto”, es **activar el contexto correcto** co
 El agente inicia con `skill → prime → agent → session`.  
 Solo escala a código cuando es estrictamente necesario y siguiendo rutas/contratos curados.
 
+## Función de cada markdown (sin mezclar audiencias)
+- `README.md`: onboarding humano del proyecto y quickstart.
+- `CLAUDE.md`: contrato operativo para Claude Code.
+- `agents.md`: contrato operativo para otros runtimes/agentes.
+- `skill.md`: runbook operativo del segmento (reglas + ciclo Search/Get + gates).
+- `llms.txt`: resumen corto para carga rápida por LLM.
+- `_ctx/agent_trifecta_dope.md`: estado técnico activo (features/gates/stack).
+- `_ctx/prime_trifecta_dope.md`: lista de lectura priorizada.
+- `_ctx/session_trifecta_dope.md`: bitácora append-only de handoff.
+
 ## Problema
 
 Los agentes de código (Claude, Gemini, Codex) parsean miles de líneas de código innecesariamente, consumen contexto, y terminan con información obsoleta o incompleta.
