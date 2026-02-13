@@ -1,0 +1,110 @@
+version: 1
+id: WO-0011
+epic_id: E-0002
+title: Fix multi-review findings from Nivel A integration
+priority: P1
+status: done
+owner: felipe_gonzalez
+branch: feat/wo-WO-0011
+worktree: ../.worktrees/WO-0011
+scope:
+  allow:
+  - scripts/paths.py
+  - scripts/helpers.py
+  - scripts/ctx_wo_take.py
+  - scripts/metadata_inference.py
+  - tests/unit/test_paths.py
+  - tests/unit/test_metadata_inference.py
+  - tests/unit/test_ctx_wo_take.py
+  - tests/test_wo_orchestration.py
+  deny:
+  - .env*
+verify:
+  commands:
+  - uv run pytest tests/unit/test_paths.py tests/unit/test_metadata_inference.py tests/unit/test_ctx_wo_take.py
+    tests/test_wo_orchestration.py -v
+dod_id: DOD-DEFAULT
+x_micro_tasks:
+- id: T1
+  name: 'T1: Fix broken test_worktree_path_generation test'
+  status: done
+  commands:
+  - Edit tests/test_wo_orchestration.py line 100 to use repo_root.parent
+  gates:
+  - test -f tests/test_wo_orchestration.py
+  evidence:
+  - tests/test_wo_orchestration.py:100 updated with .parent
+- id: T2
+  name: 'T2: Add unit tests for get_worktree_path()'
+  status: done
+  commands:
+  - Create tests/unit/test_paths.py with basic functionality tests
+  - Add test for repo at filesystem root edge case
+  gates:
+  - test -f scripts/paths.py
+  evidence:
+  - tests/unit/test_paths.py created with 18 tests
+- id: T3
+  name: 'T3: Add parent directory validation to get_worktree_path()'
+  status: done
+  commands:
+  - Edit scripts/paths.py to validate parent exists and is writable
+  gates:
+  - test -f scripts/paths.py
+  evidence:
+  - scripts/paths.py get_worktree_path() has validation (FileNotFoundError, PermissionError)
+- id: T4
+  name: 'T4: Add tests for metadata_inference.py regex pattern'
+  status: done
+  commands:
+  - Create tests/unit/test_metadata_inference.py
+  - Test get_worktrees_from_git() with new pattern
+  gates:
+  - test -f scripts/metadata_inference.py
+  evidence:
+  - tests/unit/test_metadata_inference.py created with 26 tests
+- id: T5
+  name: 'T5: Add tests for path conversion in ctx_wo_take.py'
+  status: done
+  commands:
+  - Create tests/unit/test_ctx_wo_take.py
+  - Test relative path calculation logic
+  gates:
+  - test -f scripts/ctx_wo_take.py
+  evidence:
+  - tests/unit/test_ctx_wo_take.py created with 12 tests
+- id: T6
+  name: 'T6: Simplify dead try/except code in ctx_wo_take.py'
+  status: done
+  commands:
+  - Remove unnecessary try/except for relative_to()
+  - Use os.path.relpath directly
+  - Move import os to top of file
+  gates:
+  - test -f scripts/ctx_wo_take.py
+  evidence:
+  - scripts/ctx_wo_take.py simplified path conversion using os.path.relpath
+- id: T7
+  name: 'T7: Resolve parameter order inconsistency'
+  status: done
+  commands:
+  - Update helpers.py get_worktree_path() to match paths.py signature
+  - OR add explicit alias to avoid shadowing
+  gates:
+  - test -f scripts/helpers.py
+  evidence:
+  - scripts/helpers.py parameter order resolved with deprecation warning
+- id: T8
+  name: 'T8: Update integration test mock directories'
+  status: pending
+  commands:
+  - Update test_transaction_recovery.py to use correct paths
+  - Update test_helpers_rollback.py to use correct paths
+  gates:
+  - test -f tests/integration/test_transaction_recovery.py
+  evidence:
+  - Integration tests updated with correct paths
+started_at: '2026-02-10T15:47:37.629636+00:00'
+verified_at_sha: 59a0807d8de1c737d319dcfe315639459d4274c1
+closed_at: '2026-02-10T16:09:47.447500+00:00'
+result: done

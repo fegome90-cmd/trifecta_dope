@@ -8,6 +8,7 @@ UV := uv run
 	test test-unit test-integration test-acceptance test-roadmap test-slow gate-all \
 	audit \
 	ctx-sync ctx-search ctx-get ctx-stats \
+	wo-lint wo-lint-json wo-fmt wo-fmt-check \
 	create
 
 # Default Segment (current directory)
@@ -91,3 +92,18 @@ ctx-stats:
 create:
 	@test -n "$(SEGMENT)" || (echo "SEGMENT is required"; exit 1)
 	$(UV) trifecta create --segment $(SEGMENT) --scope "$(SCOPE)"
+
+# =============================================================================
+# Work Order Lint / Format
+# =============================================================================
+wo-lint:
+	$(UV) python scripts/ctx_wo_lint.py --strict
+
+wo-lint-json:
+	$(UV) python scripts/ctx_wo_lint.py --strict --json
+
+wo-fmt:
+	$(UV) python scripts/ctx_wo_fmt.py --write
+
+wo-fmt-check:
+	$(UV) python scripts/ctx_wo_fmt.py --check

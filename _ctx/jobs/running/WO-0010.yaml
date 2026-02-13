@@ -1,0 +1,22 @@
+version: 1
+id: WO-0010
+epic_id: E-0001
+title: Real pipeline verification (WO lifecycle smoke)
+priority: P2
+status: running
+owner: felipe_gonzalez
+branch: feat/wo-WO-0010
+worktree: ../.worktrees/WO-0010
+scope:
+  allow:
+  - tests/integration/test_ctx_pipeline_real_wo.py
+  - tests/unit/test_ctx_backlog_validate.py
+  - scripts/**
+  - _ctx/logs/**
+  deny:
+  - .env*
+verify:
+  commands:
+  - uv run pytest -q tests/integration/test_ctx_pipeline_real_wo.py::test_real_wo_validates_and_can_be_taken
+dod_id: DOD-DEFAULT
+started_at: '2026-02-13T00:40:43.059176+00:00'
