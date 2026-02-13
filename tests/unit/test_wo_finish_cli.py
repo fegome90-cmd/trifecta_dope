@@ -84,6 +84,17 @@ class TestWoFinishCLIArguments:
         # Verify description mentions skipping validation or emergency
         assert "skip" in result.stdout.lower() or "emergency" in result.stdout.lower()
 
+    def test_cli_skip_verification_flag(self):
+        """Test CLI --skip-verification flag exists and is documented."""
+        result = subprocess.run(
+            ["python", "scripts/ctx_wo_finish.py", "--help"],
+            capture_output=True,
+            text=True,
+            cwd=repo_root(),
+        )
+        assert result.returncode == 0
+        assert "--skip-verification" in result.stdout
+
 
 class TestWoFinishCLIWorkflow:
     """Test WO finish CLI workflow scenarios."""

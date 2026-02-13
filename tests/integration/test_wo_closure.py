@@ -30,6 +30,7 @@ class TestWoClosureCLI:
         assert "Finish a work order" in result.stdout
         assert "--generate-only" in result.stdout
         assert "--skip-dod" in result.stdout
+        assert "--skip-verification" in result.stdout
 
     def test_wo_finish_missing_wo_file(self, tmp_path):
         """Test error when WO file doesn't exist."""
@@ -309,6 +310,7 @@ x_objective: "Test"
                 "--root",
                 str(sandbox_root),
                 "--skip-dod",
+                "--skip-verification",
             ],
             capture_output=True,
             text=True,

@@ -350,13 +350,16 @@ python scripts/ctx_wo_take.py --status
 
 ### ctx_wo_finish.py
 
-Complete a work order with DoD validation:
+Complete a work order with DoD + verification gate:
 
 ```bash
-# Complete WO (runs DoD verification)
+# Complete WO (runs DoD validation + scripts/verify.sh)
 python scripts/ctx_wo_finish.py WO-0013
 
-# Skip verification (not recommended)
+# Skip DoD validation (emergency only)
+python scripts/ctx_wo_finish.py WO-0013 --skip-dod
+
+# Skip verify.sh gate (emergency only)
 python scripts/ctx_wo_finish.py WO-0013 --skip-verification
 ```
 
@@ -385,7 +388,7 @@ python scripts/ctx_reconcile_state.py --dry-run
 ### ❌ DON'T
 
 1. **Don't edit WO YAMLs directly**: Use scripts for state transitions
-2. **Don't skip DoD verification**: Use `--skip-verification` only in emergencies
+2. **Don't skip closure gates**: Use `--skip-dod` / `--skip-verification` only in emergencies
 3. **Don't share worktrees**: One WO per worktree
 4. **Don't ignore locks**: Stale locks indicate interrupted work
 5. **Don't delete worktrees manually**: Use `git worktree remove` or helpers
