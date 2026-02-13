@@ -1194,3 +1194,8 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Commands**: write_file
 - **Pack SHA**: `8127ef82d5e4c260`
 
+[WO-0045] intent: smoke test start
+[WO-0045] result: smoke test end
+[WO-SMOKE] intent: smoke test start
+[WO-SMOKE] result: smoke test end
+[WO-0045] intent: Estabilizar el motor de Work Orders unificando el runtime bajo 'uv run python' y estableciendo 'ctx_verify_run.sh' como gate autoritativo.

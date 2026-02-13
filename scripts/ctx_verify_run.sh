@@ -35,7 +35,7 @@ fi
 export WO_PATH
 
 utc_now() {
-  python - <<'PY'
+  uv run python - <<'PY'
 from datetime import datetime, timezone
 print(datetime.now(timezone.utc).isoformat())
 PY
@@ -49,9 +49,10 @@ fi
 LOG_DIR="$ROOT/_ctx/logs/$WO_ID"
 mkdir -p "$LOG_DIR"
 
-if ! COMMANDS=$(python - <<'PY' 2>&1
-import os
-import sys
+# Load verify.commands safely (no bash interpolation into python output)
+COMMANDS="$(
+  uv run python - <<'PY' 2>&1
+import os, sys
 from pathlib import Path
 import yaml
 
@@ -70,27 +71,26 @@ commands = wo.get("verify", {}).get("commands", [])
 if not commands:
     print("ERROR: verify.commands is empty", file=sys.stderr)
     sys.exit(1)
+
 if not isinstance(commands, list) or not all(isinstance(cmd, str) for cmd in commands):
     print("ERROR: verify.commands must be a list of strings", file=sys.stderr)
     sys.exit(1)
+
 print("\n".join(commands))
 PY
-)
-then
-  echo "$COMMANDS" >&2
-  exit 1
-fi
+)"
 
-python "$ROOT/scripts/ctx_scope_lint.py" "$WO_ID" --root "$ROOT"
+# Scope-first lint (hard gate)
+uv run python "$ROOT/scripts/ctx_scope_lint.py" "$WO_ID" --root "$ROOT"
 
 STATUS="PASS"
 START="$(utc_now)"
 
+export COMMANDS_LIST="$COMMANDS"
+
 INDEX=0
 while IFS= read -r CMD; do
-  if [[ -z "$CMD" ]]; then
-    continue
-  fi
+  [[ -z "$CMD" ]] && continue
   INDEX=$((INDEX+1))
   LOG_FILE="$LOG_DIR/command_${INDEX}.log"
   if ! bash -lc "$CMD" >"$LOG_FILE" 2>&1; then
@@ -100,15 +100,19 @@ while IFS= read -r CMD; do
 done <<< "$COMMANDS"
 
 END="$(utc_now)"
+GIT_SHA="$(git -C "$ROOT" rev-parse HEAD)"
 
-GIT_SHA=$(git -C "$ROOT" rev-parse HEAD)
-if ! python - <<PY 2>&1
-import json
+export STATUS START END LOG_DIR GIT_SHA
+
+# Write verdict.json without here-doc expansion bugs
+uv run python - <<'PY' 2>&1
+import json, os
 from pathlib import Path
 import yaml
 
+wo_path = Path(os.environ["WO_PATH"])
 try:
-    wo = yaml.safe_load(Path("$WO_PATH").read_text())
+    wo = yaml.safe_load(wo_path.read_text())
 except (yaml.YAMLError, OSError) as exc:
     raise SystemExit(f"ERROR: failed to write verdict.json: {exc}")
 
@@ -119,21 +123,18 @@ verdict = {
     "wo_id": wo.get("id"),
     "epic_id": wo.get("epic_id"),
     "dod_id": wo.get("dod_id"),
-    "git_commit": "$GIT_SHA",
-    "status": "$STATUS",
-    "started_at": "$START",
-    "finished_at": "$END",
-    "commands": "$COMMANDS".split("\n"),
+    "git_commit": os.environ.get("GIT_SHA"),
+    "status": os.environ.get("STATUS"),
+    "started_at": os.environ.get("START"),
+    "finished_at": os.environ.get("END"),
+    "commands": os.environ.get("COMMANDS_LIST", "").split("\n"),
 }
+
+log_dir = Path(os.environ["LOG_DIR"])
 try:
-    Path("$LOG_DIR/verdict.json").write_text(json.dumps(verdict, indent=2))
+    (log_dir / "verdict.json").write_text(json.dumps(verdict, indent=2))
 except OSError as exc:
     raise SystemExit(f"ERROR: failed to write verdict.json: {exc}")
 PY
-then
-  exit 1
-fi
 
-if [[ "$STATUS" != "PASS" ]]; then
-  exit 1
-fi
+[[ "$STATUS" == "PASS" ]] || exit 1

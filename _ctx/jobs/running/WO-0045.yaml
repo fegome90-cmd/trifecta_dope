@@ -3,12 +3,10 @@ id: WO-0045
 epic_id: E-TESTS-CONTRACT
 title: Trifecta-first WO engine (fail-closed)
 priority: P0
-status: pending
+status: running
 scope:
   allow:
   - '*'
-  - '*/**'
-  - '**/*'
   deny:
   - .env*
   - '**/production.*'
@@ -16,11 +14,18 @@ verify:
   commands:
   - make wo-fmt-check
   - make wo-lint
+  - bash scripts/ctx_verify_run.sh WO-0045 --root .
   - uv run pytest -q tests/unit/test_wo_trifecta_contract.py
   - uv run pytest -q tests/unit/test_wo_finish_requires_evidence.py
   - uv run pytest -q tests/unit/test_prevent_manual_wo_closure.py
   - bash scripts/smoke_wo_trifecta_flow.sh WO-0045
 dod_id: DOD-DEFAULT
+objective: "Forzar que cada Work Order ejecute el flujo Trifecta completo como condici\xF3n\nno negociable,\
+  \ con contrato en schema, enforcement en take/finish, gate por WO\ny hook anti-bypass.\n"
+summary: 'Enforce Trifecta as mandatory execution engine for all WOs using fail-closed validation, evidence
+  requirements, and anti-bypass commit controls.
+
+  '
 execution:
   engine: trifecta
   required_flow:
@@ -30,6 +35,20 @@ execution:
   - ctx.get
   - session.append:result
   segment: .
+deliverables:
+- Schema exige execution.engine, execution.required_flow y execution.segment
+- ctx_wo_take.py falla si falta contrato o engine != trifecta
+- "ctx_wo_finish.py bloquea running->done sin evidencia m\xEDnima"
+- ctx_verify_run.sh ejecuta verify.commands y falla en primer error
+- "prevent_manual_wo_closure.sh bloquea cierre manual sin transici\xF3n v\xE1lida + evidencia"
+- 'No loophole: modificar scripts no permite saltar gates'
+- Tests cubren happy path, missing contract, wrong engine, missing evidence, bypass
+diff_budget:
+  max_files: 10
+  max_loc: 350
+stop_conditions:
+  max_iterations: 5
+  max_fail_verify: 2
 trace:
   ticket: null
   related_wos:
@@ -46,28 +65,6 @@ claim_links:
   constraints:
   - No silent fallback
   - Keep verification deterministic
-objective: "Forzar que cada Work Order ejecute el flujo Trifecta completo como condici\xF3\
-  n\nno negociable, con contrato en schema, enforcement en take/finish, gate por WO\n\
-  y hook anti-bypass.\n"
-summary: 'Enforce Trifecta as mandatory execution engine for all WOs using fail-closed
-  validation, evidence requirements, and anti-bypass commit controls.
-
-  '
-deliverables:
-- Schema exige execution.engine, execution.required_flow y execution.segment
-- ctx_wo_take.py falla si falta contrato o engine != trifecta
-- "ctx_wo_finish.py bloquea running->done sin evidencia m\xEDnima"
-- ctx_verify_run.sh ejecuta verify.commands y falla en primer error
-- "prevent_manual_wo_closure.sh bloquea cierre manual sin transici\xF3n v\xE1lida\
-  \ + evidencia"
-- 'No loophole: modificar scripts no permite saltar gates'
-- Tests cubren happy path, missing contract, wrong engine, missing evidence, bypass
-diff_budget:
-  max_files: 10
-  max_loc: 350
-stop_conditions:
-  max_iterations: 5
-  max_fail_verify: 2
 evidence:
   required:
   - path: _ctx/session_trifecta_dope.md

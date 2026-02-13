@@ -4,6 +4,7 @@
 #   D _ctx/jobs/running/WO-XXXX.yaml
 #   A _ctx/jobs/done|failed/WO-XXXX.yaml
 # plus closed metadata (status, verified_at_sha, closed_at) in destination file.
+# plus mandatory handoff evidence bundle per WO.
 
 set -euo pipefail
 
@@ -18,6 +19,12 @@ while IFS=$'\t' read -r status path _rest; do
 done <<< "$CHANGED_STATUS"
 
 [[ ${#CLOSED_WO_FILES[@]} -eq 0 ]] && exit 0
+
+if echo "$CHANGED_STATUS" | grep -qE "^[AMR].*[[:space:]]scripts/(ctx_wo_finish\.py|prevent_manual_wo_closure\.sh)$"; then
+    echo "ERROR: Cannot close WO while mutating closure scripts in same commit."
+    echo "Split into two commits: (1) scripts, (2) WO closure evidence."
+    exit 1
+fi
 
 for item in "${CLOSED_WO_FILES[@]}"; do
     status="${item%%:*}"
@@ -55,6 +62,18 @@ for item in "${CLOSED_WO_FILES[@]}"; do
     if ! grep -q "^verified_at_sha:" "$path" || ! grep -q "^closed_at:" "$path"; then
         echo "TRIFECTA_ERROR_CODE: MANUAL_WO_CLOSURE_BLOCKED"
         echo "ERROR: ${path} missing closure metadata (verified_at_sha/closed_at)."
+        exit 1
+    fi
+
+    if ! echo "$CHANGED_STATUS" | grep -qE "^[AMR].*[[:space:]]_ctx/handoff/${wo_id}/verdict\.json$"; then
+        echo "ERROR: Missing staged handoff verdict for ${wo_id}."
+        echo "Expected: _ctx/handoff/${wo_id}/verdict.json"
+        exit 1
+    fi
+
+    if ! echo "$CHANGED_STATUS" | grep -qE "^[AMR].*[[:space:]]_ctx/handoff/${wo_id}/verification_report\.log$"; then
+        echo "ERROR: Missing staged verification report for ${wo_id}."
+        echo "Expected: _ctx/handoff/${wo_id}/verification_report.log"
         exit 1
     fi
 done

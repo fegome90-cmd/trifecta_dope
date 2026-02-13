@@ -42,6 +42,26 @@
       },
       "patternProperties": {"^x_": {}}
     },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["engine", "required_flow", "segment"],
+      "properties": {
+        "engine": {"type": "string", "enum": ["trifecta"]},
+        "segment": {"type": "string", "enum": ["."]},
+        "required_flow": {
+          "type": "array",
+          "items": {"type": "string"},
+          "allOf": [
+            {"contains": {"const": "session.append:intent"}},
+            {"contains": {"const": "ctx.sync"}},
+            {"contains": {"const": "ctx.search"}},
+            {"contains": {"const": "ctx.get"}},
+            {"contains": {"const": "session.append:result"}}
+          ]
+        }
+      }
+    },
     "diff_budget": {
       "type": "object",
       "additionalProperties": true,
@@ -87,5 +107,17 @@
     "commit_sha": {"type": ["string", "null"]},
     "verified_at_sha": {"type": ["string", "null"]},
     "evidence_logs": {"type": "array", "items": {"type": "string"}}
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {"enum": ["pending", "running"]}
+        }
+      },
+      "then": {
+        "required": ["execution"]
+      }
+    }
+  ]
 }

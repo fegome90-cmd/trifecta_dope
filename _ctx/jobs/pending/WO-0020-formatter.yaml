@@ -25,3 +25,12 @@ description: Fix formatting issues in 62 files identified in WO-0019 debrief.
 steps:
 - Run npm run format on all docs
 - Verify clean diffs
+execution:
+  engine: trifecta
+  required_flow:
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
+  segment: .

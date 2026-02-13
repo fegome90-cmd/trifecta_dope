@@ -58,3 +58,12 @@ x_validation_rules:
 - Resolve against ctx.WorkDir (repo_root)
 - Verify result is under parent/.worktrees/
 - Reject ../../../etc and similar traversals
+execution:
+  engine: trifecta
+  required_flow:
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
+  segment: .

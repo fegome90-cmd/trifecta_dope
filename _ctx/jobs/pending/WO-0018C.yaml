@@ -169,3 +169,12 @@ x_micro_tasks:
   evidence:
   - _ctx/backlog/backlog.yaml
   commit: 'chore(backlog): update WO-0012 status to done'
+execution:
+  engine: trifecta
+  required_flow:
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
+  segment: .

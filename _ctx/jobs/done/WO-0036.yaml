@@ -1,24 +1,14 @@
 version: 1
 id: WO-0036
-epic_id: E-0003
+epic_id: E-0019
 title: WO Hygiene - Code cleanup from multi-review
 priority: P1
-status: pending
+status: done
 scope:
   allow:
-  - internal/plugins/td/**
-  - internal/plugins/trifecta/**
-  deny:
-  - .env*
-verify:
-  commands:
-  - '# No verification command provided (Legacy WO)'
-dod_id: DOD-DEFAULT
-execution:
-  engine: trifecta
-  required_flow:
-  - verify
-  segment: .
+  - internal/plugins/**
+  deny: []
+dod_id: WO-0036-dod
 created_at: '2026-02-11T14:30:00Z'
 description: "Clean up code duplication and DRY violations identified by multi-review agents.\n\n## Approach\n\
   Following **strict TDD methodology** (RED \u2192 GREEN \u2192 REFACTOR):\n1. Write failing tests first\
@@ -187,3 +177,12 @@ tasks:
   severity: TEST
   status: done
   test_ref: test_index_loading_integration
+execution:
+  engine: trifecta
+  required_flow:
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
+  segment: .

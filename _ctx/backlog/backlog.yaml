@@ -1,157 +1,165 @@
 version: 1
-generated_at: "2026-02-12T00:00:00Z"
+generated_at: '2026-02-12T00:00:00Z'
 epics:
-  - id: E-0001
-    title: "AST Cache Operability"
-    description: |
-      Make AST cache operational via configuration (flags/env vars) with full observability.
+- id: E-0001
+  title: AST Cache Operability
+  description: 'Make AST cache operational via configuration (flags/env vars) with
+    full observability.
 
-      Goal: Transition from "works when injected" to production-ready persistence
-      with telemetry, deterministic locking, and fail-closed testing.
 
+    Goal: Transition from "works when injected" to production-ready persistence
+
+    with telemetry, deterministic locking, and fail-closed testing.
+
+    '
+  status: complete
+  priority: P0
+  wo_queue:
+  - WO-P2.1
+  - WO-P2.2
+  - WO-P3.0
+  - WO-0012
+  - WO-0012.1
+  - WO-0013
+  x_legacy_wo_queue:
+  - WO-P0
+  - WO-P1
+  - WO-P2.1
+  - WO-P2.2
+  x_phases:
+  - name: 'P0: Inventory'
     status: complete
-    priority: P0
-
-    wo_queue:
-      - WO-P2.1 # Telemetry Integration (done)
-      - WO-P2.2 # File Locks via Wrapper (done)
-      - WO-P3.0 # Soak Harness & Evidence (done)
-      - WO-0012 # Persistence Feature Flag (done - test env only, verified 4b92ccb)
-      - WO-0012.1 # Dev CLI Persistence Default (done)
-      - WO-0013 # AST Persist Adoption Observability (pending)
-
-    x_legacy_wo_queue:
-      - WO-P0 # Inventory (done - SHA b0ab32f)
-      - WO-P1 # Wiring (done - SHA 354afb6, verified e7956fd)
-      - WO-P2.1 # Telemetry (done - SHA e323433)
-      - WO-P2.2 # File Locks (done - SHA c2d0338)
-
-    x_phases:
-      - name: "P0: Inventory"
-        status: complete
-        sha: "b0ab32f"
-      - name: "P1: Factory Wiring"
-        status: complete
-        sha: "354afb6"
-        verified_sha: "e7956fd"
-      - name: "P2.1: Telemetry"
-        status: complete
-        sha: "e323433"
-      - name: "P2.2: File Locks"
-        status: complete
-        sha: "c2d0338"
-
-    x_deferred:
-      - "P2.3: Corruption Detection & Recovery"
-      - "P2.4: Resource Monitoring"
-      - "P2.5: TTL & Eviction"
-
-    generated_at: "2026-01-06T16:10:00-03:00"
-    x_curated_at: "2026-01-06T16:10:00-03:00"
-
-  - id: E-0002
-    title: "Code Quality & Technical Debt"
-    description: |
-      Address technical debt and code quality issues identified through
-      multi-review processes and integration testing.
-
-      Focus: Test coverage gaps, dead code removal, parameter consistency,
-      and validation improvements.
-
-    status: pending
-    priority: P1
-
-    wo_queue:
-      - WO-0011 # Fix multi-review findings from Nivel A integration
-
-    generated_at: "2026-02-10T12:45:00-03:00"
-
-  - id: E-SCALE
-    title: "Zero-Config Discovery for Massive Repos"
-    description: |
-      Enable Trifecta to auto-discover segment boundaries in large codebases
-      like /agent_h without manual configuration.
-
-      Goal: `trifecta ctx discover --root /path` generates trifecta_config.json
-
-    status: pending
-    priority: P1
-
-    wo_queue:
-      - WO-0014 # Import Extractor
-      - WO-0015 # Topology Scanner
-      - WO-0016 # Segment Clusterer
-      - WO-0017 # CLI Integration
-
-    generated_at: "2026-01-13T09:30:00-03:00"
-
-  - id: E-0003
-    title: "TD Middleware Integration"
-    description: |
-      Create Sidecar plugin (TD) for displaying and interacting with
-      active Trifecta Work Orders.
-
-      Goal: Sidecar shows active WO badge, keybindings (tw/to/tc),
-      path guardrails for security, shared types to prevent schema drift.
-
-    status: pending
-    priority: P0
-
-    wo_queue:
-      - WO-0035 # ADR - TD Middleware Scope
-      - WO-0036 # Shared Types Package
-      - WO-0037 # TD Plugin Core
-      - WO-0038 # Path Guardrails
-      - WO-0039 # Integration Tests
-
-    x_generated_at: "2026-02-11T17:30:00-03:00"
-
-  - id: E-0004
-    title: "Documentation Skill Workflow"
-    description: |
-      Consolidate documentation automation assets (guides, validation scripts,
-      contexts, and hooks) for maintainable doc operations.
-
-      Goal: keep docs workflows reproducible and verifiable.
-
-    status: pending
-    priority: P2
-
-    wo_queue:
-      - WO-0030
-      - WO-0031
-      - WO-0032
-      - WO-0033
-      - WO-0034
-
-    generated_at: "2026-02-12T00:00:00-03:00"
-
-  - id: E-0012
-    title: "WO Closure Hardening"
-    description: |
-      Harden Work Order closure workflow by adding guards, tests,
-      and cleanup follow-ups for process consistency.
-
+    sha: b0ab32f
+  - name: 'P1: Factory Wiring'
     status: complete
-    priority: P1
+    sha: 354afb6
+    verified_sha: e7956fd
+  - name: 'P2.1: Telemetry'
+    status: complete
+    sha: e323433
+  - name: 'P2.2: File Locks'
+    status: complete
+    sha: c2d0338
+  x_deferred:
+  - 'P2.3: Corruption Detection & Recovery'
+  - 'P2.4: Resource Monitoring'
+  - 'P2.5: TTL & Eviction'
+  generated_at: '2026-01-06T16:10:00-03:00'
+  x_curated_at: '2026-01-06T16:10:00-03:00'
+- id: E-0002
+  title: Code Quality & Technical Debt
+  description: 'Address technical debt and code quality issues identified through
 
-    wo_queue:
-      - WO-0018A
-      - WO-0018B
-      - WO-0018C
+    multi-review processes and integration testing.
 
-    generated_at: "2026-02-12T00:00:00-03:00"
 
-  - id: E-0013
-    title: "Legacy WO Migration"
-    description: |
-      Migrate legacy Work Orders to schema v1 compatibility and
-      enforce deterministic validation across states.
+    Focus: Test coverage gaps, dead code removal, parameter consistency,
 
-    status: pending
-    priority: P2
+    and validation improvements.
 
-    wo_queue:
-      - WO-0019
+    '
+  status: pending
+  priority: P1
+  wo_queue:
+  - WO-0011
+  generated_at: '2026-02-10T12:45:00-03:00'
+- id: E-SCALE
+  title: Zero-Config Discovery for Massive Repos
+  description: 'Enable Trifecta to auto-discover segment boundaries in large codebases
 
-    generated_at: "2026-02-12T00:00:00-03:00"
+    like /agent_h without manual configuration.
+
+
+    Goal: `trifecta ctx discover --root /path` generates trifecta_config.json
+
+    '
+  status: pending
+  priority: P1
+  wo_queue:
+  - WO-0014
+  - WO-0015
+  - WO-0016
+  - WO-0017
+  generated_at: '2026-01-13T09:30:00-03:00'
+- id: E-0003
+  title: TD Middleware Integration
+  description: 'Create Sidecar plugin (TD) for displaying and interacting with
+
+    active Trifecta Work Orders.
+
+
+    Goal: Sidecar shows active WO badge, keybindings (tw/to/tc),
+
+    path guardrails for security, shared types to prevent schema drift.
+
+    '
+  status: pending
+  priority: P0
+  wo_queue:
+  - WO-0035
+  - WO-0036
+  - WO-0037
+  - WO-0038
+  - WO-0039
+  x_generated_at: '2026-02-11T17:30:00-03:00'
+- id: E-0004
+  title: Documentation Skill Workflow
+  description: 'Consolidate documentation automation assets (guides, validation scripts,
+
+    contexts, and hooks) for maintainable doc operations.
+
+
+    Goal: keep docs workflows reproducible and verifiable.
+
+    '
+  status: pending
+  priority: P2
+  wo_queue:
+  - WO-0030
+  - WO-0031
+  - WO-0032
+  - WO-0033
+  - WO-0034
+  generated_at: '2026-02-12T00:00:00-03:00'
+- id: E-0012
+  title: WO Closure Hardening
+  description: 'Harden Work Order closure workflow by adding guards, tests,
+
+    and cleanup follow-ups for process consistency.
+
+    '
+  status: complete
+  priority: P1
+  wo_queue:
+  - WO-0018A
+  - WO-0018B
+  - WO-0018C
+  generated_at: '2026-02-12T00:00:00-03:00'
+- id: E-0013
+  title: Legacy WO Migration
+  description: 'Migrate legacy Work Orders to schema v1 compatibility and
+
+    enforce deterministic validation across states.
+
+    '
+  status: pending
+  priority: P2
+  wo_queue:
+  - WO-0019
+  generated_at: '2026-02-12T00:00:00-03:00'
+- id: E-0019
+  title: WO Hygiene
+  description: Clean up code duplication and DRY violations.
+  status: pending
+  priority: P1
+  wo_queue:
+  - WO-0036
+  generated_at: '2026-02-13T00:00:00Z'
+- id: E-TESTS-CONTRACT
+  title: Tests Contract Enforcements
+  description: Ensure all WOs follow mandatory execution engine rules.
+  status: pending
+  priority: P0
+  wo_queue:
+  - WO-0045
+  generated_at: '2026-02-13T00:00:00Z'
