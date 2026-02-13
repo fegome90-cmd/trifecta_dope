@@ -1,0 +1,18 @@
+{
+  "wo_id": "WO-0043",
+  "status": "complete",
+  "result": "PASS",
+  "summary": "Converted 2 integration test failures to contract gates",
+  "tests": {
+    "total": 2,
+    "passed": 2,
+    "failed": 0
+  },
+  "deliverables": [
+    "tests/integration/test_naming_contract_integration.py",
+    "tests/integration/test_repro_clean_sync_then_search.py"
+  ],
+  "commit_sha": "ab3e787",
+  "verified_at": "2026-02-13T15:35:00Z",
+  "notes": "verify.sh fails due to pre-existing legacy WO files. Technical debt tracked in WO-0045."
+}
