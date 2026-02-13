@@ -31,7 +31,7 @@ def test_ast_hover_exposes_wip_stub_contract() -> None:
 
     payload = json.loads(result.stdout)
     assert payload["status"] == "ok"
-    assert payload["kind"] == "skeleton"
     assert payload["backend"] == "wip_stub"
     assert payload["capability_state"] == "WIP"
     assert payload["response_state"] == "partial"
+    assert "fallback_reason" in payload

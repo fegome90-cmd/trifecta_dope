@@ -9,13 +9,7 @@ from src.application.symbol_selector import SymbolQuery
 from src.application.ast_parser import SkeletonMapBuilder, ParseResult
 from src.domain.ast_cache import SQLiteCache
 from src.infrastructure.factories import get_ast_cache, get_ast_cache_db_path
-from src.domain.lsp_contracts import (
-    LSPResponse,
-    CapabilityState,
-    FallbackReason,
-    ResponseState,
-    Backend,
-)
+from src.domain.lsp_contracts import LSPResponse, FallbackReason, Backend
 
 ast_app = typer.Typer(help="AST & Parsing Commands")
 
@@ -236,7 +230,7 @@ def hover(
         else:
             response = LSPResponse.wip_response(
                 data={"uri": uri, "line": line, "char": character, "note": "LSP unavailable"},
-                message=f"LSP unavailable. Install pyright or pylsp for full functionality.",
+                message="LSP unavailable. Install pyright or pylsp for full functionality.",
             )
             _json_output(response.to_dict())
             return

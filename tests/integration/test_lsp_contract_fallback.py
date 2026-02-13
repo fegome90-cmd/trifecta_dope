@@ -9,8 +9,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
-
 from src.domain.lsp_contracts import (
     LSPResponse,
     CapabilityState,
