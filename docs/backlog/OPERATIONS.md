@@ -200,7 +200,7 @@ python scripts/ctx_wo_take.py --status
 | `--owner NAME` | Set owner explicitly | Current user |
 | `--list` | List pending WOs | - |
 | `--status` | Show system status | - |
-| `--force` | Skip dependency validation | - |
+| `--force` | Skip domain dependency gate only (does NOT bypass immediate schema/lint validation) | - |
 
 ### ctx_wo_finish.py
 
