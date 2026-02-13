@@ -132,6 +132,42 @@ class TestWoFinishCLIWorkflow:
         # Should display help and exit with 0
         assert result.returncode == 0
 
+    def test_cli_missing_wo_emits_error_card(self, tmp_path):
+        """Missing running WO should emit stable error card."""
+        result = subprocess.run(
+            [
+                "python",
+                "scripts/ctx_wo_finish.py",
+                "WO-NONEXISTENT",
+                "--root",
+                str(tmp_path),
+            ],
+            capture_output=True,
+            text=True,
+            cwd=repo_root(),
+        )
+        assert result.returncode == 1
+        combined = result.stdout + result.stderr
+        assert "TRIFECTA_ERROR_CODE: WO_NOT_RUNNING" in combined
+
+    def test_cli_invalid_root_emits_error_card(self):
+        """Invalid root path should emit INVALID_SEGMENT_PATH card."""
+        result = subprocess.run(
+            [
+                "python",
+                "scripts/ctx_wo_finish.py",
+                "WO-TEST",
+                "--root",
+                "/definitely/not/a/real/path/for/trifecta",
+            ],
+            capture_output=True,
+            text=True,
+            cwd=repo_root(),
+        )
+        assert result.returncode == 1
+        combined = result.stdout + result.stderr
+        assert "TRIFECTA_ERROR_CODE: INVALID_SEGMENT_PATH" in combined
+
     def test_cli_generate_only_valid_wo(self, tmp_path):
         """Test CLI --generate-only with valid WO structure."""
         # Create minimal WO structure
