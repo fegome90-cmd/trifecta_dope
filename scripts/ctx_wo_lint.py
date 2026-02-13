@@ -108,6 +108,15 @@ def _state_from_path(path: Path) -> str | None:
     return None
 
 
+def _resolve_wo_path(root: Path, wo_id: str) -> Path | None:
+    """Resolve a canonical WO path by state priority."""
+    for state in CANONICAL_JOB_STATES:
+        candidate = root / "_ctx" / "jobs" / state / f"{wo_id}.yaml"
+        if candidate.exists():
+            return candidate
+    return None
+
+
 def lint_wo(
     wo: dict[str, Any],
     file_path: Path,
@@ -151,14 +160,18 @@ def lint_wo(
         findings.append(_e("WO007", "scope must be an object", file_path, "$.scope"))
     else:
         if not scope.get("allow") or scope.get("deny") is None:
-            findings.append(_e("WO008", "scope.allow and scope.deny are required", file_path, "$.scope"))
+            findings.append(
+                _e("WO008", "scope.allow and scope.deny are required", file_path, "$.scope")
+            )
 
     verify = wo.get("verify", {})
     commands = verify.get("commands") if isinstance(verify, dict) else None
     status_norm = str(status or "").lower()
     if status_norm in {"pending", "running"}:
-        if not commands or not isinstance(commands, list) or not all(
-            isinstance(x, str) and x.strip() for x in commands
+        if (
+            not commands
+            or not isinstance(commands, list)
+            or not all(isinstance(x, str) and x.strip() for x in commands)
         ):
             findings.append(
                 _e(
@@ -178,7 +191,12 @@ def lint_wo(
                 dep_path = f"$.dependencies[{idx}]"
                 if not isinstance(dep, str) or not dep.startswith("WO-"):
                     findings.append(
-                        _e("WO011", "dependency must be a WO id string (WO-...)", file_path, dep_path)
+                        _e(
+                            "WO011",
+                            "dependency must be a WO id string (WO-...)",
+                            file_path,
+                            dep_path,
+                        )
                     )
                     continue
                 if dep not in known_wo_ids:
@@ -198,7 +216,7 @@ def lint_wo(
     return findings
 
 
-def run(root: Path, strict: bool) -> list[Finding]:
+def run(root: Path, strict: bool, wo_id: str | None = None) -> list[Finding]:
     findings: list[Finding] = []
     schema_path = root / "docs" / "backlog" / "schema" / "work_order.schema.json"
     wo_schema = _load_json(schema_path)
@@ -207,18 +225,46 @@ def run(root: Path, strict: bool) -> list[Finding]:
     findings.extend(epic_findings)
     findings.extend(dod_findings)
 
-    seen_ids: set[str] = set()
-    wo_paths, skipped_legacy = _iter_wo_files(root)
-    for skipped in skipped_legacy:
-        findings.append(
-            _i(
-                "WOI01",
-                "legacy WO file skipped by strict canonical scan",
-                skipped,
-                hint="Migrate legacy file to canonical WO format or keep as archived compatibility.",
+    all_wo_paths, skipped_legacy = _iter_wo_files(root)
+    known_wo_ids = {path.stem for path in all_wo_paths}
+
+    wo_paths = all_wo_paths
+    if wo_id:
+        target = _resolve_wo_path(root, wo_id)
+        if target is None:
+            findings.append(
+                _e(
+                    "WO013",
+                    f"WO '{wo_id}' not found in canonical states ({', '.join(CANONICAL_JOB_STATES)})",
+                    root / "_ctx" / "jobs",
+                    "$.id",
+                )
             )
-        )
-    known_wo_ids = {path.stem for path in wo_paths}
+            return findings
+        wo_paths = [target]
+
+        duplicate_count = sum(1 for path in all_wo_paths if path.stem == wo_id)
+        if duplicate_count > 1:
+            findings.append(
+                _e(
+                    "WO003",
+                    f"Duplicate WO id across states: {wo_id}",
+                    target,
+                    "$.id",
+                )
+            )
+
+    seen_ids: set[str] = set()
+    if wo_id is None:
+        for skipped in skipped_legacy:
+            findings.append(
+                _i(
+                    "WOI01",
+                    "legacy WO file skipped by strict canonical scan",
+                    skipped,
+                    hint="Migrate legacy file to canonical WO format or keep as archived compatibility.",
+                )
+            )
     for wo_path in wo_paths:
         wo, load_findings = _load_yaml(wo_path)
         findings.extend(load_findings)
@@ -249,9 +295,12 @@ def main() -> int:
     parser.add_argument("--root", default=".", help="Repository root")
     parser.add_argument("--json", action="store_true", help="Output findings as JSON")
     parser.add_argument("--strict", action="store_true", help="Treat warnings as errors")
+    parser.add_argument(
+        "--wo-id", default=None, help="Validate a specific WO ID only (e.g. WO-0001)"
+    )
     args = parser.parse_args()
 
-    findings = run(Path(args.root).resolve(), strict=args.strict)
+    findings = run(Path(args.root).resolve(), strict=args.strict, wo_id=args.wo_id)
 
     if args.json:
         print(json.dumps([asdict(f) for f in findings], indent=2))
@@ -259,7 +308,9 @@ def main() -> int:
         for finding in findings:
             location = f" {finding.path}" if finding.path else ""
             hint = f" | hint: {finding.hint}" if finding.hint else ""
-            print(f"[{finding.severity}] {finding.code}{location} {finding.file}: {finding.message}{hint}")
+            print(
+                f"[{finding.severity}] {finding.code}{location} {finding.file}: {finding.message}{hint}"
+            )
         errors = sum(1 for f in findings if f.severity == SEVERITY_ERROR)
         warnings = sum(1 for f in findings if f.severity == SEVERITY_WARN)
         infos = sum(1 for f in findings if f.severity == SEVERITY_INFO)

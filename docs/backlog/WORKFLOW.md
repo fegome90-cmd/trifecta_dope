@@ -90,6 +90,14 @@ python scripts/ctx_wo_take.py WO-0013
 4. **Status transition**: YAML moved from `pending/` to `running/`
 5. **Metadata update**: Owner, started_at, branch, worktree fields added
 
+Before any state mutation, `ctx_wo_take.py` runs immediate fail-closed validation:
+
+```bash
+uv run python scripts/ctx_wo_lint.py --strict --json --wo-id WO-0013 --root .
+```
+
+If validation reports any `ERROR`, take is aborted (no lock/worktree/state move).
+
 **Output:**
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

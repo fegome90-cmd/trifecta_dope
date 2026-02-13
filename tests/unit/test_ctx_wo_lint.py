@@ -270,3 +270,88 @@ def test_wo_lint_reports_malformed_dod_yaml(tmp_path: Path) -> None:
     assert result.returncode == 1
     findings = json.loads(result.stdout)
     assert any(f["code"] == "YAML000" for f in findings)
+
+
+def test_wo_lint_wo_id_mode_validates_single_target(tmp_path: Path) -> None:
+    root = _bootstrap_repo(tmp_path)
+    (root / "_ctx" / "jobs" / "pending" / "WO-0001.yaml").write_text(
+        _valid_wo("pending", wo_id="WO-0001"),
+        encoding="utf-8",
+    )
+    (root / "_ctx" / "jobs" / "pending" / "WO-0002.yaml").write_text(
+        _valid_wo("pending", wo_id="WO-0002", dependencies="dependencies:\n  - WO-9999\n"),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/ctx_wo_lint.py",
+            "--root",
+            str(root),
+            "--json",
+            "--wo-id",
+            "WO-0001",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0
+    findings = json.loads(result.stdout)
+    assert findings == []
+
+
+def test_wo_lint_wo_id_mode_reports_missing_wo(tmp_path: Path) -> None:
+    root = _bootstrap_repo(tmp_path)
+    (root / "_ctx" / "jobs" / "pending" / "WO-0001.yaml").write_text(
+        _valid_wo("pending", wo_id="WO-0001"),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/ctx_wo_lint.py",
+            "--root",
+            str(root),
+            "--json",
+            "--wo-id",
+            "WO-4040",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    findings = json.loads(result.stdout)
+    assert any(f["code"] == "WO013" for f in findings)
+
+
+def test_wo_lint_wo_id_mode_flags_missing_dependency(tmp_path: Path) -> None:
+    root = _bootstrap_repo(tmp_path)
+    (root / "_ctx" / "jobs" / "pending" / "WO-0001.yaml").write_text(
+        _valid_wo("pending", wo_id="WO-0001", dependencies="dependencies:\n  - WO-9999\n"),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/ctx_wo_lint.py",
+            "--root",
+            str(root),
+            "--json",
+            "--wo-id",
+            "WO-0001",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    findings = json.loads(result.stdout)
+    assert any(f["code"] == "WO012" for f in findings)

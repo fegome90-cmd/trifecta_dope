@@ -3,6 +3,10 @@
 import tempfile
 from pathlib import Path
 import os
+import shutil
+import subprocess
+
+import yaml
 
 from scripts.paths import get_worktree_path
 
@@ -78,3 +82,93 @@ def test_worktree_absolute_to_roundtrip():
 
         # Should match the original worktree path
         assert reconstructed == auto_worktree.resolve()
+
+
+def _prepare_ctx_sandbox(tmp_path: Path) -> Path:
+    repo_root = Path(__file__).resolve().parents[2]
+    fixture_root = repo_root / "tests" / "fixtures" / "ctx"
+    sandbox_root = tmp_path / "ctx"
+    shutil.copytree(fixture_root, sandbox_root)
+
+    subprocess.run(["git", "init"], cwd=sandbox_root, check=True, capture_output=True, text=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.com"],
+        cwd=sandbox_root,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        ["git", "config", "user.name", "Test User"],
+        cwd=sandbox_root,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        ["git", "checkout", "-b", "main"],
+        cwd=sandbox_root,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        ["git", "add", "."], cwd=sandbox_root, check=True, capture_output=True, text=True
+    )
+    subprocess.run(
+        ["git", "commit", "-m", "fixture baseline"],
+        cwd=sandbox_root,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return sandbox_root
+
+
+def _run_take(repo_root: Path, sandbox_root: Path, *args: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        ["python", "scripts/ctx_wo_take.py", *args, "--root", str(sandbox_root)],
+        capture_output=True,
+        text=True,
+        check=False,
+        cwd=repo_root,
+    )
+
+
+def test_take_fails_immediate_validation_for_semantic_error(tmp_path: Path) -> None:
+    repo_root = Path(__file__).resolve().parents[2]
+    sandbox_root = _prepare_ctx_sandbox(tmp_path)
+    wo_path = sandbox_root / "_ctx" / "jobs" / "pending" / "WO-0001.yaml"
+    wo_data = yaml.safe_load(wo_path.read_text(encoding="utf-8"))
+    wo_data["status"] = "running"
+    wo_path.write_text(yaml.safe_dump(wo_data, sort_keys=False), encoding="utf-8")
+
+    result = _run_take(repo_root, sandbox_root, "WO-0001")
+    output = result.stdout + result.stderr
+
+    assert result.returncode == 1
+    assert "Immediate WO validation failed for WO-0001" in output
+    assert (sandbox_root / "_ctx" / "jobs" / "pending" / "WO-0001.yaml").exists()
+    assert not (sandbox_root / "_ctx" / "jobs" / "running" / "WO-0001.yaml").exists()
+    assert not (sandbox_root / "_ctx" / "jobs" / "running" / "WO-0001.lock").exists()
+
+
+def test_take_fails_immediate_validation_for_schema_error_even_with_force(tmp_path: Path) -> None:
+    repo_root = Path(__file__).resolve().parents[2]
+    sandbox_root = _prepare_ctx_sandbox(tmp_path)
+    wo_path = sandbox_root / "_ctx" / "jobs" / "pending" / "WO-0001.yaml"
+    wo_data = yaml.safe_load(wo_path.read_text(encoding="utf-8"))
+    wo_data.pop("dod_id", None)
+    wo_path.write_text(yaml.safe_dump(wo_data, sort_keys=False), encoding="utf-8")
+
+    result = _run_take(repo_root, sandbox_root, "WO-0001", "--force")
+    output = result.stdout + result.stderr
+
+    assert result.returncode == 1
+    assert (
+        "Schema validation failed" in output
+        or "Immediate WO validation failed for WO-0001" in output
+    )
+    assert (sandbox_root / "_ctx" / "jobs" / "pending" / "WO-0001.yaml").exists()
+    assert not (sandbox_root / "_ctx" / "jobs" / "running" / "WO-0001.yaml").exists()
+    assert not (sandbox_root / "_ctx" / "jobs" / "running" / "WO-0001.lock").exists()
