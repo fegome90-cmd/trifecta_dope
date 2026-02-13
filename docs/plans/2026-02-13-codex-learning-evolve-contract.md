@@ -1,43 +1,33 @@
 # Codex Learning + Evolve Contract (v1)
 
 ## Functional Goals
-1. Capture observation events from an official-first source (`codex exec --json`).
-2. Convert repeated high-signal patterns into atomic instincts.
-3. Manage instinct lifecycle with deterministic CLI operations.
+1. Capture observation events from official Codex-compatible source (`codex exec --json`).
+2. Convert patterns into atomic instincts with confidence.
+3. Manage lifecycle via deterministic CLI (`status/import/export/evolve/ingest`).
 4. Evolve related instincts into stronger reusable artifacts.
 
 ## Non-Goals (v1)
-1. No default LLM-driven extraction.
-2. No dependency on undocumented hook APIs.
-3. No auto-promotion of evolved artifacts to curated skills without review.
+- No default LLM-driven extraction.
+- No dependency on undocumented hook APIs.
+- No automatic promotion of evolved artifacts into production skills.
 
 ## Privacy Rules
-1. Observation logs remain local.
-2. Export includes instincts only.
-3. Raw observations are excluded from default export.
+- Observation logs stay local.
+- Export includes instincts only.
+- Raw observations are never exported by default.
 
-## Parity Map (ECC -> Codex)
-| Capability | ECC | Codex v1 Target | Status |
+## Parity Table (ECC -> Codex)
+| Capability | ECC | Codex v1 target | Status |
 |---|---|---|---|
-| Plan-before-code | `/plan` | AGENTS policy + planning workflow | Now |
-| Pattern capture | `/learn` | learned-skill generation protocol | Now |
+| Plan-before-code | `/plan` command | AGENTS policy + plan workflow | Now |
+| Mid/late learning capture | `/learn` | learned skill creation protocol | Now |
 | Instinct lifecycle | v2 instinct CLI | deterministic local CLI | Now |
 | Evolve clustering | `/evolve` | `instinct_cli.py evolve` | Now |
 | Hook capture | Pre/Post hooks | optional adapter only | Later/Optional |
-| Background LLM observer | haiku loop | feature-flag, default off | Later |
+| LLM observer | background haiku flow | feature-flag, default off | Later |
 
 ## Acceptance Criteria
-1. `ingest` normalizes JSONL from `codex exec --json` into observations.
-2. `status/import/export/evolve` run end-to-end deterministically.
-3. Rules-first observer generates instincts from:
-   - repeated workflows
-   - error-to-fix sequences
-   - tool preference signals
-4. Observer run archives processed observations and preserves fresh active log.
-
-## Defaults
-1. Canonical event source: `codex exec --json`.
-2. Storage primary root: `~/.codex/homunculus`.
-3. Compatibility root: `~/.agents/homunculus`.
-4. Observer mode: `rules`.
-5. `llm_enabled`: `false`.
+1. `ingest` processes `codex exec --json` JSONL into normalized observations.
+2. `status/import/export/evolve` run end-to-end with deterministic outputs.
+3. `rules_observer.py` generates instincts from repeated workflows/error-fix/tool preference signals.
+4. `start_observer.sh run-once` creates/updates instincts and archives processed observations.
