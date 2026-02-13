@@ -119,6 +119,40 @@ def validate_segment_structure(path: Path) -> ValidationResult:
     return ValidationResult(valid=len(errors) == 0, errors=errors)
 
 
+def validate_segment_structure_with_segment_id(path: Path, segment_id: str) -> ValidationResult:
+    """Validate segment structure using an explicit segment_id (SSOT-aware)."""
+    errors: List[str] = []
+
+    if not path.exists():
+        return ValidationResult(False, [f"Path not found: {path}"])
+
+    if not (path / "skill.md").exists():
+        errors.append("Missing generic entry point: skill.md")
+
+    ctx_dir = path / "_ctx"
+    if not ctx_dir.exists():
+        errors.append("Missing directory: _ctx/")
+        return ValidationResult(False, errors)
+
+    for filename in (
+        f"agent_{segment_id}.md",
+        f"prime_{segment_id}.md",
+        f"session_{segment_id}.md",
+    ):
+        if not (ctx_dir / filename).exists():
+            errors.append(f"Missing context file: _ctx/{filename}")
+
+    for prefix in ["agent", "prime", "session"]:
+        matches = list(ctx_dir.glob(f"{prefix}_*.md"))
+        if len(matches) > 1:
+            errors.append(
+                f"Ambiguous: found {len(matches)} {prefix}_*.md files in _ctx/ "
+                f"(expected exactly 1: {prefix}_{segment_id}.md)"
+            )
+
+    return ValidationResult(valid=len(errors) == 0, errors=errors)
+
+
 def detect_legacy_context_files(path: Path) -> List[str]:
     """
     Detect legacy (non-dynamic) context filenames inside _ctx.

@@ -10,6 +10,31 @@ if TYPE_CHECKING:
 CACHE_DIR_NAME = ".trifecta"
 
 
+def _resolve_cache_root(segment_id: str) -> Path:
+    """Resolve deterministic cache root path from segment identity."""
+    if segment_id == ".":
+        return Path.cwd().resolve()
+
+    segment_path = Path(segment_id).expanduser()
+    if segment_path.is_absolute():
+        return segment_path.resolve()
+
+    return Path.cwd().resolve()
+
+
+def _safe_segment_id(segment_root: Path) -> str:
+    """Create filesystem-safe cache identifier from resolved segment root."""
+    return str(segment_root).replace("/", "_").replace("\\", "_").replace(":", "_")
+
+
+def get_ast_cache_db_path(segment_id: str) -> Path:
+    """Return deterministic SQLite cache DB path for a segment_id."""
+    segment_root = _resolve_cache_root(segment_id)
+    cache_dir = segment_root / CACHE_DIR_NAME / "cache"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    return cache_dir / f"ast_cache_{_safe_segment_id(segment_root)}.db"
+
+
 def get_ast_cache(
     persist: bool = False,
     segment_id: str = ".",
@@ -38,19 +63,7 @@ def get_ast_cache(
     should_persist = persist or os.environ.get("TRIFECTA_AST_PERSIST", "0") == "1"
 
     if should_persist:
-        # P3 Path Compliance: Use cwd/.trifecta/cache by default for now
-        # Future: Resolve from segment_root if passed explicitly
-        cache_dir = Path.cwd() / CACHE_DIR_NAME / "cache"
-        cache_dir.mkdir(parents=True, exist_ok=True)
-
-        # Deterministic filename based on segment_id
-        # sanitize segment_id to be safe for filenames
-        safe_id = segment_id.replace("/", "_").replace("\\", "_").replace(":", "_")
-        if safe_id == ".":
-            # If segment_id is dot (default), try to map to safe path of cwd
-            safe_id = str(Path.cwd()).replace("/", "_").replace("\\", "_").replace(":", "_")
-
-        db_path = cache_dir / f"ast_cache_{safe_id}.db"
+        db_path = get_ast_cache_db_path(segment_id)
 
         # Wire: Create persistent cache
         cache: AstCache = SQLiteCache(db_path=db_path, max_entries=max_entries, max_bytes=max_bytes)

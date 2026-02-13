@@ -8,7 +8,7 @@ from src.domain.result import Ok, Err
 from src.application.symbol_selector import SymbolQuery
 from src.application.ast_parser import SkeletonMapBuilder, ParseResult
 from src.domain.ast_cache import SQLiteCache
-from src.infrastructure.factories import get_ast_cache
+from src.infrastructure.factories import get_ast_cache, get_ast_cache_db_path
 
 ast_app = typer.Typer(help="AST & Parsing Commands")
 
@@ -42,6 +42,7 @@ def symbols(
     root = Path(segment).resolve()
     telemetry = _get_telemetry(telemetry_level)
     cache = get_ast_cache(persist=persist_cache, segment_id=str(root), telemetry=telemetry)
+    cache_db_path = get_ast_cache_db_path(str(root)) if persist_cache else None
 
     try:
         # 1. Parse URI
@@ -81,10 +82,23 @@ def symbols(
             raise typer.Exit(1)
 
         # 3. Invoke SkeletonMapBuilder with cache (M1 REAL)
+        miss_reason = None
+        if persist_cache and cache_db_path is not None:
+            if not cache_db_path.exists():
+                miss_reason = "cold_cache_db_missing"
+            else:
+                stats_snapshot = SQLiteCache(db_path=cache_db_path).stats()
+                miss_reason = "cold_cache_empty" if stats_snapshot.entries == 0 else "key_miss"
+        elif not persist_cache:
+            miss_reason = "ephemeral_cache"
+
         t0 = time.perf_counter_ns()
         builder = SkeletonMapBuilder(cache=cache, segment_id=str(root))
         result: ParseResult = builder.build(file_path)
         duration_ms = max(1, (time.perf_counter_ns() - t0) // 1_000_000)
+
+        if result.status == "hit":
+            miss_reason = "cache_hit"
 
         # 4. Return JSON (M1 Contract) with cache info
         output = {
@@ -96,6 +110,8 @@ def symbols(
             ],
             "cache_status": result.status,
             "cache_key": result.cache_key,
+            "miss_reason": miss_reason,
+            "cache_db_path": str(cache_db_path) if cache_db_path else None,
         }
 
         if telemetry:
@@ -108,6 +124,8 @@ def symbols(
                 symbols_count=len(result.symbols),
                 cache_status=result.status,
                 cache_key=result.cache_key,
+                miss_reason=miss_reason,
+                cache_db_path=str(cache_db_path) if cache_db_path else "",
             )
             telemetry.flush()
 
@@ -122,7 +140,28 @@ def symbols(
 
 @ast_app.command("snippet")
 def snippet(uri: str = typer.Argument(...)):
-    pass  # Minimal stub
+    telemetry = _get_telemetry("lite")
+    if telemetry:
+        telemetry.event(
+            "ast.snippet.not_implemented",
+            {"uri": uri},
+            {"status": "error", "error_code": "NOT_IMPLEMENTED"},
+            1,
+        )
+        telemetry.flush()
+    _json_output(
+        {
+            "status": "error",
+            "error_code": "NOT_IMPLEMENTED",
+            "message": "ast snippet is not implemented yet; use ast symbols for deterministic output.",
+            "hint": "Use `trifecta ast symbols <uri>` for deterministic symbol extraction.",
+            "context": {
+                "command": "ast.snippet",
+                "uri": uri,
+            },
+        }
+    )
+    raise typer.Exit(1)
 
 
 @ast_app.command("hover")
@@ -133,11 +172,24 @@ def hover(
     segment: str = typer.Option(".", "--segment"),
 ):
     """[WIP] LSP Hover request."""
+    telemetry = _get_telemetry("lite")
+    if telemetry:
+        telemetry.event(
+            "ast.hover.wip",
+            {"segment": segment, "uri": uri, "line": line, "char": character},
+            {"status": "ok", "backend": "wip_stub"},
+            1,
+        )
+        telemetry.flush()
+
     # Stub for now
     _json_output(
         {
             "status": "ok",
             "kind": "skeleton",
+            "backend": "wip_stub",
+            "capability_state": "WIP",
+            "response_state": "partial",
             "data": {"uri": uri, "range": {"start_line": 1, "end_line": 10}, "children": []},
         }
     )
@@ -149,8 +201,7 @@ def clear_cache(
 ):
     """Clear AST cache for the segment."""
     root = Path(segment).resolve()
-    cache_dir = Path.cwd() / CACHE_DIR_NAME / "cache"
-    cache_path = cache_dir / f"ast_cache_{str(root).replace('/', '_')}.db"
+    cache_path = get_ast_cache_db_path(str(root))
 
     if cache_path.exists():
         cache_path.unlink()
@@ -177,8 +228,7 @@ def cache_stats(
 ):
     """Show AST cache statistics for the segment."""
     root = Path(segment).resolve()
-    cache_dir = Path.cwd() / CACHE_DIR_NAME / "cache"
-    db_path = cache_dir / f"ast_cache_{str(root).replace('/', '_')}.db"
+    db_path = get_ast_cache_db_path(str(root))
 
     if db_path.exists():
         cache = SQLiteCache(db_path=db_path)

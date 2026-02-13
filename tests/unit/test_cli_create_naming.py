@@ -81,3 +81,15 @@ class TestCLICreateNaming:
         result2 = runner.invoke(app, ["create", "-s", str(tmp_path)])
         # May succeed or warn, but should not crash
         assert result2.exit_code in (0, 1), f"Unexpected exit code: {result2.output}"
+
+    def test_create_writes_bootstrap_config_and_agents(self, tmp_path: Path) -> None:
+        """create should bootstrap AGENTS.md + _ctx/trifecta_config.json."""
+        _setup_minimal_segment(tmp_path)
+
+        result = runner.invoke(app, ["create", "-s", str(tmp_path)])
+        assert result.exit_code == 0, f"Create failed: {result.output}"
+
+        assert (tmp_path / "AGENTS.md").exists(), "AGENTS.md missing after create"
+        assert (tmp_path / "_ctx" / "trifecta_config.json").exists(), (
+            "trifecta_config.json missing after create"
+        )
