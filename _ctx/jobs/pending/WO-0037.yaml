@@ -20,8 +20,22 @@ verify:
   - grep -q 'type Plugin struct' internal/plugins/td/plugin.go
   - grep -q 'getActiveWO' internal/plugins/td/plugin.go
 dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - verify
+  segment: .
 dependencies:
 - WO-0036
+claim_links:
+  requirements:
+  - C-TD-001
+  - C-TD-002
+  assumptions:
+  - A-TD-001
+  - A-TD-002
+  constraints:
+  - CN-TD-001
 objective: 'Implement TD plugin with:
 
   - Active WO detection (newest running by created_at)
@@ -40,15 +54,6 @@ diff_budget:
 stop_conditions:
   max_iterations: 6
   max_verify_failures: 3
-claim_links:
-  requirements:
-  - C-TD-001
-  - C-TD-002
-  assumptions:
-  - A-TD-001
-  - A-TD-002
-  constraints:
-  - CN-TD-001
 x_keybindings:
   tw: Toggle badge visibility
   to: Open worktree (validates path first)

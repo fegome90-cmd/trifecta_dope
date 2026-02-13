@@ -12,7 +12,8 @@
     "owner",
     "scope",
     "verify",
-    "dod_id"
+    "dod_id",
+    "execution"
   ],
   "properties": {
     "version": {"type": "integer"},
@@ -75,7 +76,16 @@
     "started_at": {"type": ["string", "null"]},
     "finished_at": {"type": ["string", "null"]},
     "result": {"type": ["string", "null"]},
-    "commit_sha": {"type": ["string", "null"]}
+    "commit_sha": {"type": ["string", "null"]},
+    "execution": {
+      "type": "object",
+      "required": ["engine", "required_flow", "segment"],
+      "properties": {
+        "engine": {"type": "string"},
+        "required_flow": {"type": "array", "items": {"type": "string"}},
+        "segment": {"type": "string"}
+      }
+    }
   },
   "patternProperties": {"^x_": {}}
 }

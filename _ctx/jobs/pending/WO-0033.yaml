@@ -23,6 +23,11 @@ verify:
   - bash scripts/hooks/install-hooks.sh
   - git config --get core.hooksPath
 dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - verify
+  segment: .
 dependencies:
 - WO-0031
 deliverables:

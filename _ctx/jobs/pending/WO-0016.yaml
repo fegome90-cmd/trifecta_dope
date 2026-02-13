@@ -17,6 +17,11 @@ verify:
   commands:
   - uv run pytest -q tests/unit/test_segment_clusterer.py
 dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - verify
+  segment: .
 dependencies:
 - WO-0015
 verified_at_sha: null

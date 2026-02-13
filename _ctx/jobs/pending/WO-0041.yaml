@@ -1,61 +1,58 @@
 version: 1
 id: WO-0041
 epic_id: E-LSP-CONTRACT
-title: "Definir READY como contrato con invariantes"
+title: Definir READY como contrato con invariantes
 priority: P0
 status: pending
-dod_id: DOD-DEFAULT
-objective: |
-  Introducir READY invariants mínimos para garantizar que READY realmente significa operativo.
-  READY actual significa "inicializado" pero no garantiza capacidad de servir requests.
-
-deliverables:
-  - "Handshake LSP completado (initialize/initialized)"
-  - "Proceso vivo (pid check)"
-  - "Workspace root = segment root correcto"
-  - "Request health/ping o capability-check responde en <X ms"
-  - "Evento lsp.state_change incluye reason + failed_invariant"
-  - "Si falla invariante → no puede reportarse READY"
-
 scope:
   allow:
-    - "src/infrastructure/lsp_client.py"
-    - "src/infrastructure/lsp_daemon.py"
-    - "src/application/lsp_manager.py"
-    - "tests/integration/test_lsp_ready_invariants.py"
-    - "docs/contracts/LSP_READY_CONTRACT.md"
+  - src/infrastructure/lsp_client.py
+  - src/infrastructure/lsp_daemon.py
+  - src/application/lsp_manager.py
+  - tests/integration/test_lsp_ready_invariants.py
+  - docs/contracts/LSP_READY_CONTRACT.md
   deny:
-    - ".env*"
-    - "**/production.*"
-
+  - .env*
+  - '**/production.*'
 verify:
   commands:
-    - "uv run pytest tests/integration/test_lsp_ready_invariants.py -v"
-    - "uv run pytest tests/unit/test_lsp_state_machine.py -v"
-    - "make gate-all"
-
-diff_budget:
-  max_files: 6
-  max_loc: 250
-
-stop_conditions:
-  max_iterations: 5
-  max_fail_verify: 2
-
+  - uv run pytest tests/integration/test_lsp_ready_invariants.py -v
+  - uv run pytest tests/unit/test_lsp_state_machine.py -v
+  - make gate-all
+dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - verify
+  segment: .
 trace:
   ticket: null
   related_wos:
-    - WO-0040
-    - WO-0044
-
+  - WO-0040
+  - WO-0044
 claim_links:
   requirements:
-    - "READY requiere handshake LSP completado"
-    - "READY requiere proceso vivo"
-    - "READY requiere workspace root correcto"
-    - "READY requiere health check < 500ms"
+  - READY requiere handshake LSP completado
+  - READY requiere proceso vivo
+  - READY requiere workspace root correcto
+  - READY requiere health check < 500ms
   assumptions:
-    - "LSP server (pyright/pylsp) disponible en PATH"
+  - LSP server (pyright/pylsp) disponible en PATH
   constraints:
-    - "No aumentar latency de cold start > 200ms"
-    - "Mantener backward compatibility en eventos existentes"
+  - No aumentar latency de cold start > 200ms
+  - Mantener backward compatibility en eventos existentes
+objective: "Introducir READY invariants m\xEDnimos para garantizar que READY realmente significa operativo.\n\
+  READY actual significa \"inicializado\" pero no garantiza capacidad de servir requests.\n"
+deliverables:
+- Handshake LSP completado (initialize/initialized)
+- Proceso vivo (pid check)
+- Workspace root = segment root correcto
+- Request health/ping o capability-check responde en <X ms
+- Evento lsp.state_change incluye reason + failed_invariant
+- "Si falla invariante \u2192 no puede reportarse READY"
+diff_budget:
+  max_files: 6
+  max_loc: 250
+stop_conditions:
+  max_iterations: 5
+  max_fail_verify: 2

@@ -665,6 +665,36 @@ def main():
     update_worktree_index(root)
 
     print(f"WO {args.wo_id} finished successfully (status: {result_status})")
+
+    # Record in Trifecta Session Log
+    try:
+        summary = f"Finished Work Order {args.wo_id} (status: {result_status})"
+        commands = f"ctx_wo_finish.py {args.wo_id} --result {result_status}"
+        # Execute trifecta session append via subprocess
+        import subprocess
+
+        subprocess.run(
+            [
+                "uv",
+                "run",
+                "trifecta",
+                "session",
+                "append",
+                "--segment",
+                ".",
+                "--summary",
+                summary,
+                "--commands",
+                commands,
+            ],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except Exception:
+        pass
+
     return 0
 
 

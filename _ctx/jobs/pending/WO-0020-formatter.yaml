@@ -16,6 +16,11 @@ verify:
   commands:
   - npm run format -- --check docs skills
 dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - verify
+  segment: .
 description: Fix formatting issues in 62 files identified in WO-0019 debrief.
 steps:
 - Run npm run format on all docs

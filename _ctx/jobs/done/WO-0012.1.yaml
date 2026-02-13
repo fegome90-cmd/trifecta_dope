@@ -17,9 +17,14 @@ verify:
   commands:
   - uv run pytest -q tests/integration/test_ctx_pipeline_real_wo.py
 dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - verify
+  segment: .
 dependencies:
 - WO-0012
-verified_at_sha: null
 finished_at: null
 result: done
+verified_at_sha: null
 x_objective: Enable AST persistence defaults for dev CLI paths while preserving rollback via env var override.

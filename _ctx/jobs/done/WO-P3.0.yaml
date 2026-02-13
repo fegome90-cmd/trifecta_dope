@@ -21,6 +21,11 @@ verify:
   - python eval/scripts/extract_ast_soak_metrics.py --run-id wo-p3-0 --out _ctx/metrics/ast_soak_wo-p3-0.json
   - python eval/scripts/gate_ast_soak.py --in _ctx/metrics/ast_soak_wo-p3-0.json
 dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - verify
+  segment: .
 dependencies:
 - WO-P2.2
 verified_at_sha: 3abbc30d97ed6b9467e68a37610fafcc27132c0e

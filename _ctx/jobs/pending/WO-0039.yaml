@@ -20,8 +20,22 @@ verify:
   - go test ./internal/plugins/td/... -v -run TestActiveWO
   - go test ./internal/plugins/td/... -v -run TestKeybindings
 dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - verify
+  segment: .
 dependencies:
 - WO-0038
+claim_links:
+  requirements:
+  - C-TD-001
+  - C-TD-002
+  - C-TD-003
+  assumptions:
+  - A-TD-002
+  constraints:
+  - CN-TD-001
 objective: 'Create integration tests verifying:
 
   - Plugin loads real Trifecta JSON export
@@ -42,15 +56,6 @@ diff_budget:
 stop_conditions:
   max_iterations: 5
   max_verify_failures: 3
-claim_links:
-  requirements:
-  - C-TD-001
-  - C-TD-002
-  - C-TD-003
-  assumptions:
-  - A-TD-002
-  constraints:
-  - CN-TD-001
 x_test_fixtures:
 - testdata/td/wo_worktrees.json (valid single running)
 - testdata/td/wo_worktrees_multi.json (multiple running)

@@ -198,7 +198,7 @@ def test_take_finish_updates_index_in_isolated_repo(tmp_path: Path):
             {
                 "$schema": "https://json-schema.org/draft/2020-12/schema",
                 "type": "object",
-                "required": ["version", "id", "epic_id", "title", "priority", "status", "dod_id"],
+                "required": ["version", "id", "epic_id", "title", "priority", "status", "dod_id", "execution"],
                 "properties": {
                     "version": {"type": "integer"},
                     "id": {"type": "string"},
@@ -209,6 +209,7 @@ def test_take_finish_updates_index_in_isolated_repo(tmp_path: Path):
                     "dod_id": {"type": "string"},
                     "scope": {"type": "object"},
                     "verify": {"type": "object"},
+                    "execution": {"type": "object"},
                 },
                 "additionalProperties": True,
             }
@@ -245,7 +246,11 @@ def test_take_finish_updates_index_in_isolated_repo(tmp_path: Path):
         "  deny: ['.env*']\n"
         "verify:\n"
         "  commands: ['echo ok']\n"
-        "dod_id: DOD-DEFAULT\n",
+        "dod_id: DOD-DEFAULT\n"
+        "execution:\n"
+        "  engine: trifecta\n"
+        "  required_flow: ['verify']\n"
+        "  segment: .\n",
         encoding="utf-8",
     )
 

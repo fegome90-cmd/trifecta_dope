@@ -490,6 +490,23 @@ Examples:
     print(f"  Branch:    {wo['branch']}")
     print(f"  Worktree:  {wo['worktree']}")
     print(f"  Owner:     {owner}")
+
+    # Record in Trifecta Session Log
+    try:
+        summary = f"Taken Work Order {wo_id}"
+        commands = f"ctx_wo_take.py {wo_id}"
+        # Execute trifecta session append via subprocess
+        subprocess.run(
+            ["uv", "run", "trifecta", "session", "append", "--segment", ".", "--summary", summary, "--commands", commands],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            check=False
+        )
+        logger.info(f"✓ Recorded take in Trifecta session log")
+    except Exception as e:
+        logger.warning(f"Failed to record in Trifecta session log: {e}")
+
     print("\nNext steps:")
     print(f"  1. cd {wo['worktree']}")
     print(f"  2. Start working on {wo_id}")

@@ -28,6 +28,11 @@ verify:
   - bash scripts/verify_cli_introspection.sh WO-0023
   - test -f docs/reports/cli_fase2_hardening.md
 dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - verify
+  segment: .
 dependencies:
 - WO-0022
 x_objective: "Fase 2 - Hardening del sistema de opciones inv\xE1lidas.\n\nReemplazar el mapping est\xE1\

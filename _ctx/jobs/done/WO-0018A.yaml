@@ -20,11 +20,16 @@ verify:
   commands:
   - '# See WO-0018B for actual implementation'
 dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - verify
+  segment: .
+result: superseded
+verified_at_sha: e18fe9a
 x_superseded_by: WO-0018B
 x_superseded_reason: 'All commits merged to main via PR #22 (feat/wo-WO-0018B)'
-verified_at_sha: e18fe9a
 closed_at: 2026-02-10 14:28:30+00:00
-result: superseded
 run_ids:
 - wo-0018a-fix
 - wo-0018a-verify

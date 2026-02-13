@@ -166,20 +166,40 @@ def lint_wo(
 
     verify = wo.get("verify", {})
     commands = verify.get("commands") if isinstance(verify, dict) else None
-    status_norm = str(status or "").lower()
-    if status_norm in {"pending", "running"}:
-        if (
-            not commands
-            or not isinstance(commands, list)
-            or not all(isinstance(x, str) and x.strip() for x in commands)
-        ):
+    if (
+        not commands
+        or not isinstance(commands, list)
+        or not all(isinstance(x, str) and x.strip() for x in commands)
+    ):
+        findings.append(
+            _e(
+                "WO009",
+                "verify.commands must be a non-empty list of strings",
+                file_path,
+                "$.verify.commands",
+            )
+        )
+
+    execution = wo.get("execution")
+    if not isinstance(execution, dict):
+        findings.append(_e("WO014", "execution must be an object", file_path, "$.execution"))
+    else:
+        if execution.get("engine") != "trifecta":
+            findings.append(
+                _e("WO015", "execution.engine must be 'trifecta'", file_path, "$.execution.engine")
+            )
+        if not isinstance(execution.get("required_flow"), list) or not execution.get("required_flow"):
             findings.append(
                 _e(
-                    "WO009",
-                    "verify.commands must be a non-empty list of strings for pending/running WOs",
+                    "WO016",
+                    "execution.required_flow must be a non-empty list",
                     file_path,
-                    "$.verify.commands",
+                    "$.execution.required_flow",
                 )
+            )
+        if not isinstance(execution.get("segment"), str):
+            findings.append(
+                _e("WO017", "execution.segment must be a string", file_path, "$.execution.segment")
             )
 
     dependencies = wo.get("dependencies")

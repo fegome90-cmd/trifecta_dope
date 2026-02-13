@@ -20,6 +20,11 @@ verify:
   - uv run pytest -q tests/integration/test_ast_cache_persist_cross_run_cli.py
   verified_at_sha: HEAD
 dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - verify
+  segment: .
 x_objective: "Integrar telemetr\xEDa audit-grade en AST cache.\n"
 x_deliverables:
 - TelemetryAstCache wrapper (src/infrastructure/telemetry_cache.py)

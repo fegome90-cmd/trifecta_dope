@@ -26,14 +26,19 @@ verify:
   - test -f src/cli/invalid_option_handler.py
   - uv run pytest tests/integration/test_cli_invalid_options.py -v
 dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - verify
+  segment: .
 dependencies: []
+finished_at: '2026-02-10T00:00:00Z'
+verified_at_sha: 306f6430b850da52875c89681cc8328057e18fdf
 evidence_logs:
 - _ctx/logs/WO-0022_test_results_final.log
 - _ctx/logs/WO-0022_dry_run_enhanced.log
 - _ctx/logs/WO-0022_dry_run_error.log
 - _ctx/logs/WO-0022_max_steps_error.log
-finished_at: '2026-02-10T00:00:00Z'
-verified_at_sha: 306f6430b850da52875c89681cc8328057e18fdf
 x_dependencies: []
 x_evidence_logs: []
 x_objective: "Fase 0 - Baseline y contrato para mejorar manejo de opciones inv\xE1lidas en CLI.\n\n0.1\

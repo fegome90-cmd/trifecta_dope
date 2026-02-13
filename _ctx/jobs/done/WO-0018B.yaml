@@ -21,8 +21,14 @@ verify:
   - uv run pytest tests/unit/test_wo_finish_validators.py tests/integration/test_wo_closure.py -v
   - uv run pytest --cov=scripts/ctx_wo_finish.py --cov-report=term-missing
 dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - verify
+  segment: .
 dependencies:
 - WO-0018A
+started_at: '2026-01-14T01:58:22.418424+00:00'
 verified_at_sha: c2bb56b
 closed_at: '2026-01-14T11:28:00-03:00'
 run_ids:
@@ -137,4 +143,3 @@ x_micro_tasks:
   - .coverage
   - pytest output
   commit: None
-started_at: '2026-01-14T01:58:22.418424+00:00'

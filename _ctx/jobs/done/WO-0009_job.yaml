@@ -22,7 +22,8 @@ dod_id: DOD-REPRODUCIBILITY
 x_legacy: true
 x_branch: job/WO-0009-sync-repo-content
 x_worktree: ../wt-WO-0009
-x_objective: 'Fix ctx sync to index repo content (docs/, src/) in addition to _ctx metadata.
+x_objective: 'Fix ctx sync to index repo content (docs/, src/) in addition to _ctx
+  metadata.
 
 
   Current behavior: ctx sync only indexes skill.md, prime, agent, session.
@@ -80,3 +81,8 @@ evidence_logs:
 - _ctx/logs/wo0009_green_final/01_pytest_fail.log
 - _ctx/logs/wo0009_green_final/02_pytest_green.log
 - _ctx/logs/wo0009_green_final/03_gate_wo0007.log
+execution:
+  engine: trifecta
+  required_flow:
+  - verify
+  segment: .

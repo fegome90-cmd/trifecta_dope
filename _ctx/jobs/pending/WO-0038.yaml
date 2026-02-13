@@ -20,8 +20,20 @@ verify:
   - go test ./internal/plugins/td/... -v -run TestPathTraversal
   - go test ./internal/plugins/td/... -v -run TestInvalidWOID
 dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - verify
+  segment: .
 dependencies:
 - WO-0037
+claim_links:
+  requirements:
+  - C-TD-003
+  assumptions:
+  - A-TD-002
+  constraints:
+  - CN-TD-002
 objective: 'Implement path validation preventing traversal attacks:
 
   - Only ../.worktrees/ prefix allowed
@@ -40,13 +52,6 @@ diff_budget:
 stop_conditions:
   max_iterations: 5
   max_verify_failures: 3
-claim_links:
-  requirements:
-  - C-TD-003
-  assumptions:
-  - A-TD-002
-  constraints:
-  - CN-TD-002
 x_validation_rules:
 - Path must start with ../.worktrees/
 - WO ID format validation (WO-XXXX, WO-XXA)

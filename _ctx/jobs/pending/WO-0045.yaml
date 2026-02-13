@@ -1,102 +1,91 @@
 version: 1
 id: WO-0045
 epic_id: E-TESTS-CONTRACT
-title: "Trifecta-first WO engine (fail-closed)"
+title: Trifecta-first WO engine (fail-closed)
 priority: P0
 status: pending
-dod_id: DOD-DEFAULT
-objective: |
-  Forzar que cada Work Order ejecute el flujo Trifecta completo como condición
-  no negociable, con contrato en schema, enforcement en take/finish, gate por WO
-  y hook anti-bypass.
-
-summary: >
-  Enforce Trifecta as mandatory execution engine for all WOs using fail-closed
-  validation, evidence requirements, and anti-bypass commit controls.
-
 scope:
   allow:
-    - "docs/backlog/schema/work_order.schema.json"
-    - "scripts/ctx_wo_take.py"
-    - "scripts/ctx_wo_finish.py"
-    - "scripts/ctx_verify_run.sh"
-    - "scripts/prevent_manual_wo_closure.sh"
-    - "tests/unit/test_wo_trifecta_contract.py"
-    - "tests/unit/test_wo_finish_requires_evidence.py"
-    - "tests/unit/test_prevent_manual_wo_closure.py"
-    - "scripts/smoke_wo_trifecta_flow.sh"
+  - docs/backlog/schema/work_order.schema.json
+  - scripts/ctx_wo_take.py
+  - scripts/ctx_wo_finish.py
+  - scripts/ctx_verify_run.sh
+  - scripts/prevent_manual_wo_closure.sh
+  - tests/unit/test_wo_trifecta_contract.py
+  - tests/unit/test_wo_finish_requires_evidence.py
+  - tests/unit/test_prevent_manual_wo_closure.py
+  - scripts/smoke_wo_trifecta_flow.sh
   deny:
-    - ".env*"
-    - "**/production.*"
-
+  - .env*
+  - '**/production.*'
+verify:
+  commands:
+  - make wo-fmt-check
+  - make wo-lint
+  - bash scripts/ctx_verify_run.sh WO-0045 --root .
+  - uv run pytest -q tests/unit/test_wo_trifecta_contract.py
+  - uv run pytest -q tests/unit/test_wo_finish_requires_evidence.py
+  - uv run pytest -q tests/unit/test_prevent_manual_wo_closure.py
+  - bash scripts/smoke_wo_trifecta_flow.sh WO-0045
+dod_id: DOD-DEFAULT
 execution:
   engine: trifecta
   required_flow:
-    - "session.append:intent"
-    - "ctx.sync"
-    - "ctx.search"
-    - "ctx.get"
-    - "session.append:result"
-  segment: "."
-
-verify:
-  commands:
-    - "make wo-fmt-check"
-    - "make wo-lint"
-    - "bash scripts/ctx_verify_run.sh WO-0045 --root ."
-    - "uv run pytest -q tests/unit/test_wo_trifecta_contract.py"
-    - "uv run pytest -q tests/unit/test_wo_finish_requires_evidence.py"
-    - "uv run pytest -q tests/unit/test_prevent_manual_wo_closure.py"
-    - "bash scripts/smoke_wo_trifecta_flow.sh WO-0045"
-
-deliverables:
-  - "Schema exige execution.engine, execution.required_flow y execution.segment"
-  - "ctx_wo_take.py falla si falta contrato o engine != trifecta"
-  - "ctx_wo_finish.py bloquea running->done sin evidencia mínima"
-  - "ctx_verify_run.sh ejecuta verify.commands y falla en primer error"
-  - "prevent_manual_wo_closure.sh bloquea cierre manual sin transición válida + evidencia"
-  - "No loophole: modificar scripts no permite saltar gates"
-  - "Tests cubren happy path, missing contract, wrong engine, missing evidence, bypass"
-
-diff_budget:
-  max_files: 10
-  max_loc: 350
-
-stop_conditions:
-  max_iterations: 5
-  max_fail_verify: 2
-
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
+  segment: .
 trace:
   ticket: null
   related_wos:
-    - WO-0040
-    - WO-0043
-
+  - WO-0040
+  - WO-0043
 claim_links:
   requirements:
-    - "WO contract is mandatory and fail-closed"
-    - "WO closure requires explicit evidence"
-    - "Manual closure bypass is prevented"
+  - WO contract is mandatory and fail-closed
+  - WO closure requires explicit evidence
+  - Manual closure bypass is prevented
   assumptions:
-    - "Trifecta session log remains append-only"
-    - "WO verification runs in repository runtime root"
+  - Trifecta session log remains append-only
+  - WO verification runs in repository runtime root
   constraints:
-    - "No silent fallback"
-    - "Keep verification deterministic"
+  - No silent fallback
+  - Keep verification deterministic
+objective: "Forzar que cada Work Order ejecute el flujo Trifecta completo como condici\xF3n\nno negociable,\
+  \ con contrato en schema, enforcement en take/finish, gate por WO\ny hook anti-bypass.\n"
+summary: 'Enforce Trifecta as mandatory execution engine for all WOs using fail-closed validation, evidence
+  requirements, and anti-bypass commit controls.
 
+  '
+deliverables:
+- Schema exige execution.engine, execution.required_flow y execution.segment
+- ctx_wo_take.py falla si falta contrato o engine != trifecta
+- "ctx_wo_finish.py bloquea running->done sin evidencia m\xEDnima"
+- ctx_verify_run.sh ejecuta verify.commands y falla en primer error
+- "prevent_manual_wo_closure.sh bloquea cierre manual sin transici\xF3n v\xE1lida + evidencia"
+- 'No loophole: modificar scripts no permite saltar gates'
+- Tests cubren happy path, missing contract, wrong engine, missing evidence, bypass
+diff_budget:
+  max_files: 10
+  max_loc: 350
+stop_conditions:
+  max_iterations: 5
+  max_fail_verify: 2
 evidence:
   required:
-    - path: "_ctx/session_trifecta_dope.md"
-      contains_all:
-        - "[WO-0045] intent:"
-        - "[WO-0045] result:"
-    - path: "_ctx/jobs/running/WO-0045.yaml"
-      must_not_exist_when_done: true
-    - path: "_ctx/jobs/done/WO-0045.yaml"
-      must_exist_when_done: true
-    - path: "_ctx/handoff/WO-0045"
-      must_exist_when_done: true
-      contains_any:
-        - "handoff.md"
-        - "report.md"
-        - "artifact_manifest.json"
+  - path: _ctx/session_trifecta_dope.md
+    contains_all:
+    - '[WO-0045] intent:'
+    - '[WO-0045] result:'
+  - path: _ctx/jobs/running/WO-0045.yaml
+    must_not_exist_when_done: true
+  - path: _ctx/jobs/done/WO-0045.yaml
+    must_exist_when_done: true
+  - path: _ctx/handoff/WO-0045
+    must_exist_when_done: true
+    contains_any:
+    - handoff.md
+    - report.md
+    - artifact_manifest.json

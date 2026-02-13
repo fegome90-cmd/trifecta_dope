@@ -19,10 +19,15 @@ verify:
   commands:
   - uv run pytest -xvs tests/integration/test_ctx_search_linter_ab_synthetic.py
 dod_id: DOD-LINTER_AB
-x_legacy: true
+execution:
+  engine: trifecta
+  required_flow:
+  - verify
+  segment: .
 verified_at_sha: f2c16d761834bf00b60a5ed86a37f90d76853f9f
 evidence_logs:
 - _ctx/logs/wo0008_ab_test_execution.log
+x_legacy: true
 x_final_report: docs/reports/wo0008_ab_linter_reproducibility.md
 x_branch: job/WO-0008-ab-linter-synthetic
 x_worktree: ../wt-WO-0008

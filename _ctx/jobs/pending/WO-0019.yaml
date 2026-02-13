@@ -18,6 +18,11 @@ verify:
   commands:
   - python3 scripts/schema_validation.py --root .
 dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - verify
+  segment: .
 dependencies:
 - WO-0018B
 - WO-0011

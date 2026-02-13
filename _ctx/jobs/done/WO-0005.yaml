@@ -22,6 +22,17 @@ verify:
   - scripts/verify.sh
   - uv run pytest -q
 dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - verify
+  segment: .
+trace:
+  ticket: null
+  related_wos: []
+started_at: '2026-02-10T02:25:30.215635+00:00'
+result: done
+verified_at_sha: 12b9f2f7a283c798a19dca08ca1c4814c6389fde
 x_phase: P0 Audit (AST Persistence)
 deliverables:
 - docs/reports/wo0005_p0_ast_inventory.md (Inventory)
@@ -29,14 +40,8 @@ deliverables:
 - _ctx/logs/wo0005_p0_ast/ (Evidence)
 - _ctx/logs/gate_fail_head.log
 - _ctx/logs/gate_base_commit.txt
-trace:
-  ticket: null
-  related_wos: []
 x_risks:
 - SQLite binary encoding dependence
 - Parallel process locking (WAL mode not redundant)
 - Implicit segment_id logic in persisted keys
-started_at: '2026-02-10T02:25:30.215635+00:00'
-verified_at_sha: 12b9f2f7a283c798a19dca08ca1c4814c6389fde
 closed_at: '2026-02-10T07:40:42.291880+00:00'
-result: done

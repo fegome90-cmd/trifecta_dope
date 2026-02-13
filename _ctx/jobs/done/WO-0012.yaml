@@ -13,9 +13,20 @@ scope:
   - docs/ops/feature_flags.md
   deny:
   - src/domain/**
+verify:
+  commands:
+  - TRIFECTA_AST_PERSIST=0 OPS=100 WORKERS=2 RUN_ID=baseline-t1 bash eval/scripts/run_ast_cache_soak.sh
+    | tee _ctx/logs/wo_0012/t1_baseline.log
+  - python eval/scripts/extract_ast_soak_metrics.py --run-id baseline-t1 --out _ctx/metrics/wo_0012_baseline.json
 dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - verify
+  segment: .
 dependencies:
 - WO-P3.0
+result: done
 verified_at_sha: 917128fa7adb9c983f6d8c2e493f11318b085746
 closed_at: '2026-01-13T16:20:07.467090+00:00'
 run_ids:
@@ -104,4 +115,3 @@ x_micro_tasks:
   evidence:
   - Updated backlog
   commit: 'docs(ops): close WO-0012 persistence feature flag'
-result: done

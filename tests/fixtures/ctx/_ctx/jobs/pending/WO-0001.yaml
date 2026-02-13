@@ -16,3 +16,7 @@ verify:
   commands:
     - "scripts/verify.sh"
 dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow: ["verify"]
+  segment: .

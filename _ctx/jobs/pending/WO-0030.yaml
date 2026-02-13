@@ -20,6 +20,11 @@ verify:
   commands:
   - bash skills/documentation/resources/verify_documentation.sh
 dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - verify
+  segment: .
 dependencies: []
 deliverables:
 - llms.txt
