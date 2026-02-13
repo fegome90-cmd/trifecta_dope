@@ -1,24 +1,11 @@
-version: 1
 id: WO-TEST
-epic_id: E-TEST
-title: "Test WO for Closure"
-priority: P1
+epic_id: E-0001
+title: Test WO
+priority: P2
 status: running
 owner: tester
-verified_at_sha: null
-closed_at: null
 dod_id: DOD-TEST
-x_objective: "Test fixture for WO closure"
-x_micro_tasks:
-  - id: T1
-    name: "Task 1"
-    status: done
-    evidence:
-      - "tests/integration/test_wo_closure.py"
-  - id: T2
-    name: "Task 2"
-    status: pending
-    commands: []
-    gates: []
-    evidence: []
-    commit: null
+dependencies: []
+branch: feat/wo-WO-TEST
+worktree: .worktrees/WO-TEST
+started_at: 2025-01-01T00:00:00Z

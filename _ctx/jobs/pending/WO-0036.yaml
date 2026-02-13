@@ -1,56 +1,177 @@
-version: 1
+created_at: '2026-02-11T14:30:00Z'
+description: "Clean up code duplication and DRY violations identified by multi-review\
+  \ agents.\n\n## Approach\nFollowing **strict TDD methodology** (RED \u2192 GREEN\
+  \ \u2192 REFACTOR):\n1. Write failing tests first (RED)\n2. Implement code to pass\
+  \ tests (GREEN)\n3. Refactor for quality (IMPROVE)\n\nEach task has corresponding\
+  \ DoD verification and test reference.\n"
+dod_id: WO-0036-dod
+epic_id: EP-0019
 id: WO-0036
-epic_id: E-0003
-title: Shared Types Package (internal/trifectaindex/)
-priority: P0
-status: pending
-owner: null
-branch: null
-worktree: null
-scope:
-  allow:
-  - internal/trifectaindex/**
-  - internal/plugin/plugin.go
-  deny:
-  - internal/plugins/trifecta/**
-  - cmd/**
-verify:
-  commands:
-  - go build ./internal/trifectaindex/...
-  - grep -q 'package trifectaindex' internal/trifectaindex/types.go
-  - grep -q 'Validate()' internal/trifectaindex/types.go
-dod_id: DOD-DEFAULT
-dependencies:
-- WO-0035
-objective: 'Create shared types package in Sidecar at internal/trifectaindex/
+priority: P1
+status: done
+tasks:
+- description: 'handleOpenWorktree() only checks os.IsNotExist(err), ignoring other
+    errors
 
-  containing WOIndex, WorkOrder, WOStatus, and validation logic.
+    like EACCES, EIO, ELOOP. Must handle ALL os.Stat() errors.
 
-  '
-diff_budget:
-  max_files: 10
-  max_loc: 400
-  rationale: Types package + validation logic
-stop_conditions:
-  max_iterations: 4
-  max_verify_failures: 2
-claim_links:
-  requirements:
-  - C-TD-004
-  assumptions:
-  - A-TD-001
-  constraints:
-  - CN-TD-003
-x_implementation_notes: 'Package must export:
+    '
+  dod:
+  - All os.Stat() errors are logged and handled
+  - No silent failures on filesystem operations
+  files:
+  - internal/plugins/td/plugin.go:275-278
+  id: T1
+  name: Fix os.Stat() silent failure in td plugin
+  severity: CRITICAL
+  status: done
+  test_ref: test_handle_open_worktree_error_cases
+- description: 'tickMsg type, tickCmd(), isRefreshEnabled(), and tick case in Update()
 
-  - WOStatus (pending/running/done/failed)
+    are defined but never used. Remove entirely.
 
-  - WOIndex struct
+    '
+  dod:
+  - All tick-related code removed
+  - No unused functions remaining
+  files:
+  - internal/plugins/trifecta/plugin.go:68-73
+  - internal/plugins/trifecta/plugin.go:224-236
+  id: T2
+  name: Remove dead tick infrastructure from trifecta plugin
+  severity: IMPORTANT
+  status: done
+  test_ref: test_no_dead_tick_code
+- description: 'selectedWO is written to on line 38 but never read anywhere.
 
-  - WorkOrder struct
+    Remove the field entirely.
 
-  - Validate() error method
+    '
+  dod:
+  - Unused field removed
+  - No compiler warnings about unused fields
+  files:
+  - internal/plugins/trifecta/plugin.go:38
+  id: T3
+  name: Remove unused selectedWO field from trifecta plugin
+  severity: IMPORTANT
+  status: done
+  test_ref: test_no_unused_fields
+- description: 'internal/plugins/trifecta/types.go duplicates trifectaindex/types.go
+    entirely.
 
-  - ExpectedVersion, ExpectedSchema constants
+    Delete the file and update imports in trifecta/plugin.go.
 
-  '
+    '
+  dod:
+  - Duplicate file deleted
+  - Imports updated to use trifectaindex package
+  - No type definition conflicts
+  files:
+  - internal/plugins/trifecta/types.go
+  - internal/plugins/trifecta/plugin.go:13
+  id: T4
+  name: Delete duplicate trifecta/types.go file
+  severity: IMPORTANT
+  status: done
+  test_ref: test_no_duplicate_types
+- description: 'width and height are set but never used. Remove from Plugin struct.
+
+    '
+  dod:
+  - Unused fields removed
+  - Plugin struct only contains used fields
+  files:
+  - internal/plugins/td/plugin.go:31-32
+  - internal/plugins/td/plugin.go:79-80
+  id: T5
+  name: Remove unused width/height fields from td plugin
+  severity: IMPORTANT
+  status: done
+  test_ref: test_no_unused_plugin_fields
+- description: 'Switch statement for status colors (lines 256-264) can be replaced
+
+    with a map for better maintainability.
+
+    '
+  dod:
+  - Status colors defined in map
+  - Switch statement replaced with map lookup
+  files:
+  - internal/plugins/trifecta/plugin.go:256-264
+  id: T6
+  name: Extract status color map in trifecta plugin
+  severity: SUGGESTION
+  status: done
+  test_ref: test_status_color_map
+- description: 'woIDRegex at line 25 can be simplified or combined with other validation.
+
+    '
+  dod:
+  - Regex validation simplified
+  - No duplicate validation logic
+  files:
+  - internal/plugins/td/plugin.go:25
+  - internal/plugins/td/plugin.go:217-221
+  id: T7
+  name: Simplify woIDRegex validation in td plugin
+  severity: SUGGESTION
+  status: done
+  test_ref: test_wo_id_validation
+- description: 'Current coverage is 26.5%. Add tests for loadIndex(), Update(),
+
+    Start(), Stop() methods.
+
+    '
+  dod:
+  - loadIndex() has error path tests
+  - Lifecycle methods tested
+  - Coverage increases to 50%+
+  files:
+  - internal/plugins/td/plugin.go:104-141
+  - internal/plugins/td/plugin.go:61-70
+  id: T8
+  name: Add test coverage for td plugin lifecycle
+  severity: SUGGESTION
+  status: done
+  test_ref: test_lifecycle_methods
+- description: 'Verify ALL os.Stat() errors are handled, not just IsNotExist.
+
+    '
+  dod:
+  - Test cases for EACCES, EIO, ELOOP errors
+  - Error logging verified
+  files:
+  - internal/plugins/td/plugin_test.go
+  id: T9
+  name: Add test for os.Stat() error handling
+  severity: TEST
+  status: done
+  test_ref: test_stat_error_handling
+- description: 'Test all keybindings work correctly (p/r/d/f/a/R/enter/o/q/esc).
+
+    '
+  dod:
+  - All keybindings tested
+  - Filter state transitions verified
+  files:
+  - internal/plugins/trifecta/plugin_test.go
+  id: T10
+  name: Add test for trifecta plugin keybindings
+  severity: TEST
+  status: done
+  test_ref: test_keybindings
+- description: 'Test loading from actual _ctx/index/wo_index.json file.
+
+    '
+  dod:
+  - Integration test with real index file
+  - Schema validation tested
+  files:
+  - internal/plugins/trifecta/plugin_test.go
+  id: T11
+  name: Add integration test for WO index loading
+  severity: TEST
+  status: done
+  test_ref: test_index_loading_integration
+title: WO Hygiene - Code cleanup from multi-review

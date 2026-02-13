@@ -1,7 +1,7 @@
 dod:
   - id: DOD-TEST
-    name: "Test DoD"
-    requirements:
-      - "All tests pass"
-      - "Code reviewed"
-      - "Artifacts generated"
+    name: Test DoD
+    description: Test definition of done
+    criteria:
+      - tests.log must exist
+      - lint.log must exist
