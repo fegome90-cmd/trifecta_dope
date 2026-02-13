@@ -1188,3 +1188,9 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Commands**: verificación git status/diff, creación de contrato
 - **Warnings**: Ninguno
 - **Next**: Revisar/aceptar el contrato y, si aplica, versionar cambios del repo.
+## 2026-02-13 20:47 UTC
+- **Summary**: Creating agent.md in _ctx/jobs/ to guide agents on Work Order usage, following project standards and tools.
+- **Files**: _ctx/jobs/agent.md
+- **Commands**: write_file
+- **Pack SHA**: `8127ef82d5e4c260`
+

@@ -1,0 +1,4 @@
+interface:
+  display_name: "WO Workflow"
+  short_description: "Flujo correcto para Work Orders: take, work, finish con fail-closed gates"
+  default_prompt: "Ejecutar flujo WO completo: verificar estado, tomar WO, trabajar en worktree, generar artefactos DoD, cerrar. Respetar bloqueos del main repo - no forzar limpieza de trabajo ajeno."

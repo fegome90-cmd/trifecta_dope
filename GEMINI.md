@@ -17,17 +17,18 @@ Update the relevant WO YAML (`_ctx/jobs/...`) and `_ctx/backlog/backlog.yaml` im
 **Rule 4: Commit Discipline**
 Commits MUST run pre-commit hooks. Do NOT use `--no-verify` unless managing a WIP or emergency hotfix.
 
-**Rule 5: Superpowers**
-If `superpowers` are mentioned, check `skill.md` or global superpowers, specifically `~/.claude/skills/superpowers`.
+**Rule 5: Skill Discovery & Superpowers**
+Las skills del repositorio están disponibles nativamente en `.gemini/skills/`. Actívalas con `activate_skill(name="...")`.
+- **Repo Skills**: `wo-workflow`, `wo-lint-formatter`, `documentation`, `trifecta_dope`.
+- **Superpowers**: `writing-plans`, `executing-plans`, `systematic-debugging`, `test-driven-development`, `using-git-worktrees`, etc.
 
 **Rule 6: Delivery Dynamics (Superpower Chain)**
 All work must follow this strict sequence of Superpower invocation:
 1. `writing-plans` (Design)
 2. `test-driven-development` (Implementation)
-3. `requesting-code-review` (Pre-merge)
-4. `code-review-checklist` (Self-Audit)
-5. `requesting-code-review` (Final Approval)
-6. `systematic-debugging` (If issues arise)
+3. `verification-before-completion` (Self-Audit)
+4. `requesting-code-review` (Final Approval)
+5. `systematic-debugging` (If issues arise)
 
 ---
 
@@ -70,6 +71,27 @@ uv run trifecta ctx get --segment . --ids "infra:cache_v1,doc:design_p2" --mode 
 - **Work Orders**: `_ctx/jobs/{pending,running,done}/*.yaml`
 - **Validation**: `python scripts/ctx_backlog_validate.py --strict`
 - **Rule**: `verified_at_sha` MUST be an explicit SHA, never "HEAD".
+
+---
+
+## 🧠 Skills & Superpowers
+
+Para evitar latencia y saturación de contexto, el agente debe activar skills específicas en lugar de leer archivos de documentación extensos.
+
+### 🛠️ Core Skills
+*   **`trifecta_dope`**: Reglas de búsqueda, persistencia de sesión y protocolos del segmento.
+*   **`wo-workflow`**: Guía paso a paso para el ciclo de vida de Work Orders.
+*   **`wo-lint-formatter`**: Validación de contratos YAML y formato de WOs.
+*   **`documentation`**: Estándares para reportes y manuales técnicos.
+
+### ⚡ Superpowers (Metodología Expert)
+Usa los "Superpowers" para asegurar una ejecución de grado auditoría:
+- `writing-plans`: Antes de cualquier cambio complejo.
+- `using-git-worktrees`: Para aislamiento total en WOs.
+- `test-driven-development`: Para asegurar cobertura desde el inicio.
+- `systematic-debugging`: Para fallos inesperados.
+
+> **Comando**: `activate_skill(name="executing-plans")`
 
 ---
 
