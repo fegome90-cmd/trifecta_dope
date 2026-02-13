@@ -50,6 +50,7 @@ class LSPClient:
                     {"status": "failed", "error": "binary_not_found"},
                     0,
                 )
+                self._emit_fallback("daemon_init", "binary_not_found")
                 return
 
             try:
@@ -206,6 +207,26 @@ class LSPClient:
             # kwargs are passed to event as x_fields
             self.telemetry.event(cmd, args, result, timing, lsp_state=self.state.value, **kwargs)
 
+    def _emit_fallback(self, requested_method: str, reason: str) -> None:
+        """Emit lsp.fallback telemetry event when LSP is unavailable.
+
+        This makes fallback behavior explicit and observable, allowing
+        monitoring of how often AST fallback is used instead of LSP.
+
+        Args:
+            requested_method: The LSP method that was requested (e.g., "textDocument/definition")
+            reason: Why fallback occurred (e.g., "state_not_ready:COLD", "request_timeout")
+        """
+        self._log_event(
+            "lsp.fallback",
+            {"requested_method": requested_method},
+            {"status": "fallback_to_ast", "reason": reason},
+            0,
+            fallback_to="ast",
+        )
+        if self.telemetry:
+            self.telemetry.incr("lsp_fallback_count", 1)
+
     def _run_loop(self) -> None:
         """Handshake + Read Loop."""
         try:
@@ -288,6 +309,7 @@ class LSPClient:
         """Send a request and wait for the response."""
         with self.lock:
             if self.state != LSPState.READY:
+                self._emit_fallback(method, f"state_not_ready:{self.state.value}")
                 return None
 
             req_id = self._next_id
@@ -310,6 +332,7 @@ class LSPClient:
             with self.lock:
                 self._pending_requests.pop(req_id, None)
                 self._request_events.pop(req_id, None)
+                self._emit_fallback(method, "request_timeout")
                 return None  # Timeout
 
     def _send_rpc(self, msg: Dict[str, Any]) -> None:

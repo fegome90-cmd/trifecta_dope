@@ -9,6 +9,7 @@ from src.application.symbol_selector import SymbolQuery
 from src.application.ast_parser import SkeletonMapBuilder, ParseResult
 from src.domain.ast_cache import SQLiteCache
 from src.infrastructure.factories import get_ast_cache, get_ast_cache_db_path
+from src.domain.lsp_contracts import LSPResponse, FallbackReason, Backend
 
 ast_app = typer.Typer(help="AST & Parsing Commands")
 
@@ -21,6 +22,34 @@ def _get_telemetry(level: str = "lite") -> Optional[Telemetry]:
     if level == "off":
         return None
     return Telemetry(Path.cwd(), level=level)
+
+
+def _emit_fallback_telemetry(
+    telemetry: Optional[Telemetry],
+    reason: FallbackReason,
+    method: str,
+    **kwargs,
+) -> None:
+    """Emit lsp.fallback event with explicit reason."""
+    if telemetry:
+        telemetry.event(
+            "lsp.fallback",
+            {"method": method, **kwargs},
+            {"status": "degraded", "reason": reason.value},
+            1,
+            fallback_reason=reason.value,
+        )
+        telemetry.flush()
+
+
+def _check_lsp_availability() -> tuple[bool, Optional[FallbackReason]]:
+    import shutil
+
+    executable = shutil.which("pylsp") or shutil.which("pyright-langserver")
+    if not executable:
+        return False, FallbackReason.LSP_BINARY_NOT_FOUND
+
+    return True, None
 
 
 CACHE_DIR_NAME = ".trifecta"
@@ -170,29 +199,57 @@ def hover(
     line: int = typer.Option(..., "--line", "-l"),
     character: int = typer.Option(..., "--char", "-c"),
     segment: str = typer.Option(".", "--segment"),
+    require_lsp: bool = typer.Option(
+        False, "--require-lsp", help="Fail if LSP unavailable (no fallback)"
+    ),
 ):
-    """[WIP] LSP Hover request."""
+    """LSP Hover request with explicit fallback contract."""
     telemetry = _get_telemetry("lite")
+    root = Path(segment).resolve()
+
+    is_lsp_available, fallback_reason = _check_lsp_availability()
+
+    if not is_lsp_available:
+        _emit_fallback_telemetry(
+            telemetry,
+            fallback_reason or FallbackReason.LSP_NOT_READY,
+            "hover",
+            uri=str(uri),
+            line=line,
+            char=character,
+        )
+
+        if require_lsp:
+            response = LSPResponse.error_response(
+                error_code="LSP_UNAVAILABLE",
+                fallback_reason=fallback_reason or FallbackReason.LSP_NOT_READY,
+                message=f"LSP unavailable: {(fallback_reason or FallbackReason.LSP_NOT_READY).value}",
+            )
+            _json_output(response.to_dict())
+            raise typer.Exit(1)
+        else:
+            response = LSPResponse.wip_response(
+                data={"uri": uri, "line": line, "char": character, "note": "LSP unavailable"},
+                message="LSP unavailable. Install pyright or pylsp for full functionality.",
+            )
+            _json_output(response.to_dict())
+            return
+
+    response = LSPResponse.wip_response(
+        data={"uri": uri, "line": line, "char": character, "lsp": "detected"},
+        message="Hover not yet implemented. LSP detected but not connected.",
+    )
+
     if telemetry:
         telemetry.event(
             "ast.hover.wip",
-            {"segment": segment, "uri": uri, "line": line, "char": character},
-            {"status": "ok", "backend": "wip_stub"},
+            {"segment": str(root), "uri": uri, "line": line, "char": character},
+            {"status": "ok", "backend": Backend.WIP_STUB.value, "lsp_available": True},
             1,
         )
         telemetry.flush()
 
-    # Stub for now
-    _json_output(
-        {
-            "status": "ok",
-            "kind": "skeleton",
-            "backend": "wip_stub",
-            "capability_state": "WIP",
-            "response_state": "partial",
-            "data": {"uri": uri, "range": {"start_line": 1, "end_line": 10}, "children": []},
-        }
-    )
+    _json_output(response.to_dict())
 
 
 @ast_app.command("clear-cache")
