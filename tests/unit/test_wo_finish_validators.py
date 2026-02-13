@@ -14,7 +14,12 @@ from unittest.mock import Mock
 # Add scripts directory to path for imports
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
 
-from ctx_wo_finish import validate_dod, generate_artifacts, REQUIRED_ARTIFACTS
+from ctx_wo_finish import (
+    validate_dod,
+    generate_artifacts,
+    REQUIRED_ARTIFACTS,
+    resolve_runtime_root,
+)
 
 
 class TestGenerateArtifacts:
@@ -921,7 +926,14 @@ x_objective: "Test"
         import sys
         from ctx_wo_finish import main
 
-        sys.argv = ["ctx_wo_finish.py", "WO-TEST", "--root", str(tmp_path), "--skip-dod"]
+        sys.argv = [
+            "ctx_wo_finish.py",
+            "WO-TEST",
+            "--root",
+            str(tmp_path),
+            "--skip-dod",
+            "--skip-verification",
+        ]
 
         exit_code = main()
 
@@ -951,7 +963,13 @@ x_objective: "Test"
         from io import StringIO
         from ctx_wo_finish import main
 
-        sys.argv = ["ctx_wo_finish.py", "WO-TEST", "--root", str(tmp_path)]
+        sys.argv = [
+            "ctx_wo_finish.py",
+            "WO-TEST",
+            "--root",
+            str(tmp_path),
+            "--skip-verification",
+        ]
         old_stdout = sys.stdout
         sys.stdout = StringIO()
 
@@ -1012,6 +1030,7 @@ x_objective: "Test"
             "--root",
             str(tmp_path),
             "--skip-dod",
+            "--skip-verification",
             "--result",
             "failed",
         ]
@@ -1176,3 +1195,46 @@ x_objective: "Test"
         exit_code = main()
 
         assert exit_code == 1
+
+    def test_main_verification_missing_script_fails(self, tmp_path):
+        """Test main() fails when verify.sh is missing and verification not skipped."""
+        running_dir = tmp_path / "_ctx" / "jobs" / "running"
+        running_dir.mkdir(parents=True)
+        (running_dir / "WO-TEST.yaml").write_text(
+            """version: 1
+id: WO-TEST
+status: running
+dod_id: DOD-TEST
+x_objective: "Test"
+"""
+        )
+
+        dod_dir = tmp_path / "_ctx" / "dod"
+        dod_dir.mkdir(parents=True)
+        (dod_dir / "DOD-TEST.yaml").write_text("dod:\n  - id: DOD-TEST\n    name: Test\n")
+
+        import sys
+        from ctx_wo_finish import main
+
+        sys.argv = ["ctx_wo_finish.py", "WO-TEST", "--root", str(tmp_path), "--skip-dod"]
+        exit_code = main()
+        assert exit_code == 1
+
+
+class TestRootResolution:
+    """Test canonical WO runtime root resolution."""
+
+    def test_resolve_runtime_root_dot_equals_abs_cwd(self, monkeypatch):
+        """'.' and absolute cwd resolve to the same runtime root."""
+        cwd = Path.cwd()
+        dot_result = resolve_runtime_root(".")
+        abs_result = resolve_runtime_root(str(cwd))
+        assert dot_result.is_ok()
+        assert abs_result.is_ok()
+        assert dot_result.unwrap() == abs_result.unwrap()
+
+    def test_resolve_runtime_root_rejects_nonexistent_path(self):
+        """Non-existent root path returns deterministic error."""
+        result = resolve_runtime_root("/definitely/not/a/real/path/for/trifecta")
+        assert result.is_err()
+        assert "INVALID_SEGMENT_PATH" in result.unwrap_err()

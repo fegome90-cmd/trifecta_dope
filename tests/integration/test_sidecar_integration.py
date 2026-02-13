@@ -288,6 +288,7 @@ def test_take_finish_updates_index_in_isolated_repo(tmp_path: Path):
             "--root",
             str(root),
             "--skip-dod",
+            "--skip-verification",
             "--result",
             "done",
         ],
