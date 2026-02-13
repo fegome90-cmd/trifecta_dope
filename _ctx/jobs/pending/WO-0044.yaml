@@ -1,0 +1,65 @@
+version: 1
+id: WO-0044
+epic_id: E-LSP-TELEMETRY
+title: "Telemetría mínima de salud LSP"
+priority: P0
+status: pending
+dod_id: DOD-DEFAULT
+objective: |
+  Agregar métricas/eventos mínimos de salud LSP para no operar a ciegas.
+  Detectar problemas antes de que causen fallos silenciosos.
+
+deliverables:
+  - "Contador lsp.thread_alive_after_join (edge case en shutdown)"
+  - "Contador lsp.ready_fail_invariant (cuando invariantes fallan)"
+  - "Latencia p95 de request básica (hover/ping)"
+  - "Evento lsp.daemon_status con: state, uptime, last_request_ms, root_ok"
+  - "Dashboard/report básico: trifecta telemetry health -s ."
+  - "Tests de telemetría: verificar eventos emitidos correctamente"
+
+scope:
+  allow:
+    - "src/infrastructure/lsp_client.py"
+    - "src/infrastructure/lsp_daemon.py"
+    - "src/application/telemetry_pr2.py"
+    - "src/application/telemetry_reports.py"
+    - "src/infrastructure/telemetry.py"
+    - "tests/integration/test_lsp_telemetry_health.py"
+    - "tests/unit/test_telemetry_health.py"
+  deny:
+    - ".env*"
+    - "**/production.*"
+    - "docs/**"
+
+verify:
+  commands:
+    - "uv run pytest tests/integration/test_lsp_telemetry_health.py -v"
+    - "uv run pytest tests/unit/test_telemetry_health.py -v"
+    - "uv run trifecta telemetry health -s ."
+    - "make gate-all"
+
+diff_budget:
+  max_files: 8
+  max_loc: 350
+
+stop_conditions:
+  max_iterations: 5
+  max_fail_verify: 2
+
+trace:
+  ticket: null
+  related_wos:
+    - WO-0040
+    - WO-0041
+
+claim_links:
+  requirements:
+    - "Métricas de salud emitidas en cada operación crítica"
+    - "Dashboard/report básico funcional"
+    - "Eventos de error incluyen contexto suficiente"
+  assumptions:
+    - "Telemetry system base funciona"
+    - "LSP daemon lifecycle estable"
+  constraints:
+    - "No impactar performance de requests (>5% latency)"
+    - "Mantener compatibilidad con eventos existentes"

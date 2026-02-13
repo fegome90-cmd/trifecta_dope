@@ -1,0 +1,59 @@
+version: 1
+id: WO-0043
+epic_id: E-TESTS-CONTRACT
+title: "Convertir 2 integration failures en gates de contrato"
+priority: P0
+status: pending
+dod_id: DOD-DEFAULT
+objective: |
+  Arreglar los 2 tests de integración que fallan y blindarlos como contratos estables.
+  Migrar de asserts frágiles (texto) a asserts de contrato (códigos estructurados).
+
+deliverables:
+  - "test_naming_contract_integration.py: arreglado y usando TRIFECTA_ERROR_CODE"
+  - "test_repro_clean_sync_then_search.py: arreglado y usando error cards"
+  - "Test de contamination: valida shape de error card + código, no mensaje"
+  - "Test de error code: assert por estructura estable"
+  - "Documentación de contratos de error en docs/contracts/ERROR_CODES.md"
+
+scope:
+  allow:
+    - "tests/integration/test_naming_contract_integration.py"
+    - "tests/integration/test_repro_clean_sync_then_search.py"
+    - "src/cli/error_cards.py"
+    - "src/application/exceptions.py"
+    - "docs/contracts/ERROR_CODES.md"
+  deny:
+    - ".env*"
+    - "**/production.*"
+    - "src/domain/**"
+
+verify:
+  commands:
+    - "uv run pytest tests/integration/test_naming_contract_integration.py -v"
+    - "uv run pytest tests/integration/test_repro_clean_sync_then_search.py -v"
+    - "make gate-all"
+
+diff_budget:
+  max_files: 6
+  max_loc: 200
+
+stop_conditions:
+  max_iterations: 4
+  max_fail_verify: 1
+
+trace:
+  ticket: null
+  related_wos:
+    - WO-0042
+
+claim_links:
+  requirements:
+    - "Tests usan asserts de contrato (estructura), no texto"
+    - "Error codes estables y documentados"
+    - "Shape de error card validado"
+  assumptions:
+    - "Error card system funciona correctamente"
+  constraints:
+    - "No cambiar comportamiento, solo tests"
+    - "Mantener cobertura existente"
