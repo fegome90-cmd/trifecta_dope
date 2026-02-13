@@ -27,7 +27,7 @@ dod_id: DOD-DEFAULT
 x_micro_tasks:
 - id: T1
   name: 'T1: Fix broken test_worktree_path_generation test'
-  status: done
+  status: pending
   commands:
   - Edit tests/test_wo_orchestration.py line 100 to use repo_root.parent
   gates:
@@ -36,46 +36,46 @@ x_micro_tasks:
   - tests/test_wo_orchestration.py:100 updated with .parent
 - id: T2
   name: 'T2: Add unit tests for get_worktree_path()'
-  status: done
+  status: pending
   commands:
   - Create tests/unit/test_paths.py with basic functionality tests
   - Add test for repo at filesystem root edge case
   gates:
   - test -f scripts/paths.py
   evidence:
-  - tests/unit/test_paths.py created with 18 tests
+  - tests/unit/test_paths.py created with 3+ tests
 - id: T3
   name: 'T3: Add parent directory validation to get_worktree_path()'
-  status: done
+  status: pending
   commands:
   - Edit scripts/paths.py to validate parent exists and is writable
   gates:
   - test -f scripts/paths.py
   evidence:
-  - scripts/paths.py get_worktree_path() has validation (FileNotFoundError, PermissionError)
+  - scripts/paths.py get_worktree_path() has validation
 - id: T4
   name: 'T4: Add tests for metadata_inference.py regex pattern'
-  status: done
+  status: pending
   commands:
   - Create tests/unit/test_metadata_inference.py
   - Test get_worktrees_from_git() with new pattern
   gates:
   - test -f scripts/metadata_inference.py
   evidence:
-  - tests/unit/test_metadata_inference.py created with 26 tests
+  - tests/unit/test_metadata_inference.py created
 - id: T5
   name: 'T5: Add tests for path conversion in ctx_wo_take.py'
-  status: done
+  status: pending
   commands:
   - Create tests/unit/test_ctx_wo_take.py
   - Test relative path calculation logic
   gates:
   - test -f scripts/ctx_wo_take.py
   evidence:
-  - tests/unit/test_ctx_wo_take.py created with 12 tests
+  - tests/unit/test_ctx_wo_take.py created
 - id: T6
   name: 'T6: Simplify dead try/except code in ctx_wo_take.py'
-  status: done
+  status: pending
   commands:
   - Remove unnecessary try/except for relative_to()
   - Use os.path.relpath directly
@@ -83,17 +83,17 @@ x_micro_tasks:
   gates:
   - test -f scripts/ctx_wo_take.py
   evidence:
-  - scripts/ctx_wo_take.py simplified path conversion using os.path.relpath
+  - scripts/ctx_wo_take.py simplified path conversion
 - id: T7
   name: 'T7: Resolve parameter order inconsistency'
-  status: done
+  status: pending
   commands:
   - Update helpers.py get_worktree_path() to match paths.py signature
   - OR add explicit alias to avoid shadowing
   gates:
   - test -f scripts/helpers.py
   evidence:
-  - scripts/helpers.py parameter order resolved with deprecation warning
+  - scripts/helpers.py parameter order resolved
 - id: T8
   name: 'T8: Update integration test mock directories'
   status: pending
@@ -105,6 +105,6 @@ x_micro_tasks:
   evidence:
   - Integration tests updated with correct paths
 started_at: '2026-02-10T15:47:37.629636+00:00'
-verified_at_sha: 59a0807d8de1c737d319dcfe315639459d4274c1
-closed_at: '2026-02-10T16:09:47.447500+00:00'
+verified_at_sha: b349f2b0d57ae60efc79eef7f724dd600fc50f3f
+closed_at: '2026-02-13T02:28:29.421326+00:00'
 result: done
