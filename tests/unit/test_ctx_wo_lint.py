@@ -57,18 +57,16 @@ def _bootstrap_repo(tmp_path: Path) -> Path:
         encoding="utf-8",
     )
     (root / "_ctx" / "dod" / "DOD-DEFAULT.yaml").write_text(
-        "dod:\n"
-        "  - id: DOD-DEFAULT\n"
-        "    checklist: []\n",
+        "dod:\n  - id: DOD-DEFAULT\n    checklist: []\n",
         encoding="utf-8",
     )
     return root
 
 
-def _valid_wo(status: str) -> str:
+def _valid_wo(status: str, wo_id: str = "WO-0001", dependencies: str = "") -> str:
     return (
         "version: 1\n"
-        "id: WO-0001\n"
+        f"id: {wo_id}\n"
         "epic_id: E-0001\n"
         "title: Valid WO\n"
         "priority: P1\n"
@@ -79,8 +77,9 @@ def _valid_wo(status: str) -> str:
         "  deny: ['.env*']\n"
         "verify:\n"
         "  commands:\n"
-        "    - \"echo ok\"\n"
+        '    - "echo ok"\n'
         "dod_id: DOD-DEFAULT\n"
+        f"{dependencies}"
     )
 
 
@@ -89,7 +88,7 @@ def test_wo_lint_ignores_legacy_paths(tmp_path: Path) -> None:
     (root / "_ctx" / "jobs" / "pending" / "WO-0001.yaml").write_text(
         _valid_wo("pending"), encoding="utf-8"
     )
-    (root / "_ctx" / "jobs" / "legacy" / "WO-9999.yaml").write_text(
+    (root / "_ctx" / "jobs" / "done" / "WO-9999_job.yaml").write_text(
         "invalid: [", encoding="utf-8"
     )
 
@@ -102,7 +101,8 @@ def test_wo_lint_ignores_legacy_paths(tmp_path: Path) -> None:
 
     assert result.returncode == 0
     findings = json.loads(result.stdout)
-    assert findings == []
+    assert any(f["code"] == "WOI01" and f["severity"] == "INFO" for f in findings)
+    assert not any(f["severity"] == "ERROR" for f in findings)
 
 
 def test_wo_lint_flags_pending_missing_verify_commands(tmp_path: Path) -> None:
@@ -150,3 +150,208 @@ def test_wo_lint_flags_id_mismatch(tmp_path: Path) -> None:
     assert result.returncode == 1
     findings = json.loads(result.stdout)
     assert any(f["code"] == "WO002" for f in findings)
+
+
+def test_wo_lint_flags_status_folder_mismatch(tmp_path: Path) -> None:
+    root = _bootstrap_repo(tmp_path)
+    (root / "_ctx" / "jobs" / "pending" / "WO-0001.yaml").write_text(
+        _valid_wo("running"),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [sys.executable, "scripts/ctx_wo_lint.py", "--root", str(root), "--json"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    findings = json.loads(result.stdout)
+    assert any(f["code"] == "WO004" for f in findings)
+
+
+def test_wo_lint_flags_missing_dependency_reference(tmp_path: Path) -> None:
+    root = _bootstrap_repo(tmp_path)
+    (root / "_ctx" / "jobs" / "pending" / "WO-0001.yaml").write_text(
+        _valid_wo("pending", dependencies="dependencies:\n  - WO-9999\n"),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [sys.executable, "scripts/ctx_wo_lint.py", "--root", str(root), "--json"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    findings = json.loads(result.stdout)
+    assert any(f["code"] == "WO012" for f in findings)
+
+
+def test_wo_lint_flags_duplicate_id_across_states(tmp_path: Path) -> None:
+    root = _bootstrap_repo(tmp_path)
+    (root / "_ctx" / "jobs" / "pending" / "WO-0001.yaml").write_text(
+        _valid_wo("pending", wo_id="WO-0001"),
+        encoding="utf-8",
+    )
+    (root / "_ctx" / "jobs" / "running" / "WO-0001.yaml").write_text(
+        _valid_wo("running", wo_id="WO-0001"),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [sys.executable, "scripts/ctx_wo_lint.py", "--root", str(root), "--json"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    findings = json.loads(result.stdout)
+    assert any(f["code"] == "WO003" for f in findings)
+
+
+def test_wo_lint_accepts_alphanumeric_legacy_id(tmp_path: Path) -> None:
+    root = _bootstrap_repo(tmp_path)
+    (root / "_ctx" / "jobs" / "pending" / "WO-0018C.yaml").write_text(
+        _valid_wo("pending", wo_id="WO-0018C"),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [sys.executable, "scripts/ctx_wo_lint.py", "--root", str(root), "--json"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0
+    findings = json.loads(result.stdout)
+    assert findings == []
+
+
+def test_wo_lint_reports_malformed_backlog_yaml(tmp_path: Path) -> None:
+    root = _bootstrap_repo(tmp_path)
+    (root / "_ctx" / "backlog" / "backlog.yaml").write_text("epics: [", encoding="utf-8")
+    (root / "_ctx" / "jobs" / "pending" / "WO-0001.yaml").write_text(
+        _valid_wo("pending"),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [sys.executable, "scripts/ctx_wo_lint.py", "--root", str(root), "--json"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    findings = json.loads(result.stdout)
+    assert any(f["code"] == "YAML000" for f in findings)
+
+
+def test_wo_lint_reports_malformed_dod_yaml(tmp_path: Path) -> None:
+    root = _bootstrap_repo(tmp_path)
+    (root / "_ctx" / "dod" / "DOD-DEFAULT.yaml").write_text("dod: [", encoding="utf-8")
+    (root / "_ctx" / "jobs" / "pending" / "WO-0001.yaml").write_text(
+        _valid_wo("pending"),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [sys.executable, "scripts/ctx_wo_lint.py", "--root", str(root), "--json"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    findings = json.loads(result.stdout)
+    assert any(f["code"] == "YAML000" for f in findings)
+
+
+def test_wo_lint_wo_id_mode_validates_single_target(tmp_path: Path) -> None:
+    root = _bootstrap_repo(tmp_path)
+    (root / "_ctx" / "jobs" / "pending" / "WO-0001.yaml").write_text(
+        _valid_wo("pending", wo_id="WO-0001"),
+        encoding="utf-8",
+    )
+    (root / "_ctx" / "jobs" / "pending" / "WO-0002.yaml").write_text(
+        _valid_wo("pending", wo_id="WO-0002", dependencies="dependencies:\n  - WO-9999\n"),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/ctx_wo_lint.py",
+            "--root",
+            str(root),
+            "--json",
+            "--wo-id",
+            "WO-0001",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0
+    findings = json.loads(result.stdout)
+    assert findings == []
+
+
+def test_wo_lint_wo_id_mode_reports_missing_wo(tmp_path: Path) -> None:
+    root = _bootstrap_repo(tmp_path)
+    (root / "_ctx" / "jobs" / "pending" / "WO-0001.yaml").write_text(
+        _valid_wo("pending", wo_id="WO-0001"),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/ctx_wo_lint.py",
+            "--root",
+            str(root),
+            "--json",
+            "--wo-id",
+            "WO-4040",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    findings = json.loads(result.stdout)
+    assert any(f["code"] == "WO013" for f in findings)
+
+
+def test_wo_lint_wo_id_mode_flags_missing_dependency(tmp_path: Path) -> None:
+    root = _bootstrap_repo(tmp_path)
+    (root / "_ctx" / "jobs" / "pending" / "WO-0001.yaml").write_text(
+        _valid_wo("pending", wo_id="WO-0001", dependencies="dependencies:\n  - WO-9999\n"),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/ctx_wo_lint.py",
+            "--root",
+            str(root),
+            "--json",
+            "--wo-id",
+            "WO-0001",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    findings = json.loads(result.stdout)
+    assert any(f["code"] == "WO012" for f in findings)

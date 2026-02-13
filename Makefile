@@ -6,6 +6,7 @@ UV := uv run
 
 .PHONY: help install start \
 	test test-unit test-integration test-acceptance test-roadmap test-slow gate-all \
+	wo-lint wo-lint-json wo-fmt wo-fmt-check \
 	audit \
 	ctx-sync ctx-search ctx-get ctx-stats \
 	wo-lint wo-lint-json wo-fmt wo-fmt-check \
@@ -28,6 +29,12 @@ help:
 	@echo "  make test-acceptance       (default: -m 'not slow')"
 	@echo "  make test-acceptance-slow  (includes @slow)"
 	@echo "  make test-roadmap          (features in progress)"
+	@echo ""
+	@echo "WO Hygiene:"
+	@echo "  make wo-lint               Lint WO YAML contracts (strict)"
+	@echo "  make wo-lint-json          Lint WO YAML and output JSON findings"
+	@echo "  make wo-fmt-check          Check canonical WO formatting"
+	@echo "  make wo-fmt                Apply canonical WO formatting"
 	@echo ""
 	@echo "Context Operations (PCC):"
 	@echo "  make ctx-sync [SEGMENT=.]"
@@ -61,6 +68,18 @@ test-acceptance-slow:
 
 test-roadmap:
 	$(UV) pytest -q tests/roadmap
+
+wo-lint:
+	$(UV) python scripts/ctx_wo_lint.py --strict
+
+wo-lint-json:
+	@$(UV) python scripts/ctx_wo_lint.py --json --strict
+
+wo-fmt:
+	$(UV) python scripts/ctx_wo_fmt.py --write
+
+wo-fmt-check:
+	$(UV) python scripts/ctx_wo_fmt.py --check
 
 gate-all: test-unit test-integration test-acceptance
 	@echo "✅ GATE PASSED: Unit + Integration + Acceptance (Fast)"

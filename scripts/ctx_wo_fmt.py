@@ -37,6 +37,8 @@ def _iter_wo_files(root: Path) -> list[Path]:
         for path in sorted(job_dir.glob("WO-*.yaml")):
             if "legacy" in path.parts:
                 continue
+            if path.name.endswith("_job.yaml") or path.name.endswith("-legacy.yaml"):
+                continue
             paths.append(path)
     return paths
 

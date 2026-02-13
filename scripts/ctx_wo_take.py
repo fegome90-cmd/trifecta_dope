@@ -3,13 +3,17 @@
 Work Order take script for trifecta_dope.
 Automatically creates git worktrees with atomic locking.
 """
+
 import argparse
 from datetime import datetime, timezone
 import getpass
 import json
 import os
 from pathlib import Path
+import re
+import subprocess
 import sys
+from typing import Any
 import yaml
 from jsonschema import validate
 
@@ -27,9 +31,8 @@ from helpers import (
 
 # Import domain entities
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-from domain.wo_entities import WorkOrder, WOState, Priority, WOValidationError
+from domain.wo_entities import WorkOrder, WOState, Priority
 from domain.wo_transactions import Transaction, RollbackOperation, RollbackType
-from domain.result import Ok, Err
 
 
 def load_yaml(path: Path):
@@ -59,9 +62,7 @@ def get_completed_wo_ids(root: Path) -> set[str]:
     if not done_dir.exists():
         return set()
 
-    return {
-        path.stem for path in done_dir.glob("WO-*.yaml")
-    }
+    return {path.stem for path in done_dir.glob("WO-*.yaml")}
 
 
 def validate_dependencies_using_domain(wo_data: dict, root: Path) -> tuple[bool, str | None]:
@@ -135,6 +136,69 @@ def validate_dependencies_using_domain(wo_data: dict, root: Path) -> tuple[bool,
         return False, error.message
 
 
+def validate_wo_immediately(
+    root: Path, wo_id: str, job_path: Path
+) -> tuple[bool, list[dict[str, Any]]]:
+    """Run fail-closed immediate validation for a specific WO."""
+    repo_root = Path(__file__).resolve().parent.parent
+    lint_script = Path(__file__).resolve().parent / "ctx_wo_lint.py"
+    cmd = [
+        "uv",
+        "run",
+        "python",
+        str(lint_script),
+        "--strict",
+        "--json",
+        "--wo-id",
+        wo_id,
+        "--root",
+        str(root),
+    ]
+    result = subprocess.run(
+        cmd,
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    findings: list[dict[str, Any]] = []
+    if result.stdout.strip():
+        try:
+            parsed = json.loads(result.stdout)
+            if isinstance(parsed, list):
+                findings = [f for f in parsed if isinstance(f, dict)]
+            else:
+                logger.error("Immediate WO validation returned invalid JSON payload type")
+                return False, []
+        except json.JSONDecodeError:
+            logger.error("Immediate WO validation returned non-JSON output")
+            if result.stderr:
+                logger.error(result.stderr.strip())
+            return False, []
+
+    if result.returncode != 0:
+        errors = [f for f in findings if f.get("severity") == "ERROR"]
+        logger.error(f"Immediate WO validation failed for {wo_id}")
+        if errors:
+            for finding in errors[:10]:
+                path_str = finding.get("path", "")
+                path_suffix = f" {path_str}" if path_str else ""
+                logger.error(
+                    f"[ERROR] {finding.get('code', 'UNKNOWN')}{path_suffix}: "
+                    f"{finding.get('message', 'unknown error')}"
+                )
+        else:
+            logger.error("Immediate WO validation failed without structured findings")
+            if result.stderr:
+                logger.error(result.stderr.strip())
+        logger.error("Run: make wo-fmt && make wo-lint")
+        logger.error(f"Inspect: {job_path}")
+        return False, findings
+
+    return True, findings
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Take a work order and create isolated worktree",
@@ -143,14 +207,18 @@ Examples:
   python ctx_wo_take.py WO-0001           # Take WO-0001 (auto-generates branch & worktree)
   python ctx_wo_take.py WO-0001 --owner   # Take with current user as owner
   python ctx_wo_take.py --list            # List pending work orders
-        """
+        """,
     )
     parser.add_argument("wo_id", nargs="?", help="Work order id, e.g. WO-0001")
     parser.add_argument("--root", default=".", help="Repo root (default: current directory)")
     parser.add_argument("--owner", default=None, help="Owner name (default: current user)")
     parser.add_argument("--list", action="store_true", help="List pending work orders")
     parser.add_argument("--status", action="store_true", help="Show system status")
-    parser.add_argument("--force", action="store_true", help="Force take (skip dependency validation)")
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Skip domain dependency validation only (schema/lint validation still enforced)",
+    )
     args = parser.parse_args()
 
     # Handle --list flag
@@ -179,10 +247,24 @@ Examples:
         root = Path(args.root).resolve()
         jobs_dir = root / "_ctx" / "jobs"
 
-        pending = len(list((jobs_dir / "pending").glob("WO-*.yaml"))) if (jobs_dir / "pending").exists() else 0
-        running = len(list((jobs_dir / "running").glob("WO-*.yaml"))) if (jobs_dir / "running").exists() else 0
-        done = len(list((jobs_dir / "done").glob("WO-*.yaml"))) if (jobs_dir / "done").exists() else 0
-        failed = len(list((jobs_dir / "failed").glob("WO-*.yaml"))) if (jobs_dir / "failed").exists() else 0
+        pending = (
+            len(list((jobs_dir / "pending").glob("WO-*.yaml")))
+            if (jobs_dir / "pending").exists()
+            else 0
+        )
+        running = (
+            len(list((jobs_dir / "running").glob("WO-*.yaml")))
+            if (jobs_dir / "running").exists()
+            else 0
+        )
+        done = (
+            len(list((jobs_dir / "done").glob("WO-*.yaml"))) if (jobs_dir / "done").exists() else 0
+        )
+        failed = (
+            len(list((jobs_dir / "failed").glob("WO-*.yaml")))
+            if (jobs_dir / "failed").exists()
+            else 0
+        )
 
         print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
         print("   System Status")
@@ -207,10 +289,8 @@ Examples:
     root = Path(args.root).resolve()
     wo_id = args.wo_id
 
-    # Validate WO ID format (supports WO-0018 and WO-0018A formats)
-    import re
-    if not re.match(r"^WO-\d{4}[A-Z]?$", wo_id):
-        logger.error(f"Invalid WO ID format: {wo_id} (expected: WO-XXXX or WO-XXXXA)")
+    if not re.match(r"^WO-[A-Za-z0-9.-]+$", wo_id):
+        logger.error(f"Invalid WO ID format: {wo_id} (expected: WO-<alphanumeric>)")
         return 1
 
     job_path = root / "_ctx" / "jobs" / "pending" / f"{wo_id}.yaml"
@@ -234,6 +314,11 @@ Examples:
     epic_ids = {e.get("id") for e in backlog.get("epics", [])}
     if wo.get("epic_id") not in epic_ids:
         logger.error(f"Unknown epic_id: {wo.get('epic_id')}")
+        return 1
+
+    # Fail-closed immediate validation (does not bypass with --force)
+    immediate_ok, _ = validate_wo_immediately(root, wo_id, job_path)
+    if not immediate_ok:
         return 1
 
     # Validate dependencies using domain logic
@@ -268,15 +353,17 @@ Examples:
         # Step 1: Acquire lock
         logger.info(f"Acquiring lock for {wo_id}...")
         if not create_lock(lock_path, wo_id):
-            logger.error(f"Failed to acquire lock")
+            logger.error("Failed to acquire lock")
             return 1
 
         logger.info(f"✓ Lock acquired: {lock_path}")
-        transaction = transaction.add_operation(RollbackOperation(
-            name="acquire_lock",
-            description="Remove acquired lock",
-            rollback_type=RollbackType.REMOVE_LOCK
-        ))
+        transaction = transaction.add_operation(
+            RollbackOperation(
+                name="acquire_lock",
+                description="Remove acquired lock",
+                rollback_type=RollbackType.REMOVE_LOCK,
+            )
+        )
 
         # Step 2: Update WO metadata
         owner = args.owner or getpass.getuser()
@@ -291,7 +378,7 @@ Examples:
         if branch is None or worktree is None:
             auto_branch = get_branch_name(wo_id)
             auto_worktree = get_worktree_path(wo_id, root)
-            logger.info(f"Auto-generated configuration:")
+            logger.info("Auto-generated configuration:")
             logger.info(f"  branch: {auto_branch}")
             logger.info(f"  worktree: {auto_worktree}")
 
@@ -311,16 +398,20 @@ Examples:
             create_worktree(root, wo_id, branch, Path(worktree))
 
             # Add rollback operations
-            transaction = transaction.add_operation(RollbackOperation(
-                name="create_worktree",
-                description=f"Remove worktree at {worktree}",
-                rollback_type=RollbackType.REMOVE_WORKTREE
-            ))
-            transaction = transaction.add_operation(RollbackOperation(
-                name="create_branch",
-                description=f"Remove branch {branch}",
-                rollback_type=RollbackType.REMOVE_BRANCH
-            ))
+            transaction = transaction.add_operation(
+                RollbackOperation(
+                    name="create_worktree",
+                    description=f"Remove worktree at {worktree}",
+                    rollback_type=RollbackType.REMOVE_WORKTREE,
+                )
+            )
+            transaction = transaction.add_operation(
+                RollbackOperation(
+                    name="create_branch",
+                    description=f"Remove branch {branch}",
+                    rollback_type=RollbackType.REMOVE_BRANCH,
+                )
+            )
         except Exception as e:
             logger.error(f"Failed to create worktree: {e}")
             logger.info("Executing rollback...")
@@ -334,11 +425,13 @@ Examples:
         # Step 4: Move WO to running (WRAP WITH TRANSACTION)
         running_path = running_dir / f"{wo_id}.yaml"
 
-        transaction = transaction.add_operation(RollbackOperation(
-            name="move_wo_running",
-            description="Move WO back to pending and reset metadata",
-            rollback_type=RollbackType.MOVE_WO_TO_PENDING
-        ))
+        transaction = transaction.add_operation(
+            RollbackOperation(
+                name="move_wo_running",
+                description="Move WO back to pending and reset metadata",
+                rollback_type=RollbackType.MOVE_WO_TO_PENDING,
+            )
+        )
 
         try:
             write_yaml(running_path, wo)

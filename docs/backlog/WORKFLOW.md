@@ -90,6 +90,14 @@ python scripts/ctx_wo_take.py WO-0013
 4. **Status transition**: YAML moved from `pending/` to `running/`
 5. **Metadata update**: Owner, started_at, branch, worktree fields added
 
+Before any state mutation, `ctx_wo_take.py` runs immediate fail-closed validation:
+
+```bash
+uv run python scripts/ctx_wo_lint.py --strict --json --wo-id WO-0013 --root .
+```
+
+If validation reports any `ERROR`, take is aborted (no lock/worktree/state move).
+
 **Output:**
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -139,6 +147,10 @@ uv run trifecta ast symbols "sym://python/mod/src.domain.result" --segment .
 git status
 git add .
 git commit -m "WO-0013: Implement feature"
+
+# Fail-closed WO hygiene gates
+make wo-fmt-check
+make wo-lint
 
 # Run Definition of DoD verification commands
 # (specified in WO YAML under verify.commands)
