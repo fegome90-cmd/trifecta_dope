@@ -5,12 +5,11 @@
 # Updated: 2026-02-10 - Fixed script corruption + consistent gates + report handling
 #
 # Purpose: Run comprehensive test suite + validations for WO completion
-# Usage: bash scripts/verify.sh [WO_ID] [--check-only] [--root PATH]
+# Usage: bash scripts/verify.sh [WO_ID] [--check-only]
 #
 # Arguments:
 #   WO_ID        - Work Order ID for report generation (optional)
 #   --check-only - Skip report generation, only run checks
-#   --root PATH  - Resolve and run from this repository root (worktree-safe)
 #
 # VERIFICATION GATE DEFINITION (11 gates):
 #   1. Unit tests (pytest tests/unit/)
@@ -40,21 +39,12 @@ set -uo pipefail
 # ============================================================
 WO_ID=""
 CHECK_ONLY=false
-ROOT="."
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --check-only)
       CHECK_ONLY=true
       shift
-      ;;
-    --root)
-      if [[ $# -lt 2 ]]; then
-        echo "ERROR: --root requires a path"
-        exit 1
-      fi
-      ROOT="$2"
-      shift 2
       ;;
     *)
       if [[ -z "$WO_ID" ]]; then
@@ -65,34 +55,12 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ ! -d "$ROOT" ]]; then
-  echo "ERROR: invalid root path: $ROOT"
-  exit 1
-fi
-
-ROOT="$(cd "$ROOT" && pwd -P)"
-
-# Resolve runtime root from git common-dir so WO artifacts are written to a
-# single shared _ctx state even when invoked from a worktree.
-TOPLEVEL="$(git -C "$ROOT" rev-parse --show-toplevel 2>/dev/null || echo "$ROOT")"
-COMMON_DIR="$(git -C "$ROOT" rev-parse --git-common-dir 2>/dev/null || true)"
-if [[ -n "$COMMON_DIR" ]]; then
-  if [[ "$COMMON_DIR" != /* ]]; then
-    COMMON_DIR="$TOPLEVEL/$COMMON_DIR"
-  fi
-  RUNTIME_ROOT="$(cd "$(dirname "$COMMON_DIR")" && pwd -P)"
-else
-  RUNTIME_ROOT="$ROOT"
-fi
-
-cd "$ROOT"
-
 # ============================================================
 # Report setup (optional)
 # ============================================================
 REPORT_FILE=""
 if [[ -n "$WO_ID" && "$CHECK_ONLY" == false ]]; then
-  HANDOFF_DIR="${RUNTIME_ROOT}/_ctx/handoff/${WO_ID}"
+  HANDOFF_DIR="_ctx/handoff/${WO_ID}"
   mkdir -p "$HANDOFF_DIR"
   REPORT_FILE="${HANDOFF_DIR}/verification_report.log"
   # Mirror output to console + file
@@ -139,12 +107,6 @@ echo "========================================"
 [[ -n "$WO_ID" ]] && echo "Work Order: $WO_ID"
 echo "Timestamp: $(date '+%Y-%m-%d %H:%M:%S')"
 echo ""
-
-# Fast deterministic mode for unit tests only.
-if [[ "${TRIFECTA_VERIFY_SELFTEST:-0}" == "1" ]]; then
-  echo "Self-test mode enabled, skipping verification gates."
-  exit 0
-fi
 
 # ============================================================
 # Gate 1: Unit Tests (BLOCKING)

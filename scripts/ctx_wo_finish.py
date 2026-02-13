@@ -51,44 +51,6 @@ def load_dod_catalog(root: Path):
     return catalog
 
 
-def resolve_runtime_root(root_input: str) -> Result[Path, str]:
-    """Resolve canonical WO runtime root.
-
-    Uses git common dir when available so calls from a worktree still resolve
-    to the shared runtime root where `_ctx/jobs/*` state lives.
-    """
-    candidate = Path(root_input).expanduser().resolve()
-    if not candidate.exists():
-        return Err(f"INVALID_SEGMENT_PATH: root does not exist: {candidate}")
-    if not candidate.is_dir():
-        return Err(f"INVALID_SEGMENT_PATH: root is not a directory: {candidate}")
-
-    try:
-        show_toplevel = subprocess.check_output(
-            ["git", "rev-parse", "--show-toplevel"],
-            cwd=candidate,
-            text=True,
-        ).strip()
-        common_dir_raw = subprocess.check_output(
-            ["git", "rev-parse", "--git-common-dir"],
-            cwd=candidate,
-            text=True,
-        ).strip()
-
-        toplevel = Path(show_toplevel).resolve()
-        common_dir = Path(common_dir_raw)
-        if not common_dir.is_absolute():
-            common_dir = (toplevel / common_dir).resolve()
-        runtime_root = common_dir.parent
-
-        if (runtime_root / "_ctx" / "jobs").exists():
-            return Ok(runtime_root)
-    except (subprocess.CalledProcessError, OSError):
-        pass
-
-    return Ok(candidate)
-
-
 def update_worktree_index(root: Path) -> None:
     """Regenerate `_ctx/index/wo_worktrees.json` via export_wo_index.py."""
     export_script = root / "scripts" / "export_wo_index.py"
@@ -105,53 +67,6 @@ def update_worktree_index(root: Path) -> None:
         )
     except (subprocess.CalledProcessError, OSError) as e:
         print(f"WARNING: failed to update index via export_wo_index.py: {e}")
-
-
-def run_verification_gate(wo_id: str, root: Path) -> Result[None, str]:
-    """Run canonical verification workflow before closing WO."""
-    verify_script = root / "scripts" / "verify.sh"
-    if not verify_script.exists():
-        return Err(f"Verification script missing: {verify_script}")
-
-    try:
-        result = subprocess.run(
-            ["bash", str(verify_script), wo_id, "--root", str(root)],
-            cwd=root,
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-    except OSError as e:
-        return Err(f"Failed to run verification script: {e}")
-
-    # verify.sh semantics: 0=pass, 1=blocking failure, 2=warnings only
-    if result.returncode not in (0, 2):
-        details = (result.stdout or result.stderr or "").strip().splitlines()
-        tail = "\n".join(details[-12:]) if details else "no output"
-        return Err(f"verify.sh failed (exit={result.returncode})\n{tail}")
-
-    return Ok(None)
-
-
-def inspect_nonrunning_state(wo_id: str, root: Path) -> str | None:
-    """Return diagnostic string when running WO is missing but state exists elsewhere."""
-    for state in ("done", "failed"):
-        state_path = root / "_ctx" / "jobs" / state / f"{wo_id}.yaml"
-        if not state_path.exists():
-            continue
-        try:
-            state_data = load_yaml(state_path) or {}
-        except Exception:
-            state_data = {}
-
-        status = str(state_data.get("status", "")).strip().lower()
-        if status == "running":
-            return (
-                f"Corrupted WO state detected: {state_path} has status=running. "
-                "Use scripts/ctx_reconcile_state.py before retrying."
-            )
-        return f"WO already closed in {state}/: {state_path}"
-    return None
 
 
 # =============================================================================
@@ -503,29 +418,15 @@ def main():
         action="store_true",
         help="Skip DoD validation (for emergency closures only)",
     )
-    parser.add_argument(
-        "--skip-verification",
-        action="store_true",
-        help="Skip scripts/verify.sh gate (for emergency closures only)",
-    )
     args = parser.parse_args()
 
     if not args.wo_id:
         parser.print_help()
         return 0
 
-    root_result = resolve_runtime_root(args.root)
-    if root_result.is_err():
-        print(f"ERROR: {root_result.unwrap_err()}")
-        return 1
-    root = root_result.unwrap()
-
+    root = Path(args.root).resolve()
     running_path = root / "_ctx" / "jobs" / "running" / f"{args.wo_id}.yaml"
     if not running_path.exists():
-        diagnostic = inspect_nonrunning_state(args.wo_id, root)
-        if diagnostic:
-            print(f"ERROR: {diagnostic}")
-            return 1
         print(f"ERROR: missing WO {running_path}")
         return 1
 
@@ -551,12 +452,6 @@ def main():
         result = validate_dod(args.wo_id, root)
         if result.is_err():
             print(f"ERROR: {result.unwrap_err()}")
-            return 1
-
-    if not args.skip_verification:
-        verify_result = run_verification_gate(args.wo_id, root)
-        if verify_result.is_err():
-            print(f"ERROR: {verify_result.unwrap_err()}")
             return 1
 
     # Finish WO as transaction

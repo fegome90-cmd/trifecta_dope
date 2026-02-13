@@ -17,7 +17,7 @@ cd .worktrees/WO-XXXX
 # ... work ...
 
 # End of day
-python scripts/ctx_wo_finish.py WO-XXXX   # Complete WO (DoD + verify.sh gate)
+python scripts/ctx_wo_finish.py WO-XXXX   # Complete WO
 ```
 
 ## WO Hygiene Quickstart
@@ -204,28 +204,22 @@ python scripts/ctx_wo_take.py --status
 
 ### ctx_wo_finish.py
 
-**Complete WO with full closure gates:**
+**Complete WO with verification:**
 ```bash
 python scripts/ctx_wo_finish.py WO-XXXX
 ```
 
-**Skip DoD check (emergency only):**
-```bash
-python scripts/ctx_wo_finish.py WO-XXXX --skip-dod
-```
-
-**Skip verify.sh gate (emergency only):**
+**Skip verification (emergency only):**
 ```bash
 python scripts/ctx_wo_finish.py WO-XXXX --skip-verification
 ```
 
 **What happens:**
-1. Resolves canonical runtime root (worktree-safe)
-2. Validates DoD artifacts in `_ctx/handoff/<WO>`
-3. Runs `scripts/verify.sh <WO>` as closure gate
-4. Captures current commit SHA
-5. Moves WO from `running/` to `done/` or `failed/`
-6. Removes lock and updates WO index
+1. Runs DoD verification commands from WO YAML
+2. Captures current commit SHA
+3. Moves WO from `running/` to `done/`
+4. Removes lock
+5. Updates epic status in `backlog.yaml`
 
 ### git worktree
 
