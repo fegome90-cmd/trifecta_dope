@@ -69,16 +69,12 @@ class TestNamingContractIntegration:
         # Determine contamination
         (ctx_dir / "prime_rogue.md").write_text("# Rogue")
 
-        # Fail build
         res = runner.invoke(app, ["ctx", "build", "--segment", str(seg_path)])
         assert res.exit_code != 0
-        # Match broader error (case-insensitive check for robustness)
-        stdout_lower = res.stdout.lower()
-        err_lower = str(res.exception).lower() if res.exception else ""
-        assert (
-            "ambiguous" in stdout_lower
-            or "contaminated" in stdout_lower
-            or "ambiguous" in err_lower
+        output = res.stdout or res.stderr or ""
+        assert "TRIFECTA_ERROR_CODE:" in output, "Missing error card structure"
+        assert "NORTH_STAR_AMBIGUOUS" in output or "AMBIGUOUS" in output, (
+            f"Expected NORTH_STAR_AMBIGUOUS error code, got:\n{output[:500]}"
         )
 
     def test_e2e_build_fails_on_legacy_files(self, tmp_path: Path) -> None:
