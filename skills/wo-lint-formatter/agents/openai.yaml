@@ -1,0 +1,4 @@
+interface:
+  display_name: "WO Lint Formatter"
+  short_description: "Usar y hacer cumplir lint/format de Work Orders en trifecta_dope"
+  default_prompt: "Aplicar flujo de wo-fmt/wo-lint, interpretar findings y bloquear WOs inválidos en take sin bypass de integridad."
