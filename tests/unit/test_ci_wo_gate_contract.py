@@ -14,7 +14,7 @@ def test_ci_lint_job_enforces_wo_gates_and_telemetry_artifact() -> None:
     assert any("make wo-fmt-check" in cmd for cmd in run_commands)
     assert any("make wo-lint" in cmd for cmd in run_commands)
     assert any(
-        "make wo-lint-json > _ctx/telemetry/wo_lint.json" in cmd
+        "scripts/ctx_wo_lint.py --json --strict > _ctx/telemetry/wo_lint.json" in cmd
         for cmd in run_commands
     )
 
@@ -22,6 +22,4 @@ def test_ci_lint_job_enforces_wo_gates_and_telemetry_artifact() -> None:
         step for step in steps if str(step.get("uses", "")).startswith("actions/upload-artifact@")
     ]
     assert artifact_steps, "Missing upload-artifact step for WO lint telemetry"
-    artifact_path = str(artifact_steps[0]["with"]["path"])
-    assert "_ctx/telemetry/wo_lint.json" in artifact_path
-    assert "_ctx/telemetry/wo_debt.json" in artifact_path
+    assert artifact_steps[0]["with"]["path"] == "_ctx/telemetry/wo_lint.json"

@@ -1,22 +1,14 @@
 #!/usr/bin/env python3
 import argparse
-import fnmatch
 from pathlib import Path
+import fnmatch
 import subprocess
 import sys
 import yaml
 
 
 def load_yaml(path: Path):
-    try:
-        data = yaml.safe_load(path.read_text())
-    except (yaml.YAMLError, OSError) as exc:
-        raise ValueError(f"ERROR: failed to load WO YAML: {exc}") from exc
-    if data is None:
-        raise ValueError("ERROR: WO YAML is empty")
-    if not isinstance(data, dict):
-        raise ValueError("ERROR: WO YAML must be a mapping")
-    return data
+    return yaml.safe_load(path.read_text())
 
 
 def list_changed_files(root: Path):
@@ -60,14 +52,10 @@ def main():
     if not wo_path.exists():
         wo_path = root / "_ctx" / "jobs" / "pending" / f"{args.wo_id}.yaml"
     if not wo_path.exists():
-        print(f"ERROR: missing WO {wo_path}", file=sys.stderr)
+        print(f"ERROR: missing WO {wo_path}")
         return 1
 
-    try:
-        wo = load_yaml(wo_path)
-    except ValueError as exc:
-        print(str(exc), file=sys.stderr)
-        return 1
+    wo = load_yaml(wo_path)
     scope = wo.get("scope", {})
     allow = scope.get("allow", [])
     deny = scope.get("deny", [])
