@@ -116,6 +116,18 @@ El plan se considera cerrado cuando:
 3. No existen hallazgos críticos abiertos en reconciliación WO.
 
 ## 10) Registro de ejecución
-- Commit hardening aplicado: `5a04aa1`
-- Rama actual: `codex/fix-makefile-wo-duplicates`
-- Estado: plan operativo actualizado y listo para ejecutar Fase A restante + merge local seguro.
+- Commit hardening base: `5a04aa1`
+- Commit runtime-root verify: `f5f0248`
+- Merge local en `main`: `840449d`, `02f3e76`
+- Gates en worktree limpio de `main`: PASS (`88 passed`, `ruff check`, `bash -n` hooks/scripts)
+
+### Estado por fase
+- Fase A: COMPLETADA
+  - `verify.sh` con `--root` y runtime-root canónico.
+  - `ctx_wo_finish.py` invoca verify con `--root`.
+  - Test nuevo: `tests/unit/test_verify_sh_runtime_root.py`.
+- Fase B: PARCIAL (reporte generado, limpieza pendiente)
+  - Evidencia: `/tmp/reconcile_wo.json`
+  - Hallazgos activos: `WO_INVALID_SCHEMA`, `LOCK_WITHOUT_RUNNING_WO`, `DUPLICATE_WO_ID`, `WORKTREE_WITHOUT_RUNNING_WO`.
+- Fase C: COMPLETADA (merge local técnico realizado y verificado)
+  - Integración validada en worktree limpio de `main`.
