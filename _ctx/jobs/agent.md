@@ -93,4 +93,47 @@ Cada WO debe cumplir con el DoD especificado en su campo `dod_id` (ver `_ctx/dod
 
 ---
 
+## 🔄 Flujo de Higiene Post-Merge
+
+Después de completar un WO y hacer merge a main:
+
+```bash
+# 1. Push a main
+git push origin main
+
+# 2. Remover worktree
+git worktree remove .worktrees/WO-XXXX
+
+# 3. Borrar branch mergeado
+git branch -d feat/wo-WO-XXXX
+
+# 4. Stashes: NUNCA borrar sin permiso explícito
+git stash list --date=local  # Mostrar primero
+# Solo después de confirmación: git stash clear
+
+# 5. Verificar estado final
+git worktree list
+git branch -vv
+```
+
+---
+
+## 🚨 Reglas Críticas de Seguridad
+
+### Stashes (CRÍTICO)
+- **NUNCA** ejecutar `git stash drop` o `git stash clear` sin permiso explícito
+- **SIEMPRE** mostrar `git stash list` antes de cualquier acción
+- **SIEMPRE** sugerir backup si el stash parece importante
+- **Evidencia**: Usuario perdió 95.56% de datos por stash drop sin permiso
+
+### Tags de Seguridad
+Antes de operaciones de merge masivas:
+```bash
+git tag -a "pre-merge-$(date +%Y%m%d-%H%M)" -m "Safety snapshot"
+git push --tags
+```
+
+---
+
 *Manual operativo para Agentes - Trifecta Context Engine v2.0*
+*Última actualización: 2026-02-13*

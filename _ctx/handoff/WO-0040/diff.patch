@@ -1,0 +1,161 @@
+diff --git a/_ctx/generated/repo_map.md b/_ctx/generated/repo_map.md
+index 2be16d4..fed8053 100644
+--- a/_ctx/generated/repo_map.md
++++ b/_ctx/generated/repo_map.md
+@@ -2,7 +2,7 @@
+ 
+ > **Generated**: __DATE__
+ > **Purpose**: High-level module navigation for ctx.plan code_navigation feature
+-> **Hash**: 94af0e907264
++> **Hash**: f313fbe86ce2
+ 
+ ---
+ 
+diff --git a/_ctx/generated/symbols_stub.md b/_ctx/generated/symbols_stub.md
+index 49d44d7..ea7d5dc 100644
+--- a/_ctx/generated/symbols_stub.md
++++ b/_ctx/generated/symbols_stub.md
+@@ -2,7 +2,7 @@
+ 
+ > **Status**: Placeholder for symbol-level navigation
+ > **Version**: v1 (Prime-based) → v2 (AST/LSP-based, planned)
+-> **Hash**: 94af0e907264
++> **Hash**: f313fbe86ce2
+ 
+ ---
+ 
+diff --git a/_ctx/jobs/agent.md b/_ctx/jobs/agent.md
+index 2b115d5..6287277 100644
+--- a/_ctx/jobs/agent.md
++++ b/_ctx/jobs/agent.md
+@@ -93,4 +93,47 @@ Cada WO debe cumplir con el DoD especificado en su campo `dod_id` (ver `_ctx/dod
+ 
+ ---
+ 
++## 🔄 Flujo de Higiene Post-Merge
++
++Después de completar un WO y hacer merge a main:
++
++```bash
++# 1. Push a main
++git push origin main
++
++# 2. Remover worktree
++git worktree remove .worktrees/WO-XXXX
++
++# 3. Borrar branch mergeado
++git branch -d feat/wo-WO-XXXX
++
++# 4. Stashes: NUNCA borrar sin permiso explícito
++git stash list --date=local  # Mostrar primero
++# Solo después de confirmación: git stash clear
++
++# 5. Verificar estado final
++git worktree list
++git branch -vv
++```
++
++---
++
++## 🚨 Reglas Críticas de Seguridad
++
++### Stashes (CRÍTICO)
++- **NUNCA** ejecutar `git stash drop` o `git stash clear` sin permiso explícito
++- **SIEMPRE** mostrar `git stash list` antes de cualquier acción
++- **SIEMPRE** sugerir backup si el stash parece importante
++- **Evidencia**: Usuario perdió 95.56% de datos por stash drop sin permiso
++
++### Tags de Seguridad
++Antes de operaciones de merge masivas:
++```bash
++git tag -a "pre-merge-$(date +%Y%m%d-%H%M)" -m "Safety snapshot"
++git push --tags
++```
++
++---
++
+ *Manual operativo para Agentes - Trifecta Context Engine v2.0*
++*Última actualización: 2026-02-13*
+diff --git a/_ctx/telemetry/events.jsonl b/_ctx/telemetry/events.jsonl
+index 3ebd438..95a2e18 100644
+--- a/_ctx/telemetry/events.jsonl
++++ b/_ctx/telemetry/events.jsonl
+@@ -5398,3 +5398,9 @@
+ {"ts": "2026-02-13T19:49:51-0300", "run_id": "run_1771022991", "segment_id": "6f25e381", "cmd": "ast.cache.write", "args": {"cache_key": "/var/folders/k1/jz_hmygd3k36tzkffsbyb5x00000gn/T/tmpnjwr6fpy:/var/folders/k1/jz_hmygd3k36tzkffsbyb5x00000gn/T/tmpnjwr6fpy/example.py:4626d8abd9e1ba43:1"}, "result": {"backend": "InMemoryLRUCache", "segment_id": "/var/folders/k1/jz_hmygd3k36tzkffsbyb5x00000gn/T/tmpnjwr6fpy"}, "timing_ms": 1, "warnings": [], "x": {}}
+ {"ts": "2026-02-13T19:49:51-0300", "run_id": "run_1771022991", "segment_id": "6f25e381", "cmd": "ast.parse", "args": {"file": "/var/folders/k1/jz_hmygd3k36tzkffsbyb5x00000gn/T/tmpnjwr6fpy/example.py"}, "result": {"status": "ok", "symbols_count": 2}, "timing_ms": 1, "warnings": [], "x": {"file": "/var/folders/k1/jz_hmygd3k36tzkffsbyb5x00000gn/T/tmpnjwr6fpy/example.py", "cache_key": "/var/folders/k1/jz_hmygd3k36tzkffsbyb5x00000gn/T/tmpnjwr6fpy:/var/folders/k1/jz_hmygd3k36tzkffsbyb5x00000gn/T/tmpnjwr6fpy/example.py:4626d8abd9e1ba43:1", "cache_status": "miss", "symbols_count": 2, "skeleton_bytes": 313}}
+ {"ts": "2026-02-13T19:49:51-0300", "run_id": "run_1771022991", "segment_id": "6f25e381", "cmd": "ctx.build", "args": {"segment": "<ABS_PATH_REDACTED>", "segment_id_resolved": "segment", "segment_root_resolved": "/private/var/folders/k1/jz_hmygd3k36tzkffsbyb5x00000gn/T/pytest-of-felipe_gonzalez/pytest-518/test_installer_does_not_write_0/segment", "segment_state_source": "dirname"}, "result": {"status": "ok"}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-02-13T20:27:35-0300", "run_id": "run_1771025254", "segment_id": "6f25e381", "cmd": "ctx.sync.stub_regen", "args": {"stub_name": "repo_map.md"}, "result": {"regen_ok": true, "reason": ""}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-02-13T20:27:35-0300", "run_id": "run_1771025254", "segment_id": "6f25e381", "cmd": "ctx.sync.stub_regen", "args": {"stub_name": "symbols_stub.md"}, "result": {"regen_ok": true, "reason": ""}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-02-13T20:27:35-0300", "run_id": "run_1771025254", "segment_id": "6f25e381", "cmd": "ctx.sync", "args": {"segment": ".", "segment_id_resolved": "trifecta_dope", "segment_root_resolved": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope", "segment_state_source": "dirname"}, "result": {"status": "ok"}, "timing_ms": 463, "warnings": [], "x": {}}
++{"ts": "2026-02-13T20:32:15-0300", "run_id": "run_1771025535", "segment_id": "6f25e381", "cmd": "ctx.sync.stub_regen", "args": {"stub_name": "repo_map.md"}, "result": {"regen_ok": true, "reason": ""}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-02-13T20:32:15-0300", "run_id": "run_1771025535", "segment_id": "6f25e381", "cmd": "ctx.sync.stub_regen", "args": {"stub_name": "symbols_stub.md"}, "result": {"regen_ok": true, "reason": ""}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-02-13T20:32:15-0300", "run_id": "run_1771025535", "segment_id": "6f25e381", "cmd": "ctx.sync", "args": {"segment": ".", "segment_id_resolved": "trifecta_dope", "segment_root_resolved": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope", "segment_state_source": "dirname"}, "result": {"status": "ok"}, "timing_ms": 460, "warnings": [], "x": {}}
+diff --git a/_ctx/telemetry/last_run.json b/_ctx/telemetry/last_run.json
+index 677a340..d32c98e 100644
+--- a/_ctx/telemetry/last_run.json
++++ b/_ctx/telemetry/last_run.json
+@@ -1,7 +1,7 @@
+ {
+-  "run_id": "run_1771022991",
++  "run_id": "run_1771025535",
+   "segment_id": "6f25e381",
+-  "ts": "2026-02-13 19:49:51",
++  "ts": "2026-02-13 20:32:15",
+   "ast": {
+     "ast_parse_count": 0,
+     "ast_cache_hit_count": 0,
+diff --git a/src/infrastructure/lsp_client.py b/src/infrastructure/lsp_client.py
+index 61244c2..409da4d 100644
+--- a/src/infrastructure/lsp_client.py
++++ b/src/infrastructure/lsp_client.py
+@@ -50,6 +50,7 @@ class LSPClient:
+                     {"status": "failed", "error": "binary_not_found"},
+                     0,
+                 )
++                self._emit_fallback("daemon_init", "binary_not_found")
+                 return
+ 
+             try:
+@@ -206,6 +207,26 @@ class LSPClient:
+             # kwargs are passed to event as x_fields
+             self.telemetry.event(cmd, args, result, timing, lsp_state=self.state.value, **kwargs)
+ 
++    def _emit_fallback(self, requested_method: str, reason: str) -> None:
++        """Emit lsp.fallback telemetry event when LSP is unavailable.
++
++        This makes fallback behavior explicit and observable, allowing
++        monitoring of how often AST fallback is used instead of LSP.
++
++        Args:
++            requested_method: The LSP method that was requested (e.g., "textDocument/definition")
++            reason: Why fallback occurred (e.g., "state_not_ready:COLD", "request_timeout")
++        """
++        self._log_event(
++            "lsp.fallback",
++            {"requested_method": requested_method},
++            {"status": "fallback_to_ast", "reason": reason},
++            0,
++            fallback_to="ast",
++        )
++        if self.telemetry:
++            self.telemetry.incr("lsp_fallback_count", 1)
++
+     def _run_loop(self) -> None:
+         """Handshake + Read Loop."""
+         try:
+@@ -288,6 +309,7 @@ class LSPClient:
+         """Send a request and wait for the response."""
+         with self.lock:
+             if self.state != LSPState.READY:
++                self._emit_fallback(method, f"state_not_ready:{self.state.value}")
+                 return None
+ 
+             req_id = self._next_id
+@@ -310,6 +332,7 @@ class LSPClient:
+             with self.lock:
+                 self._pending_requests.pop(req_id, None)
+                 self._request_events.pop(req_id, None)
++                self._emit_fallback(method, "request_timeout")
+                 return None  # Timeout
+ 
+     def _send_rpc(self, msg: Dict[str, Any]) -> None:

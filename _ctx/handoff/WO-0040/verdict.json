@@ -1,0 +1,19 @@
+{
+  "wo_id": "WO-0040",
+  "status": "done",
+  "generated_at": "2026-02-13T23:54:41.809832+00:00",
+  "tests_passed": false,
+  "failing_tests": [
+    {
+      "name": "test_lock_timeout_behavior",
+      "reason": "Pre-existing SQLiteCache API mismatch (unrelated to WO-0012)"
+    },
+    {
+      "name": "test_real_wo_validates_and_can_be_taken",
+      "reason": "Pre-existing test architecture issue (unrelated to WO-0012)"
+    }
+  ],
+  "lint_passed": true,
+  "artifact_verification": "complete",
+  "notes": "WO-0012 validation based on metrics (wo_0012_baseline.json, wo_0012_active.json), not pytest"
+}

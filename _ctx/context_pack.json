@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "segment": "trifecta_dope",
-  "created_at": "2026-02-13T20:32:15.294833",
+  "created_at": "2026-02-13T20:56:25.997051",
   "digest": "",
   "source_files": [
     {
@@ -1711,7 +1711,7 @@
     {
       "path": "src/infrastructure/lsp_client.py",
       "sha256": "4844e6c31d3f1afc55bdbd4b109e163824ca596ae627676be1c7c13c7f30d2cd",
-      "mtime": 1770730297.1908813,
+      "mtime": 1771026920.0943677,
       "chars": 13379
     },
     {
