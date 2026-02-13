@@ -1188,3 +1188,8 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Commands**: verificación git status/diff, creación de contrato
 - **Warnings**: Ninguno
 - **Next**: Revisar/aceptar el contrato y, si aplica, versionar cambios del repo.
+[WO-0045] intent: smoke test start
+[WO-0045] result: smoke test end
+[WO-SMOKE] intent: smoke test start
+[WO-SMOKE] result: smoke test end
+[WO-0045] intent: Estabilizar el motor de Work Orders unificando el runtime bajo 'uv run python' y estableciendo 'ctx_verify_run.sh' como gate autoritativo.

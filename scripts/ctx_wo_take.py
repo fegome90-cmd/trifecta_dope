@@ -136,6 +136,38 @@ def validate_dependencies_using_domain(wo_data: dict, root: Path) -> tuple[bool,
         return False, error.message
 
 
+def validate_execution_contract(wo_data: dict) -> tuple[bool, str | None]:
+    """Validate mandatory Trifecta execution contract for WO."""
+    execution = wo_data.get("execution")
+    if not isinstance(execution, dict):
+        return False, "execution contract is required"
+
+    engine = execution.get("engine")
+    if engine != "trifecta":
+        return False, "engine must be 'trifecta'"
+
+    segment = execution.get("segment")
+    if segment != ".":
+        return False, "segment must be '.'"
+
+    required_flow = execution.get("required_flow")
+    if not isinstance(required_flow, list) or not all(isinstance(step, str) for step in required_flow):
+        return False, "required_flow must be a list of strings"
+
+    mandatory_steps = [
+        "session.append:intent",
+        "ctx.sync",
+        "ctx.search",
+        "ctx.get",
+        "session.append:result",
+    ]
+    missing = [step for step in mandatory_steps if step not in required_flow]
+    if missing:
+        return False, f"required_flow missing mandatory steps: {', '.join(missing)}"
+
+    return True, None
+
+
 def validate_wo_immediately(
     root: Path, wo_id: str, job_path: Path
 ) -> tuple[bool, list[dict[str, Any]]]:
@@ -206,7 +238,7 @@ def update_worktree_index(root: Path) -> None:
         return
     try:
         subprocess.run(
-            [sys.executable, str(export_script)],
+            ["uv", "run", "python", str(export_script)],
             cwd=root,
             capture_output=True,
             text=True,
@@ -325,6 +357,11 @@ Examples:
         validate(instance=wo, schema=schema)
     except Exception as e:
         logger.error(f"Schema validation failed: {e}")
+        return 1
+
+    execution_valid, execution_error = validate_execution_contract(wo)
+    if not execution_valid:
+        logger.error(f"Execution contract validation failed: {execution_error}")
         return 1
 
     # Validate epic_id

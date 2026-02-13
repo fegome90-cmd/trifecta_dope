@@ -56,3 +56,12 @@ x_test_fixtures:
 - testdata/td/wo_worktrees_multi.json (multiple running)
 - testdata/td/wo_worktrees_empty.json (no active)
 - testdata/td/wo_worktrees_invalid.json (schema error)
+execution:
+  engine: trifecta
+  required_flow:
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
+  segment: .

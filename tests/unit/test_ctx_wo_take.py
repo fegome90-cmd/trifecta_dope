@@ -1,5 +1,6 @@
 """Unit tests for path conversion logic in ctx_wo_take.py."""
 
+import json
 import tempfile
 from pathlib import Path
 import os
@@ -171,4 +172,64 @@ def test_take_fails_immediate_validation_for_schema_error_even_with_force(tmp_pa
     )
     assert (sandbox_root / "_ctx" / "jobs" / "pending" / "WO-0001.yaml").exists()
     assert not (sandbox_root / "_ctx" / "jobs" / "running" / "WO-0001.yaml").exists()
+    assert not (sandbox_root / "_ctx" / "jobs" / "running" / "WO-0001.lock").exists()
+
+
+def test_take_fails_if_execution_contract_missing(tmp_path: Path) -> None:
+    repo_root = Path(__file__).resolve().parents[2]
+    sandbox_root = _prepare_ctx_sandbox(tmp_path)
+
+    wo_path = sandbox_root / "_ctx" / "jobs" / "pending" / "WO-0001.yaml"
+    wo_data = yaml.safe_load(wo_path.read_text(encoding="utf-8"))
+    wo_data.pop("execution", None)
+    wo_path.write_text(yaml.safe_dump(wo_data, sort_keys=False), encoding="utf-8")
+
+    result = _run_take(repo_root, sandbox_root, "WO-0001")
+    output = result.stdout + result.stderr
+
+    assert result.returncode == 1
+    assert "Execution contract validation failed" in output
+    assert (sandbox_root / "_ctx" / "jobs" / "pending" / "WO-0001.yaml").exists()
+    assert not (sandbox_root / "_ctx" / "jobs" / "running" / "WO-0001.lock").exists()
+
+
+def test_take_fails_if_execution_engine_not_trifecta(tmp_path: Path) -> None:
+    repo_root = Path(__file__).resolve().parents[2]
+    sandbox_root = _prepare_ctx_sandbox(tmp_path)
+    schema_path = sandbox_root / "docs" / "backlog" / "schema" / "work_order.schema.json"
+    schema_data = json.loads(schema_path.read_text(encoding="utf-8"))
+    schema_data["properties"]["execution"] = {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["engine", "required_flow", "segment"],
+        "properties": {
+            "engine": {"type": "string"},
+            "required_flow": {"type": "array", "items": {"type": "string"}},
+            "segment": {"type": "string"},
+        },
+    }
+    schema_path.write_text(json.dumps(schema_data, indent=2), encoding="utf-8")
+
+    wo_path = sandbox_root / "_ctx" / "jobs" / "pending" / "WO-0001.yaml"
+    wo_data = yaml.safe_load(wo_path.read_text(encoding="utf-8"))
+    wo_data["execution"] = {
+        "engine": "manual",
+        "required_flow": [
+            "session.append:intent",
+            "ctx.sync",
+            "ctx.search",
+            "ctx.get",
+            "session.append:result",
+        ],
+        "segment": ".",
+    }
+    wo_path.write_text(yaml.safe_dump(wo_data, sort_keys=False), encoding="utf-8")
+
+    result = _run_take(repo_root, sandbox_root, "WO-0001")
+    output = result.stdout + result.stderr
+
+    assert result.returncode == 1
+    assert "Execution contract validation failed" in output
+    assert "engine must be 'trifecta'" in output
+    assert (sandbox_root / "_ctx" / "jobs" / "pending" / "WO-0001.yaml").exists()
     assert not (sandbox_root / "_ctx" / "jobs" / "running" / "WO-0001.lock").exists()

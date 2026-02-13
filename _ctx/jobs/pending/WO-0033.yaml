@@ -31,3 +31,12 @@ deliverables:
 - scripts/hooks/run-doc-skill.sh
 - scripts/hooks/post-commit
 - skills/documentation/resources/HOOKS_GUIDE.md
+execution:
+  engine: trifecta
+  required_flow:
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
+  segment: .

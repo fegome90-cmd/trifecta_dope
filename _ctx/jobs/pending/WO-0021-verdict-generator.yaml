@@ -21,3 +21,12 @@ context: WO-0005 was skipped. Re-evaluate if validation_report.txt supersedes th
 steps:
 - Analyze need for verdict_generator.sh
 - Implement or deprecate formally
+execution:
+  engine: trifecta
+  required_flow:
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
+  segment: .

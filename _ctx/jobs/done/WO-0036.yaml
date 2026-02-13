@@ -1,17 +1,21 @@
-created_at: '2026-02-11T14:30:00Z'
-description: "Clean up code duplication and DRY violations identified by multi-review\
-  \ agents.\n\n## Approach\nFollowing **strict TDD methodology** (RED \u2192 GREEN\
-  \ \u2192 REFACTOR):\n1. Write failing tests first (RED)\n2. Implement code to pass\
-  \ tests (GREEN)\n3. Refactor for quality (IMPROVE)\n\nEach task has corresponding\
-  \ DoD verification and test reference.\n"
-dod_id: WO-0036-dod
-epic_id: EP-0019
+version: 1
 id: WO-0036
+epic_id: E-0019
+title: WO Hygiene - Code cleanup from multi-review
 priority: P1
 status: done
+scope:
+  allow:
+  - internal/plugins/**
+  deny: []
+dod_id: WO-0036-dod
+created_at: '2026-02-11T14:30:00Z'
+description: "Clean up code duplication and DRY violations identified by multi-review agents.\n\n## Approach\n\
+  Following **strict TDD methodology** (RED \u2192 GREEN \u2192 REFACTOR):\n1. Write failing tests first\
+  \ (RED)\n2. Implement code to pass tests (GREEN)\n3. Refactor for quality (IMPROVE)\n\nEach task has\
+  \ corresponding DoD verification and test reference.\n"
 tasks:
-- description: 'handleOpenWorktree() only checks os.IsNotExist(err), ignoring other
-    errors
+- description: 'handleOpenWorktree() only checks os.IsNotExist(err), ignoring other errors
 
     like EACCES, EIO, ELOOP. Must handle ALL os.Stat() errors.
 
@@ -57,8 +61,7 @@ tasks:
   severity: IMPORTANT
   status: done
   test_ref: test_no_unused_fields
-- description: 'internal/plugins/trifecta/types.go duplicates trifectaindex/types.go
-    entirely.
+- description: 'internal/plugins/trifecta/types.go duplicates trifectaindex/types.go entirely.
 
     Delete the file and update imports in trifecta/plugin.go.
 
@@ -174,4 +177,12 @@ tasks:
   severity: TEST
   status: done
   test_ref: test_index_loading_integration
-title: WO Hygiene - Code cleanup from multi-review
+execution:
+  engine: trifecta
+  required_flow:
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
+  segment: .
