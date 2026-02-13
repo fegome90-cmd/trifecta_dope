@@ -1181,3 +1181,10 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - Usage: bash scripts/verify.sh [WO_ID] [--check-only]
 - **Pack SHA**: `d95d058aac7550e4`
 
+
+## 2026-02-13 - Continuación: contrato learning/evolve en repo
+- **Summary**: Se confirmó que `uv.lock` no tiene cambios y se agregó el contrato formal de codex learning/evolve en `docs/plans`.
+- **Files**: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/docs/plans/2026-02-13-codex-learning-evolve-contract.md
+- **Commands**: verificación git status/diff, creación de contrato
+- **Warnings**: Ninguno
+- **Next**: Revisar/aceptar el contrato y, si aplica, versionar cambios del repo.
