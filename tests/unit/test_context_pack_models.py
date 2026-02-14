@@ -98,3 +98,56 @@ class TestContextPackModels:
         assert not hasattr(pack, "embeddings")
         assert not hasattr(chunk, "embedding")
         assert not hasattr(chunk, "vector")
+
+    def test_context_pack_schema_no_chunking_field(self) -> None:
+        """ContextPack schema v1 should NOT have top-level 'chunking' field.
+
+        Fail-closed test: prevents drift between documented and actual schema.
+        The 'chunking' field was documented in planning but never implemented.
+        Actual schema uses chunking_method per chunk.
+        """
+        import json
+        from pathlib import Path
+
+        # Load actual context_pack.json if it exists
+        pack_path = Path("_ctx/context_pack.json")
+        if not pack_path.exists():
+            pytest.skip("No context_pack.json found - run ctx build first")
+
+        pack_data = json.loads(pack_path.read_text())
+
+        # Fail-closed: schema v1 should NOT have chunking at top level
+        assert "chunking" not in pack_data, (
+            "Schema drift detected: 'chunking' field found in context_pack.json.\n"
+            "Expected: No top-level 'chunking' field (not implemented in v1).\n"
+            "Actual: 'chunking' present.\n"
+            "Fix: Remove chunking from schema or implement it."
+        )
+
+    def test_source_file_has_mtime_not_mtime_epoch(self) -> None:
+        """SourceFile should use 'mtime' (float), not 'mtime_epoch'.
+
+        Fail-closed test: ensures field naming consistency.
+        """
+        import json
+        from pathlib import Path
+
+        pack_path = Path("_ctx/context_pack.json")
+        if not pack_path.exists():
+            pytest.skip("No context_pack.json found")
+
+        pack_data = json.loads(pack_path.read_text())
+
+        if not pack_data.get("source_files"):
+            pytest.skip("No source_files in pack")
+
+        sf = pack_data["source_files"][0]
+
+        # Should have 'mtime' (float timestamp)
+        assert "mtime" in sf, "SourceFile missing 'mtime' field"
+        assert isinstance(sf["mtime"], (int, float)), "mtime should be numeric timestamp"
+
+        # Should NOT have 'mtime_epoch'
+        assert "mtime_epoch" not in sf, (
+            "Schema drift: 'mtime_epoch' found. Use 'mtime' (float) instead."
+        )
