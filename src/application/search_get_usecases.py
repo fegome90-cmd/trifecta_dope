@@ -1,12 +1,98 @@
 """Use case wrappers for Search and Get with telemetry."""
 
 import hashlib
+import os
+import subprocess
 from pathlib import Path
 from typing import Any, Literal, Optional
 
 from src.application.context_service import ContextService, GetResult
 from src.infrastructure.file_system import FileSystemAdapter
 from src.domain.query_linter import LinterPlan
+
+
+def _detect_source() -> str:
+    """Detect execution source for telemetry segmentation.
+
+    Returns:
+        One of: 'test', 'fixture', 'interactive', 'agent'
+    """
+    # Check environment variable first (allows explicit override)
+    env_source = os.environ.get("TRIFECTA_TELEMETRY_SOURCE")
+    if env_source in ("test", "fixture", "interactive", "agent"):
+        return env_source
+
+    # Auto-detect based on Python environment
+    import sys
+
+    # Detect if running under pytest
+    if "pytest" in sys.modules:
+        return "test"
+
+    # Detect if running in CI/automated environment
+    if os.environ.get("CI") or os.environ.get("GITHUB_ACTIONS"):
+        return "fixture"
+
+    # Detect if running in Claude Code / agent context
+    if os.environ.get("CLAUDE_CODE") or os.environ.get("AGENT_CONTEXT"):
+        return "agent"
+
+    # Default to interactive
+    return "interactive"
+
+
+def _get_build_sha() -> str:
+    """Get git commit SHA for build tracking.
+
+    Returns:
+        First 8 characters of git HEAD SHA, or 'unknown' if not in git repo.
+    """
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"], capture_output=True, text=True, timeout=5, check=True
+        )
+        return result.stdout.strip()[:8]
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError):
+        return "unknown"
+
+
+def _classify_zero_hit_reason(
+    query: str, query_class: str, alias_expanded: bool, linter_expanded: bool
+) -> str:
+    """Classify why a search returned zero hits.
+
+    Args:
+        query: The search query
+        query_class: Linter classification (vague|guided|semi|disabled)
+        alias_expanded: Whether alias expansion was applied
+        linter_expanded: Whether linter expansion was applied
+
+    Returns:
+        Reason code: 'empty'|'vague'|'no_alias'|'strict_filter'|'unknown'
+    """
+    # Empty or whitespace-only query
+    if not query or not query.strip():
+        return "empty"
+
+    # Very short queries (1-2 chars) are likely vague
+    if len(query.strip()) <= 2:
+        return "vague"
+
+    # Vague classification from linter
+    if query_class == "vague":
+        return "vague"
+
+    # No expansion applied when it could have helped
+    if not alias_expanded and not linter_expanded:
+        # Query might need expansion but didn't get it
+        if len(query.strip().split()) <= 2:
+            return "no_alias"
+
+    # Expansion applied but still no hits = strict filter
+    if alias_expanded or linter_expanded:
+        return "strict_filter"
+
+    return "unknown"
 
 
 class SearchUseCase:
@@ -121,12 +207,35 @@ class SearchUseCase:
             "linter_reasons": lint_plan["changes"]["reasons"][:3],  # Max 3 reasons
         }
 
+        # B0 Instrumentation: Source and build tracking
+        source = _detect_source()
+        build_sha = _get_build_sha()
+        search_mode = (
+            "with_expansion"
+            if (expansion_meta["alias_expanded"] or lint_plan["changed"])
+            else "search_only"
+        )
+
+        # B0 Instrumentation: Zero-hit reason classification
+        zero_hit_reason = None
+        if len(final_hits) == 0:
+            zero_hit_reason = _classify_zero_hit_reason(
+                query,
+                lint_plan["query_class"],
+                expansion_meta["alias_expanded"],
+                lint_plan["changed"],
+            )
+
         # Record telemetry
         if self.telemetry:
             self.telemetry.incr("ctx_search_count")
             self.telemetry.incr("ctx_search_hits_total", len(final_hits))
+            self.telemetry.incr(f"ctx_search_by_source_{source}_count")
+
             if len(final_hits) == 0:
                 self.telemetry.incr("ctx_search_zero_hits_count")
+                if zero_hit_reason:
+                    self.telemetry.incr(f"ctx_search_zero_hit_reason_{zero_hit_reason}_count")
 
             # Linter metrics
             if lint_plan["changed"]:
@@ -140,19 +249,35 @@ class SearchUseCase:
                     "ctx_search_alias_terms_total", expansion_meta["alias_terms_count"]
                 )
 
-            # Unified event with SANITIZED query and linter metadata
+            # Unified event with SANITIZED query and B0 instrumentation
+            event_args = {
+                "query_preview": query_preview,
+                "query_hash": query_hash,
+                "query_len": query_len,
+                "limit": limit,
+                **expansion_meta,
+                **linter_meta,
+            }
+
+            # B0: Add segmentation tags to event
+            event_result = {"hits": len(final_hits), "returned_ids": [h.id for h in final_hits]}
+
+            # B0: Add extended fields via kwargs (goes into 'x' field per PR#1)
+            event_kwargs = {
+                "source": source,
+                "build_sha": build_sha,
+                "mode": search_mode,
+            }
+
+            if zero_hit_reason:
+                event_kwargs["zero_hit_reason"] = zero_hit_reason
+
             self.telemetry.event(
                 "ctx.search",
-                {
-                    "query_preview": query_preview,
-                    "query_hash": query_hash,
-                    "query_len": query_len,
-                    "limit": limit,
-                    **expansion_meta,
-                    **linter_meta,
-                },
-                {"hits": len(final_hits), "returned_ids": [h.id for h in final_hits]},
+                event_args,
+                event_result,
                 1,  # timing_ms >= 1 required
+                **event_kwargs,
             )
 
         # Format output
