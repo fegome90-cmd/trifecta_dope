@@ -8,3 +8,26 @@ strong:
 weak:
   - README.md
   - skill.md
+
+# B3 Intervention: Multilingual anchors for Spanish queries
+# Addresses zero-hit queries like "servicio" that don't match English content
+multilingual:
+  # Spanish -> English mappings for common technical terms
+  servicio: service
+  servicios: services
+  documentación: documentation
+  guía: guide
+  guías: guides
+  manual: manual
+  uso: usage
+  cómo: how
+  comando: command
+  comandos: commands
+  error: error
+  errores: errors
+  telemetría: telemetry
+  métricas: metrics
+  búsqueda: search
+  contexto: context
+  consulta: query
+  consultas: queries
