@@ -1,11 +1,15 @@
 """
-Unit tests for Trifecta-first contract validation in ctx_wo_take.py.
+Unit tests for Trifecta execution contract validation in ctx_wo_take.py.
 
 Tests ensure that:
 1. Every WO must have execution.engine == "trifecta"
-2. Every WO must have execution.required_flow (non-empty list)
-3. Every WO must have execution.segment
+2. Every WO must have execution.required_flow (non-empty list with mandatory steps)
+3. Every WO must have execution.segment == "."
 4. --force flag does NOT bypass contract validation
+
+Contract API: validate_execution_contract(wo_data) -> tuple[bool, str | None]
+  - (True, None) = validation passed
+  - (False, "error message") = validation failed with reason
 """
 
 import json
@@ -20,7 +24,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
 
 
 class TestTrifectaContractValidation:
-    """Test validate_trifecta_contract() function."""
+    """Test validate_execution_contract() function."""
 
     @pytest.fixture
     def valid_wo_data(self) -> dict:
@@ -35,81 +39,102 @@ class TestTrifectaContractValidation:
             "dod_id": "DOD-TEST",
             "execution": {
                 "engine": "trifecta",
-                "required_flow": ["ctx sync", "verify"],
+                "required_flow": [
+                    "session.append:intent",
+                    "ctx.sync",
+                    "ctx.search",
+                    "ctx.get",
+                    "session.append:result",
+                ],
                 "segment": ".",
             },
         }
 
     def test_valid_contract_passes(self, valid_wo_data):
         """Valid execution section passes validation."""
-        from ctx_wo_take import validate_trifecta_contract
+        from ctx_wo_take import validate_execution_contract
 
-        result = validate_trifecta_contract(valid_wo_data)
+        ok, err = validate_execution_contract(valid_wo_data)
 
-        assert result.is_ok()
+        assert ok is True
+        assert err is None
 
     def test_missing_execution_fails(self, valid_wo_data):
-        """Missing execution section returns TRIFECTA_CONTRACT_MISSING."""
-        from ctx_wo_take import validate_trifecta_contract
+        """Missing execution section returns error."""
+        from ctx_wo_take import validate_execution_contract
 
         del valid_wo_data["execution"]
 
-        result = validate_trifecta_contract(valid_wo_data)
+        ok, err = validate_execution_contract(valid_wo_data)
 
-        assert result.is_err()
-        error = result.unwrap_err()
-        assert "TRIFECTA_CONTRACT_MISSING" in error
+        assert ok is False
+        assert isinstance(err, str)
+        assert "execution contract is required" in err
 
     def test_wrong_engine_fails(self, valid_wo_data):
-        """Wrong engine returns TRIFECTA_CONTRACT_INVALID."""
-        from ctx_wo_take import validate_trifecta_contract
+        """Wrong engine returns error."""
+        from ctx_wo_take import validate_execution_contract
 
         valid_wo_data["execution"]["engine"] = "manual"
 
-        result = validate_trifecta_contract(valid_wo_data)
+        ok, err = validate_execution_contract(valid_wo_data)
 
-        assert result.is_err()
-        error = result.unwrap_err()
-        assert "TRIFECTA_CONTRACT_INVALID" in error
-        assert "engine" in error.lower()
+        assert ok is False
+        assert isinstance(err, str)
+        assert "engine" in err.lower()
 
     def test_empty_required_flow_fails(self, valid_wo_data):
-        """Empty required_flow returns TRIFECTA_CONTRACT_INVALID."""
-        from ctx_wo_take import validate_trifecta_contract
+        """Empty required_flow returns error."""
+        from ctx_wo_take import validate_execution_contract
 
         valid_wo_data["execution"]["required_flow"] = []
 
-        result = validate_trifecta_contract(valid_wo_data)
+        ok, err = validate_execution_contract(valid_wo_data)
 
-        assert result.is_err()
-        error = result.unwrap_err()
-        assert "TRIFECTA_CONTRACT_INVALID" in error
-        assert "required_flow" in error.lower()
+        assert ok is False
+        assert isinstance(err, str)
+        assert "required_flow" in err.lower()
 
     def test_missing_required_flow_fails(self, valid_wo_data):
-        """Missing required_flow returns TRIFECTA_CONTRACT_INVALID."""
-        from ctx_wo_take import validate_trifecta_contract
+        """Missing required_flow returns error."""
+        from ctx_wo_take import validate_execution_contract
 
         del valid_wo_data["execution"]["required_flow"]
 
-        result = validate_trifecta_contract(valid_wo_data)
+        ok, err = validate_execution_contract(valid_wo_data)
 
-        assert result.is_err()
-        error = result.unwrap_err()
-        assert "TRIFECTA_CONTRACT_INVALID" in error
+        assert ok is False
+        assert isinstance(err, str)
+        assert "required_flow" in err.lower()
 
     def test_missing_segment_fails(self, valid_wo_data):
-        """Missing segment returns TRIFECTA_CONTRACT_INVALID."""
-        from ctx_wo_take import validate_trifecta_contract
+        """Missing/wrong segment returns error."""
+        from ctx_wo_take import validate_execution_contract
 
         del valid_wo_data["execution"]["segment"]
 
-        result = validate_trifecta_contract(valid_wo_data)
+        ok, err = validate_execution_contract(valid_wo_data)
 
-        assert result.is_err()
-        error = result.unwrap_err()
-        assert "TRIFECTA_CONTRACT_INVALID" in error
-        assert "segment" in error.lower()
+        assert ok is False
+        assert isinstance(err, str)
+        assert "segment" in err.lower()
+
+    def test_missing_mandatory_steps_fails(self, valid_wo_data):
+        """Missing mandatory steps in required_flow returns error."""
+        from ctx_wo_take import validate_execution_contract
+
+        # Remove one mandatory step
+        valid_wo_data["execution"]["required_flow"] = [
+            "session.append:intent",
+            "ctx.sync",
+            # Missing: ctx.search, ctx.get, session.append:result
+        ]
+
+        ok, err = validate_execution_contract(valid_wo_data)
+
+        assert ok is False
+        assert isinstance(err, str)
+        assert "missing mandatory steps" in err
 
 
 class TestForceNoBypass:
@@ -139,7 +164,7 @@ class TestForceNoBypass:
     def test_force_flag_no_bypass_contract_validation(
         self, tmp_path, wo_without_execution, monkeypatch
     ):
-        """--force must NOT bypass validate_trifecta_contract()."""
+        """--force must NOT bypass validate_execution_contract()."""
         # Create backlog
         backlog_dir = tmp_path / "_ctx" / "backlog"
         backlog_dir.mkdir(parents=True)
@@ -167,15 +192,15 @@ class TestForceNoBypass:
         }
         (schema_dir / "work_order.schema.json").write_text(json.dumps(schema))
 
-        # Mock validate_wo_immediately to succeed (to isolate contract validation)
-        from ctx_wo_take import validate_trifecta_contract
-
         # Verify contract validation is called and fails
-        wo_data = yaml.safe_load(wo_without_execution.read_text())
-        result = validate_trifecta_contract(wo_data)
+        from ctx_wo_take import validate_execution_contract
 
-        assert result.is_err()
-        assert "TRIFECTA_CONTRACT_MISSING" in result.unwrap_err()
+        wo_data = yaml.safe_load(wo_without_execution.read_text())
+        ok, err = validate_execution_contract(wo_data)
+
+        assert ok is False
+        assert isinstance(err, str)
+        assert "execution contract is required" in err
 
 
 class TestContractValidationOrder:
@@ -198,13 +223,14 @@ class TestContractValidationOrder:
             # NO execution section - should fail contract FIRST
         }
 
-        from ctx_wo_take import validate_trifecta_contract
+        from ctx_wo_take import validate_execution_contract
 
         # Contract validation should fail before we even look at dependencies
-        result = validate_trifecta_contract(wo_data)
+        ok, err = validate_execution_contract(wo_data)
 
-        assert result.is_err()
-        assert "TRIFECTA_CONTRACT_MISSING" in result.unwrap_err()
+        assert ok is False
+        assert isinstance(err, str)
+        assert "execution contract is required" in err
 
 
 class TestExecutionSectionStructure:
@@ -212,7 +238,7 @@ class TestExecutionSectionStructure:
 
     def test_engine_must_be_string(self):
         """Engine must be a string, not other types."""
-        from ctx_wo_take import validate_trifecta_contract
+        from ctx_wo_take import validate_execution_contract
 
         wo_data = {
             "id": "WO-TEST",
@@ -223,12 +249,14 @@ class TestExecutionSectionStructure:
             },
         }
 
-        result = validate_trifecta_contract(wo_data)
-        assert result.is_err()
+        ok, err = validate_execution_contract(wo_data)
+
+        assert ok is False
+        assert isinstance(err, str)
 
     def test_required_flow_must_be_list(self):
         """required_flow must be a list."""
-        from ctx_wo_take import validate_trifecta_contract
+        from ctx_wo_take import validate_execution_contract
 
         wo_data = {
             "id": "WO-TEST",
@@ -239,21 +267,106 @@ class TestExecutionSectionStructure:
             },
         }
 
-        result = validate_trifecta_contract(wo_data)
-        assert result.is_err()
+        ok, err = validate_execution_contract(wo_data)
+
+        assert ok is False
+        assert isinstance(err, str)
 
     def test_segment_must_be_string(self):
         """segment must be a string."""
-        from ctx_wo_take import validate_trifecta_contract
+        from ctx_wo_take import validate_execution_contract
 
         wo_data = {
             "id": "WO-TEST",
             "execution": {
                 "engine": "trifecta",
-                "required_flow": ["verify"],
+                "required_flow": [
+                    "session.append:intent",
+                    "ctx.sync",
+                    "ctx.search",
+                    "ctx.get",
+                    "session.append:result",
+                ],
                 "segment": 123,  # Invalid: not a string
             },
         }
 
-        result = validate_trifecta_contract(wo_data)
-        assert result.is_err()
+        ok, err = validate_execution_contract(wo_data)
+
+        assert ok is False
+        assert isinstance(err, str)
+
+
+class TestContractInvariants:
+    """Anti-drift tests: validate return contract invariants."""
+
+    def test_success_returns_true_none(self):
+        """Success case MUST return (True, None)."""
+        from ctx_wo_take import validate_execution_contract
+
+        valid_wo = {
+            "execution": {
+                "engine": "trifecta",
+                "required_flow": [
+                    "session.append:intent",
+                    "ctx.sync",
+                    "ctx.search",
+                    "ctx.get",
+                    "session.append:result",
+                ],
+                "segment": ".",
+            }
+        }
+
+        ok, err = validate_execution_contract(valid_wo)
+
+        # Invariant: success means ok=True AND err=None
+        assert ok is True
+        assert err is None
+
+    def test_failure_returns_false_with_message(self):
+        """Failure case MUST return (False, non-empty string)."""
+        from ctx_wo_take import validate_execution_contract
+
+        invalid_wo = {}  # Missing execution
+
+        ok, err = validate_execution_contract(invalid_wo)
+
+        # Invariant: failure means ok=False AND err is non-empty string
+        assert ok is False
+        assert isinstance(err, str)
+        assert len(err) > 0
+
+    def test_never_returns_both_true_and_error(self):
+        """Cannot return (True, "error") - invalid state."""
+        from ctx_wo_take import validate_execution_contract
+
+        # Test both success and failure cases
+        test_cases = [
+            {
+                "execution": {
+                    "engine": "trifecta",
+                    "required_flow": [
+                        "session.append:intent",
+                        "ctx.sync",
+                        "ctx.search",
+                        "ctx.get",
+                        "session.append:result",
+                    ],
+                    "segment": ".",
+                }
+            },  # Valid
+            {},  # Invalid
+            {"execution": {"engine": "manual", "required_flow": [], "segment": "."}},  # Invalid
+        ]
+
+        for wo_data in test_cases:
+            ok, err = validate_execution_contract(wo_data)
+
+            # Invariant: NEVER (True, "error")
+            if ok is True:
+                assert err is None, f"Invariant violated: ok=True but err={err}"
+            else:
+                assert err is not None and len(err) > 0, (
+                    f"Invariant violated: ok=False but err={err}"
+                )

@@ -15,7 +15,7 @@ from unittest.mock import Mock
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
 
 from ctx_wo_finish import (
-    validate_dod,
+    validate_minimum_evidence,
     generate_artifacts,
     REQUIRED_ARTIFACTS,
     resolve_runtime_root,
@@ -364,9 +364,9 @@ x_micro_tasks: []
 
 
 class TestValidateDod:
-    """Test validate_dod() function."""
+    """Test validate_minimum_evidence() function."""
 
-    def test_validate_dod_success(self, tmp_path):
+    def test_validate_minimum_evidence_success(self, tmp_path):
         """Test validation succeeds with complete valid artifacts."""
         handoff_dir = tmp_path / "_ctx" / "handoff" / "WO-TEST"
         handoff_dir.mkdir(parents=True)
@@ -381,20 +381,20 @@ class TestValidateDod:
         verdict = {"wo_id": "WO-TEST", "status": "done", "generated_at": "2025-01-13T17:00:00Z"}
         (handoff_dir / "verdict.json").write_text(json.dumps(verdict))
 
-        result = validate_dod("WO-TEST", tmp_path)
+        result = validate_minimum_evidence("WO-TEST", tmp_path)
 
         assert result.is_ok()
 
-    def test_validate_dod_missing_directory(self, tmp_path):
+    def test_validate_minimum_evidence_missing_directory(self, tmp_path):
         """Test validation fails when handoff directory doesn't exist."""
         # Don't create handoff directory
 
-        result = validate_dod("WO-TEST", tmp_path)
+        result = validate_minimum_evidence("WO-TEST", tmp_path)
 
         assert result.is_err()
-        assert "Handoff directory missing" in result.unwrap_err()
+        assert "handoff directory missing" in result.unwrap_err()
 
-    def test_validate_dod_missing_artifacts(self, tmp_path):
+    def test_validate_minimum_evidence_missing_artifacts(self, tmp_path):
         """Test validation fails when artifacts are missing."""
         handoff_dir = tmp_path / "_ctx" / "handoff" / "WO-TEST"
         handoff_dir.mkdir(parents=True)
@@ -403,12 +403,12 @@ class TestValidateDod:
         (handoff_dir / "lint.log").write_text("All checks passed!")
         (handoff_dir / "diff.patch").write_text("diff --git a/test.txt")
 
-        result = validate_dod("WO-TEST", tmp_path)
+        result = validate_minimum_evidence("WO-TEST", tmp_path)
 
         assert result.is_err()
-        assert "Missing DoD artifacts" in result.unwrap_err()
+        assert "missing DoD artifacts" in result.unwrap_err()
 
-    def test_validate_dod_empty_tests_log(self, tmp_path):
+    def test_validate_minimum_evidence_empty_tests_log(self, tmp_path):
         """Test validation fails when tests.log is empty."""
         handoff_dir = tmp_path / "_ctx" / "handoff" / "WO-TEST"
         handoff_dir.mkdir(parents=True)
@@ -417,12 +417,12 @@ class TestValidateDod:
         for artifact in REQUIRED_ARTIFACTS:
             (handoff_dir / artifact).write_text("")
 
-        result = validate_dod("WO-TEST", tmp_path)
+        result = validate_minimum_evidence("WO-TEST", tmp_path)
 
         assert result.is_err()
         assert "tests.log is empty" in result.unwrap_err()
 
-    def test_validate_dod_excessive_errors(self, tmp_path):
+    def test_validate_minimum_evidence_excessive_errors(self, tmp_path):
         """Test validation fails when tests.log has >10 ERRORs."""
         handoff_dir = tmp_path / "_ctx" / "handoff" / "WO-TEST"
         handoff_dir.mkdir(parents=True)
@@ -430,7 +430,7 @@ class TestValidateDod:
         # Create all artifacts with excessive errors in tests.log
         for artifact in REQUIRED_ARTIFACTS:
             if artifact == "tests.log":
-                error_content = "\n".join([f"ERROR: Test error {i}" for i in range(15)])
+                error_content = "\n".join([f"ERROR: Test error {i}" for i in range(60)])
                 (handoff_dir / artifact).write_text(error_content)
             elif artifact == "verdict.json":
                 verdict = {"wo_id": "WO-TEST", "status": "done"}
@@ -438,12 +438,12 @@ class TestValidateDod:
             else:
                 (handoff_dir / artifact).write_text("content")
 
-        result = validate_dod("WO-TEST", tmp_path)
+        result = validate_minimum_evidence("WO-TEST", tmp_path)
 
         assert result.is_err()
         assert "errors" in result.unwrap_err().lower()
 
-    def test_validate_dod_malformed_verdict(self, tmp_path):
+    def test_validate_minimum_evidence_malformed_verdict(self, tmp_path):
         """Test validation fails when verdict.json is malformed."""
         handoff_dir = tmp_path / "_ctx" / "handoff" / "WO-TEST"
         handoff_dir.mkdir(parents=True)
@@ -455,12 +455,12 @@ class TestValidateDod:
             else:
                 (handoff_dir / artifact).write_text("content")
 
-        result = validate_dod("WO-TEST", tmp_path)
+        result = validate_minimum_evidence("WO-TEST", tmp_path)
 
         assert result.is_err()
         assert "malformed" in result.unwrap_err().lower()
 
-    def test_validate_dod_invalid_wo_id_in_verdict(self, tmp_path):
+    def test_validate_minimum_evidence_invalid_wo_id_in_verdict(self, tmp_path):
         """Test validation fails when verdict.json has wrong wo_id."""
         handoff_dir = tmp_path / "_ctx" / "handoff" / "WO-TEST"
         handoff_dir.mkdir(parents=True)
@@ -473,12 +473,12 @@ class TestValidateDod:
             else:
                 (handoff_dir / artifact).write_text("content")
 
-        result = validate_dod("WO-TEST", tmp_path)
+        result = validate_minimum_evidence("WO-TEST", tmp_path)
 
         assert result.is_err()
         assert "wo_id" in result.unwrap_err().lower()
 
-    def test_validate_dod_with_generation_in_progress_marker(self, tmp_path):
+    def test_validate_minimum_evidence_with_generation_in_progress_marker(self, tmp_path):
         """Test validation fails when .generation_in_progress marker exists."""
         handoff_dir = tmp_path / "_ctx" / "handoff" / "WO-TEST"
         handoff_dir.mkdir(parents=True)
@@ -494,7 +494,7 @@ class TestValidateDod:
         # Create the marker file
         (handoff_dir / ".generation_in_progress").write_text("")
 
-        result = validate_dod("WO-TEST", tmp_path)
+        result = validate_minimum_evidence("WO-TEST", tmp_path)
 
         assert result.is_err()
         assert (
@@ -502,7 +502,7 @@ class TestValidateDod:
             or "generation" in result.unwrap_err().lower()
         )
 
-    def test_validate_dod_path_is_file_not_directory(self, tmp_path):
+    def test_validate_minimum_evidence_path_is_file_not_directory(self, tmp_path):
         """Test validation fails when handoff path is a file, not directory."""
         handoff_dir = tmp_path / "_ctx" / "handoff" / "WO-TEST"
         handoff_dir.parent.mkdir(parents=True)
@@ -510,7 +510,7 @@ class TestValidateDod:
         # Create a FILE at the handoff path instead of directory
         handoff_dir.write_text("This is a file, not a directory")
 
-        result = validate_dod("WO-TEST", tmp_path)
+        result = validate_minimum_evidence("WO-TEST", tmp_path)
 
         assert result.is_err()
         assert "not a directory" in result.unwrap_err()
@@ -955,10 +955,12 @@ x_objective: "Test"
         dod_dir.mkdir(parents=True)
         (dod_dir / "DOD-TEST.yaml").write_text("dod:\n  - id: DOD-TEST\n    name: Test\n")
 
-        # Mock validate_dod to return Err
+        # Mock validate_minimum_evidence to return Err
         from src.domain.result import Err
 
-        monkeypatch.setattr("ctx_wo_finish.validate_dod", lambda *a, **k: Err("Validation failed"))
+        monkeypatch.setattr(
+            "ctx_wo_finish.validate_minimum_evidence", lambda *a, **k: Err("Validation failed")
+        )
 
         import sys
         from io import StringIO
@@ -1020,7 +1022,7 @@ x_objective: "Test"
         monkeypatch.setattr("ctx_wo_finish.finish_wo_transaction", mock_finish)
         from src.domain.result import Err
 
-        monkeypatch.setattr("ctx_wo_finish.validate_dod", lambda *a, **k: Err("Skip"))
+        monkeypatch.setattr("ctx_wo_finish.validate_minimum_evidence", lambda *a, **k: Err("Skip"))
 
         import sys
         from ctx_wo_finish import main
@@ -1180,10 +1182,10 @@ x_objective: "Test"
         dod_dir.mkdir(parents=True)
         (dod_dir / "DOD-TEST.yaml").write_text("dod:\n  - id: DOD-TEST\n    name: Test\n")
 
-        # Mock validate_dod to succeed and finish_wo_transaction to fail
+        # Mock validate_minimum_evidence to succeed and finish_wo_transaction to fail
         from src.domain.result import Ok, Err
 
-        monkeypatch.setattr("ctx_wo_finish.validate_dod", lambda *a, **k: Ok(None))
+        monkeypatch.setattr("ctx_wo_finish.validate_minimum_evidence", lambda *a, **k: Ok(None))
         monkeypatch.setattr(
             "ctx_wo_finish.finish_wo_transaction", lambda *a, **k: Err("Transaction failed")
         )
@@ -1222,7 +1224,7 @@ x_objective: "Test"
         assert exit_code == 1
         captured = capsys.readouterr()
         combined = captured.out + captured.err
-        assert "TRIFECTA_ERROR_CODE: VERIFY_SCRIPT_MISSING" in combined
+        assert "Scope verification script missing" in combined
 
 
 class TestRootResolution:

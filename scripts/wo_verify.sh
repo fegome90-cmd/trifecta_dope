@@ -84,6 +84,45 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# =============================================================================
+# Override Accountability Check
+# =============================================================================
+if [[ -n "$ALLOW_DIRTY" ]]; then
+  if [[ -z "${OVERRIDE_REASON:-}" ]]; then
+    echo "ERROR: --allow-dirty requires OVERRIDE_REASON environment variable" >&2
+    exit 2
+  fi
+  if [[ ${#OVERRIDE_REASON} -lt 10 ]]; then
+    echo "ERROR: OVERRIDE_REASON must be at least 10 characters (got ${#OVERRIDE_REASON})" >&2
+    exit 2
+  fi
+  if [[ -z "${OVERRIDE_WO:-}" ]]; then
+    echo "ERROR: --allow-dirty requires OVERRIDE_WO environment variable" >&2
+    exit 2
+  fi
+  if [[ ! "$OVERRIDE_WO" =~ ^WO-[0-9]+$ ]]; then
+    echo "ERROR: OVERRIDE_WO must match format WO-[0-9]+ (got ${OVERRIDE_WO:-none})" >&2
+    exit 2
+  fi
+  if [[ -z "${OVERRIDE_UNTIL:-}" ]]; then
+    echo "ERROR: --allow-dirty requires OVERRIDE_UNTIL environment variable (YYYY-MM-DD)" >&2
+    exit 2
+  fi
+  if [[ ! "$OVERRIDE_UNTIL" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+    echo "ERROR: OVERRIDE_UNTIL must be YYYY-MM-DD (got $OVERRIDE_UNTIL)" >&2
+    exit 2
+  fi
+  
+  # Validate expiry
+  TODAY=$(date +"%Y-%m-%d")
+  if [[ "$OVERRIDE_UNTIL" < "$TODAY" ]]; then
+    echo "ERROR: OVERRIDE_UNTIL ($OVERRIDE_UNTIL) has expired (today: $TODAY)" >&2
+    exit 2
+  fi
+
+  echo "WARNING: Proceeding with dirty worktree (OVERRIDE: $OVERRIDE_WO until $OVERRIDE_UNTIL)" >&2
+fi
+
 ROOT="$(cd "$ROOT" && pwd)"
 WO_PATH="$ROOT/_ctx/jobs/running/$WO_ID.yaml"
 if [[ ! -f "$WO_PATH" ]]; then
@@ -105,33 +144,71 @@ write_verdict() {
   if ! uv run python - "$status" "$failure_stage" "$commands" <<'PY' 2>&1
 import json, os, sys
 from pathlib import Path
+from datetime import datetime
 import yaml
 
 status = sys.argv[1]
 failure_stage = sys.argv[2] if len(sys.argv) > 2 else ""
 commands_str = sys.argv[3] if len(sys.argv) > 3 else ""
 
-wo_path = Path(os.environ["WO_PATH"])
-try:
-    wo = yaml.safe_load(wo_path.read_text()) or {}
-except:
-    wo = {}
+wo_path_env = os.environ.get("WO_PATH")
+wo_path = Path(wo_path_env) if wo_path_env else None
+wo = {}
+if wo_path and wo_path.exists():
+    try:
+        wo = yaml.safe_load(wo_path.read_text()) or {}
+    except:
+        pass
+
+started_at = os.environ.get("START", "")
+finished_at = os.environ.get("END", "")
+
+duration = 0.0
+if started_at and finished_at:
+    try:
+        start_dt = datetime.fromisoformat(started_at.replace("Z", "+00:00"))
+        end_dt = datetime.fromisoformat(finished_at.replace("Z", "+00:00"))
+        duration = (end_dt - start_dt).total_seconds()
+    except:
+        pass
 
 verdict = {
+    "schema_version": "1.0.0",
     "wo_id": wo.get("id", os.environ.get("WO_ID", "UNKNOWN")),
     "epic_id": wo.get("epic_id"),
     "dod_id": wo.get("dod_id"),
     "git_commit": os.popen(f"git -C '{os.environ.get('ROOT', '.')}' rev-parse HEAD").read().strip(),
     "status": status,
-    "started_at": os.environ.get("START", ""),
-    "finished_at": os.environ.get("END", ""),
+    "started_at": started_at,
+    "finished_at": finished_at,
+    "duration_seconds": duration,
     "commands": commands_str.split("\n") if commands_str else [],
 }
 if failure_stage:
     verdict["failure_stage"] = failure_stage
 
-log_dir = Path(os.environ.get("LOG_DIR", "_ctx/logs"))
-(log_dir / "verdict.json").write_text(json.dumps(verdict, indent=2))
+# Record override accountability metadata if present
+override_reason = os.environ.get("OVERRIDE_REASON")
+override_wo = os.environ.get("OVERRIDE_WO")
+override_until = os.environ.get("OVERRIDE_UNTIL")
+if override_reason and override_wo and override_until:
+    verdict["override"] = {
+        "dirty": True,
+        "reason": override_reason,
+        "wo": override_wo,
+        "until": override_until,
+        "timestamp": datetime.now().isoformat()
+    }
+
+log_dir_env = os.environ.get("LOG_DIR")
+if log_dir_env:
+    log_dir = Path(log_dir_env)
+    log_dir.mkdir(parents=True, exist_ok=True)
+    (log_dir / "verdict.json").write_text(json.dumps(verdict, indent=2))
+else:
+    # Use default relative if somehow missing
+    Path("_ctx/logs").mkdir(parents=True, exist_ok=True)
+    Path("_ctx/logs/verdict.json").write_text(json.dumps(verdict, indent=2))
 PY
 then
   echo "FATAL: Failed to write verdict.json for $WO_ID" >&2
@@ -147,6 +224,25 @@ fi
 LOG_DIR="$ROOT/_ctx/logs/$WO_ID"
 mkdir -p "$LOG_DIR"
 export LOG_DIR ROOT WO_ID
+
+# Cleanup trap: Write verdict on crash (catchable signals only)
+# SIGKILL cannot be caught - this is a Unix limitation
+cleanup() {
+  local exit_code=$?
+  # Ensure LOG_DIR path is computed if possible
+  if [[ -z "${LOG_DIR:-}" && -n "${ROOT:-}" && -n "${WO_ID:-}" ]]; then
+    LOG_DIR="$ROOT/_ctx/logs/$WO_ID"
+  fi
+  
+  if [[ -n "${LOG_DIR:-}" && ! -f "$LOG_DIR/verdict.json" ]]; then
+    # Only try to write if we have the minimum context
+    END="$(utc_now)"
+    export END
+    write_verdict "CRASH" "unexpected_exit" ""
+  fi
+  exit $exit_code
+}
+trap cleanup EXIT TERM INT HUP
 
 # =============================================================================
 # Step 1: Scope Lint (staged mode, fail-closed)
