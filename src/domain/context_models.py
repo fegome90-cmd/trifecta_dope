@@ -71,7 +71,7 @@ class GetResult(BaseModel):
     chunks: List[ContextChunk]
     total_tokens: int
     stop_reason: str = Field(
-        ..., description="Reason for stopping: complete, budget, max_chunks, evidence, error"
+        ..., description="Reason for stopping: complete, budget, max_chunks, evidence"
     )
     chunks_requested: int = Field(..., description="Number of chunk IDs requested")
     chunks_returned: int = Field(..., description="Number of chunks actually returned")

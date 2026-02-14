@@ -146,3 +146,34 @@ def test_chars_returned_tracking(mock_context_pack: Path):
     assert result.chars_returned_total == expected_chars
     assert result.chars_returned_total > 0
     assert result.stop_reason == "complete"
+
+
+def test_stop_reason_enum_parity():
+    """Test that stop_reason values are consistent across domain model and implementation.
+
+    Fail-closed test: verifies that only documented values are used.
+    This prevents drift between schema documentation and implementation.
+    """
+    from src.domain.context_models import GetResult
+
+    # Extract documented values from Field description
+    field_info = GetResult.model_fields["stop_reason"]
+    description = field_info.description or ""
+
+    # Parse documented values (format: "Reason for stopping: value1, value2, ...")
+    if "Reason for stopping:" in description:
+        values_part = description.split("Reason for stopping:")[1].strip()
+        documented_values = set(v.strip() for v in values_part.split(","))
+    else:
+        documented_values = set()
+
+    # Implementation values from context_service.py analysis
+    implementation_values = {"complete", "budget", "max_chunks", "evidence"}
+
+    # Fail-closed: documented must match implementation exactly
+    assert documented_values == implementation_values, (
+        f"stop_reason drift detected!\n"
+        f"Documented: {documented_values}\n"
+        f"Implementation: {implementation_values}\n"
+        f"Symmetric difference: {documented_values.symmetric_difference(implementation_values)}"
+    )

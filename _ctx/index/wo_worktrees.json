@@ -1,9 +1,9 @@
 {
   "version": 1,
   "schema": "trifecta.sidecar.wo_index.v1",
-  "generated_at": "2026-02-13T23:57:42.651871+00:00",
+  "generated_at": "2026-02-14T19:16:28.790361+00:00",
   "repo_root": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope",
-  "git_head_sha_repo_root": "7de0c7733f20850d5812b96dc528202f7f963074",
+  "git_head_sha_repo_root": "67bf52870f9f002f5bb3de4cf040cb590611ab6e",
   "work_orders": [
     {
       "id": "WO-0037",
@@ -365,9 +365,9 @@
       "owner": "felipe_gonzalez",
       "epic_id": "E-LSP-CONTRACT",
       "worktree_path": "../.worktrees/WO-0040",
-      "worktree_exists": true,
+      "worktree_exists": false,
       "branch": "feat/wo-WO-0040",
-      "worktree_head_sha": "9ba3e5539a21373df616e1ba8163e5f2449473d9",
+      "worktree_head_sha": null,
       "wo_yaml_path": "_ctx/jobs/done/WO-0040.yaml",
       "created_at": "",
       "closed_at": "2026-02-13T23:57:42.516740+00:00",
