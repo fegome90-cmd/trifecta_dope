@@ -1,11 +1,50 @@
 """Query normalization and tokenization for search."""
 
 import re
-from typing import List
+from typing import List, Tuple
+
+from src.domain.result import Ok, Err
+
+
+class QueryValidationError(Exception):
+    """Raised when query fails validation."""
+
+    pass
 
 
 class QueryNormalizer:
     """Normalize and tokenize search queries."""
+
+    @staticmethod
+    def validate(query: str) -> Tuple[bool, str]:
+        """Validate query before normalization.
+
+        B2 Intervention: Reject empty or whitespace-only queries early
+        to prevent unnecessary zero-hit searches.
+
+        Args:
+            query: Raw query string
+
+        Returns:
+            Tuple of (is_valid, error_message)
+            - is_valid: True if query passes validation
+            - error_message: Empty string if valid, description if invalid
+        """
+        if query is None:
+            return False, "Query cannot be None"
+
+        if not isinstance(query, str):
+            return False, "Query must be a string"
+
+        stripped = query.strip()
+
+        if not stripped:
+            return False, "Query cannot be empty or whitespace-only"
+
+        if len(stripped) < 2:
+            return False, "Query must be at least 2 characters"
+
+        return True, ""
 
     @staticmethod
     def normalize(query: str) -> str:

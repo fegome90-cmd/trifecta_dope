@@ -6,7 +6,7 @@ UV := uv run
 
 .PHONY: help install start \
 	test test-unit test-integration test-acceptance test-roadmap test-slow gate-all \
-	wo-lint wo-lint-json wo-fmt wo-fmt-check \
+	wo-lint wo-lint-json wo-fmt wo-fmt-check wo-new wo-preflight \
 	audit \
 	ctx-sync ctx-search ctx-get ctx-stats \
 	create
@@ -34,6 +34,8 @@ help:
 	@echo "  make wo-lint-json          Lint WO YAML and output JSON findings"
 	@echo "  make wo-fmt-check          Check canonical WO formatting"
 	@echo "  make wo-fmt                Apply canonical WO formatting"
+	@echo "  make wo-new ARGS='...'     Create new WO scaffold (see: scripts/ctx_wo_bootstrap.py --help)"
+	@echo "  make wo-preflight WO=WO-XXXX  Validate WO before take"
 	@echo ""
 	@echo "Context Operations (PCC):"
 	@echo "  make ctx-sync [SEGMENT=.]"
@@ -79,6 +81,12 @@ wo-fmt:
 
 wo-fmt-check:
 	$(UV) python scripts/ctx_wo_fmt.py --check
+
+wo-new:
+	$(UV) python scripts/ctx_wo_bootstrap.py $(ARGS)
+
+wo-preflight:
+	$(UV) python scripts/ctx_wo_preflight.py $(WO)
 
 gate-all: test-unit test-integration test-acceptance
 	@echo "✅ GATE PASSED: Unit + Integration + Acceptance (Fast)"

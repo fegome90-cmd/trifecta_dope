@@ -35,6 +35,55 @@ The WO system provides atomic, isolated development environments for each work o
 
 ### 1. Creation (Pending)
 
+#### Option A: Bootstrap Script (Recommended)
+
+Use the bootstrap script to create valid WO YAML with automatic validation:
+
+```bash
+# Create new WO scaffold
+make wo-new ARGS='--id WO-0047 --epic E-0001 --title "Feature description" --priority P1'
+
+# Or with full options
+uv run python scripts/ctx_wo_bootstrap.py \
+  --id WO-0047 \
+  --epic E-0001 \
+  --title "Feature description" \
+  --priority P1 \
+  --dod DOD-DEFAULT \
+  --scope-allow "src/**" "tests/**" \
+  --scope-deny ".env*" \
+  --verify-cmd "uv run pytest -q" \
+  --verify-cmd "ruff check src"
+
+# Dry-run to preview (no file created)
+make wo-new ARGS='--id WO-TEST --epic E-0001 --title "Test" --dry-run'
+```
+
+**What bootstrap does:**
+1. Validates epic_id exists in backlog.yaml
+2. Validates dod_id exists in _ctx/dod/*.yaml
+3. Checks WO ID doesn't already exist
+4. Generates YAML with canonical key order
+5. Runs lint validation (fail-closed)
+6. Verifies canonical format
+7. Only writes file if ALL validations pass
+
+#### Option B: Manual Creation
+
+Create WO YAML manually in `_ctx/jobs/pending/WO-XXXX.yaml`. Must pass `make wo-lint`.
+
+#### Preflight (Before Take)
+
+Validate a WO before taking it:
+
+```bash
+# Human-readable output
+make wo-preflight WO=WO-0047
+
+# JSON output for CI
+uv run python scripts/ctx_wo_preflight.py WO-0047 --json
+```
+
 ### WO ID Policy
 
 - Canonical pattern: `WO-[A-Za-z0-9.-]+`

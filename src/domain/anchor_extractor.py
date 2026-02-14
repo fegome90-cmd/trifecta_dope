@@ -26,6 +26,20 @@ def extract_anchors(query: str, anchors_cfg: dict, aliases_cfg: dict) -> dict:
     weak_found = []
     aliases_matched = []
 
+    # B3: Apply multilingual translation before anchor detection
+    # Translate Spanish terms to English equivalents
+    multilingual_cfg = anchors_cfg.get("multilingual", {})
+    if multilingual_cfg:
+        translated_tokens = []
+        for token in tokens:
+            translated = multilingual_cfg.get(token, token)
+            translated_tokens.append(translated)
+        tokens = translated_tokens
+        # Also translate the full query for substring matching
+        for spanish, english in multilingual_cfg.items():
+            if spanish in query_lower:
+                query_lower = query_lower.replace(spanish, english)
+
     # Load config parts safely
     strong_cfg = anchors_cfg.get("anchors", {}).get("strong", {})
     weak_cfg = anchors_cfg.get("anchors", {}).get("weak", {})
