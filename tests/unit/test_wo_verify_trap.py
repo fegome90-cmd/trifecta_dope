@@ -5,7 +5,6 @@ import signal
 import subprocess
 import time
 
-import pytest
 import yaml
 
 
