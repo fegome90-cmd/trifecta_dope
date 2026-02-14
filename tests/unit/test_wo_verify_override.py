@@ -25,11 +25,41 @@ def mock_repo(tmp_path):
     os.chmod(mock_sh, 0o755)
 
     # Initialize git repo for rev-parse and log
-    subprocess.run(["git", "init"], cwd=tmp_path, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=tmp_path)
-    subprocess.run(["git", "config", "user.name", "Test User"], cwd=tmp_path)
-    subprocess.run(["git", "add", "."], cwd=tmp_path)
-    subprocess.run(["git", "commit", "-m", "init"], cwd=tmp_path)
+    subprocess.run(
+        ["git", "init"],
+        cwd=tmp_path,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.com"],
+        cwd=tmp_path,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        ["git", "config", "user.name", "Test User"],
+        cwd=tmp_path,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        ["git", "add", "."],
+        cwd=tmp_path,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        ["git", "commit", "-m", "init"],
+        cwd=tmp_path,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
 
     return tmp_path
 

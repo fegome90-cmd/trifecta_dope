@@ -7,7 +7,7 @@
   "properties": {
     "wo_id": {
       "type": "string",
-      "pattern": "^WO-[0-9]+$",
+      "pattern": "^WO-[A-Za-z0-9.-]+$",
       "description": "Work order ID"
     },
     "epic_id": {
@@ -73,7 +73,7 @@
         },
         "wo": {
           "type": "string",
-          "pattern": "^WO-[0-9]+$",
+          "pattern": "^WO-[A-Za-z0-9.-]+$",
           "description": "WO ID authorizing the override"
         },
         "timestamp": {
@@ -88,11 +88,5 @@
         }
       }
     }
-  },
-  "if": {
-    "properties": { "status": { "enum": ["FAIL", "CRASH"] } }
-  },
-  "then": {
-    "required": ["failure_stage"]
   }
 }
