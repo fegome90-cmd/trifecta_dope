@@ -100,8 +100,8 @@ if [[ -n "$ALLOW_DIRTY" ]]; then
     echo "ERROR: --allow-dirty requires OVERRIDE_WO environment variable" >&2
     exit 2
   fi
-  if [[ ! "$OVERRIDE_WO" =~ ^WO-[0-9]+$ ]]; then
-    echo "ERROR: OVERRIDE_WO must match format WO-[0-9]+ (got ${OVERRIDE_WO:-none})" >&2
+  if [[ ! "$OVERRIDE_WO" =~ ^WO-[A-Za-z0-9.-]+$ ]]; then
+    echo "ERROR: OVERRIDE_WO must match format WO-[A-Za-z0-9.-]+ (got ${OVERRIDE_WO:-none})" >&2
     exit 2
   fi
   if [[ -z "${OVERRIDE_UNTIL:-}" ]]; then
@@ -113,9 +113,16 @@ if [[ -n "$ALLOW_DIRTY" ]]; then
     exit 2
   fi
   
-  # Validate expiry
+  # Validate that OVERRIDE_UNTIL is a real calendar date
+  if ! OVERRIDE_UNTIL_EPOCH=$(date -d "$OVERRIDE_UNTIL" +%s 2>/dev/null); then
+    echo "ERROR: OVERRIDE_UNTIL is not a valid calendar date (got $OVERRIDE_UNTIL)" >&2
+    exit 2
+  fi
+  
+  # Validate expiry using epoch comparison
   TODAY=$(date +"%Y-%m-%d")
-  if [[ "$OVERRIDE_UNTIL" < "$TODAY" ]]; then
+  TODAY_EPOCH=$(date -d "$TODAY" +%s)
+  if (( OVERRIDE_UNTIL_EPOCH < TODAY_EPOCH )); then
     echo "ERROR: OVERRIDE_UNTIL ($OVERRIDE_UNTIL) has expired (today: $TODAY)" >&2
     exit 2
   fi
@@ -142,9 +149,9 @@ write_verdict() {
   local failure_stage="${2:-}"
   local commands="${3:-}"
   if ! uv run python - "$status" "$failure_stage" "$commands" <<'PY' 2>&1
-import json, os, sys
+import json, os, sys, subprocess
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 import yaml
 
 status = sys.argv[1]
@@ -172,12 +179,27 @@ if started_at and finished_at:
     except:
         pass
 
+# Get git commit SHA safely
+root = os.environ.get("ROOT", ".")
+git_commit = ""
+try:
+    result = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=root,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    git_commit = result.stdout.strip()
+except Exception:
+    pass
+
 verdict = {
     "schema_version": "1.0.0",
     "wo_id": wo.get("id", os.environ.get("WO_ID", "UNKNOWN")),
     "epic_id": wo.get("epic_id"),
     "dod_id": wo.get("dod_id"),
-    "git_commit": os.popen(f"git -C '{os.environ.get('ROOT', '.')}' rev-parse HEAD").read().strip(),
+    "git_commit": git_commit,
     "status": status,
     "started_at": started_at,
     "finished_at": finished_at,
@@ -187,17 +209,18 @@ verdict = {
 if failure_stage:
     verdict["failure_stage"] = failure_stage
 
-# Record override accountability metadata if present
+# Record override accountability metadata only when --allow-dirty is active
+allow_dirty = os.environ.get("ALLOW_DIRTY")
 override_reason = os.environ.get("OVERRIDE_REASON")
 override_wo = os.environ.get("OVERRIDE_WO")
 override_until = os.environ.get("OVERRIDE_UNTIL")
-if override_reason and override_wo and override_until:
+if allow_dirty and override_reason and override_wo and override_until:
     verdict["override"] = {
         "dirty": True,
         "reason": override_reason,
         "wo": override_wo,
         "until": override_until,
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
 log_dir_env = os.environ.get("LOG_DIR")

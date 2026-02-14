@@ -2,6 +2,7 @@ from pathlib import Path
 import os
 import subprocess
 
+import pytest
 import yaml
 
 
@@ -888,6 +889,6 @@ def test_scope_with_whitespace_only_filename(tmp_path: Path):
         # Should pass (wildcard allows all)
         result = _run_scope_lint(root, "WO-TEST", allow_dirty=True)
         assert result.returncode == 0, f"Expected pass: {result.stdout}\n{result.stderr}"
-    except (OSError, subprocess.CalledProcessError):
+    except (OSError, subprocess.CalledProcessError) as e:
         # Some systems may not support this, skip if fails
-        pass
+        pytest.skip(f"Platform/filesystem does not support whitespace-only filenames: {e}")

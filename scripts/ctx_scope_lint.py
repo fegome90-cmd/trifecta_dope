@@ -102,11 +102,15 @@ def resolve_path_safe(path: str, root: Path) -> str | None:
     full_path = root / path
     try:
         resolved = full_path.resolve(strict=False)
+        # Deny broken symlinks / non-existent targets
+        if not resolved.exists():
+            return None
         # Check if still inside repo after resolution
         resolved.relative_to(root.resolve())
         return str(resolved.relative_to(root.resolve()))
-    except (ValueError, OSError):
-        return None  # Outside repo or broken symlink
+    except (ValueError, OSError, RuntimeError):
+        # Outside repo, symlink loop, or other resolution error
+        return None
 
 
 def is_denied(path: str, deny: list[str]) -> bool:
