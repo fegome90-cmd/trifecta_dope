@@ -130,6 +130,25 @@ class SearchUseCase:
         from src.infrastructure.config_loader import ConfigLoader
         from src.domain.query_linter import lint_query
 
+        # B2 Intervention: Validate query early to prevent zero-hit searches
+        is_valid, error_msg = QueryNormalizer.validate(query)
+        if not is_valid:
+            # Record telemetry for rejected query
+            if self.telemetry:
+                source = _detect_source()
+                build_sha = _get_build_sha()
+                self.telemetry.incr("ctx_search_rejected_invalid_query_count")
+                self.telemetry.event(
+                    "ctx.search.rejected",
+                    {"query_preview": str(query)[:50], "reason": error_msg},
+                    {"hits": 0, "rejected": True},
+                    1,
+                    source=source,
+                    build_sha=build_sha,
+                    rejection_reason=error_msg,
+                )
+            return f"❌ Query rejected: {error_msg}"
+
         # Load aliases
         alias_loader = AliasLoader(target_path)
         aliases = alias_loader.load()
