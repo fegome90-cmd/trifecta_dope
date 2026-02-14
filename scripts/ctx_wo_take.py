@@ -137,7 +137,29 @@ def validate_dependencies_using_domain(wo_data: dict, root: Path) -> tuple[bool,
 
 
 def validate_execution_contract(wo_data: dict) -> tuple[bool, str | None]:
-    """Validate mandatory Trifecta execution contract for WO."""
+    """Validate mandatory Trifecta execution contract for WO.
+
+    Contract API (tuple-based, NOT Result):
+        Returns: (ok: bool, error: str | None)
+        - (True, None) = validation passed
+        - (False, "error message") = validation failed with reason
+
+    Invariants:
+        - If ok=True, error MUST be None
+        - If ok=False, error MUST be non-empty string
+
+    Required fields in wo_data["execution"]:
+        - engine: must equal "trifecta"
+        - segment: must equal "."
+        - required_flow: list of strings containing mandatory steps:
+            * session.append:intent
+            * ctx.sync
+            * ctx.search
+            * ctx.get
+            * session.append:result
+
+    See: tests/unit/test_wo_trifecta_contract.py for contract tests
+    """
     execution = wo_data.get("execution")
     if not isinstance(execution, dict):
         return False, "execution contract is required"
@@ -151,7 +173,9 @@ def validate_execution_contract(wo_data: dict) -> tuple[bool, str | None]:
         return False, "segment must be '.'"
 
     required_flow = execution.get("required_flow")
-    if not isinstance(required_flow, list) or not all(isinstance(step, str) for step in required_flow):
+    if not isinstance(required_flow, list) or not all(
+        isinstance(step, str) for step in required_flow
+    ):
         return False, "required_flow must be a list of strings"
 
     mandatory_steps = [
@@ -229,6 +253,7 @@ def validate_wo_immediately(
         return False, findings
 
     return True, findings
+
 
 def update_worktree_index(root: Path) -> None:
     """Regenerate `_ctx/index/wo_worktrees.json` via export_wo_index.py."""
@@ -534,11 +559,23 @@ Examples:
         commands = f"ctx_wo_take.py {wo_id}"
         # Execute trifecta session append via subprocess
         subprocess.run(
-            ["uv", "run", "trifecta", "session", "append", "--segment", ".", "--summary", summary, "--commands", commands],
+            [
+                "uv",
+                "run",
+                "trifecta",
+                "session",
+                "append",
+                "--segment",
+                ".",
+                "--summary",
+                summary,
+                "--commands",
+                commands,
+            ],
             cwd=root,
             capture_output=True,
             text=True,
-            check=False
+            check=False,
         )
         logger.info(f"✓ Recorded take in Trifecta session log")
     except Exception as e:

@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "WO Verification Verdict",
+  "description": "Schema for WO verification verdicts written by wo_verify.sh",
+  "type": "object",
+  "required": ["wo_id", "status", "git_commit", "started_at", "finished_at", "commands", "schema_version"],
+  "properties": {
+    "wo_id": {
+      "type": "string",
+      "pattern": "^WO-[A-Za-z0-9.-]+$",
+      "description": "Work order ID"
+    },
+    "epic_id": {
+      "type": ["string", "null"],
+      "description": "Epic ID from WO YAML"
+    },
+    "dod_id": {
+      "type": ["string", "null"],
+      "description": "Definition of Done ID from WO YAML"
+    },
+    "git_commit": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{7,40}$",
+      "description": "Git commit SHA at time of verification"
+    },
+    "status": {
+      "enum": ["PASS", "FAIL", "CRASH"],
+      "description": "Verification result: PASS (all checks passed), FAIL (tests failed), CRASH (unexpected termination)"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when verification started"
+    },
+    "finished_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when verification finished"
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of verification commands executed"
+    },
+    "failure_stage": {
+      "type": "string",
+      "description": "Stage where failure occurred (scope_lint, verify_commands, unexpected_exit)"
+    },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Version of the verdict schema"
+    },
+    "duration_seconds": {
+      "type": "number",
+      "description": "Total verification duration in seconds"
+    },
+    "override": {
+      "type": "object",
+      "description": "Override metadata if --allow-dirty was used",
+      "required": ["dirty", "reason", "wo", "timestamp", "until"],
+      "properties": {
+        "dirty": {
+          "type": "boolean",
+          "description": "Whether --allow-dirty was used"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 10,
+          "description": "Reason for override (min 10 chars)"
+        },
+        "wo": {
+          "type": "string",
+          "pattern": "^WO-[A-Za-z0-9.-]+$",
+          "description": "WO ID authorizing the override"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the override was applied"
+        },
+        "until": {
+          "type": "string",
+          "format": "date",
+          "description": "TTL: Override is valid until this date (YYYY-MM-DD)"
+        }
+      }
+    }
+  }
+}

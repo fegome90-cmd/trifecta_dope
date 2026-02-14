@@ -17,6 +17,7 @@ Exit codes and messages:
      WILDCARD_REQUIRES_OVERRIDE: (A4)
      OVERRIDE_EXPIRED: (A4)
 """
+
 import argparse
 import fnmatch
 from datetime import date
@@ -40,40 +41,40 @@ def load_yaml(path: Path) -> dict:
 def get_staged_paths(root: Path) -> list[str]:
     """Get files that are staged for commit (git diff --cached)."""
     p = subprocess.run(
-        ["git", "diff", "--name-only", "--cached"],
+        ["git", "-c", "core.quotePath=false", "diff", "--name-only", "--cached", "--"],
         cwd=root,
         capture_output=True,
         text=True,
     )
     if p.returncode != 0:
         raise SystemExit(f"ERROR: git diff --cached failed: {p.stderr.strip()}")
-    return [line.strip() for line in p.stdout.splitlines() if line.strip()]
+    return [os.path.normpath(line.strip()) for line in p.stdout.splitlines() if line.strip()]
 
 
 def get_unstaged_paths(root: Path) -> list[str]:
     """Get files with unstaged modifications (git diff, not --cached)."""
     p = subprocess.run(
-        ["git", "diff", "--name-only"],
+        ["git", "-c", "core.quotePath=false", "diff", "--name-only", "--"],
         cwd=root,
         capture_output=True,
         text=True,
     )
     if p.returncode != 0:
         raise SystemExit(f"ERROR: git diff failed: {p.stderr.strip()}")
-    return [line.strip() for line in p.stdout.splitlines() if line.strip()]
+    return [os.path.normpath(line.strip()) for line in p.stdout.splitlines() if line.strip()]
 
 
 def get_untracked_paths(root: Path) -> list[str]:
     """Get untracked files (git ls-files --others)."""
     p = subprocess.run(
-        ["git", "ls-files", "--others", "--exclude-standard"],
+        ["git", "-c", "core.quotePath=false", "ls-files", "--others", "--exclude-standard", "--"],
         cwd=root,
         capture_output=True,
         text=True,
     )
     if p.returncode != 0:
         raise SystemExit(f"ERROR: git ls-files failed: {p.stderr.strip()}")
-    return [line.strip() for line in p.stdout.splitlines() if line.strip()]
+    return [os.path.normpath(line.strip()) for line in p.stdout.splitlines() if line.strip()]
 
 
 def get_dirty_paths(root: Path) -> list[str]:
@@ -89,11 +90,46 @@ def get_all_paths(root: Path) -> list[str]:
     return sorted(set(staged + unstaged + untracked))
 
 
+def resolve_path_safe(path: str, root: Path) -> str | None:
+    """
+    Resolve symlink if it points inside repo, else return None.
+
+    Policy:
+    - Symlinks pointing INSIDE repo: resolve to real path, check scope
+    - Symlinks pointing OUTSIDE repo: DENY (security risk)
+    - Symlink loops / broken symlinks: DENY (return None)
+    """
+    full_path = root / path
+    try:
+        resolved = full_path.resolve(strict=False)
+        # Deny broken symlinks / non-existent targets
+        if not resolved.exists():
+            return None
+        # Check if still inside repo after resolution
+        resolved.relative_to(root.resolve())
+        return str(resolved.relative_to(root.resolve()))
+    except (ValueError, OSError, RuntimeError):
+        # Outside repo, symlink loop, or other resolution error
+        return None
+
+
 def is_denied(path: str, deny: list[str]) -> bool:
     return any(fnmatch.fnmatch(path, pat) for pat in deny)
 
 
-def is_allowed(path: str, allow: list[str], deny: list[str]) -> bool:
+def is_allowed(path: str, allow: list[str], deny: list[str], root: Path | None = None) -> bool:
+    # Resolve symlinks if root is provided
+    if root is not None:
+        full_path = root / path
+        if full_path.is_symlink():
+            resolved = resolve_path_safe(path, root)
+            if resolved is None:
+                return False  # Symlink points outside repo
+            path = resolved
+
+    # Normalize the path
+    path = os.path.normpath(path)
+
     # Deny always wins (fail-closed)
     if is_denied(path, deny):
         return False
@@ -267,7 +303,7 @@ Examples:
     # Check scope violations
     violations: list[str] = []
     for path in paths_to_check:
-        if not is_allowed(path, allow, deny):
+        if not is_allowed(path, allow, deny, root=root):
             violations.append(path)
 
     if violations:

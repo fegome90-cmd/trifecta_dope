@@ -1,5 +1,6 @@
 from pathlib import Path
 import json
+import os
 import shutil
 import subprocess
 
@@ -75,6 +76,7 @@ def test_verify_run_executes_and_writes_verdict(tmp_path: Path):
         cwd=root,
         capture_output=True,
         text=True,
+        env={**os.environ, "OVERRIDE_REASON": "Test override", "OVERRIDE_WO": "WO-0000", "OVERRIDE_UNTIL": "2099-12-31"},
     )
 
     assert result.returncode == 0, result.stderr
@@ -106,11 +108,22 @@ def _run_verify(root: Path, wo_id: str = "WO-TEST", allow_dirty: bool = True) ->
     cmd = ["uv", "run", "bash", "scripts/ctx_verify_run.sh", wo_id, "--root", str(root)]
     if allow_dirty:
         cmd.append("--allow-dirty")
+
+    # Default override env vars for --allow-dirty (required by wo_verify.sh)
+    env = os.environ.copy()
+    if allow_dirty:
+        env.update({
+            "OVERRIDE_REASON": f"Test override for {wo_id}",
+            "OVERRIDE_WO": "WO-0000",
+            "OVERRIDE_UNTIL": "2099-12-31",
+        })
+
     return subprocess.run(
         cmd,
         cwd=root,
         capture_output=True,
         text=True,
+        env=env,
     )
 
 
@@ -260,6 +273,7 @@ def test_verify_run_is_wrapper_for_wo_verify(tmp_path: Path):
         cwd=root,
         capture_output=True,
         text=True,
+        env={**os.environ, "OVERRIDE_REASON": "Test override for wrapper", "OVERRIDE_WO": "WO-0000", "OVERRIDE_UNTIL": "2099-12-31"},
     )
 
     assert result.returncode == 0
@@ -306,7 +320,7 @@ def test_wo_verify_writes_verdict_on_scope_failure(tmp_path: Path):
     assert result.returncode == 1
     # Scope lint verdict should exist
     verdict_path = root / "_ctx" / "logs" / "WO-TEST" / "verdict.json"
-    assert verdict_path.exists(), f"verdict.json should exist on scope failure"
+    assert verdict_path.exists(), "verdict.json should exist on scope failure"
     verdict = json.loads(verdict_path.read_text())
     assert verdict["status"] == "FAIL"
     assert verdict.get("failure_stage") == "scope_lint"
@@ -348,7 +362,8 @@ def test_wo_verify_with_allow_dirty_passes(tmp_path: Path):
         cwd=root,
         capture_output=True,
         text=True,
+        env={**os.environ, "OVERRIDE_REASON": "Test override for allow-dirty", "OVERRIDE_WO": "WO-0000", "OVERRIDE_UNTIL": "2099-12-31"},
     )
 
-    assert result.returncode == 0, f"Should pass with --allow-dirty: {result.stderr}"
+    assert result.returncode == 0, "Should pass with --allow-dirty: " + result.stderr
     assert "DIRTY_WORKTREE_ALLOWED" in result.stderr
