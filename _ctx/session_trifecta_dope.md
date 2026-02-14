@@ -1204,3 +1204,35 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Commands**: ctx_wo_finish.py WO-0040 --result done
 - **Pack SHA**: `cefce60037cd749f`
 
+
+## 2026-02-14 19:00 UTC - Zero-Hit Analysis Report COMPLETE
+- **Summary**: Completed comprehensive zero-hit analysis (pre vs post intervention)
+- **Findings**:
+  - Telemetría: 25.09% zero-hit ratio (275/1096 searches)
+  - Testing Suite: 100% zero-hits (por diseño - queries problemáticas)
+  - B2 (Empty Query): ✅ Funciona - rechaza 3/52 queries
+  - B3 (Multilingual): ⚠️ Parcial - traduce anchors, NO índice
+- **Root Causes**:
+  1. Código no indexado (~30%): "ContextService" no está en context pack
+  2. Queries vacías (~40%): B2 lo resuelve
+  3. Términos genéricos (~25%): Ambiguos por diseño
+  4. Español (~5%): B3 ayuda parcialmente
+- **Report**: `/Users/felipe_gonzalez/Desktop/zero_hit_analysis_report.md`
+- **Tests**: 21/21 B2/B3 tests PASS
+- **Files Modified**: query_normalizer.py (B2), anchor_extractor.py (B3)
+- **Commits**: 7 commits (see git log)
+- **Pack SHA**: current HEAD
+- **Next**: Consider B4 (symbol indexing) or close WO
+
+## 2026-02-14 19:15 UTC - Zero-Hit Recovery Protocol Added to skill.md
+- **Summary**: Añadido protocolo explícito de recuperación de zero-hits
+- **Problem**: Nuevo LLM no tenía guía para recuperar de 0 hits
+- **Solution**: Añadido "Zero-Hit Recovery Protocol" (4 steps) a skill.md
+- **Content**:
+  - Step 1: Verificar idioma (pack en inglés)
+  - Step 2: Verificar scope (docs vs código)
+  - Step 3: Ampliar query (keyword → instrucción)
+  - Step 4: Escalar (max 3 intentos → fallback)
+  - Tabla ctx.search vs ast symbols
+- **Files Modified**: skill.md (153 → 185 lines)
+- **Next**: Commit changes

@@ -146,7 +146,40 @@ make gate-all            # Full test gate before commit
 | Skipping session.md logging | Lose continuity between agent runs | Always `trifecta session append` after significant work |
 | Executing legacy ingestion scripts | Data corruption, duplication | Use `trifecta ctx sync` (official command) |
 
+## Zero-Hit Recovery Protocol
+
+Si `ctx.search` retorna **0 hits**, sigue este protocolo:
+
+### Step 1: Verificar idioma
+- El context pack está en **inglés**
+- Query en español → traduce a inglés y reintenta
+- Ejemplo: "servicio" → "service"
+
+### Step 2: Verificar scope
+- `ctx.search` busca en **documentación** (docs/, README, skill.md)
+- Para buscar **código fuente** → usa `trifecta ast symbols "sym://python/mod/..."`
+- `ctx.search` NO indexa `src/` por diseño
+
+### Step 3: Ampliar query
+| Mal (keyword) | Bien (instrucción) |
+|---------------|---------------------|
+| `"telemetry"` | `"Find telemetry event schema documentation"` |
+| `"config"` | `"How to configure segment initialization"` |
+| `"error"` | `"Error handling patterns in context pack"` |
+
+### Step 4: Escalar (max 3 intentos)
+```
+Intento 1 → 0 hits → Refinar query (Step 1-3)
+Intento 2 → 0 hits → Cambiar scope (docs → code via ast symbols)
+Intento 3 → 0 hits → Usar fallback: `trifecta load --mode fullfiles --task "..."`
+```
+
+### Diferencia ctx.search vs ast symbols
+| Herramienta | Busca en | Usa para |
+|-------------|----------|----------|
+| `ctx.search` | docs/, README, skill.md, _ctx/ | Documentación, guías |
+| `ast symbols` | src/ (código Python) | Clases, funciones, módulos |
 
 ---
 
-**Profile**: `impl_patch` | **Updated**: 2026-01-05 | **Verified Against**: CLI v2.0, Makefile, session.md 2026-01-05, AST Cache System v1
+**Profile**: `impl_patch` | **Updated**: 2026-02-14 | **Verified Against**: CLI v2.0, Makefile, session.md 2026-02-14, Zero-Hit Analysis Report
