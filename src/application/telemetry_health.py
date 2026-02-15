@@ -171,8 +171,8 @@ class TelemetryHealth:
             query_preview = event.get("args", {}).get("query_preview", "") or event.get(
                 "x", {}
             ).get("query_preview", "")
-            hits = event.get("result", {}).get("hits", 0)
-            if hits > 0:
+            recovered = event.get("result", {}).get("recovered", False)
+            if recovered:
                 total_recovered += 1
             if query_preview:
                 lower_q = query_preview.lower()
