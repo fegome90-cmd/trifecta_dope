@@ -55,7 +55,7 @@ def validate_segment_structure(path: Path) -> ValidationResult:
         - _ctx/prime_<segment_id>.md
         - _ctx/session_<segment_id>.md
 
-    Where segment_id = normalize_segment_id(path.name)
+    Where segment_id = resolve_segment_ref(path).slug
 
     Legacy files (agent.md, prime.md, session.md) are ERRORS, not warnings.
     Ambiguity (0 or >1 matches) is an ERROR.
@@ -72,7 +72,7 @@ def validate_segment_structure(path: Path) -> ValidationResult:
         - Deterministic (same input → same output)
         - Thread-safe
     """
-    from src.domain.naming import normalize_segment_id
+    from src.domain.segment_resolver import get_segment_slug
 
     errors: List[str] = []
 
@@ -92,7 +92,7 @@ def validate_segment_structure(path: Path) -> ValidationResult:
         return ValidationResult(False, errors)
 
     # Check 4: Normalize segment ID
-    segment_id = normalize_segment_id(path.name)
+    segment_id = get_segment_slug(path)
 
     # Check 5: Exact 3+1 contract with normalized ID
     expected_files = [

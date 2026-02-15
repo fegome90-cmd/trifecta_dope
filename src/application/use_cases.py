@@ -288,7 +288,7 @@ class BuildContextPackUseCase:
         if self.telemetry:
             self.telemetry.incr("ctx_build_count")
         """Scan a Trifecta segment and build a context_pack.json."""
-        from src.domain.naming import normalize_segment_id
+        from src.domain.segment_resolver import get_segment_slug
         from src.domain.result import Err, Ok
 
         # 1. Derive segment_id deterministically
@@ -300,7 +300,7 @@ class BuildContextPackUseCase:
                 segment_id = config.segment_id
             else:
                 # Fallback: Directory Name
-                segment_id = normalize_segment_id(target_path.name)
+                segment_id = get_segment_slug(target_path)
         except ValueError:
             # Deterministic Fail-Closed
             return Err(["Failed Constitution: trifecta_config.json is invalid"])

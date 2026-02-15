@@ -9,8 +9,11 @@ from src.domain.segment_resolver import (
 
 class TestSegmentRef:
     def test_resolve_current_directory(self):
+        import os
+
         ref = resolve_segment_ref(".")
-        assert ref.slug == "wo-0044"
+        current_dir = os.path.basename(os.getcwd()).lower()
+        assert ref.slug == current_dir
         assert len(ref.fingerprint) == 8
         assert ref.id == f"{ref.slug}_{ref.fingerprint}"
         assert ref.root_abs.is_absolute()
