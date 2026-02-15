@@ -233,7 +233,6 @@ class SearchUseCase:
         build_sha = _get_build_sha()
 
         # Two-pass search: if zero-hit and Spanish detected, try aliases
-        spanish_alias_applied = False
         spanish_alias_variants = []
         pass1_hits = len(final_hits)  # Track pass1 (before alias attempt)
         if len(final_hits) == 0 and source != "fixture":
@@ -248,13 +247,13 @@ class SearchUseCase:
                         break
 
         pass2_hits = 0
+        pass2_attempted = len(spanish_alias_variants) > 1
         if combined_results and not final_hits:
             sorted_hits = sorted(combined_results.values(), key=lambda x: x[1], reverse=True)[
                 :limit
             ]
             final_hits = [hit for hit, _ in sorted_hits]
             pass2_hits = len(final_hits)
-            spanish_alias_applied = len(spanish_alias_variants) > 1 and pass2_hits > 0
 
         search_mode = (
             "with_expansion"
@@ -278,8 +277,7 @@ class SearchUseCase:
             self.telemetry.incr("ctx_search_hits_total", len(final_hits))
             self.telemetry.incr(f"ctx_search_by_source_{source}_count")
 
-            # Spanish alias telemetry - only emit when alias recovered hits
-            if spanish_alias_applied:
+            if pass2_attempted:
                 self.telemetry.incr("ctx_search_spanish_alias_count")
                 self.telemetry.event(
                     "ctx.search.spanish_alias",
