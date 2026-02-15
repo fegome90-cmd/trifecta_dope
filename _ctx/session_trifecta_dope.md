@@ -1273,7 +1273,15 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Pack SHA**: `2c191b1a7296e65a`
 
 ## 2026-02-15 21:50 UTC
-- **Summary**: Taken Work Order WO-0053
+- **Summary**: Taken Work Order WO-0053 (Path Guardrails - Python)
 - **Commands**: ctx_wo_take.py WO-0053
-- **Pack SHA**: `2c191b1a7296e65a`
+- **Pack SHA**: `37ee47c`
+
+## 2026-02-15 22:45 UTC
+- **Summary**: CI integration + smoke test complete, WO-0053 created
+- **CI Integration**: Added telemetry-health job to ci.yml (exit 3=block, exit 2=warn)
+- **Smoke Test**: ZeroHitTracker verified - events.jsonl has zero_hit events, zero_hits.ndjson deduplicates, telemetry health shows top queries
+- **Backlog Hygiene**: Moved WO-0042/0044 from pending to done (were already completed)
+- **WO-0053 Scope**: Python path validation (traversal prevention, canonicalization, scope validation)
+- **Pack SHA**: `37ee47c`
 
