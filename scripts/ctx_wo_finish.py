@@ -78,25 +78,28 @@ def path_matches_patterns(path: str, patterns: list[str]) -> bool:
 
 def filter_paths_by_policy(
     paths: list[str], policy: dict[str, list[str]]
-) -> tuple[list[str], list[str]]:
+) -> tuple[list[str], list[str], list[str]]:
     """Filter paths using policy.
 
     Returns:
-        (ignored_paths, blocked_paths)
+        (ignored_paths, blocked_paths, unknown_paths)
     """
     ignore = policy.get("ignore", [])
     allowlist = policy.get("allowlist_contract", [])
 
     ignored = []
     blocked = []
+    unknown = []
 
     for path in paths:
         if path_matches_patterns(path, ignore):
             ignored.append(path)
         elif path_matches_patterns(path, allowlist):
             blocked.append(path)
+        else:
+            unknown.append(path)
 
-    return ignored, blocked
+    return ignored, blocked, unknown
 
 
 def load_finish_policy(root: Path) -> dict[str, list[str]]:
@@ -445,9 +448,25 @@ def generate_artifacts(
 
         # Generate diff.patch with policy filtering
         try:
+            BASE_BRANCH = "origin/main"
+
+            # Fetch origin to ensure we have latest main
+            try:
+                subprocess.run(
+                    ["git", "fetch", "origin"],
+                    capture_output=True,
+                    check=False,
+                    timeout=30,
+                    cwd=root,
+                )
+            except subprocess.TimeoutExpired:
+                return Err("Git fetch timed out")
+            except OSError as e:
+                return Err(f"Git fetch failed: {e}")
+
             # First, get the list of changed files
             result = subprocess.run(
-                ["git", "diff", "--name-only", "main"],
+                ["git", "diff", "--name-only", "--merge-base", BASE_BRANCH, "HEAD"],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -456,11 +475,28 @@ def generate_artifacts(
             )
             changed_files = [f for f in result.stdout.splitlines() if f.strip()]
 
-            # Load policy and filter paths
-            policy = load_finish_policy(root)
-            ignored, blocked = filter_paths_by_policy(changed_files, policy)
+            # Separate _ctx/ paths from other paths
+            # Policy only applies to _ctx/ paths - other paths are always allowed
+            ctx_paths = [f for f in changed_files if f.startswith("_ctx/")]
+            other_paths = [f for f in changed_files if not f.startswith("_ctx/")]
 
-            # If there are blocked paths (contract/state-machine changes), fail
+            # Apply policy filtering ONLY to _ctx/ paths
+            policy = load_finish_policy(root)
+            ignored, blocked, unknown = filter_paths_by_policy(ctx_paths, policy)
+
+            # If there are unknown _ctx paths, fail closed
+            if unknown:
+                unknown_list = "\n  - ".join(unknown)
+                policy_path_str = str(root / "_ctx" / "policy" / "ctx_finish_ignore.yaml")
+                return Err(
+                    f"UNKNOWN_PATHS: WO has changes to unclassified _ctx paths:\n  - {unknown_list}\n"
+                    f"These paths are not in ignore nor allowlist_contract.\n"
+                    f"Classify them in: {policy_path_str}\n"
+                    f"Ignore: {policy.get('ignore', [])}\n"
+                    f"Allowlist: {policy.get('allowlist_contract', [])}"
+                )
+
+            # If there are blocked _ctx paths (contract/state-machine changes), fail
             if blocked:
                 blocked_list = "\n  - ".join(blocked)
                 return Err(
@@ -468,30 +504,14 @@ def generate_artifacts(
                     f"These paths cannot be modified as part of this WO: {policy.get('allowlist_contract', [])}"
                 )
 
+            # Calculate allowed files: non-ctx paths (always allowed) + allowed ctx paths
+            ignored_set = set(ignored)
+            allowed_files = other_paths + [f for f in ctx_paths if f not in ignored_set]
+
             # Generate diff for allowed paths only
-            if ignored:
-                # Only diff the non-ignored files
-                allowed_files = [f for f in changed_files if f not in ignored]
-                if allowed_files:
-                    result = subprocess.run(
-                        ["git", "diff", "main", "--"] + allowed_files,
-                        capture_output=True,
-                        text=True,
-                        check=False,
-                        timeout=30,
-                        cwd=root,
-                    )
-                    diff_content = result.stdout
-                else:
-                    diff_content = (
-                        "No relevant changes from main (only ignored paths: "
-                        + ", ".join(ignored)
-                        + ")"
-                    )
-            else:
-                # No ignored paths, use full diff
+            if allowed_files:
                 result = subprocess.run(
-                    ["git", "diff", "main"],
+                    ["git", "diff", "--merge-base", BASE_BRANCH, "HEAD", "--"] + allowed_files,
                     capture_output=True,
                     text=True,
                     check=False,
@@ -499,6 +519,8 @@ def generate_artifacts(
                     cwd=root,
                 )
                 diff_content = result.stdout
+            else:
+                diff_content = "No changes from merge-base"
 
             (temp_dir / "diff.patch").write_text(diff_content or "No changes from main")
         except subprocess.TimeoutExpired:

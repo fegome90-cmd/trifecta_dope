@@ -56,11 +56,11 @@ class TestFilterPathsByPolicy:
             "_ctx/telemetry/events.jsonl",
             "tests/test_main.py",
         ]
-        ignored, blocked = filter_paths_by_policy(paths, policy)
+        ignored, blocked, unknown = filter_paths_by_policy(paths, policy)
         assert ignored == ["_ctx/session_trifecta.md", "_ctx/telemetry/events.jsonl"]
         assert blocked == []
+        assert unknown == ["src/main.py", "tests/test_main.py"]
         assert "src/main.py" not in ignored
-        assert "tests/test_main.py" not in ignored
 
     def test_allowlist_contract_only(self):
         from scripts.ctx_wo_finish import filter_paths_by_policy
@@ -71,9 +71,10 @@ class TestFilterPathsByPolicy:
             "_ctx/jobs/pending/WO-001.yaml",
             "_ctx/backlog/feature.md",
         ]
-        ignored, blocked = filter_paths_by_policy(paths, policy)
+        ignored, blocked, unknown = filter_paths_by_policy(paths, policy)
         assert ignored == []
         assert blocked == ["_ctx/jobs/pending/WO-001.yaml", "_ctx/backlog/feature.md"]
+        assert unknown == ["src/main.py"]
 
     def test_both_ignore_and_allowlist(self):
         from scripts.ctx_wo_finish import filter_paths_by_policy
@@ -87,9 +88,10 @@ class TestFilterPathsByPolicy:
             "_ctx/session_trifecta.md",
             "_ctx/jobs/pending/WO-001.yaml",
         ]
-        ignored, blocked = filter_paths_by_policy(paths, policy)
+        ignored, blocked, unknown = filter_paths_by_policy(paths, policy)
         assert ignored == ["_ctx/session_trifecta.md"]
         assert blocked == ["_ctx/jobs/pending/WO-001.yaml"]
+        assert unknown == ["src/main.py"]
 
     def test_priority_ignore_before_allowlist(self):
         from scripts.ctx_wo_finish import filter_paths_by_policy
@@ -99,27 +101,71 @@ class TestFilterPathsByPolicy:
             "allowlist_contract": ["_ctx/jobs/pending/**"],
         }
         paths = ["_ctx/jobs/pending/WO-001.yaml"]
-        ignored, blocked = filter_paths_by_policy(paths, policy)
+        ignored, blocked, unknown = filter_paths_by_policy(paths, policy)
         assert ignored == ["_ctx/jobs/pending/WO-001.yaml"]
         assert blocked == []
+        assert unknown == []
 
     def test_empty_policy(self):
         from scripts.ctx_wo_finish import filter_paths_by_policy
 
         policy = {"ignore": [], "allowlist_contract": []}
         paths = ["src/main.py", "_ctx/anything.yaml"]
-        ignored, blocked = filter_paths_by_policy(paths, policy)
+        ignored, blocked, unknown = filter_paths_by_policy(paths, policy)
         assert ignored == []
         assert blocked == []
+        assert unknown == ["src/main.py", "_ctx/anything.yaml"]
 
     def test_missing_keys(self):
         from scripts.ctx_wo_finish import filter_paths_by_policy
 
         policy = {}
         paths = ["src/main.py", "_ctx/anything.yaml"]
-        ignored, blocked = filter_paths_by_policy(paths, policy)
+        ignored, blocked, unknown = filter_paths_by_policy(paths, policy)
         assert ignored == []
         assert blocked == []
+        assert unknown == ["src/main.py", "_ctx/anything.yaml"]
+
+    def test_unknown_path_blocks(self):
+        from scripts.ctx_wo_finish import filter_paths_by_policy
+
+        policy = {"ignore": ["_ctx/session_*.md"], "allowlist_contract": ["_ctx/jobs/pending/**"]}
+        paths = ["_ctx/new_file.yaml"]
+        ignored, blocked, unknown = filter_paths_by_policy(paths, policy)
+        assert ignored == []
+        assert blocked == []
+        assert unknown == ["_ctx/new_file.yaml"]
+
+    def test_unknown_with_ignored_and_blocked(self):
+        from scripts.ctx_wo_finish import filter_paths_by_policy
+
+        policy = {
+            "ignore": ["_ctx/session_*.md"],
+            "allowlist_contract": ["_ctx/jobs/pending/**"],
+        }
+        paths = [
+            "_ctx/session_trifecta.md",  # ignored
+            "_ctx/jobs/pending/WO-001.yaml",  # blocked
+            "_ctx/new_file.yaml",  # unknown - should be caught!
+        ]
+        ignored, blocked, unknown = filter_paths_by_policy(paths, policy)
+        assert ignored == ["_ctx/session_trifecta.md"]
+        assert blocked == ["_ctx/jobs/pending/WO-001.yaml"]
+        assert unknown == ["_ctx/new_file.yaml"]
+
+    def test_non_ctx_paths_always_allowed(self):
+        from scripts.ctx_wo_finish import filter_paths_by_policy
+
+        policy = {"ignore": [], "allowlist_contract": []}
+        paths = [
+            "src/main.py",  # non-ctx - should be unknown
+            "tests/test.py",  # non-ctx - should be unknown
+            "_ctx/config.yaml",  # ctx but not in policy - should be unknown
+        ]
+        ignored, blocked, unknown = filter_paths_by_policy(paths, policy)
+        assert ignored == []
+        assert blocked == []
+        assert unknown == paths  # All are unknown
 
 
 class TestLoadFinishPolicy:
