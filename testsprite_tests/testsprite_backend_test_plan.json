@@ -1,0 +1,52 @@
+[
+  {
+    "id": "TC001",
+    "title": "test_context_pack_build_success",
+    "description": "Verify that running 'trifecta ctx build' on a valid segment creates the context_pack.json file successfully."
+  },
+  {
+    "id": "TC002",
+    "title": "test_context_pack_build_failure_missing_ctx_structure",
+    "description": "Verify that running 'trifecta ctx build' on a segment missing the _ctx/ directory structure returns an error with appropriate details."
+  },
+  {
+    "id": "TC003",
+    "title": "test_context_pack_validate_success",
+    "description": "Verify that running 'trifecta ctx validate' on a valid context pack returns a validation passed message."
+  },
+  {
+    "id": "TC004",
+    "title": "test_context_pack_validate_failure",
+    "description": "Verify that running 'trifecta ctx validate' on an invalid or corrupted context pack returns validation failed with error details."
+  },
+  {
+    "id": "TC005",
+    "title": "test_context_pack_sync_success",
+    "description": "Verify that running 'trifecta ctx sync' on a valid segment completes successfully with a sync complete message."
+  },
+  {
+    "id": "TC006",
+    "title": "test_context_pack_sync_failure",
+    "description": "Verify that running 'trifecta ctx sync' on a segment with issues returns a sync failed message."
+  },
+  {
+    "id": "TC007",
+    "title": "test_context_search_with_results",
+    "description": "Verify that running 'trifecta ctx search' with a valid query returns search results containing chunk IDs."
+  },
+  {
+    "id": "TC008",
+    "title": "test_context_search_no_results",
+    "description": "Verify that running 'trifecta ctx search' with an ambiguous or invalid query returns zero results and suggests query refinement on stderr."
+  },
+  {
+    "id": "TC009",
+    "title": "test_context_get_chunk_content_success",
+    "description": "Verify that running 'trifecta ctx get' with valid chunk IDs and mode returns the chunk content in the requested mode (excerpt or full)."
+  },
+  {
+    "id": "TC010",
+    "title": "test_context_get_chunk_content_not_found",
+    "description": "Verify that running 'trifecta ctx get' with non-existent chunk IDs returns an error indicating chunk not found."
+  }
+]

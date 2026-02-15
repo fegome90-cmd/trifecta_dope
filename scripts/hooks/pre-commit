@@ -14,7 +14,7 @@ fi
 CHANGED_FILES=$(git diff --cached --name-only 2>/dev/null || true)
 
 # Determine if we should run
-DOC_FILES_PATTERN="CLAUDE.md|agents.md|skill.md|llms.txt|docs/|skills/documentation/"
+DOC_FILES_PATTERN="CLAUDE.md|agents.md|skill.md|llms.txt|docs/|skills/documentation/|\.documentation-skill"
 if ! echo "$CHANGED_FILES" | grep -qE "$DOC_FILES_PATTERN"; then
     echo "ℹ️  No documentation changes detected, skipping doc validation"
     exit 0

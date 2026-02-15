@@ -1,0 +1,127 @@
+version: "2"
+type: backend
+tech_stack:
+  - Python 3.12
+  - Typer CLI framework
+  - Pydantic for data validation
+  - tree-sitter for AST parsing
+  - JSON/YAML for configuration
+
+features:
+  - name: Context Pack Management
+    description: Build, validate, and manage context packs for code segments
+    files:
+      - src/infrastructure/cli.py
+      - src/application/use_cases.py
+      - src/domain/models.py
+    endpoints:
+      - method: CLI
+        path: trifecta ctx build
+        description: Build context pack for segment
+        auth_required: false
+        response_schema:
+          "0": context_pack.json created
+          "1": Error with details
+      - method: CLI
+        path: trifecta ctx validate
+        description: Validate context pack health
+        auth_required: false
+        response_schema:
+          "0": Validation passed
+          "1": Validation failed with errors
+      - method: CLI
+        path: trifecta ctx sync
+        description: Build + Validate macro
+        auth_required: false
+        response_schema:
+          "0": Sync complete
+          "1": Sync failed
+    depends_on:
+      - File System Access
+      - Segment Configuration
+
+  - name: Context Search & Retrieval
+    description: Search and retrieve code chunks from context packs
+    files:
+      - src/application/search_get_usecases.py
+      - src/application/query_normalizer.py
+      - src/application/query_linter.py
+    endpoints:
+      - method: CLI
+        path: trifecta ctx search
+        description: Search for relevant chunks
+        auth_required: false
+        response_schema:
+          "0": Search results with chunk IDs
+      - method: CLI
+        path: trifecta ctx get
+        description: Retrieve full chunk content
+        auth_required: false
+        response_schema:
+          "0": Chunk content in requested mode
+    depends_on:
+      - Context Pack Management
+      - Query Processing Pipeline
+
+  - name: AST Parsing & Symbol Analysis
+    description: Parse source code and extract symbols using tree-sitter
+    files:
+      - src/infrastructure/cli_ast.py
+      - src/application/ast_parser.py
+      - src/domain/ast_models.py
+    endpoints:
+      - method: CLI
+        path: trifecta ast symbols
+        description: Extract symbols from source files
+        auth_required: false
+        response_schema:
+          "0": Symbol list with metadata
+    depends_on:
+      - tree-sitter Python bindings
+
+  - name: Telemetry & Metrics
+    description: Track usage metrics and generate reports
+    files:
+      - src/infrastructure/telemetry.py
+      - src/application/telemetry_reports.py
+      - src/application/telemetry_charts.py
+    endpoints:
+      - method: CLI
+        path: trifecta telemetry report
+        description: Generate telemetry report
+        auth_required: false
+        response_schema:
+          "0": Report in requested format
+      - method: CLI
+        path: trifecta ctx stats
+        description: Show telemetry statistics
+        auth_required: false
+        response_schema:
+          "0": Stats summary
+    depends_on:
+      - Context Pack Management
+
+  - name: Segment Creation
+    description: Scaffold new Trifecta segments with templates
+    files:
+      - src/infrastructure/cli.py
+      - src/infrastructure/templates.py
+      - src/domain/models.py
+    endpoints:
+      - method: CLI
+        path: trifecta create
+        description: Create new segment scaffold
+        auth_required: false
+        response_schema:
+          "0": Segment files created
+          "1": Creation failed
+    depends_on:
+      - Template Rendering
+
+known_limitations:
+  - issue: CLI tool, not web API - TestSprite web testing not applicable
+    location: Project architecture
+    impact: Cannot use TestSprite HTTP endpoint testing
+  - issue: Requires segment initialization before most commands work
+    location: src/infrastructure/cli.py
+    impact: Commands fail without proper _ctx/ directory structure

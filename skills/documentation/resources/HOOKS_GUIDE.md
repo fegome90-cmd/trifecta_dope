@@ -25,6 +25,24 @@ This sets `git config core.hooksPath scripts/hooks`.
 
 ---
 
+## Enabling
+
+The validation is **opt-in**. Enable it by creating a sentinel file:
+
+```bash
+# Option 1: Create sentinel file (canonical)
+touch .documentation-skill.enabled
+
+# Option 2: Set environment variable
+export DOCS_SKILL_ENABLED=1
+```
+
+Without the sentinel, the validation skips silently (exit 0).
+
+**Note:** `.documentation-skill` is deprecated but still works (emits warning).
+
+---
+
 ## Philosophy
 
 ### Local/Offline Checks (in pre-commit)
