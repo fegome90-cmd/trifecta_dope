@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Literal, Optional
 
 from src.application.context_service import ContextService, GetResult
+from src.application.zero_hit_tracker import create_zero_hit_tracker
 from src.infrastructure.file_system import FileSystemAdapter
 from src.domain.query_linter import LinterPlan
 
@@ -255,6 +256,23 @@ class SearchUseCase:
                 self.telemetry.incr("ctx_search_zero_hits_count")
                 if zero_hit_reason:
                     self.telemetry.incr(f"ctx_search_zero_hit_reason_{zero_hit_reason}_count")
+
+                # ZeroHitTracker: record structured zero-hit event
+                if self.telemetry and hasattr(self.telemetry, "_ctx_dir"):
+                    try:
+                        tracker = create_zero_hit_tracker(self.telemetry._ctx_dir)
+                        tracker.record_zero_hit(
+                            query=query,
+                            segment_fingerprint=self.telemetry.segment_id,
+                            segment_slug=self.telemetry.segment_label,
+                            source=source,
+                            build_sha=build_sha,
+                            mode=search_mode,
+                            zero_hit_reason=zero_hit_reason,
+                            limit=limit,
+                        )
+                    except Exception:
+                        pass  # Non-blocking: tracker should not break search
 
             # Linter metrics
             if lint_plan["changed"]:
