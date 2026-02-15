@@ -1,0 +1,12 @@
+{
+  "wo_id": "WO-0014",
+  "status": "done",
+  "tests_passed": true,
+  "test_count": 10,
+  "files_created": [
+    "src/domain/discovery_models.py",
+    "src/application/import_extractor.py",
+    "tests/unit/test_import_extractor.py"
+  ],
+  "commit": "95cc9a2"
+}
