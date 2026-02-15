@@ -1,0 +1,33 @@
+# Policy for ctx_wo_finish.py diff filtering
+# This file defines which _ctx/ paths should be ignored vs blocked during finish validation
+
+# Paths to ignore during finish (generated/session state)
+ignore:
+  # Session logs
+  - "_ctx/session_*.md"
+  # Telemetry
+  - "_ctx/telemetry/**"
+  # Generated artifacts (regenerable)
+  - "_ctx/context_pack.json"
+  - "_ctx/index/wo_worktrees.json"
+  # Handoff artifacts (created by finish)
+  - "_ctx/handoff/**"
+  # Runtime state
+  - "_ctx/jobs/running/**"
+  - "_ctx/logs/**"
+  # Generated files
+  - "_ctx/generated/**"
+  - "_ctx/metrics/**"
+
+# Paths that are contract/state-machine - changes here should block finish
+allowlist_contract:
+  # WO state machine
+  - "_ctx/jobs/pending/**"
+  - "_ctx/jobs/done/**"
+  - "_ctx/jobs/failed/**"
+  # Backlog (source of truth)
+  - "_ctx/backlog/**"
+  # Schemas
+  - "_ctx/schemas/**"
+  # DOD definitions
+  - "_ctx/dod/**"

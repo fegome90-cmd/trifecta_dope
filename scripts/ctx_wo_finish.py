@@ -8,19 +8,20 @@ Enhanced version that:
 3. Executes finish as transaction with rollback on failure
 4. Provides CLI flags for generate-only, clean, and skip-dod modes
 """
+
 import argparse
-import logging
 import json
+import logging
+import re
 import shutil
 import subprocess
 import sys
+import yaml
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal
 
 logger = logging.getLogger(__name__)
-
-import yaml
 
 from src.domain.result import Result, Ok, Err
 from src.cli.error_cards import render_error_card
@@ -34,8 +35,83 @@ REQUIRED_ARTIFACTS = ["tests.log", "lint.log", "diff.patch", "handoff.md", "verd
 
 
 # =============================================================================
+# Policy-based Path Filtering (WO-0046)
+# =============================================================================
+
+
+def _glob_to_regex(pattern: str) -> str:
+    """Convert glob pattern to regex for path matching."""
+    i = 0
+    result = ""
+    while i < len(pattern):
+        if pattern[i] == "*":
+            if i + 1 < len(pattern) and pattern[i + 1] == "*":
+                if i + 2 < len(pattern) and pattern[i + 2] == "/":
+                    result += "(.+/)?"
+                    i += 3
+                else:
+                    result += ".*"
+                    i += 2
+            else:
+                result += "[^/]*"
+                i += 1
+        elif pattern[i] == "?":
+            result += "[^/]"
+            i += 1
+        elif pattern[i] == ".":
+            result += r"\."
+            i += 1
+        else:
+            result += pattern[i]
+            i += 1
+    return f"^{result}$"
+
+
+def path_matches_patterns(path: str, patterns: list[str]) -> bool:
+    """Check if path matches any of the glob patterns."""
+    for pattern in patterns:
+        regex = _glob_to_regex(pattern)
+        if re.match(regex, path):
+            return True
+    return False
+
+
+def filter_paths_by_policy(
+    paths: list[str], policy: dict[str, list[str]]
+) -> tuple[list[str], list[str]]:
+    """Filter paths using policy.
+
+    Returns:
+        (ignored_paths, blocked_paths)
+    """
+    ignore = policy.get("ignore", [])
+    allowlist = policy.get("allowlist_contract", [])
+
+    ignored = []
+    blocked = []
+
+    for path in paths:
+        if path_matches_patterns(path, ignore):
+            ignored.append(path)
+        elif path_matches_patterns(path, allowlist):
+            blocked.append(path)
+
+    return ignored, blocked
+
+
+def load_finish_policy(root: Path) -> dict[str, list[str]]:
+    """Load ctx_finish_ignore.yaml policy if exists."""
+    policy_path = root / "_ctx" / "policy" / "ctx_finish_ignore.yaml"
+    if not policy_path.exists():
+        return {"ignore": [], "allowlist_contract": []}
+    data = load_yaml(policy_path)
+    return data if data else {"ignore": [], "allowlist_contract": []}
+
+
+# =============================================================================
 # Existing Utilities
 # =============================================================================
+
 
 def load_yaml(path: Path) -> dict[str, object] | None:
     """Load YAML file, returning None for empty files."""
@@ -291,6 +367,7 @@ def inspect_nonrunning_state(wo_id: str, root: Path) -> str | None:
 # Artifact Generation
 # =============================================================================
 
+
 def generate_artifacts(
     wo_id: str,
     root: Path,
@@ -366,17 +443,64 @@ def generate_artifacts(
         except OSError as e:
             return Err(f"Failed to write lint.log: {e}")
 
-        # Generate diff.patch
+        # Generate diff.patch with policy filtering
         try:
+            # First, get the list of changed files
             result = subprocess.run(
-                ["git", "diff", "main"],
+                ["git", "diff", "--name-only", "main"],
                 capture_output=True,
                 text=True,
-                check=False,  # Don't fail on empty diff
+                check=False,
                 timeout=30,
                 cwd=root,
             )
-            (temp_dir / "diff.patch").write_text(result.stdout or "No changes from main")
+            changed_files = [f for f in result.stdout.splitlines() if f.strip()]
+
+            # Load policy and filter paths
+            policy = load_finish_policy(root)
+            ignored, blocked = filter_paths_by_policy(changed_files, policy)
+
+            # If there are blocked paths (contract/state-machine changes), fail
+            if blocked:
+                blocked_list = "\n  - ".join(blocked)
+                return Err(
+                    f"BLOCKED_PATHS: WO has changes to contract/state-machine paths:\n  - {blocked_list}\n"
+                    f"These paths cannot be modified as part of this WO: {policy.get('allowlist_contract', [])}"
+                )
+
+            # Generate diff for allowed paths only
+            if ignored:
+                # Only diff the non-ignored files
+                allowed_files = [f for f in changed_files if f not in ignored]
+                if allowed_files:
+                    result = subprocess.run(
+                        ["git", "diff", "main", "--"] + allowed_files,
+                        capture_output=True,
+                        text=True,
+                        check=False,
+                        timeout=30,
+                        cwd=root,
+                    )
+                    diff_content = result.stdout
+                else:
+                    diff_content = (
+                        "No relevant changes from main (only ignored paths: "
+                        + ", ".join(ignored)
+                        + ")"
+                    )
+            else:
+                # No ignored paths, use full diff
+                result = subprocess.run(
+                    ["git", "diff", "main"],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                    timeout=30,
+                    cwd=root,
+                )
+                diff_content = result.stdout
+
+            (temp_dir / "diff.patch").write_text(diff_content or "No changes from main")
         except subprocess.TimeoutExpired:
             return Err("Git diff timed out")
         except OSError as e:
@@ -392,13 +516,17 @@ def generate_artifacts(
         handoff_md = f"""# Handoff: {wo_id}
 
 ## Summary
-{wo_data.get('x_objective', 'No objective provided')}
+{wo_data.get("x_objective", "No objective provided")}
 
 ## Evidence
 """
-        for task in wo_data.get('x_micro_tasks', []):
-            if task.get('status') == 'done':
-                evidence = task.get('evidence', ['No evidence'])[0] if isinstance(task.get('evidence'), list) else task.get('evidence', 'No evidence')
+        for task in wo_data.get("x_micro_tasks", []):
+            if task.get("status") == "done":
+                evidence = (
+                    task.get("evidence", ["No evidence"])[0]
+                    if isinstance(task.get("evidence"), list)
+                    else task.get("evidence", "No evidence")
+                )
                 handoff_md += f"\n- {task['name']}: {evidence}\n"
 
         (temp_dir / "handoff.md").write_text(handoff_md)
@@ -412,16 +540,16 @@ def generate_artifacts(
             "failing_tests": [
                 {
                     "name": "test_lock_timeout_behavior",
-                    "reason": "Pre-existing SQLiteCache API mismatch (unrelated to WO-0012)"
+                    "reason": "Pre-existing SQLiteCache API mismatch (unrelated to WO-0012)",
                 },
                 {
                     "name": "test_real_wo_validates_and_can_be_taken",
-                    "reason": "Pre-existing test architecture issue (unrelated to WO-0012)"
-                }
+                    "reason": "Pre-existing test architecture issue (unrelated to WO-0012)",
+                },
             ],
             "lint_passed": True,
             "artifact_verification": "complete",
-            "notes": "WO-0012 validation based on metrics (wo_0012_baseline.json, wo_0012_active.json), not pytest"
+            "notes": "WO-0012 validation based on metrics (wo_0012_baseline.json, wo_0012_active.json), not pytest",
         }
         (temp_dir / "verdict.json").write_text(json.dumps(verdict, indent=2))
 
@@ -446,6 +574,7 @@ def generate_artifacts(
 # =============================================================================
 # DoD Validation
 # =============================================================================
+
 
 def validate_minimum_evidence(wo_id: str, root: Path) -> Result[None, str]:
     """
@@ -512,6 +641,7 @@ def validate_minimum_evidence(wo_id: str, root: Path) -> Result[None, str]:
 # Transaction Wrapper
 # =============================================================================
 
+
 def finish_wo_transaction(
     wo_id: str,
     root: Path,
@@ -544,17 +674,22 @@ def finish_wo_transaction(
     try:
         # Check for uncommitted changes
         git_status = subprocess.run(
-            ["git", "status", "--porcelain", "--untracked-files=no", "--", ".", f":(exclude)_ctx/handoff/{wo_id}"],
+            [
+                "git",
+                "status",
+                "--porcelain",
+                "--untracked-files=no",
+                "--",
+                ".",
+                f":(exclude)_ctx/handoff/{wo_id}",
+            ],
             capture_output=True,
             text=True,
             check=True,
             cwd=root,
         )
         if git_status.stdout.strip():
-            return Err(
-                "Repository has uncommitted changes. "
-                "Commit or stash before finishing WO."
-            )
+            return Err("Repository has uncommitted changes. Commit or stash before finishing WO.")
 
         # Check not in detached HEAD
         branch = subprocess.check_output(
@@ -619,6 +754,7 @@ def finish_wo_transaction(
 # Main CLI
 # =============================================================================
 
+
 def main():
     parser = argparse.ArgumentParser(
         description="Finish a work order with artifact generation and validation"
@@ -681,7 +817,11 @@ def main():
     if not running_path.exists():
         diagnostic = inspect_nonrunning_state(args.wo_id, root)
         if diagnostic:
-            card_code = "WO_STATE_CORRUPTED" if "Corrupted WO state detected" in diagnostic else "WO_NOT_RUNNING"
+            card_code = (
+                "WO_STATE_CORRUPTED"
+                if "Corrupted WO state detected" in diagnostic
+                else "WO_NOT_RUNNING"
+            )
             print_error_card(
                 error_code=card_code,
                 error_class="INTEGRITY",
@@ -756,17 +896,21 @@ def main():
         evidence_result = validate_session_evidence(args.wo_id, root)
         if evidence_result.is_err():
             evidence_err = evidence_result.unwrap_err()
-            error_code = "EVIDENCE_INVALID" if "EVIDENCE_INVALID" in evidence_err else "EVIDENCE_MISSING"
-            print(render_error_card(
-                error_code=error_code,
-                error_class="VALIDATION",
-                cause=evidence_err,
-                next_steps=[
-                    f"Add evidence entries to _ctx/session_trifecta_dope.md",
-                    f"Expected: [{args.wo_id}] intent: ... and [{args.wo_id}] result: ..."
-                ],
-                verify_cmd=fr"grep -E \'\\[{args.wo_id}\\] (intent|result):\' _ctx/session_trifecta_dope.md"
-            ))
+            error_code = (
+                "EVIDENCE_INVALID" if "EVIDENCE_INVALID" in evidence_err else "EVIDENCE_MISSING"
+            )
+            print(
+                render_error_card(
+                    error_code=error_code,
+                    error_class="VALIDATION",
+                    cause=evidence_err,
+                    next_steps=[
+                        "Add evidence entries to _ctx/session_trifecta_dope.md",
+                        f"Expected: [{args.wo_id}] intent: ... and [{args.wo_id}] result: ...",
+                    ],
+                    verify_cmd=rf"grep -E \'\\[{args.wo_id}\\] (intent|result):\' _ctx/session_trifecta_dope.md",
+                )
+            )
             return 1
 
         verdict_result = validate_scope_verdict(args.wo_id, root)
