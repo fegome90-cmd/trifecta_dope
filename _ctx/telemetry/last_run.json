@@ -1,7 +1,7 @@
 {
-  "run_id": "run_1771025535",
-  "segment_id": "6f25e381",
-  "ts": "2026-02-13 20:32:15",
+  "run_id": "run_1771184948",
+  "segment_id": "03e36282",
+  "ts": "2026-02-15 16:49:08",
   "ast": {
     "ast_parse_count": 0,
     "ast_cache_hit_count": 0,
@@ -15,5 +15,13 @@
   },
   "telemetry_drops": {
     "drop_rate": 0.0
+  },
+  "latencies": {
+    "lsp.request": {
+      "count": 3,
+      "p50_ms": 20,
+      "p95_ms": 30,
+      "max_ms": 30
+    }
   }
 }

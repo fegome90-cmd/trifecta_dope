@@ -5,7 +5,7 @@ import hashlib
 from pathlib import Path
 from typing import Dict
 
-from src.infrastructure.segment_utils import resolve_segment_root, compute_segment_id
+from src.domain.segment_resolver import resolve_segment_ref, get_segment_fingerprint
 
 
 def _relpath(root: Path, target: Path) -> str:
@@ -80,9 +80,10 @@ class Telemetry:
         # 3. Default => _ctx/telemetry
 
         self.level = level
-        self.root = resolve_segment_root(root or Path.cwd())
-        self.segment_id = compute_segment_id(self.root)
-        self.segment_label = root.name if root else self.root.name
+        segment_ref = resolve_segment_ref(root or Path.cwd())
+        self.root = segment_ref.root_abs
+        self.segment_id = segment_ref.fingerprint
+        self.segment_label = segment_ref.slug
         self.run_id = os.environ.get("TRIFECTA_RUN_ID", f"run_{int(time.time())}")
         self.metrics: Dict[str, int] = {}
         self.timings: Dict[str, list] = {}

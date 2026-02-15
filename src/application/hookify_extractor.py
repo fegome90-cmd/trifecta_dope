@@ -150,10 +150,10 @@ class HookifyExtractor:
         Args:
             segment_root: Root path of the segment (for segment_id)
         """
-        from src.infrastructure.segment_utils import compute_segment_id
+        from src.domain.segment_resolver import get_segment_fingerprint
 
         self.segment_root = segment_root
-        self.segment_id = compute_segment_id(segment_root)
+        self.segment_id = get_segment_fingerprint(segment_root)
 
     def extract(
         self,
