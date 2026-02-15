@@ -8,6 +8,7 @@ from typing import Any, Literal, Optional
 
 from src.application.context_service import ContextService, GetResult
 from src.application.zero_hit_tracker import create_zero_hit_tracker
+from src.application.spanish_aliases import detect_spanish, expand_with_spanish_aliases
 from src.infrastructure.file_system import FileSystemAdapter
 from src.domain.query_linter import LinterPlan
 
@@ -230,6 +231,28 @@ class SearchUseCase:
         # B0 Instrumentation: Source and build tracking
         source = _detect_source()
         build_sha = _get_build_sha()
+
+        # Two-pass search: if zero-hit and Spanish detected, try aliases
+        spanish_alias_applied = False
+        spanish_alias_variants = []
+        if len(final_hits) == 0 and source != "fixture":
+            if detect_spanish(query):
+                spanish_alias_variants = expand_with_spanish_aliases(normalized_query)
+                for variant in spanish_alias_variants[1:]:
+                    result = service.search(variant, k=limit * 2)
+                    for hit in result.hits:
+                        if hit.id not in combined_results:
+                            combined_results[hit.id] = (hit, hit.score * 0.8)
+                    if combined_results:
+                        break
+
+        if combined_results and not final_hits:
+            sorted_hits = sorted(combined_results.values(), key=lambda x: x[1], reverse=True)[
+                :limit
+            ]
+            final_hits = [hit for hit, _ in sorted_hits]
+            spanish_alias_applied = len(spanish_alias_variants) > 1
+
         search_mode = (
             "with_expansion"
             if (expansion_meta["alias_expanded"] or lint_plan["changed"])
@@ -251,6 +274,16 @@ class SearchUseCase:
             self.telemetry.incr("ctx_search_count")
             self.telemetry.incr("ctx_search_hits_total", len(final_hits))
             self.telemetry.incr(f"ctx_search_by_source_{source}_count")
+
+            # Spanish alias telemetry
+            if spanish_alias_applied:
+                self.telemetry.incr("ctx_search_spanish_alias_count")
+                self.telemetry.event(
+                    "ctx.search.spanish_alias",
+                    {"query_preview": query_preview, "variants_tried": len(spanish_alias_variants)},
+                    {"hits": len(final_hits)},
+                    1,
+                )
 
             if len(final_hits) == 0:
                 self.telemetry.incr("ctx_search_zero_hits_count")
