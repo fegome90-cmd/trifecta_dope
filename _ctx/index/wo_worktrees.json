@@ -1,9 +1,9 @@
 {
   "version": 1,
   "schema": "trifecta.sidecar.wo_index.v1",
-  "generated_at": "2026-02-15T22:08:20.084792+00:00",
+  "generated_at": "2026-02-15T22:12:05.607590+00:00",
   "repo_root": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope",
-  "git_head_sha_repo_root": "cb19a16b8b807ca12ae7631570db6651704e6880",
+  "git_head_sha_repo_root": "81043d5f8e31df1196f418f56d25071442936911",
   "work_orders": [
     {
       "id": "WO-0037",
@@ -305,22 +305,6 @@
       "branch": "feat/wo-WO-0048",
       "worktree_head_sha": "b4d68ca54761000a4065e57d82e7daca4a55d9d3",
       "wo_yaml_path": "_ctx/jobs/running/WO-0048.yaml",
-      "created_at": "",
-      "closed_at": null,
-      "last_error": null
-    },
-    {
-      "id": "WO-0053",
-      "title": "Path Guardrails - CLI Input Validation + Security",
-      "status": "running",
-      "priority": "P0",
-      "owner": "felipe_gonzalez",
-      "epic_id": "E-SCALE",
-      "worktree_path": "../.worktrees/WO-0053",
-      "worktree_exists": true,
-      "branch": "feat/wo-WO-0053",
-      "worktree_head_sha": "d045701f01a721f32eac02cb10bef9a40ea013a9",
-      "wo_yaml_path": "_ctx/jobs/running/WO-0053.yaml",
       "created_at": "",
       "closed_at": null,
       "last_error": null
@@ -675,6 +659,22 @@
       "wo_yaml_path": "_ctx/jobs/done/WO-0004.yaml",
       "created_at": "",
       "closed_at": null,
+      "last_error": null
+    },
+    {
+      "id": "WO-0053",
+      "title": "Path Guardrails - CLI Input Validation + Security",
+      "status": "done",
+      "priority": "P0",
+      "owner": "felipe_gonzalez",
+      "epic_id": "E-SCALE",
+      "worktree_path": "../.worktrees/WO-0053",
+      "worktree_exists": true,
+      "branch": "feat/wo-WO-0053",
+      "worktree_head_sha": "d045701f01a721f32eac02cb10bef9a40ea013a9",
+      "wo_yaml_path": "_ctx/jobs/done/WO-0053.yaml",
+      "created_at": "",
+      "closed_at": "2026-02-15T22:12:05.471902+00:00",
       "last_error": null
     },
     {

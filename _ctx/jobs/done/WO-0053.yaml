@@ -3,7 +3,7 @@ id: WO-0053
 epic_id: E-SCALE
 title: Path Guardrails - CLI Input Validation + Security
 priority: P0
-status: running
+status: done
 owner: felipe_gonzalez
 branch: feat/wo-WO-0053
 worktree: ../.worktrees/WO-0053
@@ -52,3 +52,6 @@ diff_budget:
   max_files: 5
   max_loc: 200
 started_at: '2026-02-15T21:50:51.555782+00:00'
+verified_at_sha: 81043d5f8e31df1196f418f56d25071442936911
+closed_at: '2026-02-15T22:12:05.471902+00:00'
+result: done

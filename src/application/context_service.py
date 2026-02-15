@@ -1,4 +1,4 @@
-"""Service for Programmatic Context Calling logic."""
+"""Service for Programmatic Context Calling logic (ContextService)."""
 
 import json
 from pathlib import Path
