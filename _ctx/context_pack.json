@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "segment": "trifecta_dope",
-  "created_at": "2026-02-15T13:20:25.285620",
+  "created_at": "2026-02-15T13:34:42.098188",
   "digest": "",
   "source_files": [
     {
@@ -1914,9 +1914,9 @@
     },
     {
       "path": "CLAUDE.md",
-      "sha256": "6d46cb2a949a5a384d44f94609d21654b3b251be62213e2eaf31a9e772d8fe6c",
-      "mtime": 1770999849.8265307,
-      "chars": 6283
+      "sha256": "9a846ca5ab698e8e77718b5758e9f7510de283b031629553bf175aed570744f3",
+      "mtime": 1771173176.0957873,
+      "chars": 1397
     },
     {
       "path": "SECURITY.md",
@@ -5743,14 +5743,14 @@
       "chunking_method": "whole_file"
     },
     {
-      "id": "repo:CLAUDE.md:4fce26a486",
+      "id": "repo:CLAUDE.md:686c7d54e7",
       "doc": "repo:CLAUDE.md",
       "title_path": [
         "CLAUDE.md"
       ],
-      "text": "# CLAUDE.md\n\nThis file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.\nIt is Claude-specific; `agents.md` serves other agent runtimes.\n\n---\n\n## Quick Start\n\n```bash\n# Install\nuv sync --all-groups\n\n# Run CLI\nuv run trifecta --help\n\n# Tests\nuv run pytest                    # All tests\nuv run pytest -m \"not slow\"      # Skip slow tests\nuv run pytest tests/acceptance/  # Acceptance gate\n\n# Type check & lint\nuv run mypy src/ --strict\nuv run ruff check src/\nuv run ruff format src/\n```\n\n---\n\n## Architecture Overview\n\n**Python + Clean Architecture** with strict layer separation:\n\n- **Domain** (`src/domain/`) - Pure business logic (no IO, no async, no framework dependencies)\n- **Application** (`src/application/`) - Use cases, orchestration\n- **Infrastructure** (`src/infrastructure/`) - Framework adapters, IO, external services\n\n**Critical Rule:** Dependencies point INWARD. Domain → Application → Infrastructure.\n\nSee `docs/CONTRACTS.md` and architecture docs in `docs/adr/` for complete patterns.\n\n---\n\n## Key Patterns\n\n- **Frozen dataclasses** for domain entities (immutable)\n- **Pure functions** in domain services (testable without mocks)\n- **Protocols** for infrastructure interfaces (ports/adapters)\n- **Result types** for error handling (`Ok[T] | Err[E]`)\n- **Telemetry** for observability (no side-effect in tests via `TRIFECTA_NO_TELEMETRY`)\n\n---\n\n## Development Workflow\n\n- **TDD**: Write tests BEFORE implementation (RED → GREEN → REFACTOR)\n- **Domain first**: Business logic is pure and tested in isolation\n- **Use `uv`**: Package management and task runner\n- **Pre-commit hooks**: Auto-run tests on commit (bypass with `--no-verify` if needed)\n\n---\n\n## Red Flags\n\n| Violation | Why It's Wrong | Fix |\n|-----------|----------------|-----|\n| IO in domain | Domain must be pure | Move to infrastructure adapter |\n| Async in domain | Domain is synchronous | Move to application/infra |\n| Pydantic in domain | Framework coupling | Use frozen dataclasses |\n| Untested pure functions | Easy to test, no excuse | Write unit tests |\n| Hardcoded paths | Portability issues | Use `repo_root()` helper |\n\n---\n\n## Testing\n\n- **Unit tests** (`tests/unit/`) - Domain logic, pure functions\n- **Integration tests** (`tests/integration/`) - Use cases with real adapters\n- **Acceptance tests** (`tests/acceptance/`) - Black-box CLI tests (gate: `-m \"not slow\"`)\n- **Roadmap tests** (`tests/roadmap/`) - Future features (isolated, `--ignore`)\n\n**Coverage target**: ≥80% branch coverage\n\n---\n\n## Source of Truth\n\n- **README.md** - Project overview, installation\n- **docs/CONTRACTS.md** - API contracts, schemas\n- **docs/CLI_WORKFLOW.md** - Official CLI usage\n- **docs/adr/** - Architecture decision records\n- **docs/backlog/** - Work Order system (WORKFLOW.md, OPERATIONS.md, TROUBLESHOOTING.md)\n- **_ctx/agent_trifecta_dope.md** - Active features, tech stack\n- **_ctx/session_trifecta_dope.md** - Session history, runbook\n\n---\n\n## Trifecta-Specific Rules\n\n### _ctx/ Directory Conventions\n- **_ctx/logs/**: ONLY .log files (command stdout/stderr). Use /tmp/ for intermediate .md files.\n- **When updating session.md**: Create temp in /tmp/, append with `cat`, then cleanup. Never store .md in _ctx/logs/.\n\n### Context Pack Workflow\n1. `trifecta create --segment .` - Bootstrap metadata\n2. `trifecta ctx sync --segment .` - Build context pack\n3. `trifecta ctx validate --segment .` - Verify integrity\n4. `trifecta ctx search --segment . --query \"...\"` - Search\n5. `trifecta ctx get --segment . --ids \"...\"` - Retrieve chunks\n\n### Environment & Ops\n- **Scope Separation**: `pyproject.toml` / `pytest-env` is for **Tests**. `.envrc` (direnv) is for **Dev CLI**.\n- **Default Enablement**: Must be verified via CLI *without* env var prefixes.\n- **Audit-Grade Gates**: `exit 0` is not enough. Verify internal state (telemetry backend, file creation).\n- **Rollback**: Must be verifiable in <5 minutes via env var override.\n\n---\n\n## Work Orders (WO System)\n\nThe WO system provides isolated development environments using git worktrees.\n\n### Quick Workflow\n\n```bash\n# List pending WOs\nuv run python scripts/ctx_wo_take.py --list\n\n# Take WO (auto-creates branch + worktree)\nuv run python scripts/ctx_wo_take.py WO-XXXX\n\n# Navigate & work\ncd .worktrees/WO-XXXX\n\n# Complete WO\nuv run python scripts/ctx_wo_finish.py WO-XXXX\n```\n\n### Key Scripts\n\n| Script | Purpose |\n|--------|---------|\n| `ctx_wo_take.py` | Take WO with auto branch/worktree creation |\n| `ctx_wo_finish.py` | Complete WO with DoD validation |\n| `helpers.py` | Core utilities (worktree, lock, branch) |\n| `ctx_reconcile_state.py` | Repair state inconsistencies |\n\n### Structure & State Machine\n\n```\n_ctx/jobs/\n├── pending/*.yaml    → [take] → running/*.yaml → [finish] → done/*.yaml\n└── failed/*.yaml\n```\n\n**States**: pending → running → done (or failed)\n\n### Worktree Management\n\n- **Branch**: `feat/wo-WO-XXXX` (from `main`)\n- **Path**: `.worktrees/WO-XXXX`\n- **Lock**: `_ctx/jobs/running/WO-XXXX.lock` (atomic, stale >1h auto-cleaned)\n\n```bash\ngit worktree list              # List worktrees\ngit worktree remove .worktrees/WO-XXXX  # Cleanup\n```\n\n### Detailed Documentation\n\n- **[WORKFLOW.md](docs/backlog/WORKFLOW.md)** — Complete lifecycle guide\n- **[OPERATIONS.md](docs/backlog/OPERATIONS.md)** — Daily operations playbook\n- **[TROUBLESHOOTING.md](docs/backlog/TROUBLESHOOTING.md)** — Common issues\n- **[README.md](docs/backlog/README.md)** — Quick reference\n\n---\n\n## Telemetry\n\n- **Production**: Events logged to `_ctx/telemetry/events.jsonl`\n- **Testing**: Use `TRIFECTA_NO_TELEMETRY=1` for zero side-effects\n- **Pre-commit**: Auto-redirects telemetry via `TRIFECTA_TELEMETRY_DIR`\n\n---\n\n## Common Tasks\n\n```bash\n# Create new segment\nuv run trifecta create --segment /path/to/project\n\n# Sync context\nuv run trifecta ctx sync --segment .\n\n# Search + get workflow\nuv run trifecta ctx search --segment . --query \"ErrorCard\" --limit 5\nuv run trifecta ctx get --segment . --ids \"prime:abc123\" --mode excerpt\n\n# AST symbols (M1)\nuv run trifecta ast symbols \"sym://python/mod/src.domain.result\" --segment .\n\n# Run gate\nbash scripts/gate_clean_worktree_repro.sh  # WO-0007 reproducibility\n```\n\n---\n\n**Living Document**: Update this file when friction is encountered or new patterns emerge.\n",
-      "char_count": 6283,
-      "token_est": 1570,
+      "text": "# CLAUDE.md\n\nThis file provides guidance to Claude Code when working on this repository.\n\n---\n\n## ⚠️ CRITICAL: READ THIS FIRST BEFORE ANY TASK\n\n**DO NOT PROCEED WITH ANY TASK WITHOUT READING THESE CONTEXT FILES.**\n\n### Agent Context Files (MANDATORY - READ IN ORDER)\n\n0. **[skill.md](skill.md)** ← START HERE FIRST (3 min)\n   - Skills, roles, and core rules\n   - **CRITICAL**: Skip this → you'll use wrong commands and waste cycles\n\n1. **[_ctx/agent_trifecta_dope.md](_ctx/agent_trifecta_dope.md)** ← THEN READ (5 min)\n   - Current implementation status, active features\n   - **CRITICAL**: Skip this → you'll duplicate work or break things\n\n2. **[_ctx/session_trifecta_dope.md](_ctx/session_trifecta_dope.md)** ← SKIM (2 min)\n   - Session history, handoff log\n   - **CRITICAL**: Skip this → you'll miss workarounds and hit known bugs\n\n3. **[_ctx/prime_trifecta_dope.md](_ctx/prime_trifecta_dope.md)** ← REFERENCE (1 min)\n   - Architectural reference, system structure\n   - **CRITICAL**: Skip this → you'll violate architectural constraints\n\n### If You Skip\n\nSkip these → you'll:\n- ⛔ Break existing implementations\n- ⛔ Duplicate work already done\n- ⛔ Fail verification gates\n\n✅ READ CONTEXT FIRST → THEN PROCEED\n\n---\n\n## Quick Start\n\n```bash\nuv sync --all-groups\nuv run trifecta --help\nuv run pytest -m \"not slow\"\n```\n\nSee [skill.md](skill.md) for detailed commands, patterns, and troubleshooting.\n",
+      "char_count": 1397,
+      "token_est": 349,
       "source_path": "CLAUDE.md",
       "chunking_method": "whole_file"
     },
@@ -7677,10 +7677,10 @@
       "token_est": 1693
     },
     {
-      "id": "repo:CLAUDE.md:4fce26a486",
+      "id": "repo:CLAUDE.md:686c7d54e7",
       "title_path_norm": "CLAUDE.md",
-      "preview": "# CLAUDE.md\n\nThis file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.\nIt is Claude-specific; `agents.md` serves other agent runtimes.\n\n---\n\n## Quick Start...",
-      "token_est": 1570
+      "preview": "# CLAUDE.md\n\nThis file provides guidance to Claude Code when working on this repository.\n\n---\n\n## ⚠️ CRITICAL: READ THIS FIRST BEFORE ANY TASK\n\n**DO NOT PROCEED WITH ANY TASK WITHOUT READING THESE CON...",
+      "token_est": 349
     },
     {
       "id": "repo:SECURITY.md:35374bbda1",

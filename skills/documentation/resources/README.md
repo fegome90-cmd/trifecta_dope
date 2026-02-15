@@ -40,11 +40,34 @@ Use these to validate your documentation:
   - Run: `bash skills/documentation/resources/verify_documentation.sh`
   - Checks: CRITICAL section, time estimates, paths, consistency, etc.
   - Exit code 0 = all checks passed
+  - Supports: `--json`, `--strict`, `--online`, `--force`
   
 - **[checklist.md](checklist.md)** - Manual review checklist
   - 30+ items to check before committing
   - Organized by section (Layer 1, Typography, Files, Language, etc.)
   - Use after running script
+
+### Hooks & Automation
+
+- **[HOOKS_GUIDE.md](HOOKS_GUIDE.md)** - Git hooks setup and usage
+  - Pre-commit validation
+  - Installation: `bash scripts/hooks/install-hooks.sh`
+  - Enable: `touch .documentation-skill.enabled`
+
+- **[scripts/hooks/run-doc-skill.sh](scripts/hooks/run-doc-skill.sh)** - Wrapper script
+  - Usage: `bash scripts/hooks/run-doc-skill.sh [--json|--strict|--online]`
+
+### Overmind Signals (Phase 1)
+
+Advanced signals for project-level documentation health:
+
+| Signal | Config | What It Checks |
+|--------|--------|----------------|
+| **Ownership** | `OWNERSHIP_REQUIRED=1` | Docs have owner via CODEOWNERS or frontmatter |
+| **ADR** | `ADR_REQUIRED=1` | Architecture Decision Records in docs/adr/ |
+| **Coverage-Lite** | Always on | docs/src ratio with anti-gaming |
+
+See [OVERMIND_SLICE_SPEC.md](OVERMIND_SLICE_SPEC.md) for detailed spec.
 
 ### Examples & Reference
 
