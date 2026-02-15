@@ -3,7 +3,7 @@ id: WO-0051
 epic_id: E-SCALE
 title: Diagnostico y triage de zero-hit ratio
 priority: P0
-status: running
+status: done
 owner: felipe_gonzalez
 scope:
   allow:
@@ -55,3 +55,6 @@ stop_conditions:
 started_at: '2026-02-15T21:10:21.026240+00:00'
 branch: job/WO-0051
 worktree: ../.worktrees/WO-0051
+verified_at_sha: 430a07875dc03d2034e298d97e708b88c33ce7ad
+closed_at: '2026-02-15T21:22:28.633920+00:00'
+result: done

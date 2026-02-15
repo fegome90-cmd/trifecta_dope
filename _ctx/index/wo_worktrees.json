@@ -1,9 +1,9 @@
 {
   "version": 1,
   "schema": "trifecta.sidecar.wo_index.v1",
-  "generated_at": "2026-02-15T21:10:21.765557+00:00",
+  "generated_at": "2026-02-15T21:31:55.616100+00:00",
   "repo_root": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope",
-  "git_head_sha_repo_root": "07c9f72c531921dc35f94d02530df1194f76b6fb",
+  "git_head_sha_repo_root": "2e628c4a144e4ba35163a37ce3f3887ba368ce4e",
   "work_orders": [
     {
       "id": "WO-0037",
@@ -342,17 +342,17 @@
       "last_error": null
     },
     {
-      "id": "WO-0051",
-      "title": "Diagnostico y triage de zero-hit ratio",
+      "id": "WO-0052",
+      "title": "Implementar ZeroHitTracker para logueo estructurado",
       "status": "running",
-      "priority": "P0",
+      "priority": "P1",
       "owner": "felipe_gonzalez",
       "epic_id": "E-SCALE",
-      "worktree_path": "../.worktrees/WO-0051",
+      "worktree_path": "../.worktrees/WO-0052",
       "worktree_exists": true,
-      "branch": "job/WO-0051",
-      "worktree_head_sha": "07c9f72c531921dc35f94d02530df1194f76b6fb",
-      "wo_yaml_path": "_ctx/jobs/running/WO-0051.yaml",
+      "branch": "job/WO-0052",
+      "worktree_head_sha": "5e733e5bc80de085866901082c61c62378cc6375",
+      "wo_yaml_path": "_ctx/jobs/running/WO-0052.yaml",
       "created_at": "",
       "closed_at": null,
       "last_error": null
@@ -579,6 +579,22 @@
       "wo_yaml_path": "_ctx/jobs/done/WO-0047.yaml",
       "created_at": "",
       "closed_at": "2026-02-15T18:18:31.413354+00:00",
+      "last_error": null
+    },
+    {
+      "id": "WO-0051",
+      "title": "Diagnostico y triage de zero-hit ratio",
+      "status": "done",
+      "priority": "P0",
+      "owner": "felipe_gonzalez",
+      "epic_id": "E-SCALE",
+      "worktree_path": "../.worktrees/WO-0051",
+      "worktree_exists": true,
+      "branch": "job/WO-0051",
+      "worktree_head_sha": "07c9f72c531921dc35f94d02530df1194f76b6fb",
+      "wo_yaml_path": "_ctx/jobs/done/WO-0051.yaml",
+      "created_at": "",
+      "closed_at": "2026-02-15T21:22:28.633920+00:00",
       "last_error": null
     },
     {
