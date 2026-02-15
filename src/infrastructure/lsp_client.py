@@ -198,6 +198,10 @@ class LSPClient:
         return self.state == LSPState.READY
 
     def _transition(self, new_state: LSPState) -> None:
+        # Track READY invariant failures
+        if new_state == LSPState.FAILED and self.state != LSPState.FAILED:
+            if self.telemetry:
+                self.telemetry.incr("lsp.ready_fail_invariant")
         self.state = new_state
 
     def _log_event(

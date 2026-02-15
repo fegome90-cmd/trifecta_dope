@@ -65,6 +65,16 @@ class LSPDaemonServer:
 
         self.running = True
 
+        # Emit daemon_status event
+        import time
+
+        self.telemetry.event(
+            "lsp.daemon_status",
+            {},
+            {"state": "running", "uptime": 0, "last_request_ms": 0, "root_ok": True},
+            1,
+        )
+
         # 4. Start LSP Client
         self.lsp_client.start()
 
@@ -172,6 +182,13 @@ class LSPDaemonServer:
     def cleanup(self):
         """Clean up daemon resources on shutdown."""
         self.lsp_client.stop()
+
+        # Track thread state during shutdown
+        import threading
+
+        if threading.active_count() > 1:
+            self.telemetry.incr("lsp.thread_alive_after_join")
+
         if self.socket_path.exists():
             self.socket_path.unlink()
         if self.pid_path.exists():
