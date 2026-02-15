@@ -1,7 +1,7 @@
 {
-  "run_id": "run_1771193033",
-  "segment_id": "899fd933",
-  "ts": "2026-02-15 19:03:53",
+  "run_id": "run_1771193371",
+  "segment_id": "6f25e381",
+  "ts": "2026-02-15 19:09:31",
   "ast": {
     "ast_parse_count": 0,
     "ast_cache_hit_count": 0,
@@ -19,9 +19,9 @@
   "latencies": {
     "ctx.search": {
       "count": 1,
-      "p50_ms": 43,
-      "p95_ms": 43,
-      "max_ms": 43
+      "p50_ms": 40,
+      "p95_ms": 40,
+      "max_ms": 40
     }
   }
 }

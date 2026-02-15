@@ -1,9 +1,9 @@
 {
   "version": 1,
   "schema": "trifecta.sidecar.wo_index.v1",
-  "generated_at": "2026-02-15T21:50:52.270081+00:00",
+  "generated_at": "2026-02-15T22:08:20.084792+00:00",
   "repo_root": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope",
-  "git_head_sha_repo_root": "a9b492566d516d504312057ff7a4be82b9ae2cd2",
+  "git_head_sha_repo_root": "cb19a16b8b807ca12ae7631570db6651704e6880",
   "work_orders": [
     {
       "id": "WO-0037",
@@ -319,7 +319,7 @@
       "worktree_path": "../.worktrees/WO-0053",
       "worktree_exists": true,
       "branch": "feat/wo-WO-0053",
-      "worktree_head_sha": "a9b492566d516d504312057ff7a4be82b9ae2cd2",
+      "worktree_head_sha": "d045701f01a721f32eac02cb10bef9a40ea013a9",
       "wo_yaml_path": "_ctx/jobs/running/WO-0053.yaml",
       "created_at": "",
       "closed_at": null,
