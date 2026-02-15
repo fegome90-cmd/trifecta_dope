@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any, Optional, Dict
 from src.infrastructure.lsp_client import LSPClient
 from src.infrastructure.telemetry import Telemetry
-from src.infrastructure.segment_utils import resolve_segment_root, compute_segment_id
+from src.domain.segment_resolver import resolve_segment_ref, get_segment_fingerprint
 from src.infrastructure.daemon_paths import (
     get_daemon_socket_path,
     get_daemon_lock_path,
@@ -23,13 +23,13 @@ DEFAULT_TTL = 180
 
 class LSPDaemonServer:
     def __init__(self, segment_root: Path, ttl_sec: int = DEFAULT_TTL):
-        self.root = resolve_segment_root(segment_root)
+        self.root = resolve_segment_ref(segment_root).root_abs
         self.ttl = ttl_sec
         self.last_activity = time.time()
         self.running = False
 
-        # Unified Segment ID / Dir
-        self.segment_id = compute_segment_id(self.root)
+        # Unified Segment ID using SSOT resolver
+        self.segment_id = get_segment_fingerprint(self.root)
 
         # Use short paths from daemon_paths to avoid AF_UNIX limit
         self.socket_path = get_daemon_socket_path(self.segment_id)
@@ -185,8 +185,8 @@ class LSPDaemonServer:
 
 class LSPDaemonClient:
     def __init__(self, root: Path):
-        self.root = resolve_segment_root(root)
-        self.segment_id = compute_segment_id(self.root)
+        self.root = resolve_segment_ref(root).root_abs
+        self.segment_id = get_segment_fingerprint(self.root)
 
         # Use short paths from daemon_paths
         self.socket_path = get_daemon_socket_path(self.segment_id)
