@@ -118,6 +118,81 @@ class TelemetryHealth:
 
         return result
 
+    def _compute_spanish_alias_impact(self) -> dict:
+        from collections import defaultdict
+
+        alias_events = [e for e in self.events if e.get("cmd") == "ctx.search.spanish_alias"]
+
+        if not alias_events:
+            return {
+                "total_applied": 0,
+                "total_recovered": 0,
+                "recovery_rate": 0.0,
+                "top_aliases": [],
+            }
+
+        total_applied = len(alias_events)
+
+        total_recovered = 0
+        alias_term_counts = defaultdict(int)
+        known_spanish_terms = {
+            "servicio",
+            "servicios",
+            "busqueda",
+            "búsqueda",
+            "documento",
+            "configuracion",
+            "configuración",
+            "comando",
+            "problema",
+            "archivo",
+            "carpeta",
+            "directorio",
+            "ruta",
+            "código",
+            "codigo",
+            "proyecto",
+            "aplicacion",
+            "aplicación",
+            "interfaz",
+            "usuario",
+            "datos",
+            "informacion",
+            "información",
+            "resultado",
+            "ejemplo",
+            "prueba",
+            "pruebas",
+            "descripcion",
+            "descripción",
+        }
+
+        for event in alias_events:
+            query_preview = event.get("args", {}).get("query_preview", "") or event.get(
+                "x", {}
+            ).get("query_preview", "")
+            hits = event.get("result", {}).get("hits", 0)
+            if hits > 0:
+                total_recovered += 1
+            if query_preview:
+                lower_q = query_preview.lower()
+                for term in known_spanish_terms:
+                    if term in lower_q:
+                        alias_term_counts[term] += 1
+
+        top_aliases = [
+            {"term": t, "count": c}
+            for t, c in sorted(alias_term_counts.items(), key=lambda x: -x[1])
+        ][:10]
+        recovery_rate = total_recovered / total_applied if total_applied > 0 else 0.0
+
+        return {
+            "total_applied": total_applied,
+            "total_recovered": total_recovered,
+            "recovery_rate": recovery_rate,
+            "top_aliases": top_aliases,
+        }
+
     def check_lsp_invariants(self) -> list[HealthResult]:
         """Check hard LSP invariants."""
         results = []
@@ -149,22 +224,29 @@ class TelemetryHealth:
 
         Uses operational ratio (excludes fixture) for exit code decisions.
         Reports both operational and overall for visibility.
+        Prefers events.jsonl for accurate data, falls back to metrics.json.
         """
         source_breakdown = self._compute_zero_hit_by_source()
 
         operational = source_breakdown["operational"]
         overall = source_breakdown["overall"]
 
-        # Use operational ratio for decisions (excludes fixture)
         ratio = operational["ratio"]
         total_searches = operational["searches"]
         zero_hits = operational["zero_hits"]
 
         if total_searches == 0:
-            # Fallback to overall if no operational data
             ratio = overall["ratio"]
             total_searches = overall["searches"]
             zero_hits = overall["zero_hits"]
+
+        if total_searches == 0:
+            metrics_searches = self.metrics.get("ctx_search_count", 0)
+            metrics_zero_hits = self.metrics.get("ctx_search_zero_hits_count", 0)
+            if metrics_searches > 0:
+                ratio = metrics_zero_hits / metrics_searches
+                total_searches = metrics_searches
+                zero_hits = metrics_zero_hits
 
         if total_searches == 0:
             return None
@@ -197,6 +279,10 @@ class TelemetryHealth:
                 {"query": h.get("query_preview", ""), "count": h.get("count", 0)}
                 for h in top_zero_hits
             ]
+
+        spanish_alias_impact = self._compute_spanish_alias_impact()
+        if spanish_alias_impact["total_applied"] > 0:
+            details["spanish_alias_impact"] = spanish_alias_impact
 
         if ratio > self.ZERO_HIT_RATIO_THRESHOLD:
             return HealthResult(
@@ -272,6 +358,15 @@ def run_health_check(segment_path: Path, verbose: bool = False) -> int:
                 print(
                     f"  Overall (all sources): {r.details['overall_zero_hits']}/{r.details['overall_searches']} = {r.details['overall_ratio']:.1%}"
                 )
+            if "spanish_alias_impact" in r.details:
+                impact = r.details["spanish_alias_impact"]
+                print(
+                    f"  Spanish alias impact: {impact['total_recovered']}/{impact['total_applied']} recovered ({impact['recovery_rate']:.1%} rate)"
+                )
+                if impact["top_aliases"]:
+                    print("    Top aliases:")
+                    for a in impact["top_aliases"][:5]:
+                        print(f"      - {a['term']}: {a['count']}")
 
     if not results:
         print("No telemetry data found (WARN: no data to analyze)")
