@@ -15,6 +15,13 @@ from click.exceptions import UsageError
 # AST/LSP Integration (Phase 2a/2b)
 from src.infrastructure.cli_ast import ast_app
 
+# Path Guardrails
+from src.infrastructure.path_utils import (
+    InvalidSegmentError,
+    PathTraversalError,
+    validate_segment,
+)
+
 from src.cli.invalid_option_handler import handle_invalid_option_error
 from src.application.search_get_usecases import GetChunkUseCase, SearchUseCase
 from src.application.telemetry_charts import generate_chart
@@ -87,14 +94,26 @@ app.add_typer(legacy_app, name="legacy")
 HELP_SEGMENT = "Target segment path (e.g., 'debug_terminal' or '.')"
 HELP_TELEMETRY = "Telemetry level: off, lite (default), full"
 
-HELP_TELEMETRY = "Telemetry level: off, lite (default), full"
+
+def _resolve_segment(segment: str, require_ctx: bool = False) -> Path:
+    """Resolve and validate segment path with security guardrails."""
+    try:
+        validated = validate_segment(segment, require_ctx=require_ctx)
+        return validated
+    except InvalidSegmentError as e:
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(code=1)
+    except PathTraversalError as e:
+        typer.echo(f"Error: Path traversal attempt blocked: {e}", err=True)
+        raise typer.Exit(code=1)
+    except ValueError as e:
+        typer.echo(f"Error: Invalid segment path: {e}", err=True)
+        raise typer.Exit(code=1)
 
 
 def _get_telemetry(segment: str, level: str) -> Telemetry:
     """Initialize telemetry."""
-    # Convert segment string to path
-    path = Path(segment).resolve()
-    # Check env override
+    path = _resolve_segment(segment, require_ctx=True)
     env_level = os.environ.get("TRIFECTA_TELEMETRY_LEVEL", level)
     return Telemetry(path, level=env_level)
 
@@ -153,7 +172,7 @@ def ctx_stats(
     segment: str = typer.Option(..., "--segment", "-s", help=HELP_SEGMENT),
 ) -> None:
     """[T8] Show telemetry stats for a segment."""
-    path = Path(segment).resolve()
+    path = _resolve_segment(segment)
     telemetry_dir = path / "_ctx" / "telemetry"
 
     if not telemetry_dir.exists():
