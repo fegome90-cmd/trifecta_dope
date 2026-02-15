@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from src.application.exceptions import InvalidConfigScopeError, InvalidSegmentPathError
-from src.domain.naming import normalize_segment_id
+from src.domain.segment_resolver import resolve_segment_ref
 from src.infrastructure.file_system import FileSystemAdapter
 
 
@@ -53,7 +53,7 @@ def resolve_segment_state(segment_input: str, file_system: FileSystemAdapter) ->
         source = "config"
         config_path_used: Path | None = config_path
     else:
-        segment_id = normalize_segment_id(resolved_root.name)
+        segment_id = resolve_segment_ref(resolved_root).slug
         source = "dirname"
         config_path_used = None
 

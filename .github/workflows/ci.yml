@@ -83,6 +83,35 @@ jobs:
       - name: Run mypy type checker
         run: uv run mypy src/
 
+      - name: SSOT Grep Guard - Block deprecated segment ID functions
+        run: |
+          # This guard prevents new uses of deprecated segment ID functions
+          # Allowed: segment_resolver.py (SSOT wrapper), naming.py (definition), tests/
+          
+          # Check for forbidden imports/uses (excluding allowed files)
+          if grep -r --include="*.py" \
+            -e "from src.domain.naming import normalize_segment_id" \
+            -e "from src.infrastructure.segment_utils import compute_segment_id" \
+            --exclude-dir=tests \
+            --exclude=src/domain/segment_resolver.py \
+            --exclude=src/domain/naming.py \
+            --exclude=src/infrastructure/segment_utils.py \
+            src/ 2>/dev/null; then
+            echo "ERROR: Found deprecated segment ID function usage outside allowed files."
+            echo "Allowed files:"
+            echo "  - src/domain/segment_resolver.py (SSOT wrapper)"
+            echo "  - src/domain/naming.py (function definition)"
+            echo "  - src/infrastructure/segment_utils.py (deprecated wrapper)"
+            echo "  - tests/ (test files)"
+            echo ""
+            echo "Please use SegmentRef from src.domain.segment_resolver instead:"
+            echo "  - get_segment_slug(path) for slug-only"
+            echo "  - get_segment_id(path) for slug_fingerprint"
+            echo "  - resolve_segment_ref(path) for full SegmentRef object"
+            exit 1
+          fi
+          echo "SSOT Grep Guard: No deprecated segment ID function usage found"
+
       - name: Run WO formatter check
         run: make wo-fmt-check
 

@@ -24,9 +24,9 @@ class TrifectaConfig(BaseModel):
     @property
     def segment_id(self) -> str:
         """Derive normalized segment ID from segment name."""
-        from src.domain.naming import normalize_segment_id
+        from src.domain.segment_resolver import get_segment_slug
 
-        return normalize_segment_id(self.segment)
+        return get_segment_slug(self.segment)
 
 
 class TrifectaPack(BaseModel):

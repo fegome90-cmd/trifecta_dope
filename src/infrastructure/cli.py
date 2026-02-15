@@ -1398,9 +1398,9 @@ def create(
         target_dir.mkdir(parents=True)
 
     # Derive segment_id from directory name (same logic as use_cases.py)
-    from src.domain.naming import normalize_segment_id
+    from src.domain.segment_resolver import get_segment_slug
 
-    segment_id = normalize_segment_id(target_dir.name)
+    segment_id = get_segment_slug(target_dir)
 
     config = TrifectaConfig(
         segment=segment_id,
