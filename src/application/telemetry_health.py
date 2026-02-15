@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Optional
 
 from src.application.telemetry_reports import load_telemetry_data
+from src.application.zero_hit_tracker import create_zero_hit_tracker
 
 
 @dataclass
@@ -75,27 +76,39 @@ class TelemetryHealth:
         zero_hits = self.metrics.get("ctx_search_zero_hits_count", 0)
         ratio = zero_hits / total_searches if total_searches > 0 else 0
 
+        # Get top zero-hit queries from tracker
+        top_zero_hits = []
+        try:
+            tracker = create_zero_hit_tracker(self.segment_path / "_ctx" / "telemetry")
+            top_zero_hits = tracker.get_top_zero_hits(limit=5)
+        except Exception:
+            pass  # Non-blocking
+
+        details = {
+            "metric": "zero_hit_ratio",
+            "value": ratio,
+            "threshold": self.ZERO_HIT_RATIO_THRESHOLD,
+            "total_searches": total_searches,
+            "zero_hits": zero_hits,
+        }
+
+        if top_zero_hits:
+            details["top_zero_hit_queries"] = [
+                {"query": h.get("query_preview", ""), "count": h.get("count", 0)}
+                for h in top_zero_hits
+            ]
+
         if ratio > self.ZERO_HIT_RATIO_THRESHOLD:
             return HealthResult(
                 status="WARN",
                 message=f"Zero-hit ratio {ratio:.1%} exceeds threshold {self.ZERO_HIT_RATIO_THRESHOLD:.0%}",
-                details={
-                    "metric": "zero_hit_ratio",
-                    "value": ratio,
-                    "threshold": self.ZERO_HIT_RATIO_THRESHOLD,
-                    "total_searches": total_searches,
-                    "zero_hits": zero_hits,
-                },
+                details=details,
             )
 
         return HealthResult(
             status="OK",
             message=f"Zero-hit ratio {ratio:.1%} within threshold",
-            details={
-                "metric": "zero_hit_ratio",
-                "value": ratio,
-                "threshold": self.ZERO_HIT_RATIO_THRESHOLD,
-            },
+            details=details,
         )
 
     def check_all(self) -> tuple[int, list[HealthResult]]:
