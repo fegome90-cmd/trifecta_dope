@@ -1,9 +1,9 @@
 {
   "version": 1,
   "schema": "trifecta.sidecar.wo_index.v1",
-  "generated_at": "2026-02-15T21:42:41.426460+00:00",
+  "generated_at": "2026-02-15T21:50:52.270081+00:00",
   "repo_root": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope",
-  "git_head_sha_repo_root": "bdf14e7d88927bea339a1e3075e78e07d6967861",
+  "git_head_sha_repo_root": "a9b492566d516d504312057ff7a4be82b9ae2cd2",
   "work_orders": [
     {
       "id": "WO-0037",
@@ -118,22 +118,6 @@
       "last_error": null
     },
     {
-      "id": "WO-0044",
-      "title": "Telemetr\u00eda m\u00ednima de salud LSP",
-      "status": "pending",
-      "priority": "P0",
-      "owner": "",
-      "epic_id": "E-LSP-CONTRACT",
-      "worktree_path": "../.worktrees/WO-0044",
-      "worktree_exists": true,
-      "branch": "feat/wo-WO-0044",
-      "worktree_head_sha": "e62b6a0b96677c77cc82e74c4058d734aeab35ff",
-      "wo_yaml_path": "_ctx/jobs/pending/WO-0044.yaml",
-      "created_at": "",
-      "closed_at": null,
-      "last_error": null
-    },
-    {
       "id": "WO-0033",
       "title": "Add git hooks automation for doc updates",
       "status": "pending",
@@ -225,22 +209,6 @@
       "branch": "feat/wo-WO-0015",
       "worktree_head_sha": null,
       "wo_yaml_path": "_ctx/jobs/pending/WO-0015.yaml",
-      "created_at": "",
-      "closed_at": null,
-      "last_error": null
-    },
-    {
-      "id": "WO-0042",
-      "title": "Estabilizar SSOT de segment/workspace root",
-      "status": "pending",
-      "priority": "P0",
-      "owner": "",
-      "epic_id": "E-SSOT-ROOT",
-      "worktree_path": "../.worktrees/WO-0042",
-      "worktree_exists": true,
-      "branch": "feat/wo-WO-0042",
-      "worktree_head_sha": "f065927d0e6b91278135acbded4fefbae43dd7f4",
-      "wo_yaml_path": "_ctx/jobs/pending/WO-0042.yaml",
       "created_at": "",
       "closed_at": null,
       "last_error": null
@@ -342,17 +310,17 @@
       "last_error": null
     },
     {
-      "id": "WO-0038",
-      "title": "Path Guardrails (Validation + Security)",
+      "id": "WO-0053",
+      "title": "Path Guardrails - CLI Input Validation + Security",
       "status": "running",
       "priority": "P0",
       "owner": "felipe_gonzalez",
-      "epic_id": "E-0003",
-      "worktree_path": "../.worktrees/WO-0038",
+      "epic_id": "E-SCALE",
+      "worktree_path": "../.worktrees/WO-0053",
       "worktree_exists": true,
-      "branch": "feat/wo-WO-0038",
-      "worktree_head_sha": "bdf14e7d88927bea339a1e3075e78e07d6967861",
-      "wo_yaml_path": "_ctx/jobs/running/WO-0038.yaml",
+      "branch": "feat/wo-WO-0053",
+      "worktree_head_sha": "a9b492566d516d504312057ff7a4be82b9ae2cd2",
+      "wo_yaml_path": "_ctx/jobs/running/WO-0053.yaml",
       "created_at": "",
       "closed_at": null,
       "last_error": null
@@ -584,17 +552,17 @@
     {
       "id": "WO-0044",
       "title": "Telemetr\u00eda m\u00ednima de salud LSP",
-      "status": "done",
+      "status": "pending",
       "priority": "P0",
-      "owner": "felipe_gonzalez",
-      "epic_id": "E-SCALE",
+      "owner": "",
+      "epic_id": "E-LSP-CONTRACT",
       "worktree_path": "../.worktrees/WO-0044",
       "worktree_exists": true,
       "branch": "feat/wo-WO-0044",
       "worktree_head_sha": "e62b6a0b96677c77cc82e74c4058d734aeab35ff",
-      "wo_yaml_path": "_ctx/jobs/done/WO-0044.yaml",
+      "wo_yaml_path": "_ctx/jobs/pending/WO-0044.yaml",
       "created_at": "",
-      "closed_at": "2026-02-15T20:02:36.191121+00:00",
+      "closed_at": null,
       "last_error": null
     },
     {
@@ -776,17 +744,17 @@
     {
       "id": "WO-0042",
       "title": "Estabilizar SSOT de segment/workspace root",
-      "status": "done",
+      "status": "pending",
       "priority": "P0",
-      "owner": "felipe_gonzalez",
-      "epic_id": "E-SCALE",
+      "owner": "",
+      "epic_id": "E-SSOT-ROOT",
       "worktree_path": "../.worktrees/WO-0042",
       "worktree_exists": true,
       "branch": "feat/wo-WO-0042",
       "worktree_head_sha": "f065927d0e6b91278135acbded4fefbae43dd7f4",
-      "wo_yaml_path": "_ctx/jobs/done/WO-0042.yaml",
+      "wo_yaml_path": "_ctx/jobs/pending/WO-0042.yaml",
       "created_at": "",
-      "closed_at": "2026-02-15T19:35:19.655117+00:00",
+      "closed_at": null,
       "last_error": null
     },
     {

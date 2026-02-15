@@ -1,0 +1,54 @@
+version: 1
+id: WO-0053
+epic_id: E-SCALE
+title: Path Guardrails - CLI Input Validation + Security
+priority: P0
+status: running
+owner: felipe_gonzalez
+branch: feat/wo-WO-0053
+worktree: ../.worktrees/WO-0053
+scope:
+  allow:
+  - src/infrastructure/path_utils.py
+  - src/infrastructure/cli.py
+  - src/domain/validators.py
+  deny:
+  - .env*
+verify:
+  commands:
+  - uv run pytest tests/unit/test_path_guardrails.py -v
+  - uv run ruff check src/infrastructure/path_utils.py src/infrastructure/cli.py
+dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
+  segment: .
+dependencies: []
+claim_links:
+  requirements:
+  - 'Path canonicalization: Resolve symlinks and relative paths consistently'
+  - 'Path traversal prevention: Block ../ escapes outside segment root'
+  - 'Invalid WO ID detection: Validate WO IDs match pattern'
+  - 'Segment scope validation: Verify path stays within segment boundary'
+assumptions:
+- Zero-hit tracker is working (from WO-0052)
+constraints:
+- Use pathlib.Path.resolve() for canonicalization
+- Return typed errors, not raw exceptions
+objective: 'Implement path validation for CLI inputs preventing: - Path traversal
+  attacks (../ escapes) - Canonicalization inconsistencies - Invalid scope (path outside
+  segment root) - Invalid WO ID formats '
+deliverables:
+- Module src/infrastructure/path_utils.py with guardrail functions
+- Integration points in CLI for --segment, --path options
+- Unit tests covering edge cases
+- Integration with telemetry (log path validation failures)
+diff_budget:
+  max_files: 5
+  max_loc: 200
+started_at: '2026-02-15T21:50:51.555782+00:00'
