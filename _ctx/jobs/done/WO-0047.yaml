@@ -1,0 +1,33 @@
+version: 1
+id: WO-0047
+epic_id: E-SCALE
+title: 'Fix finish policy gate: fail-closed + robust diff base'
+priority: P0
+status: done
+owner: felipe_gonzalez
+branch: feat/wo-WO-0047
+worktree: ../.worktrees/WO-0047
+scope:
+  allow:
+  - scripts/ctx_wo_finish.py
+  - _ctx/policy/ctx_finish_ignore.yaml
+  - tests/unit/test_policy_filtering.py
+  deny: []
+verify:
+  commands:
+  - uv run pytest -q tests/unit/test_policy_filtering.py
+dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
+  segment: .
+dependencies: []
+started_at: '2026-02-15T18:00:29.820042+00:00'
+verified_at_sha: ab98f36498799c7b1d657e1335d5d71819ea5d92
+closed_at: '2026-02-15T18:18:31.413354+00:00'
+result: done

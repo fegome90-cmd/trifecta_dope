@@ -1,0 +1,65 @@
+version: 1
+id: WO-0050
+epic_id: E-SCALE
+title: Implementar comando telemetry health con exit codes
+priority: P0
+status: running
+owner: felipe_gonzalez
+scope:
+  allow:
+  - src/infrastructure/cli.py
+  - src/application/telemetry_health.py
+  - tests/unit/test_telemetry_health.py
+  deny:
+  - .env*
+  - '**/production.*'
+verify:
+  commands:
+  - uv run pytest tests/unit/test_telemetry_health.py -v
+  - uv run trifecta telemetry health -s .
+dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
+  segment: .
+trace:
+  ticket: null
+  related_wos:
+  - WO-0044
+claim_links:
+  requirements:
+  - Comando trifecta telemetry health -s .
+  - 'Exit codes: 0=OK, 2=WARN, 3=FAIL'
+  - Verifica invariantes LSP hard fail
+  - Verifica zero-hit ratio como warn
+  - Tests unitarios
+  - CI step report-only
+assumptions:
+- Datos de telemetry existen en _ctx/telemetry/
+constraints:
+- Fail-closed para archivos faltantes (WARN si no hay datos, no FAIL)
+- No bloquear CI inicialmente (solo report)
+objective: 'Implementar comando trifecta telemetry health que permita a CI verificar
+  salud del sistema. Fase 1: report-only en CI. Fase 2: bloqueo gradual para invariantes.'
+deliverables:
+- Comando trifecta telemetry health -s .
+- 'Exit codes: 0=OK, 2=WARN, 3=FAIL'
+- 'Check: lsp.ready_fail_invariant > 0 = FAIL (hard invariant)'
+- 'Check: lsp.thread_alive_after_join > 0 = FAIL (hard invariant)'
+- 'Check: zero-hit ratio > 30% = WARN (soft metric)'
+- Test unitarios en tests/unit/test_telemetry_health.py
+- CI step en .github/workflows/ci.yml (report-only, no bloquea)
+diff_budget:
+  max_files: 5
+  max_loc: 200
+stop_conditions:
+  max_iterations: 3
+  max_fail_verify: 2
+started_at: '2026-02-15T20:43:54.283723+00:00'
+branch: job/WO-0050
+worktree: ../.worktrees/WO-0050

@@ -1,0 +1,19 @@
+{
+  "run_id": "run_1771188415",
+  "segment_id": "a1bbee44",
+  "ts": "2026-02-15 17:46:55",
+  "ast": {
+    "ast_parse_count": 0,
+    "ast_cache_hit_count": 0,
+    "ast_cache_miss_count": 0
+  },
+  "lsp": {
+    "lsp_spawn_count": 0,
+    "lsp_ready_count": 0,
+    "lsp_fallback_count": 0,
+    "lsp_request_count": 0
+  },
+  "telemetry_drops": {
+    "drop_rate": 0.0
+  }
+}

@@ -1,0 +1,74 @@
+version: 1
+id: WO-0042
+epic_id: E-SCALE
+title: Estabilizar SSOT de segment/workspace root
+priority: P0
+status: done
+scope:
+  allow:
+  - src/domain/segment_resolver.py
+  - src/infrastructure/segment_utils.py
+  - src/infrastructure/daemon_paths.py
+  - src/infrastructure/factories.py
+  - src/infrastructure/cli.py
+  - src/infrastructure/cli_ast.py
+  - tests/unit/test_segment_resolver.py
+  - tests/integration/test_ssot_root.py
+  deny:
+  - .env*
+  - '**/production.*'
+  - docs/**
+verify:
+  commands:
+  - uv run pytest tests/unit/test_segment_resolver.py -v
+  - uv run pytest tests/integration/test_ssot_root.py -v
+  - uv run pytest tests/integration/test_daemon_paths_constraints.py -v
+  - make gate-all
+dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
+  segment: .
+trace:
+  ticket: null
+  related_wos:
+  - WO-0043
+claim_links:
+  requirements:
+  - "segment_id determin\xEDstico para mismos inputs"
+  - segment_root resuelto consistentemente
+  - daemon socket path derivado de segment_id
+  - cache db path derivado de segment_id
+  assumptions:
+  - Filesystem con soporte para symlinks
+  constraints:
+  - No breaking changes en CLI args
+  - Mantener paths cortos para AF_UNIX limit
+objective: "Crear un \xFAnico resolver oficial (SSOT) para segment_id, segment_root,\
+  \ daemon socket path,\ncache db path, y telemetry grouping. Resolver identidades\
+  \ divergentes que rompen el sistema.\n"
+deliverables:
+- SSOT resolver unificado en src/domain/segment_resolver.py
+- "Mismos inputs \u21D2 mismo segment_id siempre (determin\xEDstico)"
+- Tests cubren SEGMENT=. y rutas absolutas
+- Error codes coherentes independientes de orden de preconditions
+- 'Refactor: todos los usos migrados al SSOT resolver'
+- Deprecation path para funciones viejas
+diff_budget:
+  max_files: 12
+  max_loc: 400
+stop_conditions:
+  max_iterations: 6
+  max_fail_verify: 2
+owner: felipe_gonzalez
+started_at: '2026-02-15T18:27:05.048864+00:00'
+branch: feat/wo-WO-0042
+worktree: ../.worktrees/WO-0042
+verified_at_sha: e34fae8c1837ed67340036208a42714b7e915e4e
+closed_at: '2026-02-15T19:35:19.655117+00:00'
+result: done

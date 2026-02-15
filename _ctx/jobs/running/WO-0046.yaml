@@ -1,0 +1,52 @@
+version: 1
+id: WO-0046
+epic_id: E-0003
+title: Fix ctx_wo_finish sync + policy-based diff filter
+priority: P0
+status: running
+owner: felipe_gonzalez
+branch: feat/wo-WO-0046
+worktree: ../.worktrees/WO-0046
+scope:
+  allow:
+  - scripts/ctx_wo_finish.py
+  - _ctx/policy/ctx_finish_ignore.yaml
+  - tests/unit/test_ctx_finish_policy.py
+  deny: []
+verify:
+  commands:
+  - uv run pytest -q tests/unit/test_ctx_finish_policy.py
+dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - implement
+  - session.append:result
+  segment: .
+dependencies: []
+started_at: '2026-02-15T17:30:53.857324+00:00'
+verified_at_sha: null
+closed_at: null
+governance:
+  must:
+  - Policy YAML with ignore + allowlist_contract
+  - Fail-closed for unclassified paths
+  - "Tests: handoff exists \u2192 pass, schema changes \u2192 fail"
+x_objective: Fix ctx_wo_finish.py to handle _ctx/ drift between worktree and main
+  using policy-based filtering
+x_items:
+- Create _ctx/policy/ctx_finish_ignore.yaml with ignore + allowlist_contract
+- 'Add sync step: fetch + rebase origin/main before validation'
+- Implement diff filter using policy
+- "Add tests for: handoff exists \u2192 pass, schema changes \u2192 fail"
+- Fail closed for unclassified paths
+diff_budget:
+  max_files: 5
+  max_loc: 300
+stop_conditions:
+  max_iterations: 3
+  max_fail_verify: 1
