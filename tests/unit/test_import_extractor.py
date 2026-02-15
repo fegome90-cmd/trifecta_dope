@@ -1,8 +1,5 @@
 """Tests for import_extractor module."""
 
-import pytest
-
-from src.domain.discovery_models import ImportInfo, ExtractionResult
 from src.application.import_extractor import extract_imports
 
 

@@ -1,7 +1,6 @@
 """Domain models for discovery operations."""
 
 from dataclasses import dataclass
-from typing import Literal
 
 
 @dataclass(frozen=True)
