@@ -1,0 +1,62 @@
+#!/bin/bash
+# pre-commit hook - Documentation validation
+# Validates docs and syncs context before commit
+
+set -euo pipefail
+
+# Optional kill-switch
+if [[ "${TRIFECTA_HOOKS_DISABLE:-0}" == "1" ]]; then
+    echo "ℹ️  TRIFECTA_HOOKS_DISABLE=1, skipping hooks"
+    exit 0
+fi
+
+# Check for doc changes (only relevant files)
+CHANGED_FILES=$(git diff --cached --name-only 2>/dev/null || true)
+
+# Determine if we should run
+DOC_FILES_PATTERN="CLAUDE.md|agents.md|skill.md|llms.txt|docs/|skills/documentation/|\.documentation-skill"
+if ! echo "$CHANGED_FILES" | grep -qE "$DOC_FILES_PATTERN"; then
+    echo "ℹ️  No documentation changes detected, skipping doc validation"
+    exit 0
+fi
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "📝 Documentation Validation Hook"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# Find root (hand repoles worktrees)
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo ".")
+
+# STEP 1: Validate documentation patterns
+echo ""
+echo "1️⃣  Validating documentation patterns..."
+if bash "$REPO_ROOT/skills/documentation/resources/verify_documentation.sh" "$REPO_ROOT"; then
+    echo "✅ Documentation validation passed"
+else
+    echo "❌ Documentation validation failed!"
+    echo ""
+    echo "Fix issues and retry, or bypass with:"
+    echo "  git commit --no-verify"
+    exit 1
+fi
+
+# STEP 2: Sync context (only if doc changes)
+echo ""
+echo "2️⃣  Syncing context pack..."
+if command -v uv &>/dev/null; then
+    if uv run trifecta ctx sync --segment "$REPO_ROOT" >/dev/null 2>&1; then
+        echo "✅ Context pack synced"
+    else
+        echo "⚠️  ctx sync had issues (non-blocking, check _ctx/ manually)"
+    fi
+else
+    echo "⚠️  uv not found, skipping ctx sync"
+fi
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "✅ Documentation validated and synced!"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+exit 0
