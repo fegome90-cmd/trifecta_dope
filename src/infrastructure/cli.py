@@ -18,6 +18,7 @@ from src.infrastructure.cli_ast import ast_app
 from src.cli.invalid_option_handler import handle_invalid_option_error
 from src.application.search_get_usecases import GetChunkUseCase, SearchUseCase
 from src.application.telemetry_charts import generate_chart
+from src.application.telemetry_health import run_health_check
 from src.application.telemetry_reports import export_data, generate_report
 from src.application.plan_use_case import PlanUseCase
 from src.application.stub_regen_use_case import StubRegenUseCase
@@ -1436,7 +1437,9 @@ def create(
             target_dir / "_ctx" / f"prime_{segment_id}.md",
             target_dir / "_ctx" / f"session_{segment_id}.md",
         ]
-        missing_bootstrap = [str(p.relative_to(target_dir)) for p in required_bootstrap if not p.exists()]
+        missing_bootstrap = [
+            str(p.relative_to(target_dir)) for p in required_bootstrap if not p.exists()
+        ]
 
         # Verify line count of skill.md
         skill_lines = len(files["skill.md"].splitlines())
@@ -1697,6 +1700,16 @@ def telemetry_chart(
 
     chart = generate_chart(segment_path, chart_type, days)
     typer.echo(chart)
+
+
+@telemetry_app.command("health")
+def telemetry_health(
+    segment: str = typer.Option(..., "--segment", "-s", help=HELP_SEGMENT),
+) -> None:
+    """Check telemetry health. Exit codes: 0=OK, 2=WARN, 3=FAIL."""
+    segment_path = Path(segment).resolve()
+    exit_code = run_health_check(segment_path)
+    raise typer.Exit(code=exit_code)
 
 
 @legacy_app.command("scan")
