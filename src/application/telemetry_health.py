@@ -5,9 +5,13 @@ Exit codes:
   0 = OK (all checks pass)
   2 = WARN (soft metrics exceeded threshold)
   3 = FAIL (hard invariants broken)
+
+Health by Source:
+  - operational: excludes source=fixture (real usage)
+  - overall: includes all sources (for visibility)
+  - Exit codes are based on operational ratio
 """
 
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
@@ -41,6 +45,79 @@ class TelemetryHealth:
         """Load telemetry data from segment."""
         self.events, self.metrics, self.last_run = load_telemetry_data(self.segment_path)
 
+    def _compute_zero_hit_by_source(self) -> dict:
+        """Compute zero-hit ratios by source from events.
+
+        Returns:
+            Dict with breakdown by source:
+            {
+                'overall': {'searches': N, 'zero_hits': M, 'ratio': R},
+                'operational': {'searches': N, 'zero_hits': M, 'ratio': R},
+                'sources': [{'source': 'fixture', 'searches': N, 'zero_hits': M, 'ratio': R}, ...]
+            }
+        """
+        from collections import defaultdict
+
+        # Count searches and zero-hits by source
+        source_stats = defaultdict(lambda: {"searches": 0, "zero_hits": 0})
+
+        for event in self.events:
+            if event.get("cmd") != "ctx.search":
+                continue
+
+            source = event.get("x", {}).get("source", "unknown")
+            hits = event.get("result", {}).get("hits", -1)
+
+            source_stats[source]["searches"] += 1
+            if hits == 0:
+                source_stats[source]["zero_hits"] += 1
+
+        # Compute ratios
+        result = {
+            "overall": {"searches": 0, "zero_hits": 0, "ratio": 0.0},
+            "operational": {"searches": 0, "zero_hits": 0, "ratio": 0.0},
+            "sources": [],
+        }
+
+        total_searches = 0
+        total_zero_hits = 0
+        operational_searches = 0
+        operational_zero_hits = 0
+
+        for source, stats in source_stats.items():
+            searches = stats["searches"]
+            zero_hits = stats["zero_hits"]
+            ratio = zero_hits / searches if searches > 0 else 0.0
+
+            result["sources"].append(
+                {"source": source, "searches": searches, "zero_hits": zero_hits, "ratio": ratio}
+            )
+
+            total_searches += searches
+            total_zero_hits += zero_hits
+
+            # Operational excludes fixture
+            if source != "fixture":
+                operational_searches += searches
+                operational_zero_hits += zero_hits
+
+        # Overall ratio
+        result["overall"]["searches"] = total_searches
+        result["overall"]["zero_hits"] = total_zero_hits
+        result["overall"]["ratio"] = total_zero_hits / total_searches if total_searches > 0 else 0.0
+
+        # Operational ratio (excludes fixture)
+        result["operational"]["searches"] = operational_searches
+        result["operational"]["zero_hits"] = operational_zero_hits
+        result["operational"]["ratio"] = (
+            operational_zero_hits / operational_searches if operational_searches > 0 else 0.0
+        )
+
+        # Sort sources by zero-hits descending
+        result["sources"].sort(key=lambda x: x["zero_hits"], reverse=True)
+
+        return result
+
     def check_lsp_invariants(self) -> list[HealthResult]:
         """Check hard LSP invariants."""
         results = []
@@ -68,13 +145,29 @@ class TelemetryHealth:
         return results
 
     def check_zero_hit_ratio(self) -> Optional[HealthResult]:
-        """Check zero-hit ratio (soft metric)."""
-        total_searches = self.metrics.get("ctx_search_count", 0)
+        """Check zero-hit ratio (soft metric).
+
+        Uses operational ratio (excludes fixture) for exit code decisions.
+        Reports both operational and overall for visibility.
+        """
+        source_breakdown = self._compute_zero_hit_by_source()
+
+        operational = source_breakdown["operational"]
+        overall = source_breakdown["overall"]
+
+        # Use operational ratio for decisions (excludes fixture)
+        ratio = operational["ratio"]
+        total_searches = operational["searches"]
+        zero_hits = operational["zero_hits"]
+
+        if total_searches == 0:
+            # Fallback to overall if no operational data
+            ratio = overall["ratio"]
+            total_searches = overall["searches"]
+            zero_hits = overall["zero_hits"]
+
         if total_searches == 0:
             return None
-
-        zero_hits = self.metrics.get("ctx_search_zero_hits_count", 0)
-        ratio = zero_hits / total_searches if total_searches > 0 else 0
 
         # Get top zero-hit queries from tracker
         top_zero_hits = []
@@ -90,6 +183,13 @@ class TelemetryHealth:
             "threshold": self.ZERO_HIT_RATIO_THRESHOLD,
             "total_searches": total_searches,
             "zero_hits": zero_hits,
+            "operational_ratio": operational["ratio"],
+            "operational_searches": operational["searches"],
+            "operational_zero_hits": operational["zero_hits"],
+            "overall_ratio": overall["ratio"],
+            "overall_searches": overall["searches"],
+            "overall_zero_hits": overall["zero_hits"],
+            "source_breakdown": source_breakdown["sources"][:5],  # Top 5 sources
         }
 
         if top_zero_hits:
@@ -101,13 +201,13 @@ class TelemetryHealth:
         if ratio > self.ZERO_HIT_RATIO_THRESHOLD:
             return HealthResult(
                 status="WARN",
-                message=f"Zero-hit ratio {ratio:.1%} exceeds threshold {self.ZERO_HIT_RATIO_THRESHOLD:.0%}",
+                message=f"Zero-hit ratio (operational) {ratio:.1%} exceeds threshold {self.ZERO_HIT_RATIO_THRESHOLD:.0%}",
                 details=details,
             )
 
         return HealthResult(
             status="OK",
-            message=f"Zero-hit ratio {ratio:.1%} within threshold",
+            message=f"Zero-hit ratio (operational) {ratio:.1%} within threshold",
             details=details,
         )
 
@@ -159,9 +259,18 @@ def run_health_check(segment_path: Path, verbose: bool = False) -> int:
                 print("  Top zero-hit queries:")
                 for q in r.details["top_zero_hit_queries"][:5]:
                     print(f"    - {q['query']} (count: {q['count']})")
-            if "total_searches" in r.details:
+            if "source_breakdown" in r.details:
+                print("  Zero-hit by source:")
+                for src in r.details["source_breakdown"]:
+                    print(
+                        f"    - {src['source']}: {src['zero_hits']}/{src['searches']} = {src['ratio']:.1%}"
+                    )
+            if "operational_ratio" in r.details:
                 print(
-                    f"  Total searches: {r.details['total_searches']}, Zero-hits: {r.details['zero_hits']}"
+                    f"  Operational (excl. fixture): {r.details['operational_zero_hits']}/{r.details['operational_searches']} = {r.details['operational_ratio']:.1%}"
+                )
+                print(
+                    f"  Overall (all sources): {r.details['overall_zero_hits']}/{r.details['overall_searches']} = {r.details['overall_ratio']:.1%}"
                 )
 
     if not results:

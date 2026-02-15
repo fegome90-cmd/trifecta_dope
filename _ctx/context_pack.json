@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "segment": "trifecta_dope",
-  "created_at": "2026-02-15T19:24:16.618555",
+  "created_at": "2026-02-15T20:02:15.598152",
   "digest": "",
   "source_files": [
     {
@@ -1356,9 +1356,9 @@
     },
     {
       "path": "docs/reports/zero_hit_triage_20260215.md",
-      "sha256": "fd1441ab21ce45ecdc8301ed7360d0bc687b42a21e724f366f73e5afae21a2d4",
-      "mtime": 1771194154.8569288,
-      "chars": 3707
+      "sha256": "2131827654e1d646bc8e2e96b40e82b1da801ddf83a2fdabe81a91c87db9b5f3",
+      "mtime": 1771196523.2039723,
+      "chars": 4096
     },
     {
       "path": "docs/reports/wo0008_ab_linter_reproducibility.md",
@@ -4675,14 +4675,14 @@
       "chunking_method": "whole_file"
     },
     {
-      "id": "repo:docs/reports/zero_hit_triage_20260215.md:c044c752e6",
+      "id": "repo:docs/reports/zero_hit_triage_20260215.md:2f59506087",
       "doc": "repo:docs/reports/zero_hit_triage_20260215.md",
       "title_path": [
         "zero_hit_triage_20260215.md"
       ],
-      "text": "# Zero-Hit Triage Report\n\n**Date**: 2026-02-15  \n**Source**: `_ctx/telemetry/zero_hits.ndjson` + events.jsonl\n\n---\n\n## Executive Summary\n\n| Metric | Value |\n|--------|-------|\n| Total searches | 1,279 |\n| Total zero-hits | 318 |\n| **Zero-hit ratio** | **24.9%** |\n\n> Note: Previous 53.7% was misleading (tracked only fixture queries)\n\n### By Source\n\n| Source | Searches | Zero-hits | Ratio |\n|--------|----------|-----------|-------|\n| unknown (agents) | 713 | 185 | 25.9% |\n| fixture (tests) | 564 | 132 | 23.4% |\n| interactive | 2 | 1 | 50.0% |\n\n---\n\n## Classification Table\n\n| Rank | Count | Query | Bucket | Root Cause | Action |\n|------|-------|-------|--------|------------|--------|\n| 1 | 100 | `` (empty) | 🧹 **Noise** | Bug: empty query passed to search | Fix: filter empty queries before search |\n| 2 | 61 | `servicio` | ✅ **Legítimo miss** | Spanish word, pack is English | No action (expected) |\n| 3 | 12 | `servicios` | ✅ **Legítimo miss** | Spanish word | No action |\n| 4 | 12 | `búsqueda` | ✅ **Legítimo miss** | Spanish word | No action |\n| 5 | 12 | `services` | ✅ **Legítimo miss** | English synonym | No action |\n| 6 | 12 | `stop_reason` | ✅ **Legítimo miss** | Internal term | No action |\n| 7 | 12 | `123`, `!!!`, `@#$%` | 🧹 **Noise** | Test fixture edge cases | No action (by design) |\n| 8 | 12 | `UPPERCASE`, `MixedCase` | 🧹 **Noise** | Test fixture case sensitivity | No action (by design) |\n| 9 | 11 | `config` | ✅ **Was miss** | Previously not in pack | **RESOLVED** - now returns hits |\n| 10 | 10 | `ContextService` | 📦 **Pack faltante** | In pack (22 refs) but not found | **INVESTIGATE** - case/score issue |\n\n---\n\n## Key Findings\n\n### 1. Empty Query is the Biggest Issue\n- **100 zero-hits** from empty queries (31% of all zero-hits!)\n- Source: \"unknown\" (agents calling search without query)\n- **Action**: Filter empty queries at CLI level\n\n### 2. Spanish Words Are Legitimate Misses\n- `servicio`, `servicios`, `búsqueda` = 85 zero-hits\n- Pack is English-indexed, these are expected misses\n- **Action**: None (by design)\n\n### 3. Test Fixture is Working as Intended\n- 132 zero-hits from fixture (test edge cases)\n- **Action**: None (by design)\n\n### 4. ContextService is a Real Issue\n- Exists in context pack (22 references)\n- But search returns 0 hits\n- **Action**: Investigate - possibly needs anchor or different indexing\n\n---\n\n## Intervention Plan\n\n### Priority 1: Filter Empty Queries\n```python\n# In CLI or search use case\nif not query.strip():\n    raise ValueError(\"Empty query not allowed\")\n```\n\n### Priority 2: ContextService - INVESTIGATED\n\n**Finding**: The file IS in the pack (`repo:src/application/context_service.py:299a315568`) but search returns 0 hits.\n\n**Root Cause**: The chunk text starts with the docstring. The class name `ContextService` only appears in code (`class ContextService:`), not in the searchable text.\n\n**Solution Options**:\n1. Add anchor/keyword to the file's docstring\n2. Use AST symbols search instead of lexical for class names\n3. Accept as \"legitimate miss\" (lexical limitation)\n\n**Recommended**: Add anchor in docstring → \"Service for Programmatic Context Calling logic (ContextService)\"\n\n---\n\n## Reality Check Results\n\n| Query | Before | After | Status |\n|-------|--------|-------|--------|\n| `config` | 0 hits | 3 hits | ✅ Fixed |\n| `ContextService` | 0 hits | 0 hits | ❌ Still broken |\n\n---\n\n## Success Criteria\n\n- [ ] Filter empty queries → saves 100 zero-hits → ratio 24.9% → 17.1%\n- [ ] Fix ContextService → saves 10 zero-hits → 17.1% → 16.3%\n- [ ] **Target**: < 20% zero-hit ratio\n\n---\n\n## Next Steps\n\n1. Create fix for empty query filtering\n2. Investigate ContextService indexing\n3. Re-run telemetry after fixes\n4. Measure new ratio\n",
-      "char_count": 3707,
-      "token_est": 926,
+      "text": "# Zero-Hit Triage Report\n\n**Date**: 2026-02-15  \n**Source**: `_ctx/telemetry/zero_hits.ndjson` + events.jsonl\n\n---\n\n## Executive Summary\n\n| Metric | Value |\n|--------|-------|\n| Total searches | 1,279 |\n| Total zero-hits | 318 |\n| **Zero-hit ratio** | **24.9%** |\n\n> Note: Previous 53.7% was misleading (tracked only fixture queries)\n\n### By Source\n\n| Source | Searches | Zero-hits | Ratio |\n|--------|----------|-----------|-------|\n| unknown (agents) | 713 | 185 | 25.9% |\n| fixture (tests) | 564 | 132 | 23.4% |\n| interactive | 2 | 1 | 50.0% |\n\n---\n\n## Classification Table\n\n| Rank | Count | Query | Bucket | Root Cause | Action |\n|------|-------|-------|--------|------------|--------|\n| 1 | 100 | `` (empty) | 🧹 **Noise** | Bug: empty query passed to search | Fix: filter empty queries before search |\n| 2 | 61 | `servicio` | ✅ **Legítimo miss** | Spanish word, pack is English | No action (expected) |\n| 3 | 12 | `servicios` | ✅ **Legítimo miss** | Spanish word | No action |\n| 4 | 12 | `búsqueda` | ✅ **Legítimo miss** | Spanish word | No action |\n| 5 | 12 | `services` | ✅ **Legítimo miss** | English synonym | No action |\n| 6 | 12 | `stop_reason` | ✅ **Legítimo miss** | Internal term | No action |\n| 7 | 12 | `123`, `!!!`, `@#$%` | 🧹 **Noise** | Test fixture edge cases | No action (by design) |\n| 8 | 12 | `UPPERCASE`, `MixedCase` | 🧹 **Noise** | Test fixture case sensitivity | No action (by design) |\n| 9 | 11 | `config` | ✅ **Was miss** | Previously not in pack | **RESOLVED** - now returns hits |\n| 10 | 10 | `ContextService` | 📦 **Pack faltante** | In pack (22 refs) but not found | **INVESTIGATE** - case/score issue |\n\n---\n\n## Key Findings\n\n### 1. Empty Query is the Biggest Issue\n- **100 zero-hits** from empty queries (31% of all zero-hits!)\n- Source: \"unknown\" (agents calling search without query)\n- **GOOD NEWS**: B2 intervention (query validation) already implemented\n- **Evidence**: 62 queries rejected (not counted as zero-hits):\n  - 38x: \"Query cannot be empty or whitespace-only\"\n  - 24x: \"Query must be at least 2 characters\"\n\n### 2. Spanish Words Are Legitimate Misses\n- `servicio`, `servicios`, `búsqueda` = 85 zero-hits\n- Pack is English-indexed, these are expected misses\n- **Action**: None (by design)\n\n### 3. Test Fixture is Working as Intended\n- 132 zero-hits from fixture (test edge cases)\n- **Action**: None (by design)\n\n### 4. ContextService is a Real Issue\n- Exists in context pack (22 references)\n- But search returns 0 hits\n- **Action**: Investigate - possibly needs anchor or different indexing\n\n---\n\n## Intervention Plan\n\n### Priority 1: Filter Empty Queries\n```python\n# In CLI or search use case\nif not query.strip():\n    raise ValueError(\"Empty query not allowed\")\n```\n\n### Priority 2: ContextService - INVESTIGATED\n\n**Finding**: The file IS in the pack (`repo:src/application/context_service.py:299a315568`) but search returns 0 hits.\n\n**Root Cause**: The chunk text starts with the docstring. The class name `ContextService` only appears in code (`class ContextService:`), not in the searchable text.\n\n**Solution Applied**: Added ContextService keyword to docstring\n\n```python\n# Before\n\"\"\"Service for Programmatic Context Calling logic.\"\"\"\n\n# After  \n\"\"\"Service for Programmatic Context Calling logic (ContextService).\"\"\"\n```\n\n**Reality Check (AFTER FIX)**:\n```\n$ trifecta ctx search -s . -q \"ContextService\" --limit 3\nSearch Results (1 hits):\n1. [repo:src/application/context_service.py:1f6cec8071] context_service.py\n   Score: 0.50 | Tokens: ~2824\n```\n\n**Status**: ✅ FIXED - now returns 1 hit\n\n---\n\n## Reality Check Results\n\n| Query | Before | After | Status |\n|-------|--------|-------|--------|\n| `config` | 0 hits | 3 hits | ✅ Fixed |\n| `ContextService` | 0 hits | 0 hits | ❌ Still broken |\n\n---\n\n## Success Criteria\n\n- [ ] Filter empty queries → saves 100 zero-hits → ratio 24.9% → 17.1%\n- [ ] Fix ContextService → saves 10 zero-hits → 17.1% → 16.3%\n- [ ] **Target**: < 20% zero-hit ratio\n\n---\n\n## Next Steps\n\n1. Create fix for empty query filtering\n2. Investigate ContextService indexing\n3. Re-run telemetry after fixes\n4. Measure new ratio\n",
+      "char_count": 4096,
+      "token_est": 1024,
       "source_path": "zero_hit_triage_20260215.md",
       "chunking_method": "whole_file"
     },
@@ -7263,10 +7263,10 @@
       "token_est": 616
     },
     {
-      "id": "repo:docs/reports/zero_hit_triage_20260215.md:c044c752e6",
+      "id": "repo:docs/reports/zero_hit_triage_20260215.md:2f59506087",
       "title_path_norm": "zero_hit_triage_20260215.md",
       "preview": "# Zero-Hit Triage Report\n\n**Date**: 2026-02-15  \n**Source**: `_ctx/telemetry/zero_hits.ndjson` + events.jsonl\n\n---\n\n## Executive Summary\n\n| Metric | Value |\n|--------|-------|\n| Total searches | 1,279...",
-      "token_est": 926
+      "token_est": 1024
     },
     {
       "id": "repo:docs/reports/wo0008_ab_linter_reproducibility.md:fb205e2c69",
