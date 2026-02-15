@@ -191,6 +191,7 @@ class TelemetryHealth:
             "total_recovered": total_recovered,
             "recovery_rate": recovery_rate,
             "top_aliases": top_aliases,
+            "window_events": len(self.events),
         }
 
     def check_lsp_invariants(self) -> list[HealthResult]:
@@ -360,8 +361,9 @@ def run_health_check(segment_path: Path, verbose: bool = False) -> int:
                 )
             if "spanish_alias_impact" in r.details:
                 impact = r.details["spanish_alias_impact"]
+                window = impact.get("window_events", "N/A")
                 print(
-                    f"  Spanish alias impact: {impact['total_recovered']}/{impact['total_applied']} recovered ({impact['recovery_rate']:.1%} rate)"
+                    f"  Spanish alias impact ({window} events): {impact['total_recovered']}/{impact['total_applied']} recovered ({impact['recovery_rate']:.1%} rate)"
                 )
                 if impact["top_aliases"]:
                     print("    Top aliases:")

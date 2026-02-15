@@ -124,3 +124,22 @@ class TestTelemetryHealth:
         assert impact["total_applied"] == 3
         assert impact["total_recovered"] == 1
         assert impact["recovery_rate"] == pytest.approx(1 / 3)
+
+    def test_spanish_alias_impact_pass2_fails(self, temp_segment):
+        tel_dir = temp_segment / "_ctx" / "telemetry"
+        events_file = tel_dir / "events.jsonl"
+        events_file.write_text(
+            '{"cmd":"ctx.search","x":{"source":"interactive"},"args":{"query_preview":"test"},"result":{"hits":5}}\n'
+            '{"cmd":"ctx.search","x":{"source":"interactive"},"args":{"query_preview":"carpeta"},"result":{"hits":0}}\n'
+            '{"cmd":"ctx.search.spanish_alias","args":{"query_preview":"carpeta","variants_tried":2},"result":{"pass1_hits":0,"pass2_hits":0,"recovered":false}}\n'
+        )
+
+        health = TelemetryHealth(temp_segment)
+        exit_code, results = health.check_all()
+
+        zero_hit_result = next((r for r in results if "spanish_alias_impact" in r.details), None)
+        assert zero_hit_result is not None
+        impact = zero_hit_result.details["spanish_alias_impact"]
+        assert impact["total_applied"] == 1
+        assert impact["total_recovered"] == 0
+        assert impact["recovery_rate"] == 0.0
