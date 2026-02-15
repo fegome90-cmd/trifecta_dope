@@ -1,9 +1,9 @@
 version: 1
 id: WO-0042
-epic_id: E-SCALE
+epic_id: E-SSOT-ROOT
 title: Estabilizar SSOT de segment/workspace root
 priority: P0
-status: done
+status: pending
 scope:
   allow:
   - src/domain/segment_resolver.py
@@ -28,11 +28,7 @@ dod_id: DOD-DEFAULT
 execution:
   engine: trifecta
   required_flow:
-  - session.append:intent
-  - ctx.sync
-  - ctx.search
-  - ctx.get
-  - session.append:result
+  - verify
   segment: .
 trace:
   ticket: null
@@ -49,9 +45,8 @@ claim_links:
   constraints:
   - No breaking changes en CLI args
   - Mantener paths cortos para AF_UNIX limit
-objective: "Crear un \xFAnico resolver oficial (SSOT) para segment_id, segment_root,\
-  \ daemon socket path,\ncache db path, y telemetry grouping. Resolver identidades\
-  \ divergentes que rompen el sistema.\n"
+objective: "Crear un \xFAnico resolver oficial (SSOT) para segment_id, segment_root, daemon socket path,\n\
+  cache db path, y telemetry grouping. Resolver identidades divergentes que rompen el sistema.\n"
 deliverables:
 - SSOT resolver unificado en src/domain/segment_resolver.py
 - "Mismos inputs \u21D2 mismo segment_id siempre (determin\xEDstico)"
@@ -65,10 +60,3 @@ diff_budget:
 stop_conditions:
   max_iterations: 6
   max_fail_verify: 2
-owner: felipe_gonzalez
-started_at: '2026-02-15T18:27:05.048864+00:00'
-branch: feat/wo-WO-0042
-worktree: ../.worktrees/WO-0042
-verified_at_sha: e34fae8c1837ed67340036208a42714b7e915e4e
-closed_at: '2026-02-15T19:35:19.655117+00:00'
-result: done

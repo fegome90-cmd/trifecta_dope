@@ -136,11 +136,12 @@ class TelemetryHealth:
             return 0, results
 
 
-def run_health_check(segment_path: Path) -> int:
+def run_health_check(segment_path: Path, verbose: bool = False) -> int:
     """Run health check and return exit code.
 
     Args:
         segment_path: Path to segment directory
+        verbose: Print detailed information including top queries
 
     Returns:
         Exit code: 0=OK, 2=WARN, 3=FAIL
@@ -151,6 +152,17 @@ def run_health_check(segment_path: Path) -> int:
     for r in results:
         status_icon = {"OK": "✓", "WARN": "⚠", "FAIL": "✗"}[r.status]
         print(f"{status_icon} {r.message}")
+
+        # Print detailed info for WARN/FAIL or when verbose
+        if verbose or r.status in ("WARN", "FAIL"):
+            if "top_zero_hit_queries" in r.details:
+                print("  Top zero-hit queries:")
+                for q in r.details["top_zero_hit_queries"][:5]:
+                    print(f"    - {q['query']} (count: {q['count']})")
+            if "total_searches" in r.details:
+                print(
+                    f"  Total searches: {r.details['total_searches']}, Zero-hits: {r.details['zero_hits']}"
+                )
 
     if not results:
         print("No telemetry data found (WARN: no data to analyze)")

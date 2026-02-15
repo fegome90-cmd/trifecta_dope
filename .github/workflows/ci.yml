@@ -128,3 +128,45 @@ jobs:
         with:
           name: wo-lint-json
           path: _ctx/telemetry/wo_lint.json
+
+  telemetry-health:
+    name: Telemetry Health Check
+    runs-on: ubuntu-latest
+    # Run only on main branch pushes (not on every PR to avoid noise)
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Run telemetry health check
+        id: health
+        run: |
+          # Run health check - exit codes: 0=OK, 2=WARN, 3=FAIL
+          # WARN (2) doesn't block CI but prints info
+          # FAIL (3) blocks CI
+          uv run trifecta telemetry health -s .
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+
+      - name: Show warning details on WARN
+        if: steps.health.outputs.exit_code == '2'
+        run: |
+          echo "::warning::Telemetry health check returned WARN - zero-hit ratio may be elevated"
+          echo "Run 'trifecta telemetry health -s .' locally for details"
+
+      - name: Fail on critical health issues
+        if: steps.health.outputs.exit_code == '3'
+        run: |
+          echo "::error::Telemetry health check FAILED - critical issues detected"
+          echo "Run 'trifecta telemetry health -s .' locally for details"
+          exit 1

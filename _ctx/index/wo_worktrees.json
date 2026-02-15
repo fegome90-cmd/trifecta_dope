@@ -1,9 +1,9 @@
 {
   "version": 1,
   "schema": "trifecta.sidecar.wo_index.v1",
-  "generated_at": "2026-02-15T21:31:55.616100+00:00",
+  "generated_at": "2026-02-15T21:42:41.426460+00:00",
   "repo_root": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope",
-  "git_head_sha_repo_root": "2e628c4a144e4ba35163a37ce3f3887ba368ce4e",
+  "git_head_sha_repo_root": "bdf14e7d88927bea339a1e3075e78e07d6967861",
   "work_orders": [
     {
       "id": "WO-0037",
@@ -262,22 +262,6 @@
       "last_error": null
     },
     {
-      "id": "WO-0038",
-      "title": "Path Guardrails (Validation + Security)",
-      "status": "pending",
-      "priority": "P0",
-      "owner": null,
-      "epic_id": "E-0003",
-      "worktree_path": "../.worktrees/WO-0038",
-      "worktree_exists": false,
-      "branch": null,
-      "worktree_head_sha": null,
-      "wo_yaml_path": "_ctx/jobs/pending/WO-0038.yaml",
-      "created_at": "",
-      "closed_at": null,
-      "last_error": null
-    },
-    {
       "id": "WO-0014",
       "title": "Import Extractor using stdlib AST",
       "status": "pending",
@@ -342,22 +326,6 @@
       "last_error": null
     },
     {
-      "id": "WO-0052",
-      "title": "Implementar ZeroHitTracker para logueo estructurado",
-      "status": "running",
-      "priority": "P1",
-      "owner": "felipe_gonzalez",
-      "epic_id": "E-SCALE",
-      "worktree_path": "../.worktrees/WO-0052",
-      "worktree_exists": true,
-      "branch": "job/WO-0052",
-      "worktree_head_sha": "5e733e5bc80de085866901082c61c62378cc6375",
-      "wo_yaml_path": "_ctx/jobs/running/WO-0052.yaml",
-      "created_at": "",
-      "closed_at": null,
-      "last_error": null
-    },
-    {
       "id": "WO-0048",
       "title": "SSOT SegmentRef Sweep + Anti-Drift Guard",
       "status": "running",
@@ -374,17 +342,17 @@
       "last_error": null
     },
     {
-      "id": "WO-0045",
-      "title": "Trifecta-first WO engine (fail-closed)",
+      "id": "WO-0038",
+      "title": "Path Guardrails (Validation + Security)",
       "status": "running",
       "priority": "P0",
-      "owner": "",
-      "epic_id": "E-TESTS-CONTRACT",
-      "worktree_path": "../.worktrees/WO-0045",
-      "worktree_exists": false,
-      "branch": "feat/wo-WO-0045",
-      "worktree_head_sha": null,
-      "wo_yaml_path": "_ctx/jobs/running/WO-0045.yaml",
+      "owner": "felipe_gonzalez",
+      "epic_id": "E-0003",
+      "worktree_path": "../.worktrees/WO-0038",
+      "worktree_exists": true,
+      "branch": "feat/wo-WO-0038",
+      "worktree_head_sha": "bdf14e7d88927bea339a1e3075e78e07d6967861",
+      "wo_yaml_path": "_ctx/jobs/running/WO-0038.yaml",
       "created_at": "",
       "closed_at": null,
       "last_error": null
@@ -737,6 +705,22 @@
       "branch": "job/WO-0004-query-linter-cli",
       "worktree_head_sha": null,
       "wo_yaml_path": "_ctx/jobs/done/WO-0004.yaml",
+      "created_at": "",
+      "closed_at": null,
+      "last_error": null
+    },
+    {
+      "id": "WO-0045",
+      "title": "Trifecta-first WO engine (fail-closed)",
+      "status": "running",
+      "priority": "P0",
+      "owner": "",
+      "epic_id": "E-TESTS-CONTRACT",
+      "worktree_path": "../.worktrees/WO-0045",
+      "worktree_exists": false,
+      "branch": "feat/wo-WO-0045",
+      "worktree_head_sha": null,
+      "wo_yaml_path": "_ctx/jobs/running/WO-0045.yaml",
       "created_at": "",
       "closed_at": null,
       "last_error": null

@@ -1705,10 +1705,13 @@ def telemetry_chart(
 @telemetry_app.command("health")
 def telemetry_health(
     segment: str = typer.Option(..., "--segment", "-s", help=HELP_SEGMENT),
+    verbose: bool = typer.Option(
+        False, "--verbose", "-v", help="Show detailed information including top queries"
+    ),
 ) -> None:
     """Check telemetry health. Exit codes: 0=OK, 2=WARN, 3=FAIL."""
     segment_path = Path(segment).resolve()
-    exit_code = run_health_check(segment_path)
+    exit_code = run_health_check(segment_path, verbose=verbose)
     raise typer.Exit(code=exit_code)
 
 
