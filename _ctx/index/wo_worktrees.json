@@ -1,9 +1,9 @@
 {
   "version": 1,
   "schema": "trifecta.sidecar.wo_index.v1",
-  "generated_at": "2026-02-15T20:49:36.571461+00:00",
+  "generated_at": "2026-02-15T21:10:21.765557+00:00",
   "repo_root": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope",
-  "git_head_sha_repo_root": "3fe9e665a84d893669d0e920e7db30a904e8e254",
+  "git_head_sha_repo_root": "07c9f72c531921dc35f94d02530df1194f76b6fb",
   "work_orders": [
     {
       "id": "WO-0037",
@@ -319,7 +319,7 @@
       "worktree_path": "../.worktrees/WO-0050",
       "worktree_exists": true,
       "branch": "job/WO-0050",
-      "worktree_head_sha": "3fe9e665a84d893669d0e920e7db30a904e8e254",
+      "worktree_head_sha": "f94954c924dc3a13540a67a8cc5903086c603532",
       "wo_yaml_path": "_ctx/jobs/running/WO-0050.yaml",
       "created_at": "",
       "closed_at": null,
@@ -337,6 +337,22 @@
       "branch": "feat/wo-WO-0046",
       "worktree_head_sha": null,
       "wo_yaml_path": "_ctx/jobs/running/WO-0046.yaml",
+      "created_at": "",
+      "closed_at": null,
+      "last_error": null
+    },
+    {
+      "id": "WO-0051",
+      "title": "Diagnostico y triage de zero-hit ratio",
+      "status": "running",
+      "priority": "P0",
+      "owner": "felipe_gonzalez",
+      "epic_id": "E-SCALE",
+      "worktree_path": "../.worktrees/WO-0051",
+      "worktree_exists": true,
+      "branch": "job/WO-0051",
+      "worktree_head_sha": "07c9f72c531921dc35f94d02530df1194f76b6fb",
+      "wo_yaml_path": "_ctx/jobs/running/WO-0051.yaml",
       "created_at": "",
       "closed_at": null,
       "last_error": null

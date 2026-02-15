@@ -1,0 +1,57 @@
+version: 1
+id: WO-0051
+epic_id: E-SCALE
+title: Diagnostico y triage de zero-hit ratio
+priority: P0
+status: running
+owner: felipe_gonzalez
+scope:
+  allow:
+  - src/application/zero_hit_reports.py
+  - src/application/telemetry_reports.py
+  - _ctx/telemetry/
+  deny:
+  - .env*
+verify:
+  commands:
+  - uv run trifecta ctx search --segment . --query "test" | head -5
+dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
+  segment: .
+trace:
+  ticket: null
+  related_wos:
+  - WO-0050
+claim_links:
+  requirements:
+  - Reporte que separe zero-hits por query type
+  - Reporte que separe zero-hits por segment/pack
+  - 'Top 20 queries que fallan + clasificacion: deberian fallar o no'
+  - 1-2 intervenciones concretas para bajar ratio
+assumptions:
+- 53.7% zero-hit viene de telemetria real (no suite adversarial)
+constraints:
+- 'No inflar scope: focus en diagnostico + intervencion minima'
+objective: Diagnosticar el 53.7% zero-hit ratio. Distinguir si viene de suite adversarial
+  o de queries reales. Generar intervencion minima para bajar el ratio.
+deliverables:
+- Reporte zero-hit por query type (test/fixture/interactive/agent)
+- Reporte zero-hit por segment/pack
+- 'Top 20 queries que fallan con clasificacion: expected fail vs unexpected fail'
+- "1-2 intervenciones concretas para bajar ratio (a\xF1adir terminos a prime, etc.)"
+diff_budget:
+  max_files: 5
+  max_loc: 150
+stop_conditions:
+  max_iterations: 2
+  max_fail_verify: 1
+started_at: '2026-02-15T21:10:21.026240+00:00'
+branch: job/WO-0051
+worktree: ../.worktrees/WO-0051

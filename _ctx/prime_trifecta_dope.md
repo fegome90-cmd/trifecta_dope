@@ -31,6 +31,9 @@ profile: load_only
 12. `trifecta_dope/tests/acceptance/test_ctx_sync_preconditions.py`
 13. `trifecta_dope/src/domain/naming.py`
 14. `trifecta_dope/src/infrastructure/daemon_paths.py`
+15. `trifecta_dope/src/application/context_service.py`
+16. `trifecta_dope/src/application/search_get_usecases.py`
+17. `trifecta_dope/src/application/telemetry_pr2.py`
 
 
 ## [MED] Prioridad MEDIA - Implementación
