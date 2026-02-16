@@ -1,9 +1,9 @@
 {
   "version": 1,
   "schema": "trifecta.sidecar.wo_index.v1",
-  "generated_at": "2026-02-16T00:59:20.387127+00:00",
+  "generated_at": "2026-02-16T01:16:58.353716+00:00",
   "repo_root": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope",
-  "git_head_sha_repo_root": "6426f1efea1f36f982f7866463662900bdb43e6e",
+  "git_head_sha_repo_root": "4c6bb0de767010eabd375d63d1e366acc1bfd202",
   "work_orders": [
     {
       "id": "WO-0037",
