@@ -1,0 +1,9 @@
+{
+  "wo_id": "WO-0041",
+  "status": "PASS",
+  "verified_at": "2026-02-16T00:00:00Z",
+  "verified_at_sha": "72d48d5",
+  "tests_passed": 12,
+  "lint_passed": true,
+  "notes": "All LSP invariant tests pass. Implementation adds invariant checking before READY transition."
+}

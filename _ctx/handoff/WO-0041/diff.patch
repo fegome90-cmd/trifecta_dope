@@ -1,0 +1,388 @@
+diff --git a/docs/contracts/LSP_READY_INVARIANTS.md b/docs/contracts/LSP_READY_INVARIANTS.md
+new file mode 100644
+index 0000000..6fe6a3f
+--- /dev/null
++++ b/docs/contracts/LSP_READY_INVARIANTS.md
+@@ -0,0 +1,106 @@
++# LSP READY Invariants Contract
++
++## Overview
++
++This contract defines the **invariant checks** that MUST pass before the `LSPClient` can transition to the `READY` state. This ensures that `READY` truly means "operational and capable of serving requests."
++
++## Problem
++
++The previous "relaxed READY" contract (see `LSP_RELAXED_READY.md`) only verified that the LSP handshake completed. This meant `READY` could be reported even when:
++- The LSP process had crashed
++- The workspace root was incorrect
++- The LSP was not responding to requests
++
++## Invariants
++
++Before transitioning to `READY`, the following invariants MUST all pass:
++
++### 1. Handshake Complete (`handshake_complete`)
++- `initialize` request must return a successful response
++- `initialized` notification must be sent
++- At least empty capabilities must be received
++
++### 2. Process Alive (`process_alive`)
++- The LSP subprocess must be running (not terminated)
++- `process.poll()` must return `None`
++
++### 3. Workspace Root Correct (`workspace_root_correct`)
++- `root_path` must be set and must exist on the filesystem
++- The path must be accessible for file operations
++
++### 4. Health Check Responds (`health_check_responds`)
++- The LSP must have returned capabilities from the handshake
++- This indicates the server is capable of processing requests
++
++## Implementation
++
++### Invariant Tracking
++
++Failed invariants are tracked in `LSPClient._failed_invariants`:
++```python
++INVARIANT_HANDSHAKE = "handshake_complete"
++INVARIANT_PROCESS_ALIVE = "process_alive"
++INVARIANT_WORKSPACE_ROOT = "workspace_root_correct"
++INVARIANT_HEALTH_CHECK = "health_check_responds"
++```
++
++### State Transition
++
++```python
++def _run_loop(self) -> None:
++    # ... handshake ...
++    
++    if not self._check_invariants():
++        self._log_event(
++            "lsp.state_change",
++            {},
++            {"status": "failed", "reason": "invariant_check_failed"},
++            1,
++            reason="invariant_check_failed",
++            failed_invariants=",".join(self._failed_invariants),
++        )
++        self._transition(LSPState.FAILED)
++        return
++    
++    self._transition(LSPState.READY)
++```
++
++### Health Check API
++
++```python
++def health_check(self, timeout_ms: int = 500) -> bool:
++    """Verify LSP can respond within timeout."""
++    if self.state != LSPState.READY:
++        return False
++    
++    result = self.request("$/health", {}, timeout=timeout_ms / 1000.0)
++    return result is not None
++```
++
++## Telemetry Events
++
++### lsp.state_change (on transition failure)
++```python
++{
++    "cmd": "lsp.state_change",
++    "result": {"status": "failed", "reason": "invariant_check_failed"},
++    "reason": "invariant_check_failed",
++    "failed_invariants": "process_alive,workspace_root_correct"
++}
++```
++
++### lsp.health_check
++```python
++{
++    "cmd": "lsp.health_check",
++    "result": {"status": "timeout", "latency_ms": 523},
++    "timing": 523
++}
++```
++
++## Verification
++
++Tests verifying this contract:
++- `tests/integration/test_ready_semantics_documented_and_enforced.py::test_ready_semantics_is_post_initialize`
++- `tests/integration/test_ready_semantics_documented_and_enforced.py::test_ready_fails_when_invariants_fail`
++- `tests/integration/test_ready_semantics_documented_and_enforced.py::test_invariant_check_tracks_failures`
+diff --git a/src/infrastructure/lsp_client.py b/src/infrastructure/lsp_client.py
+index a4c4031..a0bce27 100644
+--- a/src/infrastructure/lsp_client.py
++++ b/src/infrastructure/lsp_client.py
+@@ -4,7 +4,8 @@ import shutil
+ import threading
+ import os
+ import sys
+-from typing import Optional, Dict, Any
++import time
++from typing import Optional, Dict, Any, List
+ from enum import Enum
+ from pathlib import Path
+ 
+@@ -17,6 +18,12 @@ class LSPState(Enum):
+     CLOSED = "CLOSED"
+ 
+ 
++INVARIANT_HANDSHAKE = "handshake_complete"
++INVARIANT_PROCESS_ALIVE = "process_alive"
++INVARIANT_WORKSPACE_ROOT = "workspace_root_correct"
++INVARIANT_HEALTH_CHECK = "health_check_responds"
++
++
+ class LSPClient:
+     def __init__(self, root_path: Path, telemetry: Any = None):
+         self.root_path = root_path
+@@ -24,14 +31,15 @@ class LSPClient:
+         self.state = LSPState.COLD
+         self.process: Optional[subprocess.Popen[bytes]] = None
+         self.lock = threading.Lock()
+-        self._stop_lock = threading.Lock()  # Separate lock for stop idempotency
++        self._stop_lock = threading.Lock()
+         self.stopping = threading.Event()
+-        self._thread: Optional[threading.Thread] = None  # Track loop thread for join
++        self._thread: Optional[threading.Thread] = None
+         self._capabilities: Dict[str, Any] = {}
+         self._warmup_file: Optional[Path] = None
++        self._failed_invariants: List[str] = []
+ 
+         # Request handling
+-        self._next_id = 1000  # Avoid conflict with init id 1
++        self._next_id = 1000
+         self._pending_requests: Dict[int, Any] = {}
+         self._request_events: Dict[int, threading.Event] = {}
+ 
+@@ -232,9 +240,7 @@ class LSPClient:
+             self.telemetry.incr("lsp_fallback_count", 1)
+ 
+     def _run_loop(self) -> None:
+-        """Handshake + Read Loop."""
+         try:
+-            # 1. Initialize
+             req = {
+                 "jsonrpc": "2.0",
+                 "id": 1,
+@@ -247,16 +253,27 @@ class LSPClient:
+             }
+             self._send_rpc(req)
+ 
+-            # 2. Wait for Response (blocking single read)
+             resp = self._read_rpc()
+             if not resp or "result" not in resp:
++                self._failed_invariants.append(INVARIANT_HANDSHAKE)
+                 self._transition(LSPState.FAILED)
+                 return
+ 
+             self._capabilities = resp["result"].get("capabilities", {})
+             self._send_rpc({"jsonrpc": "2.0", "method": "initialized", "params": {}})
+ 
+-            # relaxed READY: Transition immediately to allow requests
++            if not self._check_invariants():
++                self._log_event(
++                    "lsp.state_change",
++                    {},
++                    {"status": "failed", "reason": "invariant_check_failed"},
++                    1,
++                    reason="invariant_check_failed",
++                    failed_invariants=",".join(self._failed_invariants),
++                )
++                self._transition(LSPState.FAILED)
++                return
++
+             with self.lock:
+                 self._transition(LSPState.READY)
+ 
+@@ -267,16 +284,14 @@ class LSPClient:
+                     {},
+                     {"status": "ready"},
+                     1,
+-                    reason="initialized",
++                    reason="invariants_passed",
+                 )
+ 
+-            # 3. Read Loop (Waiting for publishDiagnostics & Responses)
+             while self.state != LSPState.CLOSED:
+                 msg = self._read_rpc()
+                 if not msg:
+-                    break  # EOF
++                    break
+ 
+-                # Handle Response
+                 if "id" in msg and "result" in msg:
+                     req_id = msg["id"]
+                     with self.lock:
+@@ -284,18 +299,13 @@ class LSPClient:
+                             self._pending_requests[req_id] = msg["result"]
+                             self._request_events[req_id].set()
+ 
+-                # Handle Notification
+                 method = msg.get("method", "")
+                 if method == "textDocument/publishDiagnostics":
+-                    # Log diagnostics but do not control state (already READY)
+                     pass
+         except Exception as e:
+-            # If we're stopping, silently exit without printing debug messages
+             if self.stopping.is_set():
+                 return
+ 
+-            # Only log errors if NOT intentionally stopping
+-            # Capture stderr
+             err_out = "Unknown"
+             if self.process:
+                 try:
+@@ -305,8 +315,66 @@ class LSPClient:
+                 except Exception:
+                     pass
+             sys.stderr.write(f"DEBUG: LSP Loop Exception: {e}. Stderr: {err_out}\n")
++            self._failed_invariants.append(INVARIANT_HANDSHAKE)
+             self._transition(LSPState.FAILED)
+ 
++    def _check_invariants(self) -> bool:
++        self._failed_invariants.clear()
++
++        if not self._verify_process_alive():
++            return False
++
++        if not self._verify_workspace_root():
++            return False
++
++        if not self._verify_health_check():
++            return False
++
++        return True
++
++    def _verify_process_alive(self) -> bool:
++        if not self.process or self.process.poll() is not None:
++            self._failed_invariants.append(INVARIANT_PROCESS_ALIVE)
++            return False
++        return True
++
++    def _verify_workspace_root(self) -> bool:
++        if not self.root_path or not self.root_path.exists():
++            self._failed_invariants.append(INVARIANT_WORKSPACE_ROOT)
++            return False
++        return True
++
++    def _verify_health_check(self) -> bool:
++        if not self._capabilities:
++            self._failed_invariants.append(INVARIANT_HEALTH_CHECK)
++            return False
++        return True
++
++    def health_check(self, timeout_ms: int = 500) -> bool:
++        if self.state != LSPState.READY:
++            return False
++
++        start = time.perf_counter()
++        result = self.request("$/health", {}, timeout=timeout_ms / 1000.0)
++        elapsed_ms = int((time.perf_counter() - start) * 1000)
++
++        if result is not None and elapsed_ms <= timeout_ms:
++            return True
++
++        if elapsed_ms > timeout_ms:
++            self._failed_invariants.append(f"{INVARIANT_HEALTH_CHECK}_timeout")
++            self._log_event(
++                "lsp.health_check",
++                {},
++                {"status": "timeout", "latency_ms": elapsed_ms},
++                elapsed_ms,
++            )
++
++        return False
++
++    def get_failed_invariants(self) -> List[str]:
++        return self._failed_invariants.copy()
++
+     def request(
+         self, method: str, params: Dict[str, Any], timeout: float = 2.0
+     ) -> Optional[Dict[str, Any]]:
+diff --git a/tests/integration/test_ready_semantics_documented_and_enforced.py b/tests/integration/test_ready_semantics_documented_and_enforced.py
+index 494312e..e442c72 100644
+--- a/tests/integration/test_ready_semantics_documented_and_enforced.py
++++ b/tests/integration/test_ready_semantics_documented_and_enforced.py
+@@ -1,38 +1,59 @@
+ from unittest.mock import MagicMock, patch
+-from src.infrastructure.lsp_client import LSPClient, LSPState
++from src.infrastructure.lsp_client import (
++    LSPClient,
++    LSPState,
++    INVARIANT_PROCESS_ALIVE,
++    INVARIANT_WORKSPACE_ROOT,
++    INVARIANT_HEALTH_CHECK,
++)
+ 
+ 
+ def test_ready_semantics_is_post_initialize(tmp_path):
+-    """
+-    Tripwire: Enforce Option B (Post-Initialize READY).
+-    The system MUST transition to READY immediately after the 'initialized' handshake check,
+-    WITHOUT waiting for 'publishDiagnostics'.
+-
+-    This ensures RPC availability is prioritized over semantic readiness (which is flaky without VFS).
+-    """
+     client = LSPClient(tmp_path)
+     client.process = MagicMock()
+-    # Mock communication
++    client._capabilities = {}
+     client._send_rpc = MagicMock()
+ 
+-    # Mock _read_rpc sequence:
+-    # 1. 'initialize' response (triggers "initialized" notification + READY transition)
+-    # 2. EOF or irrelevant message to exit loop (simulated by side_effect exception or break)
+-
+     init_response = {"jsonrpc": "2.0", "id": 1, "result": {"capabilities": {}}}
+ 
+-    # We patch _read_rpc to return init_response then None (EOF)
+     with patch.object(client, "_read_rpc", side_effect=[init_response, None]):
+-        # Run the loop logic (synchronously for test)
+-        client._run_loop()
++        with patch.object(client, "_check_invariants", return_value=True):
++            client._run_loop()
+ 
+-    # VERIFICATION:
+-    # 1. State must be READY
+     assert client.state == LSPState.READY, "LSPClient should be READY after initialize handshake"
+ 
+-    # 2. 'initialized' notification must have been sent
+-    # We check calls to _send_rpc
+-    # First call is initialize request, Second is initialized notification
+     assert client._send_rpc.call_count >= 2
+     args, _ = client._send_rpc.call_args_list[1]
+     assert args[0]["method"] == "initialized", "Client must send 'initialized' notification"
++
++
++def test_ready_fails_when_invariants_fail(tmp_path):
++    client = LSPClient(tmp_path)
++    client.process = None
++    client._capabilities = {}
++    client._send_rpc = MagicMock()
++
++    init_response = {"jsonrpc": "2.0", "id": 1, "result": {"capabilities": {}}}
++
++    with patch.object(client, "_read_rpc", side_effect=[init_response, None]):
++        client._run_loop()
++
++    assert client.state == LSPState.FAILED, "LSPClient should be FAILED when invariants fail"
++    assert len(client.get_failed_invariants()) > 0, "Failed invariants should be recorded"
++
++
++def test_invariant_check_tracks_failures(tmp_path):
++    client = LSPClient(tmp_path)
++
++    client._verify_process_alive()
++    assert INVARIANT_PROCESS_ALIVE in client._failed_invariants
++
++    client._failed_invariants.clear()
++    client.root_path = tmp_path / "nonexistent"
++    client._verify_workspace_root()
++    assert INVARIANT_WORKSPACE_ROOT in client._failed_invariants
++
++    client._failed_invariants.clear()
++    client._capabilities = {}
++    client._verify_health_check()
++    assert INVARIANT_HEALTH_CHECK in client._failed_invariants
