@@ -1,9 +1,9 @@
 {
   "version": 1,
   "schema": "trifecta.sidecar.wo_index.v1",
-  "generated_at": "2026-02-15T22:12:05.607590+00:00",
+  "generated_at": "2026-02-16T00:59:20.387127+00:00",
   "repo_root": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope",
-  "git_head_sha_repo_root": "81043d5f8e31df1196f418f56d25071442936911",
+  "git_head_sha_repo_root": "6426f1efea1f36f982f7866463662900bdb43e6e",
   "work_orders": [
     {
       "id": "WO-0037",
@@ -61,9 +61,9 @@
       "owner": "",
       "epic_id": "E-LSP-CONTRACT",
       "worktree_path": "../.worktrees/WO-0041",
-      "worktree_exists": false,
+      "worktree_exists": true,
       "branch": "feat/wo-WO-0041",
-      "worktree_head_sha": null,
+      "worktree_head_sha": "fb875405114c1e8257278d6c95e4cff0454303bd",
       "wo_yaml_path": "_ctx/jobs/pending/WO-0041.yaml",
       "created_at": "",
       "closed_at": null,
@@ -355,6 +355,22 @@
       "wo_yaml_path": "_ctx/jobs/done/WO-0040.yaml",
       "created_at": "",
       "closed_at": "2026-02-13T23:57:42.516740+00:00",
+      "last_error": null
+    },
+    {
+      "id": "WO-0041",
+      "title": "Definir READY como contrato con invariantes",
+      "status": "done",
+      "priority": "P0",
+      "owner": "felipe_gonzalez",
+      "epic_id": "E-LSP-CONTRACT",
+      "worktree_path": "../.worktrees/WO-0041",
+      "worktree_exists": true,
+      "branch": "feat/wo-WO-0041",
+      "worktree_head_sha": "fb875405114c1e8257278d6c95e4cff0454303bd",
+      "wo_yaml_path": "_ctx/jobs/done/WO-0041.yaml",
+      "created_at": "",
+      "closed_at": "2026-02-16T00:59:20.255319+00:00",
       "last_error": null
     },
     {
@@ -669,9 +685,9 @@
       "owner": "felipe_gonzalez",
       "epic_id": "E-SCALE",
       "worktree_path": "../.worktrees/WO-0053",
-      "worktree_exists": true,
+      "worktree_exists": false,
       "branch": "feat/wo-WO-0053",
-      "worktree_head_sha": "d045701f01a721f32eac02cb10bef9a40ea013a9",
+      "worktree_head_sha": null,
       "wo_yaml_path": "_ctx/jobs/done/WO-0053.yaml",
       "created_at": "",
       "closed_at": "2026-02-15T22:12:05.471902+00:00",
