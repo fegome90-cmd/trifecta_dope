@@ -32,15 +32,21 @@ if [[ -n "${TRIFECTA_PRECOMMIT_TEST_CMD:-}" ]]; then
     bash scripts/hooks/pre_commit_test_gate.sh
 fi
 
-# 5) Context sync
-echo "[hooks] Syncing context..."
-if command -v uv &>/dev/null; then
-    uv run trifecta ctx sync --segment . || {
-        echo "❌ Context pack sync failed"
-        exit 1
-    }
-    git add _ctx/context_pack.json 2>/dev/null || true
-    echo "✅ Context synced"
+# 5) Context sync (only if trifecta files changed)
+echo "[hooks] Checking if context sync needed..."
+CTX_FILES="^(skill\.md|prime_.*\.md|agent\.md|session_.*\.md|README\.md|_ctx/.*)$"
+if staged_files | grep -qE "$CTX_FILES"; then
+    echo "[hooks] Context files changed, syncing..."
+    if command -v uv &>/dev/null; then
+        uv run trifecta ctx sync --segment . || {
+            echo "❌ Context pack sync failed"
+            exit 1
+        }
+        git add _ctx/context_pack.json 2>/dev/null || true
+        echo "✅ Context synced"
+    fi
+else
+    echo "[hooks] No context files changed, skipping sync"
 fi
 
 echo "[hooks] pre-commit PASS"

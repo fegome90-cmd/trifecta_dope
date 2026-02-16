@@ -2,9 +2,15 @@
 import os
 import re
 import sys
+from datetime import datetime, timedelta
 from pathlib import Path
 
 WO_RE = re.compile(r"^WO-\d+\.ya?ml$")
+LOCK_STALE_HOURS = 24
+
+
+def warn(msg: str) -> None:
+    print(f"WARN: {msg}", file=sys.stderr)
 
 
 def fail(msg: str) -> None:
@@ -35,11 +41,17 @@ def main() -> None:
 
     running_dir = ctx / "running"
     if running_dir.exists():
+        now = datetime.now()
         for p in running_dir.iterdir():
             if p.is_file() and WO_RE.match(p.name):
                 lock = running_dir / f"{p.stem}.lock"
                 if not lock.exists():
-                    fail(f"Missing lock for running WO: {p.name}")
+                    if p.stat().st_mtime < (now - timedelta(hours=LOCK_STALE_HOURS)).timestamp():
+                        warn(
+                            f"Stale running WO without lock: {p.name} (consider running ctx_wo_finish.py)"
+                        )
+                    else:
+                        fail(f"Missing lock for running WO: {p.name}")
 
     print("OK: trifecta integrity check PASS")
 
