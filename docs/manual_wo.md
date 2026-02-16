@@ -4,35 +4,25 @@ Este documento describe el ciclo de vida, los procesos técnicos y las herramien
 
 ---
 
-## 0. Creación y Preparación (OBLIGATORIO)
+## 0. EntryPoints Oficiales (Single Source of Truth)
 
-### Bootstrap: Crear nuevo WO
+Los siguientes comandos son los **únicos mecanismos válidos** para interactuar con WOs:
 
-```bash
-# Crear WO desde scaffold canónico (OBLIGATORIO para WOs nuevos)
-make wo-new ARGS='--id WO-XXXX --epic E-XXXX --title "Descripcion" --priority P1'
+| Acción    | Comando Oficial            | Observación                      |
+| --------- | ------------------------- | -------------------------------- |
+| Crear WO  | `make wo-new`            | Usa `ctx_wo_bootstrap.py`        |
+| Preflight | `make wo-preflight`       | Usa `ctx_wo_preflight.py`        |
+| Tomar WO  | `ctx_wo_take.py WO-XXXX` | No se mueve YAML manualmente      |
+| Cerrar WO | `ctx_wo_finish.py WO-XXXX` | Único mecanismo válido de cierre |
 
-# Con opciones completas
-uv run python scripts/ctx_wo_bootstrap.py \
-  --id WO-XXXX \
-  --epic E-XXXX \
-  --title "Descripcion" \
-  --priority P1 \
-  --dod DOD-DEFAULT \
-  --verify-cmd "uv run pytest tests/..."
-```
+### Prohibido
 
-### Preflight: Validar antes de Tomar (OBLIGATORIO)
+* Editar `_ctx/jobs/done/` manualmente
+* Ejecutar `wo_verify.sh` directamente
+* Usar `verify.sh` como sustituto de `ctx_wo_finish.py`
+* Mover YAML entre estados manualmente
 
-```bash
-# Validar WO antes de take (fail-closed)
-make wo-preflight WO=WO-XXXX
-
-# JSON para CI
-uv run python scripts/ctx_wo_preflight.py WO-XXXX --json
-```
-
-**Politica**: Todo WO nuevo debe pasar por bootstrap + preflight antes del take. No se permite take directo sin validacion.
+Si se detecta bypass → el estado se considera corrupto.
 
 ---
 
@@ -125,6 +115,35 @@ Ubicados en `_ctx/handoff/WO-XXXX/`:
 
 ---
 
+## 4.1. Flujo Real de Cierre (Finish) — Secuencia Obligatoria
+
+```
+[Worktree] 
+   ↓
+ctx_wo_finish.py
+   ↓
+1) Generate DoD artifacts
+   ↓
+2) Run WO-scoped verify.commands
+        └── ctx_verify_run.sh
+                └── wo_verify.sh (motor interno)
+   ↓
+3) Run repo-wide gates (verify.sh)
+   ↓
+4) Atomic state transition (running → done/failed)
+```
+
+### Orden de Precedencia
+
+1. `verify.commands` del WO (obligatorio)
+2. Gates globales (`verify.sh`)
+3. Session Evidence markers
+4. Transacción atómica
+
+Si cualquiera falla → estado `FAILED`, no `DONE`.
+
+---
+
 ## 5. Referencia de Scripts Operativos
 
 ### EntryPoints Oficiales (SSOT)
@@ -208,3 +227,11 @@ El sistema exporta un índice en `_ctx/index/wo_worktrees.json` cada vez que se 
 4. No existe DONE sin SHA/verdict
 5. Preflight es obligatorio antes de take
 6. Main debe estar limpio para operar
+
+---
+
+## Principio Rector
+
+> Si el sistema permite bypass sin dolor, el bypass se convierte en el camino principal.
+
+Trifecta es **workflow como contrato ejecutable**, no sugerencia.
