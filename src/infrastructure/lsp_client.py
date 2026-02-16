@@ -4,7 +4,8 @@ import shutil
 import threading
 import os
 import sys
-from typing import Optional, Dict, Any
+import time
+from typing import Optional, Dict, Any, List
 from enum import Enum
 from pathlib import Path
 
@@ -17,6 +18,12 @@ class LSPState(Enum):
     CLOSED = "CLOSED"
 
 
+INVARIANT_HANDSHAKE = "handshake_complete"
+INVARIANT_PROCESS_ALIVE = "process_alive"
+INVARIANT_WORKSPACE_ROOT = "workspace_root_correct"
+INVARIANT_HEALTH_CHECK = "health_check_responds"
+
+
 class LSPClient:
     def __init__(self, root_path: Path, telemetry: Any = None):
         self.root_path = root_path
@@ -24,14 +31,15 @@ class LSPClient:
         self.state = LSPState.COLD
         self.process: Optional[subprocess.Popen[bytes]] = None
         self.lock = threading.Lock()
-        self._stop_lock = threading.Lock()  # Separate lock for stop idempotency
+        self._stop_lock = threading.Lock()
         self.stopping = threading.Event()
-        self._thread: Optional[threading.Thread] = None  # Track loop thread for join
+        self._thread: Optional[threading.Thread] = None
         self._capabilities: Dict[str, Any] = {}
         self._warmup_file: Optional[Path] = None
+        self._failed_invariants: List[str] = []
 
         # Request handling
-        self._next_id = 1000  # Avoid conflict with init id 1
+        self._next_id = 1000
         self._pending_requests: Dict[int, Any] = {}
         self._request_events: Dict[int, threading.Event] = {}
 
@@ -232,9 +240,7 @@ class LSPClient:
             self.telemetry.incr("lsp_fallback_count", 1)
 
     def _run_loop(self) -> None:
-        """Handshake + Read Loop."""
         try:
-            # 1. Initialize
             req = {
                 "jsonrpc": "2.0",
                 "id": 1,
@@ -247,16 +253,27 @@ class LSPClient:
             }
             self._send_rpc(req)
 
-            # 2. Wait for Response (blocking single read)
             resp = self._read_rpc()
             if not resp or "result" not in resp:
+                self._failed_invariants.append(INVARIANT_HANDSHAKE)
                 self._transition(LSPState.FAILED)
                 return
 
             self._capabilities = resp["result"].get("capabilities", {})
             self._send_rpc({"jsonrpc": "2.0", "method": "initialized", "params": {}})
 
-            # relaxed READY: Transition immediately to allow requests
+            if not self._check_invariants():
+                self._log_event(
+                    "lsp.state_change",
+                    {},
+                    {"status": "failed", "reason": "invariant_check_failed"},
+                    1,
+                    reason="invariant_check_failed",
+                    failed_invariants=",".join(self._failed_invariants),
+                )
+                self._transition(LSPState.FAILED)
+                return
+
             with self.lock:
                 self._transition(LSPState.READY)
 
@@ -267,16 +284,14 @@ class LSPClient:
                     {},
                     {"status": "ready"},
                     1,
-                    reason="initialized",
+                    reason="invariants_passed",
                 )
 
-            # 3. Read Loop (Waiting for publishDiagnostics & Responses)
             while self.state != LSPState.CLOSED:
                 msg = self._read_rpc()
                 if not msg:
-                    break  # EOF
+                    break
 
-                # Handle Response
                 if "id" in msg and "result" in msg:
                     req_id = msg["id"]
                     with self.lock:
@@ -284,18 +299,13 @@ class LSPClient:
                             self._pending_requests[req_id] = msg["result"]
                             self._request_events[req_id].set()
 
-                # Handle Notification
                 method = msg.get("method", "")
                 if method == "textDocument/publishDiagnostics":
-                    # Log diagnostics but do not control state (already READY)
                     pass
         except Exception as e:
-            # If we're stopping, silently exit without printing debug messages
             if self.stopping.is_set():
                 return
 
-            # Only log errors if NOT intentionally stopping
-            # Capture stderr
             err_out = "Unknown"
             if self.process:
                 try:
@@ -305,7 +315,65 @@ class LSPClient:
                 except Exception:
                     pass
             sys.stderr.write(f"DEBUG: LSP Loop Exception: {e}. Stderr: {err_out}\n")
+            self._failed_invariants.append(INVARIANT_HANDSHAKE)
             self._transition(LSPState.FAILED)
+
+    def _check_invariants(self) -> bool:
+        self._failed_invariants.clear()
+
+        if not self._verify_process_alive():
+            return False
+
+        if not self._verify_workspace_root():
+            return False
+
+        if not self._verify_health_check():
+            return False
+
+        return True
+
+    def _verify_process_alive(self) -> bool:
+        if not self.process or self.process.poll() is not None:
+            self._failed_invariants.append(INVARIANT_PROCESS_ALIVE)
+            return False
+        return True
+
+    def _verify_workspace_root(self) -> bool:
+        if not self.root_path or not self.root_path.exists():
+            self._failed_invariants.append(INVARIANT_WORKSPACE_ROOT)
+            return False
+        return True
+
+    def _verify_health_check(self) -> bool:
+        if not self._capabilities:
+            self._failed_invariants.append(INVARIANT_HEALTH_CHECK)
+            return False
+        return True
+
+    def health_check(self, timeout_ms: int = 500) -> bool:
+        if self.state != LSPState.READY:
+            return False
+
+        start = time.perf_counter()
+        result = self.request("$/health", {}, timeout=timeout_ms / 1000.0)
+        elapsed_ms = int((time.perf_counter() - start) * 1000)
+
+        if result is not None and elapsed_ms <= timeout_ms:
+            return True
+
+        if elapsed_ms > timeout_ms:
+            self._failed_invariants.append(f"{INVARIANT_HEALTH_CHECK}_timeout")
+            self._log_event(
+                "lsp.health_check",
+                {},
+                {"status": "timeout", "latency_ms": elapsed_ms},
+                elapsed_ms,
+            )
+
+        return False
+
+    def get_failed_invariants(self) -> List[str]:
+        return self._failed_invariants.copy()
 
     def request(
         self, method: str, params: Dict[str, Any], timeout: float = 2.0
