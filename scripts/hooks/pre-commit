@@ -1,62 +1,47 @@
 #!/bin/bash
-# pre-commit hook - Documentation validation
-# Validates docs and syncs context before commit
+# pre-commit hook - Trifecta fail-closed gates
+# Blocks bypass, validates WO, syncs context
 
 set -euo pipefail
 
-# Optional kill-switch
 if [[ "${TRIFECTA_HOOKS_DISABLE:-0}" == "1" ]]; then
     echo "ℹ️  TRIFECTA_HOOKS_DISABLE=1, skipping hooks"
     exit 0
 fi
 
-# Check for doc changes (only relevant files)
-CHANGED_FILES=$(git diff --cached --name-only 2>/dev/null || true)
-
-# Determine if we should run
-DOC_FILES_PATTERN="CLAUDE.md|agents.md|skill.md|llms.txt|docs/|skills/documentation/|\.documentation-skill"
-if ! echo "$CHANGED_FILES" | grep -qE "$DOC_FILES_PATTERN"; then
-    echo "ℹ️  No documentation changes detected, skipping doc validation"
-    exit 0
-fi
-
-echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "📝 Documentation Validation Hook"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
-# Find root (hand repoles worktrees)
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo ".")
+cd "$REPO_ROOT"
 
-# STEP 1: Validate documentation patterns
-echo ""
-echo "1️⃣  Validating documentation patterns..."
-if bash "$REPO_ROOT/skills/documentation/resources/verify_documentation.sh" "$REPO_ROOT"; then
-    echo "✅ Documentation validation passed"
-else
-    echo "❌ Documentation validation failed!"
-    echo ""
-    echo "Fix issues and retry, or bypass with:"
-    echo "  git commit --no-verify"
-    exit 1
+echo "[hooks] pre-commit starting..."
+
+# 1) Block manual WO closure
+echo "[hooks] Checking for manual WO closure..."
+bash scripts/hooks/prevent_manual_wo_closure.sh
+
+# 2) Format + lint WO YAMLs if touched
+echo "[hooks] Checking WO YAML changes..."
+bash scripts/hooks/wo_fmt_lint.sh
+
+# 3) Integrity check
+echo "[hooks] Running integrity check..."
+uv run python scripts/hooks/trifecta_integrity_check.py
+
+# 4) Optional test gate
+if [[ -n "${TRIFECTA_PRECOMMIT_TEST_CMD:-}" ]]; then
+    echo "[hooks] Running test gate..."
+    bash scripts/hooks/pre_commit_test_gate.sh
 fi
 
-# STEP 2: Sync context (only if doc changes)
-echo ""
-echo "2️⃣  Syncing context pack..."
+# 5) Context sync
+echo "[hooks] Syncing context..."
 if command -v uv &>/dev/null; then
-    if uv run trifecta ctx sync --segment "$REPO_ROOT" >/dev/null 2>&1; then
-        echo "✅ Context pack synced"
-    else
-        echo "⚠️  ctx sync had issues (non-blocking, check _ctx/ manually)"
-    fi
-else
-    echo "⚠️  uv not found, skipping ctx sync"
+    uv run trifecta ctx sync --segment . || {
+        echo "❌ Context pack sync failed"
+        exit 1
+    }
+    git add _ctx/context_pack.json 2>/dev/null || true
+    echo "✅ Context synced"
 fi
 
-echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "✅ Documentation validated and synced!"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
+echo "[hooks] pre-commit PASS"
 exit 0
