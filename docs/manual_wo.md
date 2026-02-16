@@ -1,174 +1,210 @@
 # Manual Operativo: Work Orders (WO) en Trifecta Dope
 
-Este documento describe el ciclo de vida, los procesos técnicos y las herramientas para la gestión de Work Orders (WO) en el proyecto `trifecta_dope`.
+Este documento describe el ciclo de vida, los procesos técnicos y las herramientas para la gestión de Work Orders (WO) garantizando un estándar de **grado auditoría**.
+
+---
+
+## 0. Creación y Preparación (OBLIGATORIO)
+
+### Bootstrap: Crear nuevo WO
+
+```bash
+# Crear WO desde scaffold canónico (OBLIGATORIO para WOs nuevos)
+make wo-new ARGS='--id WO-XXXX --epic E-XXXX --title "Descripcion" --priority P1'
+
+# Con opciones completas
+uv run python scripts/ctx_wo_bootstrap.py \
+  --id WO-XXXX \
+  --epic E-XXXX \
+  --title "Descripcion" \
+  --priority P1 \
+  --dod DOD-DEFAULT \
+  --verify-cmd "uv run pytest tests/..."
+```
+
+### Preflight: Validar antes de Tomar (OBLIGATORIO)
+
+```bash
+# Validar WO antes de take (fail-closed)
+make wo-preflight WO=WO-XXXX
+
+# JSON para CI
+uv run python scripts/ctx_wo_preflight.py WO-XXXX --json
+```
+
+**Politica**: Todo WO nuevo debe pasar por bootstrap + preflight antes del take. No se permite take directo sin validacion.
+
+---
 
 ## 1. Ciclo de Vida del WO (Máquina de Estados)
 
-Cada WO sigue una transición de estados estricta para garantizar la trazabilidad y el aislamiento.
+Cada WO sigue una máquina de estados inmutable definida en el dominio (`wo_entities.py`).
 
 ```mermaid
 graph TD
     A[PENDING] -- "ctx_wo_take.py" --> B[RUNNING]
     B -- "ctx_wo_finish.py" --> C[DONE]
-    B -- "Error / Timeout" --> D[FAILED]
+    B -- "ctx_wo_finish.py --result failed" --> D[FAILED]
+    B -- "ctx_wo_finish.py --result partial" --> E[PARTIAL]
+    E -- "Resume" --> B
     D -- "Fix & Re-take" --> A
-    B -- "ctx_reconcile_state.py" --> B
+    B -- "Timeout (>1h)" --> F[STALE LOCK]
+    F -- "Auto-cleanup on Take" --> A
+
+    subgraph "Ecosistema _ctx/"
+        G[backlog.yaml] --> H[pending/]
+        H -- "Take" --> I[running/]
+        I -- "Finish" --> J[done/failed/]
+        K[DOD Definitions] --> I
+        L[Schemas] --> I
+        I -- "Artifacts" --> M[handoff/]
+    end
 ```
 
-### Estados
+### Estados Detallados
 
-* **PENDING**: Identificado en el backlog, YAML reside en `_ctx/jobs/pending/`.
-* **RUNNING**: En ejecución activa, YAML reside en `_ctx/jobs/running/`. Posee un lock atómico y un worktree dedicado.
-* **DONE**: Finalizado con éxito, YAML reside en `_ctx/jobs/done/`. Contiene el SHA de verificación.
-* **FAILED**: Finalizado con errores insalvables o abortado.
+* **PENDING**: Identificado en el backlog. Invariante: No puede tener `started_at`.
+* **RUNNING**: En ejecución activa. Invariante: OBLIGATORIO tener `started_at`.
+* **DONE / FAILED / PARTIAL**: Estados terminales o estables. Invariante: OBLIGATORIO tener `finished_at` posterior a `started_at` y `verified_at_sha`.
 
 ---
 
-## 2. Flujo Técnico: Tomar un WO (Take)
+## 2. Invariantes de Seguridad y Transacciones
 
-El proceso de "Take" transforma un requerimiento estático en un entorno de desarrollo activo.
+El sistema Trifecta utiliza un enfoque **Fail-Closed** basado en transacciones atómicas.
 
-### Scripts Involucrados
+### A. Transacciones y Rollback (LIFO)
 
-- `scripts/ctx_wo_take.py`: Orquestador principal.
-* `scripts/helpers.py`: Utilidades de git worktree y locking.
+Tanto el `take` como el `finish` operan bajo un esquema de transacciones. Si un paso falla (ej: error al crear el worktree), el sistema ejecuta una compensación en orden inverso (**LIFO - Last In, First Out**):
 
-### Diagrama de Proceso (Take)
+1. Si falló el movimiento del YAML, se intenta restaurar desde el estado anterior.
+2. Si falló la creación del worktree, se elimina el branch generado.
+3. Finalmente, se libera el lock atómico.
 
-```text
-[Backlog YAML] -> [ctx_wo_take.py]
-      |
-      v
-1. Validación Schema & Contract (fail-closed)
-      |
-      v
-2. Adquisición de Lock Atómico (_ctx/jobs/running/WO-XXXX.lock)
-      |
-      v
-3. Creación de Branch (feat/wo-WO-XXXX)
-      |
-      v
-4. Creación de Worktree (.worktrees/WO-XXXX)
-      |
-      v
-5. Movimiento de YAML (pending/ -> running/) + Metadata (owner, started_at)
-      |
-      v
-[Worktree Listo para Desarrollo]
-```
+### B. Locking Atómico de Grado Industrial
 
-### Requisitos para Take
+El sistema evita condiciones de carrera (race conditions) mediante dos mecanismos:
 
-- Main repo debe estar en estado limpio (sin cambios sin commit).
-* El ID del WO debe existir en `_ctx/jobs/pending/`.
-* Las dependencias del WO deben estar en estado `done` (validación de dominio).
+* **Principal**: `os.link()` para crear hard-links, una operación atómica a nivel de kernel.
+* **Fallback**: `os.rename()` si el filesystem no soporta hard-links.
+* **Heartbeat**: Los procesos largos actualizan el timestamp del archivo `.lock` para evitar ser marcados como persistencia huérfana.
+
+### C. Filtrado por Políticas (`ctx_finish_ignore.yaml`)
+
+Durante el cierre, Trifecta valida que no se hayan modificado archivos sensibles al contrato del sistema:
+
+* **Ignorados**: Telemetría, logs, handoffs, y el propio YAML en ejecución.
+* **Bloqueantes**: Si el `git diff` detecta cambios en `_ctx/backlog/`, `_ctx/schemas/` o `_ctx/dod/`, el cierre se bloquea automáticamente para evitar "split-brain" en la gobernanza.
 
 ---
 
-## 3. Desarrollo Aislado (Worktree)
+## 3. Flujo Técnico: Tomar un WO (Take)
 
-El sistema utiliza **Git Worktrees** para evitar la contaminación entre tareas.
+### Proceso Interno
 
-* **Ubicación**: `.worktrees/WO-XXXX`
-* **Aislamiento**: Cada worktree tiene su propia copia del working directory y su propia branch. Puedes cambiar de contexto (CD) a otro worktree sin afectar el trabajo actual.
-* **Git Context**: Git detecta automáticamente que estás en un worktree y apunta al `.git` común del repositorio raíz.
+1. **Linter Strict**: Valida que el YAML cumpla con el `work_order.schema.json` y que las dependencias estén en `done`.
+2. **Transaction Start**: Registra el inicio de la operación.
+3. **Atomic Lock**: Crea `_ctx/jobs/running/WO-XXXX.lock`.
+4. **Worktree Isolation**: Crea un directorio físico fuera del repo principal para aislamiento total de procesos git.
 
 ---
 
-## 4. Flujo Técnico: Cerrar un WO (Finish)
+## 4. Definición de Hecho (DoD) y Evidencia
 
-El cierre es la etapa más crítica, encargada de generar evidencia (DoD) y consolidar el estado.
+El cierre de un WO requiere el cumplimiento de un **Catálogo DoD** (`_ctx/dod/*.yaml`).
 
-### Scripts Involucrados
-
-- `scripts/ctx_wo_finish.py`: Generación de artefactos y transacción de cierre.
-* `scripts/verify.sh`: Gate de verificación global.
-
-### Diagrama de Proceso (Finish)
-
-```text
-[Trabajo en Worktree] -> [ctx_wo_finish.py]
-      |
-      v
-1. Generación de Artefactos DoD (logs, patches, verdict)
-      |
-      v
-2. Verificación de Gates (verdicts & session evidence)
-      |
-      v
-3. Transacción de Cierre (Atomic):
-   a. Write result YAML a done/ o failed/
-   b. Remove running YAML
-   c. Delete WO Lock
-      |
-      v
-[WO Consolidado]
-```
-
-### Artefactos Creados (DoD)
+### Artefactos Mandatorios (DOD-DEFAULT)
 
 Ubicados en `_ctx/handoff/WO-XXXX/`:
-* `tests.log`: Salida completa de la suite de tests.
-* `lint.log`: Resultado del análisis estático (Ruff).
-* `diff.patch`: Patch del trabajo realizado (filtrado por política de seguridad).
-* `handoff.md`: Resumen narrativo del trabajo y micro-tareas.
-* `verdict.json`: Veredicto final estructurado (PASS/FAIL).
+
+* `tests.log`: Auditoría de ejecución de pruebas.
+* `lint.log`: Conformidad de estilo y análisis estático.
+* `diff.patch`: Registro inmutable de los cambios realizados.
+* `handoff.md`: Narrativa humana y evidencia de micro-tareas.
+* `verdict.json`: Veredicto estructurado compatible con el schema de auditoría.
 
 ---
 
-## 5. Formatos y Contratos
+## 5. Referencia de Scripts Operativos
 
-### Job YAML (`_ctx/jobs/{state}/WO-XXXX.yaml`)
+### EntryPoints Oficiales (SSOT)
 
-```yaml
-id: WO-XXXX
-epic_id: E-XXXX
-status: running
-owner: felipe_gonzalez
-execution:
-  engine: trifecta
-  segment: .
-  required_flow:
-    - session.append:intent
-    - ctx.sync
-    - ...
-verify:
-  commands:
-    - uv run pytest tests/specific_test.py
-```
+| Comando | Script | Uso Primario |
+| :--- | :--- | :--- |
+| **Take** | `ctx_wo_take.py` | Tomar WO y crear entorno aislado. |
+| **Finish** | `ctx_wo_finish.py` | Cerrar WO, generar DoD y consolidar. |
+| **Preflight** | `ctx_wo_preflight.py` | Validar antes de take/finish (fail-closed). |
+| **Bootstrap** | `ctx_wo_bootstrap.py` | Crear nuevo WO desde scaffold canónico. |
+| **Rescate** | `ctx_reconcile_state.py`| Sincronizar estado si el proceso fue interrumpido. |
+| **Backlog** | `ctx_backlog_validate.py`| Validar integridad del backlog global y epics. |
+| **Higiene** | `ctx_wo_fmt.py` | Mantener formato canónico de YAMLs. |
+| **Higiene** | `ctx_wo_lint.py` | Validar contratos YAML (Strict Mode). |
 
-### Verificación de Gates
+### Gates Automáticos (Hooks)
 
-El sistema activa los gates de cierre mediante:
-
-1. **Session Evidence**: Busca marcadores `[WO-XXXX] intent:` y `[WO-XXXX] result:` en `_ctx/session_trifecta_dope.md`.
-2. **Verify Script**: Ejecuta `scripts/verify.sh` que centraliza tests y linters.
+| Hook | Script | Qué hace | Bloquea |
+| :--- | :--- | :--- | :--- |
+| **Sync** | `ctx_sync_hook.sh` | Sincroniza contexto | Si falla sync |
+| **Format** | `ctx_wo_fmt.py` | Formatea YAMLs | Si hay drift |
+| **Lint** | `ctx_wo_lint.py` | Valida contrato WO | Si schema invalido |
+| **Test Gate** | `pre_commit_test_gate.sh` | Tests rápidos | Si tests fallan |
+| **WO Closure** | `prevent_manual_wo_closure.sh` | Bloquea done manual | Si alguien intenta |
+| **Integrity** | `trifecta_integrity_check.py` | Consistencia ctx/code | Si hay drift |
 
 ---
 
-## 6. Resolución de Problemas (Troubleshooting)
+## 6. Directorio Contextual (`_ctx/`): El Cerebro del Sistema
 
-| Problema | Herramienta / Solución |
-| :--- | :--- |
-| **Estado Corrupto** | Ejecutar `uv run python scripts/ctx_reconcile_state.py` para sincronizar YAMLs vs Worktrees. |
-| **Lock Stale** | Los locks de más de 1 hora se limpian automáticamente en el siguiente `take`. |
-| **Main Sucio** | `ctx_wo_finish.py` bloqueará el cierre. Debes hacer commit o stash en el repo principal. |
-| **Schema Error** | Validar contra `docs/backlog/schema/` usando `ctx_backlog_validate.py`. |
+El directorio `_ctx/` no es solo almacenamiento; es la base de datos de estado y el registro de auditoría del proyecto.
+
+### Estructura y Responsabilidades
+
+| Directorio / Archivo | Rol | Descripción |
+| :--- | :--- | :--- |
+| `backlog/backlog.yaml` | **SSOT** | Single Source of Truth. Define Epics y la cola de WOs. |
+| `jobs/pending/` | **Entrada** | WOs listos para ser tomados pero no iniciados. |
+| `jobs/running/` | **Activo** | WOs en ejecución. Contiene archivos `.lock` y YAMLs activos. |
+| `jobs/done/` | **Histórico** | WOs completados con éxito. Registro inmutable. |
+| `jobs/failed/` | **Fallos** | WOs que fallaron los gates o fueron cancelados. |
+| `dod/` | **Contratos** | Definiciones de qué evidencia es necesaria para cerrar un WO. |
+| `handoff/` | **Evidencia** | Almacena logs, parches y veredictos por cada WO cerrado. |
+| `policy/` | **Reglas** | Define qué cambios en `_ctx/` son legales durante un cierre. |
+| `telemetry/` | **Métricas** | Logs de performance, hits de búsqueda y eventos del sistema. |
+| `schemas/` | **Garantía** | Esquemas JSON para validar veredictos y transacciones. |
+
+### Flujo de Datos Contextual
+
+1. **Planificación**: Se define el WO en `backlog.yaml` y se crea en `jobs/pending/`.
+2. **Activación**: `ctx_wo_take.py` mueve el YAML a `jobs/running/` y crea el `.lock`.
+3. **Ejecución**: Se genera evidencia dinámica en `_ctx/logs/` y telemetría en `_ctx/telemetry/`.
+4. **Consolidación**: `ctx_wo_finish.py` lee el DoD de `_ctx/dod/`, genera el handoff en `_ctx/handoff/`, y mueve el YAML a `jobs/done/`.
 
 ---
 
-## 7. Resumen de Comandos Rápidos
+## 7. Troubleshooting y Códigos de Error
 
-```bash
-# Listar pendientes
-uv run python scripts/ctx_wo_take.py --list
+### Errores Comunes
 
-# Tomar WO
-uv run python scripts/ctx_wo_take.py WO-XXXX
+* `WO_NOT_RUNNING`: El YAML no está en la carpeta de ejecución.
+* `UNSATISFIED_DEPENDENCIES`: Estás intentando tomar un WO cuyo padre no ha terminado.
+* `UNKNOWN_PATHS`: Has modificado archivos en `_ctx/` no clasificados. **Acción**: Clasificar en `ctx_finish_ignore.yaml`.
+* `INVALID_STATE_TRANSITION`: Intento de pasar de `done` a `running` directamente.
 
-# Cerrar WO
-uv run python scripts/ctx_wo_finish.py WO-XXXX
+---
 
-# Generar solo evidencia (sin cerrar)
-uv run python scripts/ctx_wo_finish.py WO-XXXX --generate-only
-```
+## 8. Integración Sidecar (WoW)
+
+El sistema exporta un índice en `_ctx/index/wo_worktrees.json` cada vez que se toma o cierra un WO. Este índice es consumido por la UI de **WoW (Work Order Web)** y el plugin Sidecar para mostrar el estado actual del desarrollador en tiempo real.
+
+---
+
+## 9. Reglas de Oro (Policy)
+
+> El manual define el entrypoint SSOT y prohibe los bypass.
+
+1. Cerrar WO = solo con `ctx_wo_finish.py`
+2. wo_verify.sh es interno - no usar directo
+3. Todo commit pasa por hooks
+4. No existe DONE sin SHA/verdict
+5. Preflight es obligatorio antes de take
+6. Main debe estar limpio para operar
