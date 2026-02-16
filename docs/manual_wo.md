@@ -54,8 +54,19 @@ graph TD
 ### Estados Detallados
 
 * **PENDING**: Identificado en el backlog. Invariante: No puede tener `started_at`.
-* **RUNNING**: En ejecución activa. Invariante: OBLIGATORIO tener `started_at`.
+* **RUNNING**: En ejecución activa. Invariante: OBLIGATORIO tener `started_at` y `.lock`.
 * **DONE / FAILED / PARTIAL**: Estados terminales o estables. Invariante: OBLIGATORIO tener `finished_at` posterior a `started_at` y `verified_at_sha`.
+
+### WOs Stale (Sin Lock)
+
+Los WOs en estado `running` deben tener un archivo `.lock` asociado. El hook `trifecta_integrity_check.py` valida esto en cada commit:
+
+* **< 24h sin lock**: **FAIL** - El commit se bloquea (protección activa)
+* **> 24h sin lock**: **WARN** - El commit permite continuar pero muestra advertencia
+
+Esto permite que WOs interrumpidos (crashes, sessions terminadas abruptamente) no bloqueen indefinidamente el trabajo, mientras protege contra WOs activos sin lock.
+
+**Acción recomendada para WOs stale**: Ejecutar `ctx_reconcile_state.py` o `ctx_wo_finish.py` según corresponda.
 
 ---
 
@@ -161,14 +172,38 @@ Si cualquiera falla → estado `FAILED`, no `DONE`.
 
 ### Gates Automáticos (Hooks)
 
+Todos los hooks están ubicados en `scripts/hooks/`:
+
 | Hook | Script | Qué hace | Bloquea |
 | :--- | :--- | :--- | :--- |
-| **Sync** | `ctx_sync_hook.sh` | Sincroniza contexto | Si falla sync |
-| **Format** | `ctx_wo_fmt.py` | Formatea YAMLs | Si hay drift |
-| **Lint** | `ctx_wo_lint.py` | Valida contrato WO | Si schema invalido |
-| **Test Gate** | `pre_commit_test_gate.sh` | Tests rápidos | Si tests fallan |
-| **WO Closure** | `prevent_manual_wo_closure.sh` | Bloquea done manual | Si alguien intenta |
-| **Integrity** | `trifecta_integrity_check.py` | Consistencia ctx/code | Si hay drift |
+| **Sync** | `scripts/hooks/ctx_sync_hook.sh` | Sincroniza contexto | Si falla sync |
+| **Format/Lint** | `scripts/hooks/wo_fmt_lint.sh` | Formatea + valida YAMLs WO | Si hay errores |
+| **Test Gate** | `scripts/hooks/pre_commit_test_gate.sh` | Tests rápidos | Si tests fallan |
+| **WO Closure** | `scripts/hooks/prevent_manual_wo_closure.sh` | Bloquea done manual | Si alguien intenta |
+| **Integrity** | `scripts/hooks/trifecta_integrity_check.py` | Consistencia ctx/code | Si hay drift |
+| **Common** | `scripts/hooks/common.sh` | Funciones compartidas | N/A (librería) |
+
+### Bypass de Emergencia (Solo para Casos Críticos)
+
+Si es absolutamente necesario hacer un cambio manual en `_ctx/jobs/done/` o `_ctx/jobs/failed/` (por ejemplo, para reparar estado corrupto):
+
+```bash
+git commit -m "fix: [emergency] reason for manual WO closure"
+# o
+git commit -m "fix: [bypass] emergency state repair"
+```
+
+⚠️ **Seguridad**: El bypass por variable de entorno (`TRIFECTA_ALLOW_MANUAL_WO_CLOSURE=1`) fue **removido**. Ahora requiere explícitamente `[emergency]` o `[bypass]` en el mensaje del commit, creando trazabilidad de auditoría.
+
+### Optimización: Context Sync Condicional
+
+El hook `pre-commit` solo ejecuta `trifecta ctx sync` cuando hay cambios en archivos relevantes:
+
+* `skill.md`, `prime_*.md`, `agent.md`, `session_*.md`
+* `README.md`
+* `_ctx/*` (cualquier archivo en el directorio de contexto)
+
+Esto evita regenerar el context pack en commits que solo modifican código fuente (`src/`, `tests/`), mejorando el rendimiento.
 
 ---
 
@@ -208,6 +243,9 @@ El directorio `_ctx/` no es solo almacenamiento; es la base de datos de estado y
 * `UNSATISFIED_DEPENDENCIES`: Estás intentando tomar un WO cuyo padre no ha terminado.
 * `UNKNOWN_PATHS`: Has modificado archivos en `_ctx/` no clasificados. **Acción**: Clasificar en `ctx_finish_ignore.yaml`.
 * `INVALID_STATE_TRANSITION`: Intento de pasar de `done` a `running` directamente.
+* `WO_IN_MULTIPLE_STATES`: El mismo WO existe en más de un directorio de estado (ej: `pending/` y `done/`). **Acción**: Eliminar duplicado manualmente o usar `ctx_reconcile_state.py`.
+* `MISSING_LOCK_FOR_RUNNING`: WO en `running/` sin archivo `.lock`. **Acción**: Si es reciente (<24h), el commit se bloquea. Si es stale (>24h), solo warning - completar o marcar como failed.
+* `HOOK_FAILED`: Uno de los hooks falló. Revisar output del hook específico.
 
 ---
 
