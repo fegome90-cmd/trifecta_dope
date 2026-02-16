@@ -124,7 +124,7 @@ jobs:
           uv run python scripts/ctx_wo_lint.py --json --strict > _ctx/telemetry/wo_lint.json
 
       - name: Upload WO lint telemetry artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: wo-lint-json
           path: _ctx/telemetry/wo_lint.json
