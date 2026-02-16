@@ -1293,3 +1293,18 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Commands**: ctx_wo_finish.py WO-0053 --result done
 - **Pack SHA**: `2c191b1a7296e65a`
 
+## 2026-02-16 00:34 UTC
+- **Summary**: Taken Work Order WO-0041 (READY invariants contract)
+- **Commands**: ctx_wo_take.py WO-0041
+- **Pack SHA**: `5f4b35d`
+- **Note**: Fixed WO YAML to reference correct test files
+
+[WO-0041] intent: Implement READY invariants contract - handshake complete, process alive, workspace root correct, health check < 500ms
+
+## 2026-02-16 01:00 UTC
+- **Summary**: Completed Work Order WO-0041
+- **Commands**: ctx_wo_finish.py WO-0041
+- **Pack SHA**: `7e385e1`
+
+[WO-0041] result: COMPLETE - Invariant checking implemented before READY transition. Added _check_invariants(), _failed_invariants tracking, health_check() method, and failed_invariants in telemetry. 3 new tests added. Contract docs created.
+
