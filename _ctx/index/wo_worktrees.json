@@ -1,9 +1,9 @@
 {
   "version": 1,
   "schema": "trifecta.sidecar.wo_index.v1",
-  "generated_at": "2026-02-17T12:55:11.624415+00:00",
+  "generated_at": "2026-02-17T14:31:55.603265+00:00",
   "repo_root": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope",
-  "git_head_sha_repo_root": "86bcd7df284396945a6ec2b64f5d33f9c0b9e0e3",
+  "git_head_sha_repo_root": "2efc6da1f3ff11ca588a10b3a8f553b6eb9df2b4",
   "work_orders": [
     {
       "id": "WO-0037",
@@ -214,6 +214,22 @@
       "last_error": null
     },
     {
+      "id": "WO-0055",
+      "title": "Fix WO manual-closure hook: design vs actual mismatch",
+      "status": "pending",
+      "priority": "P1",
+      "owner": null,
+      "epic_id": "E-0001",
+      "worktree_path": "../.worktrees/WO-0055",
+      "worktree_exists": false,
+      "branch": null,
+      "worktree_head_sha": null,
+      "wo_yaml_path": "_ctx/jobs/pending/WO-0055.yaml",
+      "created_at": "",
+      "closed_at": null,
+      "last_error": null
+    },
+    {
       "id": "WO-0014",
       "title": "Import Extractor using stdlib AST",
       "status": "pending",
@@ -287,7 +303,7 @@
       "worktree_path": "../.worktrees/WO-0054",
       "worktree_exists": true,
       "branch": "feat/wo-WO-0054",
-      "worktree_head_sha": "86bcd7df284396945a6ec2b64f5d33f9c0b9e0e3",
+      "worktree_head_sha": "026846c4cbee8e4cb183703c0784c6e828bde33e",
       "wo_yaml_path": "_ctx/jobs/running/WO-0054.yaml",
       "created_at": "",
       "closed_at": null,
@@ -696,7 +712,7 @@
     {
       "id": "WO-0045",
       "title": "Trifecta-first WO engine (fail-closed)",
-      "status": "running",
+      "status": "done",
       "priority": "P0",
       "owner": "",
       "epic_id": "E-TESTS-CONTRACT",
@@ -704,7 +720,7 @@
       "worktree_exists": false,
       "branch": "feat/wo-WO-0045",
       "worktree_head_sha": null,
-      "wo_yaml_path": "_ctx/jobs/running/WO-0045.yaml",
+      "wo_yaml_path": "_ctx/jobs/done/WO-0045.yaml",
       "created_at": "",
       "closed_at": null,
       "last_error": null
