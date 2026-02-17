@@ -1,6 +1,6 @@
 ---
-name: telemetry_analysis
-description: Use when analyzing Trifecta CLI telemetry data (events.jsonl, metrics.json, last_run.json) to generate concise reports
+name: trifecta_telemetry_analysis
+description: Analyzes Trifecta CLI telemetry data from events.jsonl, metrics.json, and last_run.json to generate reports on usage, performance, and system health
 ---
 
 ## Overview
@@ -27,14 +27,17 @@ Telemetría local-first para análisis de uso del CLI Trifecta.
 ### Counters (metrics.json)
 ```json
 {
-  "ctx_build_count": N,           // Construcciones de pack
-  "ctx_search_count": N,           // Búsquedas totales
-  "ctx_search_hits_total": N,      // Resultados encontrados
-  "ctx_search_zero_hits_count": N, // Búsquedas sin resultados
-  "ctx_get_count": N,              // Recuperaciones de contexto
-  "ctx_get_chunks_total": N,       // Chunks entregados
-  "ctx_get_mode_excerpt_count": N, // Modos excerpt vs raw
-  "prime_links_included_total": N  // Links en prime
+  "ctx_build_count": N,              // Construcciones de pack
+  "ctx_search_count": N,              // Búsquedas totales
+  "ctx_search_hits_total": N,         // Resultados encontrados
+  "ctx_search_zero_hits_count": N,    // Búsquedas sin resultados
+  "ctx_get_count": N,                 // Recuperaciones de contexto
+  "ctx_get_chunks_total": N,          // Chunks entregados
+  "ctx_get_mode_excerpt_count": N,    // Modos excerpt vs raw
+  "prime_links_included_total": N,    // Links en prime
+  "ast_cache_hit_count": N,           // AST cache hits
+  "ast_cache_miss_count": N,          // AST cache misses
+  "ast_parse_count": N                // Total AST parses
 }
 ```
 
@@ -43,13 +46,22 @@ Telemetría local-first para análisis de uso del CLI Trifecta.
 {
   "ts": "ISO-8601",
   "run_id": "run_...",
-  "cmd": "ctx.search|ctx.get|load|ctx.build",
-  "args": {"query": "...", "limit": N},
-  "result": {"status": "ok|validation_failed", "hits": N},
+  "segment_id": "...",
+  "cmd": "ctx.search|ctx.get|ctx.sync|ast.symbols|telemetry.report",
+  "args": {"query": "...", "limit": N, "segment": "."},
+  "result": {"status": "ok|error", "hits": N, "error_code": "..."},
   "timing_ms": N,
-  "warnings": []
+  "warnings": [],
+  "x": {}  // Extended metadata (cache_status, spanish_alias, etc.)
 }
 ```
+
+### AST Cache Events
+- `ast.cache.hit` - Cache hit with backend info
+- `ast.cache.miss` - Cache miss
+- `ast.cache.write` - New entry written
+- `ast.cache.lock_wait` - Waiting for file lock
+- `ast.cache.lock_timeout` - Lock acquisition timeout
 
 ## Report Templates
 
@@ -90,7 +102,17 @@ Telemetría local-first para análisis de uso del CLI Trifecta.
 **Patterns**: [New behaviors, regression warnings]
 ```
 
-## Analysis Commands
+## CLI Commands
+
+```bash
+# Generate reports
+trifecta telemetry report -s . --last 30          # Last 30 days
+trifecta telemetry health -s .                    # System health check
+trifecta telemetry export -s . --format json      # Export raw data
+trifecta telemetry chart -s . --type hits         # ASCII chart: hits|latency|commands
+```
+
+## Analysis Commands (jq)
 
 ```bash
 # Extract metrics from events.jsonl
@@ -104,6 +126,13 @@ jq 'select(.result.status != "ok")' events.jsonl
 
 # Zero-hit searches rate
 jq '[select(.cmd=="ctx.search")] | map(.result.hits==0) | length / length * 100' events.jsonl
+
+# AST cache hit rate
+jq '[select(.cmd=="ast.cache.hit")] | length' events.jsonl
+jq '[select(.cmd=="ast.cache.miss")] | length' events.jsonl
+
+# Spanish alias recovery events
+jq 'select(.cmd=="ctx.search.spanish_alias")' events.jsonl
 ```
 
 ## Red Flags
@@ -114,6 +143,25 @@ jq '[select(.cmd=="ctx.search")] | map(.result.hits==0) | length / length * 100'
 | zero-hit > 40% | Poor search queries | Check query patterns |
 | warnings recurring | Systemic issue | Fix root cause |
 | pack stale | Context outdated | Rebuild pack |
+| ast.cache.lock_timeout > 0 | File lock contention | Review concurrent access |
+| cache_hit_rate < 50% | Poor cache utilization | Check cache configuration |
+
+## Spanish Aliases Analysis
+
+When analyzing search effectiveness, check for Spanish alias recovery:
+
+```bash
+# Check alias recovery success rate
+jq 'select(.cmd=="ctx.search.spanish_alias" and .result.recovered==true)' events.jsonl
+
+# Compare pass1 vs pass2 hits
+jq 'select(.cmd=="ctx.search.spanish_alias") | {query: .args.query_preview, pass1: .result.pass1_hits, pass2: .result.pass2_hits}' events.jsonl
+```
+
+Metrics to track:
+- **Recovery rate**: % of queries recovered via aliases
+- **Hit improvement**: Average hit increase from pass1 to pass2
+- **Top failed queries**: Spanish terms that still return zero hits
 
 ## Best Practices
 
@@ -121,9 +169,17 @@ jq '[select(.cmd=="ctx.search")] | map(.result.hits==0) | length / length * 100'
 2. **Compare períodos** → Trends > snapshots absolutos
 3. **Investigate outliers** → Un evento malo puede sesgar P95
 4. **Correlate metrics** → latency vs search effectiveness vs errors
+5. **Check AST cache** → Verify cache_hit_count increases with repeated symbol extraction
+6. **Monitor Spanish aliases** → Ensure recovery rate > 60% for Spanish queries
+
+## Related Skills
+
+- `trifecta_dope` - Main Trifecta skill for context operations
+- `telemetry_analysis/skills/analyze` - Concise telemetry report generation
 
 ## References
 
 - [CLI Telemetry Best Practices](https://marcon.me/articles/cli-telemetry-best-practices/)
 - [P50/P95/P99 Latency Guide](https://oneuptime.com/blog/post/2025-09-15-p50-vs-p95-vs-p99-latency-percentiles/view)
 - [Agent Monitoring Patterns](https://www.requesty.ai/solution/detailed-analytics)
+- Trifecta Documentation: `docs/telemetry/`

@@ -35,14 +35,16 @@ claim_links:
   - 'Path traversal prevention: Block ../ escapes outside segment root'
   - 'Invalid WO ID detection: Validate WO IDs match pattern'
   - 'Segment scope validation: Verify path stays within segment boundary'
+objective: 'Implement path validation for CLI inputs preventing: - Path traversal attacks (../ escapes)
+  - Canonicalization inconsistencies - Invalid scope (path outside segment root) - Invalid WO ID formats '
+started_at: '2026-02-15T21:50:51.555782+00:00'
+result: done
+verified_at_sha: 81043d5f8e31df1196f418f56d25071442936911
 assumptions:
 - Zero-hit tracker is working (from WO-0052)
 constraints:
 - Use pathlib.Path.resolve() for canonicalization
 - Return typed errors, not raw exceptions
-objective: 'Implement path validation for CLI inputs preventing: - Path traversal
-  attacks (../ escapes) - Canonicalization inconsistencies - Invalid scope (path outside
-  segment root) - Invalid WO ID formats '
 deliverables:
 - Module src/infrastructure/path_utils.py with guardrail functions
 - Integration points in CLI for --segment, --path options
@@ -51,7 +53,4 @@ deliverables:
 diff_budget:
   max_files: 5
   max_loc: 200
-started_at: '2026-02-15T21:50:51.555782+00:00'
-verified_at_sha: 81043d5f8e31df1196f418f56d25071442936911
 closed_at: '2026-02-15T22:12:05.471902+00:00'
-result: done

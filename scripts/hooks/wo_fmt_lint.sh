@@ -8,6 +8,6 @@ if ! staged_files | grep -qE '^_ctx/jobs/(pending|running|done|failed)/WO-.*\.ya
 fi
 
 log "[hooks] WO YAML touched → fmt + lint"
-uv run python scripts/ctx_wo_fmt.py || fail "WO fmt failed"
+uv run python scripts/ctx_wo_fmt.py --write || fail "WO fmt failed"
 uv run python scripts/ctx_wo_lint.py --strict || fail "WO lint failed"
 log "[hooks] WO fmt/lint PASS"

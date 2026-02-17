@@ -5,6 +5,8 @@ title: Diagnostico y triage de zero-hit ratio
 priority: P0
 status: done
 owner: felipe_gonzalez
+branch: job/WO-0051
+worktree: ../.worktrees/WO-0051
 scope:
   allow:
   - src/application/zero_hit_reports.py
@@ -35,12 +37,15 @@ claim_links:
   - Reporte que separe zero-hits por segment/pack
   - 'Top 20 queries que fallan + clasificacion: deberian fallar o no'
   - 1-2 intervenciones concretas para bajar ratio
+objective: Diagnosticar el 53.7% zero-hit ratio. Distinguir si viene de suite adversarial o de queries
+  reales. Generar intervencion minima para bajar el ratio.
+started_at: '2026-02-15T21:10:21.026240+00:00'
+result: done
+verified_at_sha: 430a07875dc03d2034e298d97e708b88c33ce7ad
 assumptions:
 - 53.7% zero-hit viene de telemetria real (no suite adversarial)
 constraints:
 - 'No inflar scope: focus en diagnostico + intervencion minima'
-objective: Diagnosticar el 53.7% zero-hit ratio. Distinguir si viene de suite adversarial
-  o de queries reales. Generar intervencion minima para bajar el ratio.
 deliverables:
 - Reporte zero-hit por query type (test/fixture/interactive/agent)
 - Reporte zero-hit por segment/pack
@@ -52,9 +57,4 @@ diff_budget:
 stop_conditions:
   max_iterations: 2
   max_fail_verify: 1
-started_at: '2026-02-15T21:10:21.026240+00:00'
-branch: job/WO-0051
-worktree: ../.worktrees/WO-0051
-verified_at_sha: 430a07875dc03d2034e298d97e708b88c33ce7ad
 closed_at: '2026-02-15T21:22:28.633920+00:00'
-result: done

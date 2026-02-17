@@ -23,10 +23,13 @@ dod_id: DOD-DEFAULT
 execution:
   engine: trifecta
   required_flow:
-  - verify
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
   segment: .
-dependencies:
-- WO-0038
+dependencies: []
 claim_links:
   requirements:
   - C-TD-001
@@ -61,12 +64,3 @@ x_test_fixtures:
 - testdata/td/wo_worktrees_multi.json (multiple running)
 - testdata/td/wo_worktrees_empty.json (no active)
 - testdata/td/wo_worktrees_invalid.json (schema error)
-execution:
-  engine: trifecta
-  required_flow:
-  - session.append:intent
-  - ctx.sync
-  - ctx.search
-  - ctx.get
-  - session.append:result
-  segment: .

@@ -183,13 +183,16 @@ The WO system provides isolated development environments using git worktrees.
 # List pending WOs
 uv run python scripts/ctx_wo_take.py --list
 
+# Preflight (OBLIGATORY) - fail-closed validation before take
+make wo-preflight WO=WO-XXXX
+
 # Take WO (auto-creates branch + worktree)
 uv run python scripts/ctx_wo_take.py WO-XXXX
 
 # Navigate & work
 cd .worktrees/WO-XXXX
 
-# Complete WO
+# Complete WO (only via ctx_wo_finish.py)
 uv run python scripts/ctx_wo_finish.py WO-XXXX
 ```
 
@@ -229,6 +232,7 @@ git worktree remove .worktrees/WO-XXXX  # Cleanup
 - **[OPERATIONS.md](docs/backlog/OPERATIONS.md)** — Daily operations playbook
 - **[TROUBLESHOOTING.md](docs/backlog/TROUBLESHOOTING.md)** — Common issues
 - **[README.md](docs/backlog/README.md)** — Quick reference
+- **[MANUAL_WO.md](docs/backlog/MANUAL_WO.md)** — Detallado del sistema de Work Orders (estados, DoD, cierre)
 
 ---
 

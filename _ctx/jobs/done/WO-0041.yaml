@@ -4,6 +4,9 @@ epic_id: E-LSP-CONTRACT
 title: Definir READY como contrato con invariantes
 priority: P0
 status: done
+owner: felipe_gonzalez
+branch: feat/wo-WO-0041
+worktree: ../.worktrees/WO-0041
 scope:
   allow:
   - src/infrastructure/lsp_client.py
@@ -17,8 +20,7 @@ scope:
   - '**/production.*'
 verify:
   commands:
-  - uv run pytest tests/integration/test_ready_semantics_documented_and_enforced.py
-    -v
+  - uv run pytest tests/integration/test_ready_semantics_documented_and_enforced.py -v
   - uv run pytest tests/integration/test_lsp_contract_fallback.py -v
 dod_id: DOD-DEFAULT
 execution:
@@ -47,9 +49,11 @@ claim_links:
   constraints:
   - No aumentar latency de cold start > 200ms
   - Mantener backward compatibility en eventos existentes
-objective: "Introducir READY invariants m\xEDnimos para garantizar que READY realmente\
-  \ significa operativo.\nREADY actual significa \"inicializado\" pero no garantiza\
-  \ capacidad de servir requests.\n"
+objective: "Introducir READY invariants m\xEDnimos para garantizar que READY realmente significa operativo.\n\
+  READY actual significa \"inicializado\" pero no garantiza capacidad de servir requests.\n"
+started_at: '2026-02-16T00:34:10.799968+00:00'
+result: done
+verified_at_sha: 6426f1efea1f36f982f7866463662900bdb43e6e
 deliverables:
 - Handshake LSP completado (initialize/initialized)
 - Proceso vivo (pid check)
@@ -63,10 +67,4 @@ diff_budget:
 stop_conditions:
   max_iterations: 5
   max_fail_verify: 2
-owner: felipe_gonzalez
-started_at: '2026-02-16T00:34:10.799968+00:00'
-branch: feat/wo-WO-0041
-worktree: ../.worktrees/WO-0041
-verified_at_sha: 6426f1efea1f36f982f7866463662900bdb43e6e
 closed_at: '2026-02-16T00:59:20.255319+00:00'
-result: done

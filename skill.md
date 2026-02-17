@@ -91,8 +91,10 @@ make gate-all            # Full test gate before commit
 - Buscando info específica sin cargar archivos completos (ctx search → ctx get)
 - Validando integridad del context pack antes de cambios (ctx validate)
 - Trabajando con AST symbols M1 PRODUCTION (`trifecta ast symbols`)
-- Analizando telemetría del CLI (`trifecta telemetry report/chart/stats`)
+- Analizando telemetría del CLI (`trifecta telemetry report/chart/health`)
 - Gestionando cache de AST persistente (`trifecta ast cache-stats/clear-cache`)
+- Buscando en español (sistema Spanish Aliases activo)
+- Gestionando Work Orders via `ctx_wo_take.py` / `ctx_wo_finish.py`
 
 **Triggers to activate:**
 - Entraste al workspace sin leer skill.md + prime + agent + session
@@ -127,6 +129,7 @@ make gate-all            # Full test gate before commit
 | **Run tests** | `make gate-all` |
 | **Full validation** | `trifecta ctx validate --segment .` |
 | **View telemetry** | `trifecta telemetry report -s . --last 30` |
+| **Telemetry health** | `trifecta telemetry health -s .` |
 | **Generate plan** | `trifecta ctx plan --segment . --task "..."` |
 | **Extract symbols (M1)** | `trifecta ast symbols "sym://python/mod/path"` |
 | **Extract symbols (persist cache)** | `trifecta ast symbols "sym://python/mod/path" --persist-cache` |
@@ -182,4 +185,4 @@ Intento 3 → 0 hits → Usar fallback: `trifecta load --mode fullfiles --task "
 
 ---
 
-**Profile**: `impl_patch` | **Updated**: 2026-02-14 | **Verified Against**: CLI v2.0, Makefile, session.md 2026-02-14, Zero-Hit Analysis Report
+**Profile**: `impl_patch` | **Updated**: 2026-02-16 | **Verified Against**: CLI v2.0, Makefile, session.md 2026-02-16, Zero-Hit Analysis Report, agent.md 2026-02-16

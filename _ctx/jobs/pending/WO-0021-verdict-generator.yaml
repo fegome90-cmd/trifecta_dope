@@ -19,19 +19,14 @@ dod_id: DOD-DEFAULT
 execution:
   engine: trifecta
   required_flow:
-  - verify
-  segment: .
-description: Implement verdict_generator.sh for MELT metrics generation.
-context: WO-0005 was skipped. Re-evaluate if validation_report.txt supersedes this.
-steps:
-- Analyze need for verdict_generator.sh
-- Implement or deprecate formally
-execution:
-  engine: trifecta
-  required_flow:
   - session.append:intent
   - ctx.sync
   - ctx.search
   - ctx.get
   - session.append:result
   segment: .
+description: Implement verdict_generator.sh for MELT metrics generation.
+context: WO-0005 was skipped. Re-evaluate if validation_report.txt supersedes this.
+steps:
+- Analyze need for verdict_generator.sh
+- Implement or deprecate formally

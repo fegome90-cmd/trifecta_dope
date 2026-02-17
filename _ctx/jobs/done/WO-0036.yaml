@@ -9,6 +9,15 @@ scope:
   - internal/plugins/**
   deny: []
 dod_id: WO-0036-dod
+execution:
+  engine: trifecta
+  required_flow:
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
+  segment: .
 created_at: '2026-02-11T14:30:00Z'
 description: "Clean up code duplication and DRY violations identified by multi-review agents.\n\n## Approach\n\
   Following **strict TDD methodology** (RED \u2192 GREEN \u2192 REFACTOR):\n1. Write failing tests first\
@@ -177,12 +186,3 @@ tasks:
   severity: TEST
   status: done
   test_ref: test_index_loading_integration
-execution:
-  engine: trifecta
-  required_flow:
-  - session.append:intent
-  - ctx.sync
-  - ctx.search
-  - ctx.get
-  - session.append:result
-  segment: .

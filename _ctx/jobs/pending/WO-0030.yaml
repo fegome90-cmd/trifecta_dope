@@ -23,19 +23,14 @@ dod_id: DOD-DEFAULT
 execution:
   engine: trifecta
   required_flow:
-  - verify
-  segment: .
-dependencies: []
-deliverables:
-- llms.txt
-- skills/documentation/resources/guides/QUICKSTART.md
-- skills/documentation/resources/guides/ADVANCED.md
-execution:
-  engine: trifecta
-  required_flow:
   - session.append:intent
   - ctx.sync
   - ctx.search
   - ctx.get
   - session.append:result
   segment: .
+dependencies: []
+deliverables:
+- llms.txt
+- skills/documentation/resources/guides/QUICKSTART.md
+- skills/documentation/resources/guides/ADVANCED.md
