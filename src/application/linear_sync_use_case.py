@@ -239,8 +239,12 @@ class LinearSyncUseCase:
                 self.client.update_issue(issue_id, payload)
                 action = "update"
 
-            self.client.transition_issue_state(issue_id, linear_state_id)
-            self.client.set_labels(issue_id, payload.get("labels", []))
+            if "state" in payload:
+                self.client.transition_issue_state(issue_id, linear_state_id)
+            if "labels" in payload:
+                labels = payload.get("labels")
+                if isinstance(labels, list):
+                    self.client.set_labels(issue_id, labels)
 
             append_journal_event(
                 self.root,

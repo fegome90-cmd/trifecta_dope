@@ -131,7 +131,7 @@ def test_doctor_exit_code_tech_when_capability_missing(tmp_path: Path, monkeypat
     monkeypatch.setenv("LINEAR_FAKE_DB", str(tmp_path / "fake_db.json"))
 
     assert runner.invoke(app, ["linear", "bootstrap", "--root", str(tmp_path)]).exit_code == 0
-    monkeypatch.setenv("LINEAR_FAKE_MISSING_CAPABILITY", "set_labels")
+    monkeypatch.setenv("LINEAR_FAKE_MISSING_CAPABILITY", "update_issue")
 
     result = runner.invoke(app, ["linear", "doctor", "--root", str(tmp_path)])
     assert result.exit_code == 1
