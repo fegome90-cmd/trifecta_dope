@@ -7,6 +7,7 @@ import json
 import os
 import sys
 import tomllib
+import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Any
@@ -51,11 +52,17 @@ def _load_linear_config() -> tuple[str, str]:
     return url, token
 
 
-def _post_sse_json(url: str, token: str, payload: dict[str, Any], session_id: str | None) -> tuple[dict[str, Any], str | None]:
+def _open_with_auth(
+    url: str,
+    token: str,
+    payload: dict[str, Any],
+    session_id: str | None,
+    auth_value: str,
+):
     headers = {
         "Content-Type": "application/json",
         "Accept": "application/json, text/event-stream",
-        "Authorization": f"Bearer {token}",
+        "Authorization": auth_value,
     }
     if session_id:
         headers["Mcp-Session-Id"] = session_id
@@ -66,28 +73,46 @@ def _post_sse_json(url: str, token: str, payload: dict[str, Any], session_id: st
         headers=headers,
         method="POST",
     )
-    with urllib.request.urlopen(req, timeout=20) as resp:  # nosec B310 - controlled URL from trusted config/env
-        new_session = resp.headers.get("mcp-session-id") or session_id
-        content_type = str(resp.headers.get("content-type") or "").lower()
-        if "text/event-stream" in content_type:
-            # Streamable HTTP: consume the first JSON event and return immediately.
-            while True:
-                line = resp.readline()
-                if not line:
-                    break
-                text = line.decode("utf-8", errors="replace").strip()
-                if not text.startswith("data: "):
-                    continue
-                candidate = text[6:].strip()
-                if not candidate:
-                    continue
-                return json.loads(candidate), new_session
-            return {}, new_session
+    return urllib.request.urlopen(req, timeout=20)  # nosec B310 - controlled URL from trusted config/env
 
-        raw = resp.read().decode("utf-8", errors="replace")
-        if not raw.strip():
-            return {}, new_session
-        return json.loads(raw), new_session
+
+def _post_sse_json(url: str, token: str, payload: dict[str, Any], session_id: str | None) -> tuple[dict[str, Any], str | None]:
+    auth_candidates = [f"Bearer {token}", token]
+    last_exc: Exception | None = None
+    for auth_value in auth_candidates:
+        try:
+            with _open_with_auth(url, token, payload, session_id, auth_value) as resp:
+                new_session = resp.headers.get("mcp-session-id") or session_id
+                content_type = str(resp.headers.get("content-type") or "").lower()
+                if "text/event-stream" in content_type:
+                    # Streamable HTTP: consume the first JSON event and return immediately.
+                    while True:
+                        line = resp.readline()
+                        if not line:
+                            break
+                        text = line.decode("utf-8", errors="replace").strip()
+                        if not text.startswith("data: "):
+                            continue
+                        candidate = text[6:].strip()
+                        if not candidate:
+                            continue
+                        return json.loads(candidate), new_session
+                    return {}, new_session
+
+                raw = resp.read().decode("utf-8", errors="replace")
+                if not raw.strip():
+                    return {}, new_session
+                return json.loads(raw), new_session
+        except urllib.error.HTTPError as exc:
+            detail = exc.read().decode("utf-8", errors="replace")
+            # Linear GraphQL-style guidance: retry without Bearer once.
+            if auth_value.startswith("Bearer ") and "Remove the Bearer prefix" in detail:
+                last_exc = exc
+                continue
+            raise BridgeError(f"HTTP Error {exc.code}: {detail}") from exc
+    if last_exc:
+        raise last_exc
+    raise BridgeError("Unable to authenticate against Linear MCP endpoint")
 
 
 def main() -> int:

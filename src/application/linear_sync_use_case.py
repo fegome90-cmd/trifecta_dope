@@ -175,9 +175,61 @@ class LinearSyncUseCase:
             raise LinearMCPError("status_map cache missing or invalid; run linear bootstrap")
         return cached["status_map"]
 
+    @staticmethod
+    def _normalize_issue_for_diff(
+        current: dict[str, Any],
+        projected: dict[str, Any],
+        linear_state_id_to_name: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
+        normalized: dict[str, Any] = {}
+        name_to_state_id: dict[str, str] = {}
+        if isinstance(linear_state_id_to_name, dict):
+            for sid, sname in linear_state_id_to_name.items():
+                if isinstance(sid, str) and isinstance(sname, str):
+                    name_to_state_id[sname.strip().lower()] = sid
+
+        for key in projected.keys():
+            value = current.get(key)
+            if key == "state":
+                if isinstance(value, dict):
+                    value = value.get("id") or value.get("stateId") or value.get("name")
+                if not value:
+                    value = current.get("status")
+                if isinstance(value, str):
+                    lowered = value.strip().lower()
+                    value = name_to_state_id.get(lowered, value)
+            elif key == "priority" and isinstance(value, dict):
+                value = value.get("value")
+            elif key == "labels":
+                if isinstance(value, list):
+                    labels: list[str] = []
+                    for item in value:
+                        if isinstance(item, str):
+                            labels.append(item)
+                        elif isinstance(item, dict) and isinstance(item.get("name"), str):
+                            labels.append(item["name"])
+                    value = sorted(set(labels))
+            elif key == "team":
+                if isinstance(value, dict):
+                    value = value.get("id") or value.get("key") or value.get("name")
+                if current.get("teamId"):
+                    value = current.get("teamId")
+                elif not value:
+                    value = current.get("team")
+            elif key == "project":
+                if isinstance(value, dict):
+                    value = value.get("id") or value.get("name")
+            elif key == "assignee" and isinstance(value, dict):
+                value = value.get("id") or value.get("email") or value.get("name")
+
+            normalized[key] = value
+        return normalized
+
     def push_wo(self, wo_id: str) -> LinearActionResult:
         try:
             status_map = self._status_map()
+            cache = self._load_status_map_cache() or {}
+            resolved_team_id = str(cache.get("team_id") or "").strip()
             state = load_or_rebuild_state(self.root)
             wo_pair = next(((wo, path) for wo, path in self._load_work_orders() if wo.get("id") == wo_id), None)
             if wo_pair is None:
@@ -189,7 +241,11 @@ class LinearSyncUseCase:
                 raise LinearMCPError(f"No status map for WO status '{trifecta_status}'")
 
             payload = build_linear_payload(wo, self.policy, linear_state_id, wo_path)
+            if resolved_team_id:
+                payload["team"] = resolved_team_id
             fingerprint = compute_projection_fingerprint(payload, self.policy.policy_version)
+            comparable_keys = set(self.policy.outbound_allow) | {"team"}
+            comparable_payload = {k: v for k, v in payload.items() if k in comparable_keys}
 
             entry = state.get(wo_id)
             if isinstance(entry, dict):
@@ -198,23 +254,36 @@ class LinearSyncUseCase:
                 issue_id = ""
 
             if not issue_id:
-                issues = self.client.list_issues(self.policy.team_id or "")
+                issues = self.client.list_issues(resolved_team_id or self.policy.team_id or self.policy.team_key)
                 for issue in issues.get("issues", []):
-                    if isinstance(issue, dict) and issue.get("wo_id") == wo_id:
+                    if not isinstance(issue, dict):
+                        continue
+                    by_anchor = issue.get("wo_id") == wo_id
+                    title = str(issue.get("title") or "")
+                    by_title = title.startswith(f"[{wo_id}]")
+                    if by_anchor or by_title:
                         issue_id = str(issue.get("id") or "")
-                        break
+                        if issue_id:
+                            break
 
             if not issue_id:
                 created = self.client.create_issue(payload)
                 issue = created.get("issue") if isinstance(created, dict) else None
                 issue_id = str((issue or {}).get("id") or "")
+                if not issue_id and isinstance(created, dict):
+                    issue_id = str(created.get("id") or "")
                 if not issue_id:
                     raise LinearMCPError("create_issue did not return issue id")
                 action = "create"
             else:
                 current_resp = self.client.get_issue(issue_id)
                 current = current_resp.get("issue") or {}
-                diffs = diff_payload(payload, current)
+                current_norm = self._normalize_issue_for_diff(
+                    current,
+                    comparable_payload,
+                    (cache.get("linear_state_id_to_name") if isinstance(cache, dict) else None),
+                )
+                diffs = diff_payload(comparable_payload, current_norm)
                 changed_fields = set(diffs.keys())
                 if not changed_fields and isinstance(entry, dict):
                     if str(entry.get("last_fingerprint") or "") == fingerprint:
@@ -304,11 +373,18 @@ class LinearSyncUseCase:
                     continue
 
                 payload = build_linear_payload(wo, self.policy, linear_state_id, wo_path)
+                comparable_keys = set(self.policy.outbound_allow) | {"team"}
+                comparable_payload = {k: v for k, v in payload.items() if k in comparable_keys}
                 current_resp = self.client.get_issue(issue_id)
                 current = current_resp.get("issue") or {}
                 if not isinstance(current, dict):
                     continue
-                diffs = diff_payload(payload, current)
+                current_norm = self._normalize_issue_for_diff(
+                    current,
+                    comparable_payload,
+                    (self._load_status_map_cache() or {}).get("linear_state_id_to_name"),
+                )
+                diffs = diff_payload(comparable_payload, current_norm)
                 if not diffs:
                     continue
                 changed_fields = set(diffs.keys())

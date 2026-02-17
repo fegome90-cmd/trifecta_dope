@@ -6,6 +6,26 @@ from typing import Any
 from src.domain.linear_models import LinearPolicy
 
 
+def _map_priority(value: Any) -> int:
+    if isinstance(value, int):
+        return value
+    if not isinstance(value, str):
+        return 3
+    v = value.strip().lower()
+    mapping = {
+        "p0": 1,
+        "p1": 2,
+        "p2": 3,
+        "p3": 4,
+        "urgent": 1,
+        "high": 2,
+        "medium": 3,
+        "normal": 3,
+        "low": 4,
+    }
+    return mapping.get(v, 3)
+
+
 def _render_read_only_section(title: str, lines: list[str]) -> str:
     body = "\n".join(lines) if lines else "(none)"
     return f"### {title} (read-only from Trifecta)\n{body}\n"
@@ -65,14 +85,17 @@ def build_linear_payload(
         "wo_id": wo_id,
         "title": f"[{wo_id}] {title}".strip(),
         "description": "\n\n".join(description_parts).strip(),
-        "priority": wo.get("priority", "medium"),
+        "priority": _map_priority(wo.get("priority", "medium")),
         "labels": sorted(set(labels)),
-        "assignee": assignee,
         "state": linear_state_id,
         "team": policy.team_id or policy.team_key,
         "status": wo.get("status", "pending"),
         "epic_id": epic_id if isinstance(epic_id, str) else "",
     }
+    if assignee:
+        payload["assignee"] = assignee
+    if policy.project:
+        payload["project"] = policy.project
 
     # Keep only policy-allowed outbound fields + wo_id anchor for remote lookup
     allowed = set(policy.outbound_allow) | {"wo_id", "status", "epic_id", "team"}

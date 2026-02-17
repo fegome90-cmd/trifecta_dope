@@ -23,7 +23,7 @@ REQUIRED_LINEAR_OPS: dict[str, tuple[str, ...]] = {
     "add_comment": ("add_comment", "create_comment"),
     "set_labels": ("set_labels", "update_issue"),
     "transition_issue_state": ("transition_issue_state", "update_issue"),
-    "resolve_team": ("resolve_team", "get_team", "list_teams"),
+    "resolve_team": ("resolve_team", "list_teams", "get_team"),
     "list_workflow_states": ("list_workflow_states", "list_issue_statuses"),
 }
 
@@ -201,6 +201,19 @@ class LinearMCPClient:
 
     @staticmethod
     def _decode_content_payload(payload: dict[str, Any]) -> dict[str, Any]:
+        if payload.get("isError") is True:
+            content = payload.get("content")
+            if isinstance(content, list):
+                for item in content:
+                    if not isinstance(item, dict):
+                        continue
+                    if item.get("type") != "text":
+                        continue
+                    text = item.get("text")
+                    if isinstance(text, str) and text.strip():
+                        raise LinearMCPError(f"MCP tool error: {text.strip()}")
+            raise LinearMCPError("MCP tool returned error content")
+
         content = payload.get("content")
         if not isinstance(content, list):
             return payload
@@ -278,6 +291,9 @@ class LinearMCPClient:
         else:
             raw = self._decode_content_payload(self.call_tool("list_teams", {"query": team_key, "limit": 50}))
             teams = self._team_candidates(raw)
+            if not teams:
+                raw = self._decode_content_payload(self.call_tool("list_teams", {"limit": 250}))
+                teams = self._team_candidates(raw)
 
         if not teams:
             raise LinearMCPError(f"Unable to resolve team from MCP response for key '{team_key}'")
@@ -317,10 +333,53 @@ class LinearMCPClient:
         return {"states": statuses}
 
     def create_issue(self, payload: dict[str, Any]) -> dict[str, Any]:
-        return self.call_tool("create_issue", payload)
+        allowed = {
+            "title",
+            "description",
+            "team",
+            "cycle",
+            "milestone",
+            "priority",
+            "project",
+            "state",
+            "assignee",
+            "delegate",
+            "labels",
+            "dueDate",
+            "parentId",
+            "estimate",
+            "links",
+            "blocks",
+            "blockedBy",
+            "relatedTo",
+            "duplicateOf",
+        }
+        args = {k: v for k, v in payload.items() if k in allowed}
+        return self.call_tool("create_issue", args)
 
     def update_issue(self, issue_id: str, payload: dict[str, Any]) -> dict[str, Any]:
-        args = {"id": issue_id, **payload}
+        allowed = {
+            "title",
+            "description",
+            "team",
+            "milestone",
+            "priority",
+            "project",
+            "state",
+            "cycle",
+            "assignee",
+            "delegate",
+            "labels",
+            "parentId",
+            "dueDate",
+            "estimate",
+            "links",
+            "blocks",
+            "blockedBy",
+            "relatedTo",
+            "duplicateOf",
+        }
+        args = {"id": issue_id, **{k: v for k, v in payload.items() if k in allowed}}
         res = self.call_tool("update_issue", args)
         if res.get("updated") is False and "set_labels" in self._tool_names:
             # Legacy adapter compatibility path (fake MCP fixture).

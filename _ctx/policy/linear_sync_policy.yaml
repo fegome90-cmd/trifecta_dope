@@ -1,0 +1,37 @@
+mode: viewer
+direction: outbound
+policy_version: v1
+team_key: Medula
+team_id: ""
+project: "Trifecta"
+outbound_allow:
+  - title
+  - description
+  - priority
+  - labels
+  - assignee
+  - project
+  - state
+  - comments
+inbound_allow: []
+drift_severity:
+  INFO:
+    - description
+    - labels
+  WARN:
+    - priority
+    - assignee
+  FATAL:
+    - status_critical
+    - dod
+    - verify
+    - execution
+    - evidence
+    - dependencies
+    - scope
+status_map:
+  pending: null
+  running: null
+  partial: null
+  done: null
+  failed: null
