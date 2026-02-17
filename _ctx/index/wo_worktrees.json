@@ -1,9 +1,9 @@
 {
   "version": 1,
   "schema": "trifecta.sidecar.wo_index.v1",
-  "generated_at": "2026-02-16T01:16:58.353716+00:00",
+  "generated_at": "2026-02-17T12:55:11.624415+00:00",
   "repo_root": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope",
-  "git_head_sha_repo_root": "4c6bb0de767010eabd375d63d1e366acc1bfd202",
+  "git_head_sha_repo_root": "86bcd7df284396945a6ec2b64f5d33f9c0b9e0e3",
   "work_orders": [
     {
       "id": "WO-0037",
@@ -49,22 +49,6 @@
       "branch": "feat/wo-WO-0016",
       "worktree_head_sha": null,
       "wo_yaml_path": "_ctx/jobs/pending/WO-0016.yaml",
-      "created_at": "",
-      "closed_at": null,
-      "last_error": null
-    },
-    {
-      "id": "WO-0041",
-      "title": "Definir READY como contrato con invariantes",
-      "status": "pending",
-      "priority": "P0",
-      "owner": "",
-      "epic_id": "E-LSP-CONTRACT",
-      "worktree_path": "../.worktrees/WO-0041",
-      "worktree_exists": true,
-      "branch": "feat/wo-WO-0041",
-      "worktree_head_sha": "fb875405114c1e8257278d6c95e4cff0454303bd",
-      "wo_yaml_path": "_ctx/jobs/pending/WO-0041.yaml",
       "created_at": "",
       "closed_at": null,
       "last_error": null
@@ -262,22 +246,6 @@
       "last_error": null
     },
     {
-      "id": "WO-0050",
-      "title": "Implementar comando telemetry health con exit codes",
-      "status": "running",
-      "priority": "P0",
-      "owner": "felipe_gonzalez",
-      "epic_id": "E-SCALE",
-      "worktree_path": "../.worktrees/WO-0050",
-      "worktree_exists": true,
-      "branch": "job/WO-0050",
-      "worktree_head_sha": "f94954c924dc3a13540a67a8cc5903086c603532",
-      "wo_yaml_path": "_ctx/jobs/running/WO-0050.yaml",
-      "created_at": "",
-      "closed_at": null,
-      "last_error": null
-    },
-    {
       "id": "WO-0046",
       "title": "Fix ctx_wo_finish sync + policy-based diff filter",
       "status": "running",
@@ -305,6 +273,22 @@
       "branch": "feat/wo-WO-0048",
       "worktree_head_sha": "b4d68ca54761000a4065e57d82e7daca4a55d9d3",
       "wo_yaml_path": "_ctx/jobs/running/WO-0048.yaml",
+      "created_at": "",
+      "closed_at": null,
+      "last_error": null
+    },
+    {
+      "id": "WO-0054",
+      "title": "Integrar documentaci\u00f3n WO en flujo de scripts (AGENTS + MANUAL_WO)",
+      "status": "running",
+      "priority": "P2",
+      "owner": "felipe_gonzalez",
+      "epic_id": "E-0004",
+      "worktree_path": "../.worktrees/WO-0054",
+      "worktree_exists": true,
+      "branch": "feat/wo-WO-0054",
+      "worktree_head_sha": "86bcd7df284396945a6ec2b64f5d33f9c0b9e0e3",
+      "wo_yaml_path": "_ctx/jobs/running/WO-0054.yaml",
       "created_at": "",
       "closed_at": null,
       "last_error": null
@@ -449,6 +433,22 @@
       "branch": "feat/wo-WO-P2.2",
       "worktree_head_sha": null,
       "wo_yaml_path": "_ctx/jobs/done/WO-P2.2.yaml",
+      "created_at": "",
+      "closed_at": null,
+      "last_error": null
+    },
+    {
+      "id": "WO-0050",
+      "title": "Implementar comando telemetry health con exit codes",
+      "status": "done",
+      "priority": "P0",
+      "owner": "felipe_gonzalez",
+      "epic_id": "E-SCALE",
+      "worktree_path": "../.worktrees/WO-0050",
+      "worktree_exists": true,
+      "branch": "job/WO-0050",
+      "worktree_head_sha": "f94954c924dc3a13540a67a8cc5903086c603532",
+      "wo_yaml_path": "_ctx/jobs/done/WO-0050.yaml",
       "created_at": "",
       "closed_at": null,
       "last_error": null

@@ -121,6 +121,8 @@ epics:
   - WO-0033
   - WO-0034
   generated_at: '2026-02-12T00:00:00-03:00'
+  x_notes:
+  - 'Includes WO-0054: Integrar documentación WO en flujo de scripts (AGENTS + MANUAL_WO)'
 - id: E-0012
   title: WO Closure Hardening
   description: 'Harden Work Order closure workflow by adding guards, tests,
