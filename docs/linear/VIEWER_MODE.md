@@ -52,6 +52,9 @@ Viewer mode is outbound-only from Trifecta to Linear.
 - `LINEAR_MCP_CMD` (required): MCP stdio command
 - `LINEAR_MCP_TIMEOUT_MS` (optional, default `5000`)
 - `LINEAR_MCP_DEBUG=1` (optional): raw frame logging
+- Optional bridge env (when using Codex HTTP MCP):
+  - `LINEAR_MCP_URL`
+  - `LINEAR_MCP_BEARER_TOKEN`
 
 ## Doctor Preconditions
 
@@ -72,6 +75,17 @@ Viewer mode is outbound-only from Trifecta to Linear.
 
 - Transport: JSON-RPC 2.0 over NDJSON (one JSON per line)
 - Single in-flight request (no pipelining)
+
+## Codex Linear Bridge (persistent)
+
+Use the repo bridge to connect Trifecta stdio client to Codex Linear MCP (streamable HTTP):
+
+```bash
+export LINEAR_MCP_CMD="python /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/scripts/dev/linear_mcp_bridge.py"
+```
+
+By default, the bridge reads `~/.codex/config.toml` (`mcp_servers.linear`).
+You can override with `LINEAR_MCP_URL` and `LINEAR_MCP_BEARER_TOKEN`.
 
 ## Fake MCP test harness
 
