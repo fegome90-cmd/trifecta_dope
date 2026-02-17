@@ -44,6 +44,7 @@ from src.infrastructure.file_system import FileSystemAdapter
 from src.infrastructure.telemetry import Telemetry
 from src.infrastructure.templates import TemplateRenderer
 from src.application.obsidian_sync_use_case import create_sync_use_case
+from src.application.linear_sync_use_case import LinearSyncUseCase
 from src.infrastructure.obsidian_config import ObsidianConfigManager
 
 
@@ -81,11 +82,13 @@ ctx_app = typer.Typer(
 session_app = typer.Typer(help="Session logging commands", cls=TrifectaGroup)
 telemetry_app = typer.Typer(help="Telemetry analysis commands", cls=TrifectaGroup)
 obsidian_app = typer.Typer(help="Obsidian vault integration for findings", cls=TrifectaGroup)
+linear_app = typer.Typer(help="Linear viewer sync (outbound-only)", cls=TrifectaGroup)
 
 app.add_typer(ctx_app, name="ctx")
 app.add_typer(session_app, name="session")
 app.add_typer(telemetry_app, name="telemetry")
 app.add_typer(obsidian_app, name="obsidian")
+app.add_typer(linear_app, name="linear")
 
 # Legacy Burn-Down
 legacy_app = typer.Typer(help="Legacy Burn-Down commands", cls=TrifectaGroup)
@@ -1895,6 +1898,111 @@ def obsidian_validate() -> None:
         typer.echo("❌ Vault validation failed")
         typer.echo(f"   Error: {validation.error}")
         raise typer.Exit(code=1)
+
+
+@linear_app.command("bootstrap")
+def linear_bootstrap(
+    root: str = typer.Option(".", "--root", help="Repository root"),
+) -> None:
+    """Bootstrap Linear status map by state IDs."""
+    use_case = LinearSyncUseCase(Path(root))
+    result = use_case.bootstrap()
+    use_case.client.close()
+    if result.ok:
+        typer.echo("Linear bootstrap completed")
+        return
+    typer.echo(f"Linear bootstrap failed: {result.message}", err=True)
+    raise typer.Exit(code=result.exit_code)
+
+
+@linear_app.command("doctor")
+def linear_doctor(
+    root: str = typer.Option(".", "--root", help="Repository root"),
+) -> None:
+    """Diagnose Linear viewer-mode readiness (policy/capabilities/status map)."""
+    try:
+        use_case = LinearSyncUseCase(Path(root))
+    except Exception as exc:
+        typer.echo(f"Linear doctor failed: {exc}", err=True)
+        raise typer.Exit(code=1)
+    result = use_case.doctor()
+    use_case.client.close()
+    if result.ok:
+        typer.echo("Linear doctor: OK")
+        return
+    typer.echo(f"Linear doctor failed: {result.message}", err=True)
+    raise typer.Exit(code=result.exit_code)
+
+
+@linear_app.command("push")
+def linear_push(
+    wo_id: str = typer.Argument(..., help="WO ID, e.g. WO-0001"),
+    root: str = typer.Option(".", "--root", help="Repository root"),
+) -> None:
+    """Push one WO projection to Linear (outbound only)."""
+    use_case = LinearSyncUseCase(Path(root))
+    bootstrap = use_case.bootstrap()
+    if not bootstrap.ok:
+        use_case.client.close()
+        typer.echo(f"Linear bootstrap failed: {bootstrap.message}", err=True)
+        raise typer.Exit(code=bootstrap.exit_code)
+
+    result = use_case.push_wo(wo_id)
+    use_case.client.close()
+    if result.ok:
+        typer.echo(f"Linear push completed for {wo_id}: {result.message}")
+        return
+    typer.echo(f"Linear push failed for {wo_id}: {result.message}", err=True)
+    raise typer.Exit(code=result.exit_code)
+
+
+@linear_app.command("sync")
+def linear_sync(
+    root: str = typer.Option(".", "--root", help="Repository root"),
+) -> None:
+    """Sync all WO projections to Linear (outbound only)."""
+    use_case = LinearSyncUseCase(Path(root))
+    bootstrap = use_case.bootstrap()
+    if not bootstrap.ok:
+        use_case.client.close()
+        typer.echo(f"Linear bootstrap failed: {bootstrap.message}", err=True)
+        raise typer.Exit(code=bootstrap.exit_code)
+
+    result = use_case.sync()
+    use_case.client.close()
+    if result.ok:
+        typer.echo("Linear sync completed")
+        return
+    typer.echo(f"Linear sync finished with issues: {result.message}", err=True)
+    raise typer.Exit(code=result.exit_code)
+
+
+@linear_app.command("reconcile")
+def linear_reconcile(
+    root: str = typer.Option(".", "--root", help="Repository root"),
+    dry_run: bool = typer.Option(True, "--dry-run/--apply", help="Default dry-run"),
+) -> None:
+    """Reconcile local WO projection vs Linear state."""
+    use_case = LinearSyncUseCase(Path(root))
+    bootstrap = use_case.bootstrap()
+    if not bootstrap.ok:
+        use_case.client.close()
+        typer.echo(f"Linear bootstrap failed: {bootstrap.message}", err=True)
+        raise typer.Exit(code=bootstrap.exit_code)
+
+    result = use_case.reconcile(dry_run=dry_run)
+    use_case.client.close()
+    if result.exit_code == 0:
+        typer.echo("Linear reconcile: OK")
+        return
+    if result.exit_code == 2:
+        typer.echo("Linear reconcile: WARN")
+        raise typer.Exit(code=2)
+    if result.exit_code == 3:
+        typer.echo("Linear reconcile: FATAL", err=True)
+        raise typer.Exit(code=3)
+    typer.echo(f"Linear reconcile failed: {result.message}", err=True)
+    raise typer.Exit(code=1)
 
 
 def main() -> None:
