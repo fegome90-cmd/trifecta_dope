@@ -1,9 +1,9 @@
 {
   "version": 1,
   "schema": "trifecta.sidecar.wo_index.v1",
-  "generated_at": "2026-02-17T14:31:55.603265+00:00",
+  "generated_at": "2026-02-17T14:36:51.282312+00:00",
   "repo_root": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope",
-  "git_head_sha_repo_root": "2efc6da1f3ff11ca588a10b3a8f553b6eb9df2b4",
+  "git_head_sha_repo_root": "5f6b470c5b69da5003d47ed4baf0d0fde1527193",
   "work_orders": [
     {
       "id": "WO-0037",
@@ -289,22 +289,6 @@
       "branch": "feat/wo-WO-0048",
       "worktree_head_sha": "b4d68ca54761000a4065e57d82e7daca4a55d9d3",
       "wo_yaml_path": "_ctx/jobs/running/WO-0048.yaml",
-      "created_at": "",
-      "closed_at": null,
-      "last_error": null
-    },
-    {
-      "id": "WO-0054",
-      "title": "Integrar documentaci\u00f3n WO en flujo de scripts (AGENTS + MANUAL_WO)",
-      "status": "running",
-      "priority": "P2",
-      "owner": "felipe_gonzalez",
-      "epic_id": "E-0004",
-      "worktree_path": "../.worktrees/WO-0054",
-      "worktree_exists": true,
-      "branch": "feat/wo-WO-0054",
-      "worktree_head_sha": "026846c4cbee8e4cb183703c0784c6e828bde33e",
-      "wo_yaml_path": "_ctx/jobs/running/WO-0054.yaml",
       "created_at": "",
       "closed_at": null,
       "last_error": null
@@ -787,6 +771,22 @@
       "wo_yaml_path": "_ctx/jobs/pending/WO-0042.yaml",
       "created_at": "",
       "closed_at": null,
+      "last_error": null
+    },
+    {
+      "id": "WO-0054",
+      "title": "Integrar documentaci\u00f3n WO en flujo de scripts (AGENTS + MANUAL_WO)",
+      "status": "done",
+      "priority": "P2",
+      "owner": "felipe_gonzalez",
+      "epic_id": "E-0004",
+      "worktree_path": "../.worktrees/WO-0054",
+      "worktree_exists": true,
+      "branch": "feat/wo-WO-0054",
+      "worktree_head_sha": "026846c4cbee8e4cb183703c0784c6e828bde33e",
+      "wo_yaml_path": "_ctx/jobs/done/WO-0054.yaml",
+      "created_at": "",
+      "closed_at": "2026-02-17T14:36:51.136495+00:00",
       "last_error": null
     },
     {
