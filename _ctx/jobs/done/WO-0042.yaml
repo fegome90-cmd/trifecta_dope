@@ -3,7 +3,7 @@ id: WO-0042
 epic_id: E-SSOT-ROOT
 title: Estabilizar SSOT de segment/workspace root
 priority: P0
-status: pending
+status: done
 scope:
   allow:
   - src/domain/segment_resolver.py

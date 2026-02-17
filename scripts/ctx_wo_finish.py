@@ -102,13 +102,83 @@ def filter_paths_by_policy(
     return ignored, blocked, unknown
 
 
+def validate_policy_security(policy_path: Path, data: dict) -> list[str]:
+    """Validate policy file for security issues.
+
+    Returns a list of warnings. Empty list means no issues found.
+    """
+    warnings = []
+    ignore_patterns = _ensure_list(data.get("ignore", []))
+
+    # Check for patterns that could hide malicious changes
+    # Each risky pattern should have a SECURITY comment explaining the risk
+    risky_patterns = [
+        ("agent_*.md", "agent files can contain misleading prompts"),
+        ("prime_*.md", "prime files can contain misleading documentation"),
+        ("session_*.md", "session logs can hide malicious activity"),
+    ]
+
+    for risky_pattern, risk_desc in risky_patterns:
+        if any(risky_pattern in p for p in ignore_patterns):
+            # Check if SECURITY comment exists in file
+            content = policy_path.read_text()
+            if "SECURITY" not in content and "SECURITY ASSUMPTION" not in content:
+                warnings.append(
+                    f"Pattern '{risky_pattern}' is ignored but lacks SECURITY documentation. "
+                    f"Risk: {risk_desc}. Add a SECURITY comment explaining why this is safe."
+                )
+
+    return warnings
+
+
 def load_finish_policy(root: Path) -> dict[str, list[str]]:
-    """Load ctx_finish_ignore.yaml policy if exists."""
+    """Load ctx_finish_ignore.yaml policy if exists.
+
+    Warns explicitly if policy file exists but cannot be parsed.
+    Returns empty default on missing file or parse error (fail-soft).
+    """
     policy_path = root / "_ctx" / "policy" / "ctx_finish_ignore.yaml"
     if not policy_path.exists():
         return {"ignore": [], "allowlist_contract": []}
+
     data = load_yaml(policy_path)
-    return data if data else {"ignore": [], "allowlist_contract": []}
+    if data is None:
+        # File exists but failed to parse - warn explicitly
+        logger.warning(
+            f"Policy file exists but could not be parsed: {policy_path}. "
+            "Using empty policy (no paths ignored/blocked). "
+            "Fix YAML syntax or remove file to suppress this warning."
+        )
+        return {"ignore": [], "allowlist_contract": []}
+
+    # Validate expected structure
+    if not isinstance(data, dict):
+        logger.warning(
+            f"Policy file parsed but is not a dict: {policy_path} (got {type(data).__name__}). "
+            "Using empty policy."
+        )
+        return {"ignore": [], "allowlist_contract": []}
+
+    # Security validation
+    security_warnings = validate_policy_security(policy_path, data)
+    for warning in security_warnings:
+        logger.warning(f"Policy security warning ({policy_path}): {warning}")
+
+    # Ensure keys exist with defaults
+    return {
+        "ignore": _ensure_list(data.get("ignore")),
+        "allowlist_contract": _ensure_list(data.get("allowlist_contract")),
+    }
+
+
+def _ensure_list(value: object) -> list[str]:
+    """Ensure value is a list of strings, returning empty list if not."""
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return [str(item) for item in value]
+    # Single value -> single-item list
+    return [str(value)]
 
 
 # =============================================================================
@@ -431,6 +501,7 @@ def generate_artifacts(
             return Err(f"Failed to write tests.log: {e}")
 
         # Generate lint.log
+        ruff_exit_code = 0  # Default to passing
         try:
             result = subprocess.run(
                 ["uv", "run", "ruff", "check", "src/"],
@@ -440,6 +511,7 @@ def generate_artifacts(
                 timeout=60,
                 cwd=root,
             )
+            ruff_exit_code = result.returncode
             (temp_dir / "lint.log").write_text(result.stdout or "No lint issues")
         except subprocess.TimeoutExpired:
             return Err("Lint timed out")
@@ -553,25 +625,32 @@ def generate_artifacts(
 
         (temp_dir / "handoff.md").write_text(handoff_md)
 
+        # Parse tests.log for failing tests
+        failing_tests = []
+        try:
+            tests_output = (temp_dir / "tests.log").read_text()
+            # Extract failed test names from pytest output
+            failed_match = re.search(r"FAILED\s+(.+)", tests_output)
+            if failed_match:
+                failed_line = failed_match.group(1)
+                # Parse failed test names (format: "path/to/test.py::test_name")
+                for test_path in failed_line.split():
+                    if "::" in test_path:
+                        test_name = test_path.split("::")[-1]
+                        failing_tests.append({"name": test_name, "reason": "Test failed"})
+        except (OSError, PermissionError) as e:
+            logger.warning(f"Failed to parse tests.log for failing tests: {e}")
+
         # Generate verdict.json with schema validation
         verdict = {
             "wo_id": wo_id,
             "status": "done",
             "generated_at": datetime.now(timezone.utc).isoformat(),
-            "tests_passed": False,  # Honest about pre-existing failures
-            "failing_tests": [
-                {
-                    "name": "test_lock_timeout_behavior",
-                    "reason": "Pre-existing SQLiteCache API mismatch (unrelated to WO-0012)",
-                },
-                {
-                    "name": "test_real_wo_validates_and_can_be_taken",
-                    "reason": "Pre-existing test architecture issue (unrelated to WO-0012)",
-                },
-            ],
-            "lint_passed": True,
+            "tests_passed": len(failing_tests) == 0,
+            "failing_tests": failing_tests,
+            "lint_passed": ruff_exit_code == 0,  # Parse ruff exit code: 0 = no issues
             "artifact_verification": "complete",
-            "notes": "WO-0012 validation based on metrics (wo_0012_baseline.json, wo_0012_active.json), not pytest",
+            "notes": f"Validation for {wo_id}",
         }
         (temp_dir / "verdict.json").write_text(json.dumps(verdict, indent=2))
 
@@ -1013,8 +1092,8 @@ def main():
             text=True,
             check=False,
         )
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning(f'Failed to append to session log: {e}')
 
     return 0
 

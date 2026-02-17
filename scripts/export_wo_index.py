@@ -127,9 +127,10 @@ def main():
     # Get all worktrees from git
     worktrees = get_worktrees_from_git(root)
 
-    # Load all WOs
+    # Load all WOs with duplicate detection
     work_orders = []
     errors = []
+    seen_wo_ids = set()
 
     for state_dir in ["pending", "running", "done", "failed"]:
         state_path = root / "_ctx" / "jobs" / state_dir
@@ -139,6 +140,28 @@ def main():
         for wo_file in state_path.glob("WO-*.yaml"):
             try:
                 entry = build_wo_index(wo_file, root, worktrees)
+                wo_id = entry["id"]
+
+                # VALIDATION: Detect duplicate WO IDs
+                if wo_id in seen_wo_ids:
+                    errors.append(
+                        f"DUPLICATE_WO: {wo_id} appears multiple times. "
+                        f"Keeping first occurrence from {state_dir}/. "
+                        f"Duplicate at {wo_file} skipped."
+                    )
+                    continue
+
+                # VALIDATION: Sync status with YAML location
+                # If WO is in done/ but status != "done", use directory location as source of truth
+                yaml_status = state_dir
+                if entry["status"] != yaml_status:
+                    entry["status"] = yaml_status
+                    errors.append(
+                        f"STATUS_SYNC: {wo_id} status field '{entry['status']}' "
+                        f"corrected to match YAML location '{yaml_status}/'"
+                    )
+
+                seen_wo_ids.add(wo_id)
                 work_orders.append(entry)
             except Exception as e:
                 errors.append(f"Failed to load {wo_file.name}: {e}")

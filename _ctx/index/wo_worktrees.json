@@ -1,9 +1,9 @@
 {
   "version": 1,
   "schema": "trifecta.sidecar.wo_index.v1",
-  "generated_at": "2026-02-17T14:36:51.282312+00:00",
+  "generated_at": "2026-02-17T15:10:27.383456+00:00",
   "repo_root": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope",
-  "git_head_sha_repo_root": "5f6b470c5b69da5003d47ed4baf0d0fde1527193",
+  "git_head_sha_repo_root": "19611cce6d595520569decdfffdf7e274c303235",
   "work_orders": [
     {
       "id": "WO-0037",
@@ -390,38 +390,6 @@
       "last_error": null
     },
     {
-      "id": "WO-0009",
-      "title": "ctx sync debe indexar contenido del repo (docs/src), no solo _ctx",
-      "status": "done",
-      "priority": "P0",
-      "owner": null,
-      "epic_id": "E-0001",
-      "worktree_path": "../.worktrees/WO-0009",
-      "worktree_exists": false,
-      "branch": "feat/wo-WO-0009",
-      "worktree_head_sha": null,
-      "wo_yaml_path": "_ctx/jobs/done/WO-0009.yaml",
-      "created_at": "",
-      "closed_at": null,
-      "last_error": null
-    },
-    {
-      "id": "WO-0008",
-      "title": "A/B Linter Reproducibility (OFF=0, ON>0) en fixture sint\u00e9tico",
-      "status": "done",
-      "priority": "P1",
-      "owner": null,
-      "epic_id": "E-0001",
-      "worktree_path": "../.worktrees/WO-0008",
-      "worktree_exists": false,
-      "branch": "feat/wo-WO-0008",
-      "worktree_head_sha": null,
-      "wo_yaml_path": "_ctx/jobs/done/WO-0008.yaml",
-      "created_at": "",
-      "closed_at": null,
-      "last_error": null
-    },
-    {
       "id": "WO-P2.2",
       "title": "AST Cache File Locks (Wrapper Pattern)",
       "status": "done",
@@ -552,7 +520,7 @@
     {
       "id": "WO-0044",
       "title": "Telemetr\u00eda m\u00ednima de salud LSP",
-      "status": "pending",
+      "status": "done",
       "priority": "P0",
       "owner": "",
       "epic_id": "E-LSP-CONTRACT",
@@ -560,7 +528,7 @@
       "worktree_exists": true,
       "branch": "feat/wo-WO-0044",
       "worktree_head_sha": "e62b6a0b96677c77cc82e74c4058d734aeab35ff",
-      "wo_yaml_path": "_ctx/jobs/pending/WO-0044.yaml",
+      "wo_yaml_path": "_ctx/jobs/done/WO-0044.yaml",
       "created_at": "",
       "closed_at": null,
       "last_error": null
@@ -760,7 +728,7 @@
     {
       "id": "WO-0042",
       "title": "Estabilizar SSOT de segment/workspace root",
-      "status": "pending",
+      "status": "done",
       "priority": "P0",
       "owner": "",
       "epic_id": "E-SSOT-ROOT",
@@ -768,7 +736,7 @@
       "worktree_exists": true,
       "branch": "feat/wo-WO-0042",
       "worktree_head_sha": "f065927d0e6b91278135acbded4fefbae43dd7f4",
-      "wo_yaml_path": "_ctx/jobs/pending/WO-0042.yaml",
+      "wo_yaml_path": "_ctx/jobs/done/WO-0042.yaml",
       "created_at": "",
       "closed_at": null,
       "last_error": null
@@ -781,28 +749,12 @@
       "owner": "felipe_gonzalez",
       "epic_id": "E-0004",
       "worktree_path": "../.worktrees/WO-0054",
-      "worktree_exists": true,
+      "worktree_exists": false,
       "branch": "feat/wo-WO-0054",
-      "worktree_head_sha": "026846c4cbee8e4cb183703c0784c6e828bde33e",
+      "worktree_head_sha": null,
       "wo_yaml_path": "_ctx/jobs/done/WO-0054.yaml",
       "created_at": "",
       "closed_at": "2026-02-17T14:36:51.136495+00:00",
-      "last_error": null
-    },
-    {
-      "id": "WO-0011",
-      "title": "Field Exercises v2: Hard Query Linter Evaluation (Audit Grade)",
-      "status": "done",
-      "priority": "P1",
-      "owner": null,
-      "epic_id": "E-0001",
-      "worktree_path": "../.worktrees/WO-0011",
-      "worktree_exists": false,
-      "branch": "feat/wo-WO-0011",
-      "worktree_head_sha": null,
-      "wo_yaml_path": "_ctx/jobs/done/WO-0011.yaml",
-      "created_at": "",
-      "closed_at": null,
       "last_error": null
     },
     {

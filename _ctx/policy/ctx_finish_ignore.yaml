@@ -1,11 +1,42 @@
-# Policy for ctx_wo_finish.py diff filtering
-# This file defines which _ctx/ paths should be ignored vs blocked during finish validation
-
-# Paths to ignore during finish (generated/session state)
+# ═══════════════════════════════════════════════════════════════════════════════
+# SECURITY MODEL: ctx_wo_finish.py Policy
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# This policy defines fail-closed filtering for ctx_wo_finish.py.
+#
+# THREAT MODEL: Malicious changes to ignored paths could bypass code review.
+#    An attacker could modify ignored files to inject malicious behavior while
+#    the finish validator would silently accept the changes.
+#
+# MITIGATION STRATEGY: All ignored paths MUST satisfy at least one of:
+#    1. GENERATED-ONLY: Files created by automation, not meant for manual edits.
+#       If you see manual edits to these files, INVESTIGATE before merging.
+#    2. SESSION STATE: Append-only logs that record history (tampering is detectable).
+#    3. REGENERABLE: Can be rebuilt from source-of-truth contract files.
+#    4. LOW-VALUE CONTENT: Documentation files that don't affect runtime behavior.
+#       Changes here don't impact security but may affect agent understanding.
+#
+# FAIL-CLOSED BEHAVIOR:
+#    - Any change NOT in ignore list AND NOT in allowlist_contract WILL BLOCK finish.
+#    - If you see unexpected changes to ignored files, review them manually.
+#    - When in doubt, move the file to allowlist_contract to enforce review.
+#
+# ═══════════════════════════════════════════════════════════════════════════════
+# Paths to ignore during finish (generated/session state/low-value docs)
 ignore:
-  # Session logs
+  # Session logs (append-only, high-frequency writes)
   - "_ctx/session_*.md"
-  # Context reference files (not contract state)
+  # Context reference files (LOW-VALUE CONTENT)
+  # SECURITY ASSUMPTION: These files are templates created by `ctx sync` and then
+  # manually edited. They are documentation that helps agents understand the codebase.
+  #
+  # RISK: An attacker could hide malicious documentation here to mislead agents.
+  # MITIGATION: Changes to these files are visible in git diff. During code review,
+  #            check for suspicious prompts or misleading instructions.
+  #
+  # NOTE: These are NOT generated-only - they receive manual edits. The ignore
+  #       pattern is for convenience (reducing noise), not security. If WO work
+  #       specifically targets documentation quality, consider moving to allowlist.
   - "_ctx/agent_*.md"
   - "_ctx/prime_*.md"
   # Telemetry

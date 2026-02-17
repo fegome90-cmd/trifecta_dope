@@ -3,7 +3,7 @@ id: WO-0044
 epic_id: E-LSP-CONTRACT
 title: "Telemetr\xEDa m\xEDnima de salud LSP"
 priority: P0
-status: pending
+status: done
 scope:
   allow:
   - src/infrastructure/lsp_client.py
