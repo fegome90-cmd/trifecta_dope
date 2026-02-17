@@ -1,8 +1,8 @@
 ---
 segment: .
 scope: Verification
-repo_root: /workspaces/trifecta_dope
-last_verified: 2026-01-05
+repo_root: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope
+last_verified: 2026-02-16
 default_profile: impl_patch
 python_version: ">=3.12"
 package_manager: uv
@@ -31,17 +31,22 @@ package_manager: uv
 - typer[all]>=0.9.0 (CLI Framework)
 - pydantic>=2.0 (Data Models/Schema)
 - pyyaml>=6.0 (Artifacts parsing)
+- ruamel.yaml>=0.18.0 (Advanced YAML parsing)
 - tree-sitter>=0.23.0 (AST Parsing)
 - tree-sitter-python>=0.23.0 (Python Language Support)
+- jsonschema>=4.0.0 (Schema validation)
+- filelock>=3.20.2 (File locking for cache concurrency)
 
 **Dev Dependencies:**
 - pytest>=7.0 (Testing Framework)
 - pytest-cov (Coverage)
+- pytest-env>=1.2.0 (Environment variables for tests)
 - ruff (Linting/Formatting)
 - pyrefly (Static Types - Migrated from Mypy)
-- pyright==1.1.407 (Type Checker)
+- pyright==1.1.408 (Type Checker)
 - bandit[toml]>=1.7.0 (Security Scanner)
 - safety>=2.0.0 (Dependency Vulnerability Scanner)
+- mypy>=1.19.1 (Alternative type checker)
 
 **Telemetry Optional Dependencies:**
 - jupyter>=1.0.0 (Analysis Notebooks)
@@ -151,6 +156,12 @@ make ctx-search Q="búsqueda específica" SEGMENT=.
 # Requerido para telemetría
 TRIFECTA_TELEMETRY_LEVEL=lite
 LSP_DAEMON_TTL_SEC=180  # Default
+
+# Cache de AST (habilitado por defecto en tests via pytest-env)
+TRIFECTA_AST_PERSIST=1  # Habilita persistencia SQLite
+
+# Deprecaciones
+TRIFECTA_DEPRECATED=warn  # off | warn | fail
 ```
 
 ## Gates (Comandos de Verificación)
@@ -169,7 +180,7 @@ LSP_DAEMON_TTL_SEC=180  # Default
 | **Type** | `uv run pyrefly check` | Integridad de tipos |
 | **Context** | `make ctx-sync` | Sincronizar context pack |
 
-## Active Features (Verified 2026-01-05)
+## Active Features (Verified 2026-02-16)
 
 | Feature | Status | Verified | Commands |
 |---------|--------|----------|----------|
@@ -180,8 +191,10 @@ LSP_DAEMON_TTL_SEC=180  # Default
 | **Error Cards** | ✅ STABLE | 2026-01-02 | `SEGMENT_NOT_INITIALIZED` error type |
 | **Deprecation Tracking** | ✅ STABLE | 2026-01-02 | `TRIFECTA_DEPRECATED` env var |
 | **Pre-commit Gates** | ✅ STABLE | 2026-01-03 | Zero side-effects guaranteed |
-| **ctx plan** | ✅ STABLE | NEW v2.0 | `trifecta ctx plan --segment . --task "..."` |
-| **ctx eval-plan** | ✅ STABLE | NEW v2.0 | Evaluate plans against datasets |
+| **ctx plan** | ✅ STABLE | 2026-01-15 | `trifecta ctx plan --segment . --task "..."` |
+| **ctx eval-plan** | ✅ STABLE | 2026-01-15 | Evaluate plans against datasets |
+| **Spanish Aliases** | ✅ STABLE | 2026-02-16 | Two-pass search with alias recovery |
+| **WO System** | ✅ STABLE | 2026-02-16 | Work Order management via git worktrees |
 | **Obsidian Integration** | ⚠️ EXPERIMENTAL | NONE | Not production-ready, not recommended |
 
 ## Troubleshooting
@@ -198,14 +211,19 @@ LSP_DAEMON_TTL_SEC=180  # Default
 | Cache de AST crece sin límite | Usar `--persist-cache` con `InMemoryLRUCache` (efímero) o verificar `SQLiteCache` evicción LRU |
 | Cache hit rate bajo | Verificar que `SkeletonMapBuilder` usa misma instancia de `AstCache` entre componentes |
 | Telemetría de cache siempre muestra `cache_hit=false` | Usar `ParseResult` con `status="hit"`/`"miss"` en lugar de parámetro booleano |
+| Zero-hits en español | Sistema de Spanish Aliases activo (two-pass search), verificar `TRIFECTA_TELEMETRY_LEVEL` para debug |
+| WO state inconsistency | Ejecutar `python scripts/ctx_reconcile_state.py` para reparar |
+| Worktree no existe | `uv run python scripts/ctx_wo_take.py WO-XXXX` recrea worktree y branch |
 
 ## Integration Points
 
 **Upstream Dependencies:**
 - `pydantic` - Base de modelos de dominio
 - `typer` - Motor del CLI
-- `pyyaml` - Serialización de estados/config
+- `pyyaml` / `ruamel.yaml` - Serialización de estados/config
+- `jsonschema` - Validación de schemas (WO, Context Pack)
 - `sqlite3` - Persistencia de cache de AST (std lib)
+- `filelock` - Locks de archivo para concurrencia cache
 
 **Downstream Consumers:**
 - Agentes de código que necesiten contexto estructurado
@@ -217,6 +235,19 @@ LSP_DAEMON_TTL_SEC=180  # Default
 - `src/application/telemetry_pr2.py` - `track_parse()` acepta `ParseResult` con `cache_status` y `cache_key`
 - `src/application/pr2_context_searcher.py` - Inyecta `AstCache` en componentes
 - `src/infrastructure/cli_ast.py` - CLI commands: `ast symbols --persist-cache`, `ast cache-stats`, `ast clear-cache`
+- `src/infrastructure/file_locked_cache.py` - Wrapper de file locking para `SQLiteCache`
+- `src/infrastructure/factories.py` - `get_ast_cache()` factory con soporte telemetría
+
+**WO (Work Order) System:**
+- `_ctx/jobs/{pending,running,done,failed}/` - Estado de WO
+- `scripts/ctx_wo_take.py` - Tomar WO (crea branch + worktree)
+- `scripts/ctx_wo_finish.py` - Completar WO (validación DoD)
+- `scripts/ctx_reconcile_state.py` - Reparar inconsistencias de estado
+
+**Spanish Aliases:**
+- `src/application/spanish_aliases.py` - Mapeo de términos español→inglés
+- `src/application/pr2_context_searcher.py` - Two-pass search con alias fallback
+- Evento `spanish_alias.recovered` emitido en telemetría cuando se usa alias
 
 
 

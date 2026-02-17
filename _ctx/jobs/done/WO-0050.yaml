@@ -3,7 +3,7 @@ id: WO-0050
 epic_id: E-SCALE
 title: Implementar comando telemetry health con exit codes
 priority: P0
-status: running
+status: done
 owner: felipe_gonzalez
 scope:
   allow:
