@@ -21,7 +21,11 @@ dod_id: DOD-DEFAULT
 execution:
   engine: trifecta
   required_flow:
-  - verify
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
   segment: .
 dependencies:
 - WO-0018B
@@ -186,12 +190,3 @@ x_micro_tasks:
   - /tmp/final_validation.log
   - /tmp/final_report.md
   commit: 'chore(wo): complete WO schema migration'
-execution:
-  engine: trifecta
-  required_flow:
-  - session.append:intent
-  - ctx.sync
-  - ctx.search
-  - ctx.get
-  - session.append:result
-  segment: .

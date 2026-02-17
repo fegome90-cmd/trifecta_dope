@@ -5,6 +5,9 @@
 ignore:
   # Session logs
   - "_ctx/session_*.md"
+  # Context reference files (not contract state)
+  - "_ctx/agent_*.md"
+  - "_ctx/prime_*.md"
   # Telemetry
   - "_ctx/telemetry/**"
   # Generated artifacts (regenerable)

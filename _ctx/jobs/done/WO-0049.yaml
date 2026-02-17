@@ -5,6 +5,8 @@ title: Agregar DeprecationWarning a segment_utils.py
 priority: P0
 status: done
 owner: felipe_gonzalez
+branch: job/WO-0049
+worktree: ../.worktrees/WO-0049
 scope:
   allow:
   - src/infrastructure/segment_utils.py
@@ -34,14 +36,16 @@ claim_links:
   - DeprecationWarning con stacklevel=2 en todas las funciones deprecated
   - Test que verifica que el warning se emite
   - "Documentaci\xF3n breve en docstring"
+objective: Agregar DeprecationWarning a segment_utils.py para que cualquier uso directo sea detectable.
+  El CI guard excluye este archivo, por lo que necesitamos warnings como segunda linea de defensa.
+started_at: '2026-02-15T20:42:42.050565+00:00'
+result: done
+verified_at_sha: 3fe9e665a84d893669d0e920e7db30a904e8e254
 assumptions:
 - warnings.warn funciona correctamente en Python
 constraints:
 - Mantener backward compatibility (las funciones siguen existiendo)
 - "No romper c\xF3digo existente que use segment_utils"
-objective: Agregar DeprecationWarning a segment_utils.py para que cualquier uso directo
-  sea detectable. El CI guard excluye este archivo, por lo que necesitamos warnings
-  como segunda linea de defensa.
 deliverables:
 - warnings.warn con DeprecationWarning y stacklevel=2 en resolve_segment_root()
 - warnings.warn con DeprecationWarning y stacklevel=2 en compute_segment_id()
@@ -53,9 +57,4 @@ diff_budget:
 stop_conditions:
   max_iterations: 2
   max_fail_verify: 1
-started_at: '2026-02-15T20:42:42.050565+00:00'
-branch: job/WO-0049
-worktree: ../.worktrees/WO-0049
-verified_at_sha: 3fe9e665a84d893669d0e920e7db30a904e8e254
 closed_at: '2026-02-15T20:49:36.434544+00:00'
-result: done

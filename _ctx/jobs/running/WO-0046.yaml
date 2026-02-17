@@ -36,8 +36,7 @@ governance:
   - Policy YAML with ignore + allowlist_contract
   - Fail-closed for unclassified paths
   - "Tests: handoff exists \u2192 pass, schema changes \u2192 fail"
-x_objective: Fix ctx_wo_finish.py to handle _ctx/ drift between worktree and main
-  using policy-based filtering
+x_objective: Fix ctx_wo_finish.py to handle _ctx/ drift between worktree and main using policy-based filtering
 x_items:
 - Create _ctx/policy/ctx_finish_ignore.yaml with ignore + allowlist_contract
 - 'Add sync step: fetch + rebase origin/main before validation'

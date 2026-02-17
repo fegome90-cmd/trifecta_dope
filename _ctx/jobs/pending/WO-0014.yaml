@@ -23,7 +23,11 @@ dod_id: DOD-DEFAULT
 execution:
   engine: trifecta
   required_flow:
-  - verify
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
   segment: .
 dependencies: []
 started_at: '2026-02-13T20:09:58.298898+00:00'
@@ -47,12 +51,3 @@ diff_budget:
 stop_conditions:
   max_iterations: 5
   max_fail_verify: 2
-execution:
-  engine: trifecta
-  required_flow:
-  - session.append:intent
-  - ctx.sync
-  - ctx.search
-  - ctx.get
-  - session.append:result
-  segment: .

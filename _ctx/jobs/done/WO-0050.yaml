@@ -5,6 +5,8 @@ title: Implementar comando telemetry health con exit codes
 priority: P0
 status: done
 owner: felipe_gonzalez
+branch: job/WO-0050
+worktree: ../.worktrees/WO-0050
 scope:
   allow:
   - src/infrastructure/cli.py
@@ -39,13 +41,14 @@ claim_links:
   - Verifica zero-hit ratio como warn
   - Tests unitarios
   - CI step report-only
+objective: 'Implementar comando trifecta telemetry health que permita a CI verificar salud del sistema.
+  Fase 1: report-only en CI. Fase 2: bloqueo gradual para invariantes.'
+started_at: '2026-02-15T20:43:54.283723+00:00'
 assumptions:
 - Datos de telemetry existen en _ctx/telemetry/
 constraints:
 - Fail-closed para archivos faltantes (WARN si no hay datos, no FAIL)
 - No bloquear CI inicialmente (solo report)
-objective: 'Implementar comando trifecta telemetry health que permita a CI verificar
-  salud del sistema. Fase 1: report-only en CI. Fase 2: bloqueo gradual para invariantes.'
 deliverables:
 - Comando trifecta telemetry health -s .
 - 'Exit codes: 0=OK, 2=WARN, 3=FAIL'
@@ -60,6 +63,3 @@ diff_budget:
 stop_conditions:
   max_iterations: 3
   max_fail_verify: 2
-started_at: '2026-02-15T20:43:54.283723+00:00'
-branch: job/WO-0050
-worktree: ../.worktrees/WO-0050

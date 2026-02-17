@@ -24,7 +24,11 @@ dod_id: DOD-DEFAULT
 execution:
   engine: trifecta
   required_flow:
-  - verify
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
   segment: .
 dependencies:
 - WO-0031
@@ -33,12 +37,3 @@ deliverables:
 - skills/documentation/resources/contexts/review.md
 - skills/documentation/resources/contexts/research.md
 - skills/documentation/resources/workflows/update-docs-workflow.md
-execution:
-  engine: trifecta
-  required_flow:
-  - session.append:intent
-  - ctx.sync
-  - ctx.search
-  - ctx.get
-  - session.append:result
-  segment: .

@@ -22,7 +22,11 @@ dod_id: DOD-DEFAULT
 execution:
   engine: trifecta
   required_flow:
-  - verify
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
   segment: .
 dependencies: []
 verified_at_sha: null
@@ -169,12 +173,3 @@ x_micro_tasks:
   evidence:
   - _ctx/backlog/backlog.yaml
   commit: 'chore(backlog): update WO-0012 status to done'
-execution:
-  engine: trifecta
-  required_flow:
-  - session.append:intent
-  - ctx.sync
-  - ctx.search
-  - ctx.get
-  - session.append:result
-  segment: .

@@ -23,18 +23,13 @@ dod_id: DOD-DEFAULT
 execution:
   engine: trifecta
   required_flow:
-  - verify
-  segment: .
-dependencies: []
-deliverables:
-- skills/documentation/resources/validate-references.sh
-- skills/documentation/resources/validate_references.py
-execution:
-  engine: trifecta
-  required_flow:
   - session.append:intent
   - ctx.sync
   - ctx.search
   - ctx.get
   - session.append:result
   segment: .
+dependencies: []
+deliverables:
+- skills/documentation/resources/validate-references.sh
+- skills/documentation/resources/validate_references.py
