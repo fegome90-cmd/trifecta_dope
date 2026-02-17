@@ -49,3 +49,8 @@ venv/
 # Development tools
 .sidecar/
 .todos/
+# Linear viewer runtime artifacts (generated at runtime)
+_ctx/linear_sync/index.jsonl
+_ctx/linear_sync/state.json
+_ctx/linear_sync/status_map.json
+_ctx/linear_sync/mcp_debug.log
