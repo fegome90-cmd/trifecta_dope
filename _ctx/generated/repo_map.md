@@ -1,8 +1,8 @@
-# Trifecta Dope - Repository Map
+# App - Repository Map
 
 > **Generated**: __DATE__
 > **Purpose**: High-level module navigation for ctx.plan code_navigation feature
-> **Hash**: f313fbe86ce2
+> **Hash**: 7a45ba90eb39
 
 ---
 

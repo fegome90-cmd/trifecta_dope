@@ -19,48 +19,48 @@ last_updated: 2026-02-16
 **Leer primero para entender el contexto del segmento.**
 
 ### Entry Points & CLI
-1. `trifecta_dope/skill.md`
-2. `trifecta_dope/README.md`
-3. `trifecta_dope/src/infrastructure/cli.py`
-4. `trifecta_dope/src/infrastructure/cli_ast.py`
+1. `skill.md`
+2. `README.md`
+3. `src/infrastructure/cli.py`
+4. `src/infrastructure/cli_ast.py`
 
 ### Domain Layer (Pure Business Logic)
-5. `trifecta_dope/src/domain/ast_models.py`
-6. `trifecta_dope/src/domain/ast_cache.py`
-7. `trifecta_dope/src/domain/models.py`
-8. `trifecta_dope/src/domain/naming.py`
-9. `trifecta_dope/src/domain/result.py`
-10. `trifecta_dope/src/domain/constants.py`
+5. `src/domain/ast_models.py`
+6. `src/domain/ast_cache.py`
+7. `src/domain/models.py`
+8. `src/domain/naming.py`
+9. `src/domain/result.py`
+10. `src/domain/constants.py`
 
 ### Application Layer (Use Cases)
-11. `trifecta_dope/src/application/use_cases.py`
-12. `trifecta_dope/src/application/context_service.py`
-13. `trifecta_dope/src/application/search_get_usecases.py`
-14. `trifecta_dope/src/application/ast_parser.py`
-15. `trifecta_dope/src/application/pr2_context_searcher.py`
+11. `src/application/use_cases.py`
+12. `src/application/context_service.py`
+13. `src/application/search_get_usecases.py`
+14. `src/application/ast_parser.py`
+15. `src/application/pr2_context_searcher.py`
 
 ### Infrastructure Layer (Adapters)
-16. `trifecta_dope/src/infrastructure/lsp_daemon.py`
-17. `trifecta_dope/src/infrastructure/lsp_client.py`
-18. `trifecta_dope/src/infrastructure/telemetry.py`
-19. `trifecta_dope/src/infrastructure/factories.py`
-20. `trifecta_dope/src/infrastructure/file_locked_cache.py`
-21. `trifecta_dope/src/infrastructure/daemon_paths.py`
+16. `src/infrastructure/lsp_daemon.py`
+17. `src/infrastructure/lsp_client.py`
+18. `src/infrastructure/telemetry.py`
+19. `src/infrastructure/factories.py`
+20. `src/infrastructure/file_locked_cache.py`
+21. `src/infrastructure/daemon_paths.py`
 
 ### Error Handling & Contracts
-22. `trifecta_dope/src/cli/error_cards.py`
-23. `trifecta_dope/src/application/exceptions.py`
+22. `src/cli/error_cards.py`
+23. `src/application/exceptions.py`
 
 ### Testing - Critical Gates
-24. `trifecta_dope/tests/acceptance/test_ctx_sync_preconditions.py`
-25. `trifecta_dope/tests/integration/test_lsp_daemon.py`
-26. `trifecta_dope/tests/integration/test_ast_cache_persist_cross_run_cli.py`
+24. `tests/acceptance/test_ctx_sync_preconditions.py`
+25. `tests/integration/test_lsp_daemon.py`
+26. `tests/integration/test_ast_cache_persist_cross_run_cli.py`
 
 ### Configuration & Contracts
-27. `trifecta_dope/Makefile`
-28. `trifecta_dope/pyproject.toml`
-29. `trifecta_dope/docs/CLI_WORKFLOW.md`
-30. `trifecta_dope/.github/copilot-instructions.md`
+27. `Makefile`
+28. `pyproject.toml`
+29. `docs/CLI_WORKFLOW.md`
+30. `.github/copilot-instructions.md`
 
 
 ## [MED] Prioridad MEDIA - Implementación
@@ -68,38 +68,38 @@ last_updated: 2026-02-16
 **Leer para entender features específicos y testing.**
 
 ### Telemetry System
-1. `trifecta_dope/src/application/telemetry_pr2.py`
-2. `trifecta_dope/src/application/telemetry_reports.py`
-3. `trifecta_dope/src/application/telemetry_charts.py`
-4. `trifecta_dope/src/infrastructure/telemetry_cache.py`
-5. `trifecta_dope/tests/integration/test_lsp_telemetry.py`
+1. `src/application/telemetry_pr2.py`
+2. `src/application/telemetry_reports.py`
+3. `src/application/telemetry_charts.py`
+4. `src/infrastructure/telemetry_cache.py`
+5. `tests/integration/test_lsp_telemetry.py`
 
 ### Query Processing
-6. `trifecta_dope/src/application/query_expander.py`
-7. `trifecta_dope/src/application/query_normalizer.py`
-8. `trifecta_dope/src/domain/query_linter.py`
-9. `trifecta_dope/src/domain/anchor_extractor.py`
+6. `src/application/query_expander.py`
+7. `src/application/query_normalizer.py`
+8. `src/domain/query_linter.py`
+9. `src/domain/anchor_extractor.py`
 
 ### Context & Search
-10. `trifecta_dope/src/domain/context_models.py`
-11. `trifecta_dope/src/application/chunking.py`
-12. `trifecta_dope/src/infrastructure/file_system.py`
+10. `src/domain/context_models.py`
+11. `src/application/chunking.py`
+12. `src/infrastructure/file_system.py`
 
 ### Bug Documentation
-13. `trifecta_dope/docs/bugs/create_cwd_bug.md`
+13. `docs/bugs/create_cwd_bug.md`
 
 ### Integration Tests
-14. `trifecta_dope/tests/integration/test_daemon_paths_constraints.py`
-15. `trifecta_dope/tests/integration/test_ast_telemetry_consistency.py`
+14. `tests/integration/test_daemon_paths_constraints.py`
+15. `tests/integration/test_ast_telemetry_consistency.py`
 
 ## [LOW] Prioridad BAJA - Referencias
 
 **Documentación de referencia, archivada.**
 
-1. `trifecta_dope/braindope.md`
-2. `trifecta_dope/docs/CONTRACTS.md`
-3. `trifecta_dope/CLAUDE.md`
-4. `trifecta_dope/docs/adr/`
+1. `braindope.md`
+2. `docs/CONTRACTS.md`
+3. `CLAUDE.md`
+4. `docs/adr/`
 
 ## [MAP] Architecture Diagram
 
