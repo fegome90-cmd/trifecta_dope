@@ -26,6 +26,9 @@ class ImportExtractor(ast.NodeVisitor):
         if node.module == "__builtins__":
             return
 
+        if node.module is None and node.level > 0:
+            pass
+
         imported_names = tuple(alias.name for alias in node.names)
 
         self.imports.append(
@@ -39,7 +42,7 @@ class ImportExtractor(ast.NodeVisitor):
 
     def visit_Call(self, node: ast.Call) -> None:
         if isinstance(node.func, ast.Name) and node.func.id == "__import__":
-            self.warnings.append(f"Dynamic import detected at line {node.lineno}")
+            self.warnings.append("Dynamic import detected at line {node.lineno}")
         self.generic_visit(node)
 
 

@@ -21,10 +21,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal
 
+logger = logging.getLogger(__name__)
+
 from src.domain.result import Result, Ok, Err
 from src.cli.error_cards import render_error_card
-
-logger = logging.getLogger(__name__)
 
 
 # =============================================================================
@@ -102,7 +102,7 @@ def filter_paths_by_policy(
     return ignored, blocked, unknown
 
 
-def validate_policy_security(policy_path: Path, data: dict[str, object]) -> list[str]:
+def validate_policy_security(policy_path: Path, data: dict) -> list[str]:
     """Validate policy file for security issues.
 
     Returns a list of warnings. Empty list means no issues found.
@@ -225,22 +225,17 @@ def _ctx_running_path(wo_id: str, root: Path) -> Path:
     return root / "_ctx" / "jobs" / "running" / f"{wo_id}.yaml"
 
 
-def write_yaml(path: Path, data: object) -> None:
+def write_yaml(path: Path, data):
     path.write_text(yaml.safe_dump(data, sort_keys=False))
 
 
-def load_dod_catalog(root: Path) -> dict[str, dict[str, object]]:
+def load_dod_catalog(root: Path):
     dod_dir = root / "_ctx" / "dod"
-    catalog: dict[str, dict[str, object]] = {}
+    catalog = {}
     for path in sorted(dod_dir.glob("*.yaml")):
         dod_data = load_yaml(path)
-        if dod_data is not None:
-            dod_entries = dod_data.get("dod")
-            if isinstance(dod_entries, list):
-                for entry in dod_entries:
-                    if isinstance(entry, dict):
-                        entry_id = entry.get("id", "")
-                        catalog[entry_id] = entry
+        for entry in dod_data.get("dod", []):
+            catalog[entry.get("id")] = entry
     return catalog
 
 
@@ -861,7 +856,7 @@ def finish_wo_transaction(
 # =============================================================================
 
 
-def main() -> int:
+def main():
     parser = argparse.ArgumentParser(
         description="Finish a work order with artifact generation and validation"
     )
@@ -906,11 +901,10 @@ def main() -> int:
 
     root_result = resolve_runtime_root(args.root)
     if root_result.is_err():
-        err_msg = root_result.unwrap_err()
         print_error_card(
             error_code="INVALID_SEGMENT_PATH",
             error_class="VALIDATION",
-            cause=err_msg or "unknown error",
+            cause=root_result.unwrap_err(),
             next_steps=[
                 "Use a valid repository path with --root",
                 "Run from repo root or pass --root /abs/path/to/repo",
@@ -919,7 +913,6 @@ def main() -> int:
         )
         return 1
     root = root_result.unwrap()
-    assert root is not None, "root should be Path after successful resolution"
 
     running_path = root / "_ctx" / "jobs" / "running" / f"{args.wo_id}.yaml"
     if not running_path.exists():
@@ -955,38 +948,13 @@ def main() -> int:
 
     # Load WO and DOD catalog
     wo = load_yaml(running_path)
-    if wo is None:
-        print_error_card(
-            error_code="WO_NOT_RUNNING",
-            error_class="VALIDATION",
-            cause=f"failed to load WO YAML from {running_path}",
-            next_steps=[
-                "Verify WO YAML file exists and is valid",
-                "Run: uv run python scripts/ctx_reconcile_state.py --root . --json /tmp/reconcile_wo.json",
-            ],
-            verify_cmd=f"python scripts/ctx_wo_finish.py {args.wo_id} --root {root}",
-        )
-        return 1
     dod_catalog = load_dod_catalog(root)
-    dod_id = wo.get("dod_id")
-    if not isinstance(dod_id, str):
-        print_error_card(
-            error_code="DOD_VALIDATION_FAILED",
-            error_class="VALIDATION",
-            cause=f"invalid dod_id type: {type(dod_id).__name__}",
-            next_steps=[
-                "Fix dod_id in WO YAML - must be a string",
-                "Run: make wo-lint",
-            ],
-            verify_cmd=f"python scripts/ctx_wo_finish.py {args.wo_id} --root {root}",
-        )
-        return 1
-    dod = dod_catalog.get(dod_id)
+    dod = dod_catalog.get(wo.get("dod_id"))
     if not dod:
         print_error_card(
             error_code="DOD_VALIDATION_FAILED",
             error_class="VALIDATION",
-            cause=f"unknown dod_id {dod_id}",
+            cause=f"unknown dod_id {wo.get('dod_id')}",
             next_steps=[
                 "Fix dod_id in WO YAML or add DoD entry in _ctx/dod/*.yaml",
                 "Run: make wo-lint",
@@ -1006,12 +974,12 @@ def main() -> int:
 
     # Validate DOD unless skipped
     if not args.skip_dod:
-        dod_result = validate_minimum_evidence(args.wo_id, root)
-        if dod_result.is_err():
+        result = validate_minimum_evidence(args.wo_id, root)
+        if result.is_err():
             print_error_card(
                 error_code="DOD_VALIDATION_FAILED",
                 error_class="VALIDATION",
-                cause=dod_result.unwrap_err() or "DoD validation failed",
+                cause=result.unwrap_err(),
                 next_steps=[
                     f"Regenerate artifacts: python scripts/ctx_wo_finish.py {args.wo_id} --root {root} --generate-only --clean",
                     "Re-run with DoD enabled (without --skip-dod)",
@@ -1028,7 +996,7 @@ def main() -> int:
 
         evidence_result = validate_session_evidence(args.wo_id, root)
         if evidence_result.is_err():
-            evidence_err = evidence_result.unwrap_err() or "evidence validation failed"
+            evidence_err = evidence_result.unwrap_err()
             error_code = (
                 "EVIDENCE_INVALID" if "EVIDENCE_INVALID" in evidence_err else "EVIDENCE_MISSING"
             )
@@ -1059,7 +1027,7 @@ def main() -> int:
     if not args.skip_verification and args.global_gate:
         verify_result = run_verification_gate(args.wo_id, root)
         if verify_result.is_err():
-            verify_cause = verify_result.unwrap_err() or "verification failed"
+            verify_cause = verify_result.unwrap_err()
             card_code = (
                 "VERIFY_SCRIPT_MISSING"
                 if verify_cause.startswith("Verification script missing:")
@@ -1078,13 +1046,13 @@ def main() -> int:
             return 1
 
     # Finish WO as transaction
-    result_status: Literal["done", "failed"] = args.result or "done"
-    finish_result = finish_wo_transaction(args.wo_id, root, result_status)
-    if finish_result.is_err():
+    result_status = args.result or "done"
+    result = finish_wo_transaction(args.wo_id, root, result_status)
+    if result.is_err():
         print_error_card(
             error_code="WO_NOT_RUNNING",
             error_class="TRANSACTION",
-            cause=finish_result.unwrap_err() or "transaction failed",
+            cause=result.unwrap_err(),
             next_steps=[
                 "Ensure git state is clean and branch is not detached HEAD",
                 "Re-run finish command after resolving repository state",
@@ -1125,7 +1093,7 @@ def main() -> int:
             check=False,
         )
     except Exception as e:
-        logger.warning(f"Failed to append to session log: {e}")
+        logger.warning(f'Failed to append to session log: {e}')
 
     return 0
 
