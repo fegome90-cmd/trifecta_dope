@@ -1,0 +1,277 @@
+{
+  "version": 1,
+  "description": "GAIA-lite tasks for Trifecta benchmark - verifiable repo tasks",
+  "tasks": [
+    {
+      "id": "task_001",
+      "name": "Find TODO comments",
+      "prompt": "Find all TODO comments in the codebase and list them with file:line format",
+      "acceptance_checklist": [
+        "Output contains at least 5 TODO items",
+        "Each item has file path and line number",
+        "No false positives (non-TODO strings)"
+      ],
+      "verifiers": [
+        {
+          "type": "count_min",
+          "field": "todo_items",
+          "min": 5,
+          "description": "At least 5 TODO items found"
+        },
+        {
+          "type": "regex_match",
+          "pattern": "[a-zA-Z_/]+\\.\\w+:#\\d+",
+          "description": "Items have file:line format"
+        }
+      ],
+      "time_budget_s": 30,
+      "constraints": {
+        "max_files_edit": 0,
+        "readonly": true
+      }
+    },
+    {
+      "id": "task_002",
+      "name": "Count Python files",
+      "prompt": "Count the number of Python files in the src/ directory and its subdirectories",
+      "acceptance_checklist": [
+        "Output is a single integer",
+        "Count is accurate (verify against find)"
+      ],
+      "verifiers": [
+        {
+          "type": "command",
+          "cmd": "find src/ -name '*.py' | wc -l",
+          "expected": "79",
+          "comparison": "equals",
+          "field": "python_count"
+        }
+      ],
+      "time_budget_s": 30,
+      "constraints": {
+        "max_files_edit": 0,
+        "readonly": true
+      }
+    },
+    {
+      "id": "task_003",
+      "name": "Find all markdown files",
+      "prompt": "Find all .md files in the docs/ directory",
+      "acceptance_checklist": [
+        "List all markdown files with paths",
+        "Include at least 10 files"
+      ],
+      "verifiers": [
+        {
+          "type": "count_min",
+          "field": "md_files",
+          "min": 10,
+          "description": "At least 10 markdown files"
+        }
+      ],
+      "time_budget_s": 30,
+      "constraints": {
+        "max_files_edit": 0,
+        "readonly": true
+      }
+    },
+    {
+      "id": "task_004",
+      "name": "Find function definitions",
+      "prompt": "Find all function definitions (def keyword) in src/application/ and list them",
+      "acceptance_checklist": [
+        "Output lists function names with file:line",
+        "At least 10 functions found"
+      ],
+      "verifiers": [
+        {
+          "type": "count_min",
+          "field": "function_count",
+          "min": 10,
+          "description": "At least 10 functions"
+        }
+      ],
+      "time_budget_s": 30,
+      "constraints": {
+        "max_files_edit": 0,
+        "readonly": true
+      }
+    },
+    {
+      "id": "task_005",
+      "name": "Find import statements",
+      "prompt": "Find all import statements in src/infrastructure/cli.py",
+      "acceptance_checklist": [
+        "Output lists import statements",
+        "At least 5 imports found"
+      ],
+      "verifiers": [
+        {
+          "type": "count_min",
+          "field": "import_count",
+          "min": 5,
+          "description": "At least 5 imports"
+        }
+      ],
+      "time_budget_s": 30,
+      "constraints": {
+        "max_files_edit": 0,
+        "readonly": true
+      }
+    },
+    {
+      "id": "task_006",
+      "name": "Find test files",
+      "prompt": "Find all test files (test_*.py or *_test.py) in the tests/ directory",
+      "acceptance_checklist": [
+        "Output lists test file paths",
+        "At least 5 test files found"
+      ],
+      "verifiers": [
+        {
+          "type": "count_min",
+          "field": "test_files",
+          "min": 5,
+          "description": "At least 5 test files"
+        }
+      ],
+      "time_budget_s": 30,
+      "constraints": {
+        "max_files_edit": 0,
+        "readonly": true
+      }
+    },
+    {
+      "id": "task_007",
+      "name": "Find configuration files",
+      "prompt": "Find all configuration files (pyproject.toml, setup.py, requirements.txt, .env*)",
+      "acceptance_checklist": [
+        "Output lists config file paths",
+        "At least 3 config files found"
+      ],
+      "verifiers": [
+        {
+          "type": "count_min",
+          "field": "config_files",
+          "min": 3,
+          "description": "At least 3 config files"
+        }
+      ],
+      "time_budget_s": 30,
+      "constraints": {
+        "max_files_edit": 0,
+        "readonly": true
+      }
+    },
+    {
+      "id": "task_008",
+      "name": "Find async functions",
+      "prompt": "Find all async function definitions (async def) in src/domain/",
+      "acceptance_checklist": [
+        "Output lists async function names with file:line",
+        "At least 1 async function found"
+      ],
+      "verifiers": [
+        {
+          "type": "count_min",
+          "field": "async_functions",
+          "min": 1,
+          "description": "At least 1 async function"
+        }
+      ],
+      "time_budget_s": 30,
+      "constraints": {
+        "max_files_edit": 0,
+        "readonly": true
+      }
+    },
+    {
+      "id": "task_009",
+      "name": "Find class definitions",
+      "prompt": "Find all class definitions in src/ directory",
+      "acceptance_checklist": [
+        "Output lists class names with file:line",
+        "At least 5 classes found"
+      ],
+      "verifiers": [
+        {
+          "type": "count_min",
+          "field": "class_count",
+          "min": 5,
+          "description": "At least 5 classes"
+        }
+      ],
+      "time_budget_s": 30,
+      "constraints": {
+        "max_files_edit": 0,
+        "readonly": true
+      }
+    },
+    {
+      "id": "task_010",
+      "name": "Find docstrings",
+      "prompt": "Find all functions/classes with docstrings in src/application/use_cases.py",
+      "acceptance_checklist": [
+        "Output lists items with docstrings",
+        "At least 3 items with docstrings"
+      ],
+      "verifiers": [
+        {
+          "type": "count_min",
+          "field": "docstrings",
+          "min": 3,
+          "description": "At least 3 docstrings"
+        }
+      ],
+      "time_budget_s": 30,
+      "constraints": {
+        "max_files_edit": 0,
+        "readonly": true
+      }
+    },
+    {
+      "id": "task_011",
+      "name": "Find error handling",
+      "prompt": "Find all try-except blocks in src/infrastructure/",
+      "acceptance_checklist": [
+        "Output lists try-except locations",
+        "At least 3 try-except blocks found"
+      ],
+      "verifiers": [
+        {
+          "type": "count_min",
+          "field": "try_except",
+          "min": 3,
+          "description": "At least 3 try-except blocks"
+        }
+      ],
+      "time_budget_s": 30,
+      "constraints": {
+        "max_files_edit": 0,
+        "readonly": true
+      }
+    },
+    {
+      "id": "task_012",
+      "name": "Find type hints",
+      "prompt": "Find all functions with type hints in src/domain/",
+      "acceptance_checklist": [
+        "Output lists typed functions",
+        "At least 5 typed functions found"
+      ],
+      "verifiers": [
+        {
+          "type": "count_min",
+          "field": "typed_functions",
+          "min": 5,
+          "description": "At least 5 typed functions"
+        }
+      ],
+      "time_budget_s": 30,
+      "constraints": {
+        "max_files_edit": 0,
+        "readonly": true
+      }
+    }
+  ]
+}

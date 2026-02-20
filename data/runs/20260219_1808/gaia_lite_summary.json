@@ -1,0 +1,57 @@
+{
+  "timestamp": "2026-02-19T18:08:00Z",
+  "n_trials": 30,
+  "n_tasks": 12,
+  "n_policies": 4,
+  "total_runs": 1440,
+  "results": {
+    "heuristic": {
+      "pass_rate": 0.9166666666666666,
+      "pass_ci_lower": 0.8835288082626117,
+      "pass_ci_upper": 0.9410058243907188,
+      "passed": 330,
+      "total": 360,
+      "token_median": 425.5,
+      "token_iqr": 28.25,
+      "time_median": 0.21995294094085693,
+      "time_ci_lower": 0.21898484230041504,
+      "time_ci_upper": 0.22085309028625488
+    },
+    "cli": {
+      "pass_rate": 0.9166666666666666,
+      "pass_ci_lower": 0.8835288082626117,
+      "pass_ci_upper": 0.9410058243907188,
+      "passed": 330,
+      "total": 360,
+      "token_median": 263.5,
+      "token_iqr": 20.0,
+      "time_median": 0.2165745496749878,
+      "time_ci_lower": 0.21569335460662842,
+      "time_ci_upper": 0.21788477897644043
+    },
+    "bm25": {
+      "pass_rate": 0.9166666666666666,
+      "pass_ci_lower": 0.8835288082626117,
+      "pass_ci_upper": 0.9410058243907188,
+      "passed": 330,
+      "total": 360,
+      "token_median": 425.5,
+      "token_iqr": 28.25,
+      "time_median": 0.21712005138397217,
+      "time_ci_lower": 0.2168009877204895,
+      "time_ci_upper": 0.21740984916687012
+    },
+    "dump": {
+      "pass_rate": 0.16666666666666666,
+      "pass_ci_lower": 0.13173049904763864,
+      "pass_ci_upper": 0.208641794829697,
+      "passed": 60,
+      "total": 360,
+      "token_median": 6710.0,
+      "token_iqr": 4.5,
+      "time_median": 0.29579949378967285,
+      "time_ci_lower": 0.2945876121520996,
+      "time_ci_upper": 0.2974240779876709
+    }
+  }
+}

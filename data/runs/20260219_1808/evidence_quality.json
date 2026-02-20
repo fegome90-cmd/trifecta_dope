@@ -1,0 +1,94 @@
+{
+  "total_queries": 12,
+  "zero_hit_rate": 0.0,
+  "avg_hits": 5.0,
+  "hit_at_1": 1.0,
+  "hit_at_3": 1.0,
+  "hit_at_5": 1.0,
+  "per_task": [
+    {
+      "task_id": "task_001",
+      "name": "Find TODO comments",
+      "hits": 5,
+      "zero_hit": false,
+      "returncode": 0
+    },
+    {
+      "task_id": "task_002",
+      "name": "Count Python files",
+      "hits": 5,
+      "zero_hit": false,
+      "returncode": 0
+    },
+    {
+      "task_id": "task_003",
+      "name": "Find all markdown files",
+      "hits": 5,
+      "zero_hit": false,
+      "returncode": 0
+    },
+    {
+      "task_id": "task_004",
+      "name": "Find function definitions",
+      "hits": 5,
+      "zero_hit": false,
+      "returncode": 0
+    },
+    {
+      "task_id": "task_005",
+      "name": "Find import statements",
+      "hits": 5,
+      "zero_hit": false,
+      "returncode": 0
+    },
+    {
+      "task_id": "task_006",
+      "name": "Find test files",
+      "hits": 5,
+      "zero_hit": false,
+      "returncode": 0
+    },
+    {
+      "task_id": "task_007",
+      "name": "Find configuration files",
+      "hits": 5,
+      "zero_hit": false,
+      "returncode": 0
+    },
+    {
+      "task_id": "task_008",
+      "name": "Find async functions",
+      "hits": 5,
+      "zero_hit": false,
+      "returncode": 0
+    },
+    {
+      "task_id": "task_009",
+      "name": "Find class definitions",
+      "hits": 5,
+      "zero_hit": false,
+      "returncode": 0
+    },
+    {
+      "task_id": "task_010",
+      "name": "Find docstrings",
+      "hits": 5,
+      "zero_hit": false,
+      "returncode": 0
+    },
+    {
+      "task_id": "task_011",
+      "name": "Find error handling",
+      "hits": 5,
+      "zero_hit": false,
+      "returncode": 0
+    },
+    {
+      "task_id": "task_012",
+      "name": "Find type hints",
+      "hits": 5,
+      "zero_hit": false,
+      "returncode": 0
+    }
+  ]
+}

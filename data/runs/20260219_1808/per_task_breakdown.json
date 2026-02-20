@@ -1,0 +1,394 @@
+{
+  "heuristic": {
+    "task_001": {
+      "passed": 0,
+      "total": 30,
+      "pass_rate": 0.0,
+      "tokens_median": 368,
+      "time_median": 0.22371952533721923,
+      "task_name": "Find TODO comments"
+    },
+    "task_002": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 445,
+      "time_median": 0.22868651549021404,
+      "task_name": "Count Python files"
+    },
+    "task_003": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 426,
+      "time_median": 0.22027889092763264,
+      "task_name": "Find all markdown files"
+    },
+    "task_004": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 405,
+      "time_median": 0.22151406606038412,
+      "task_name": "Find function definitions"
+    },
+    "task_005": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 423,
+      "time_median": 0.21990162531534832,
+      "task_name": "Find import statements"
+    },
+    "task_006": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 431,
+      "time_median": 0.22334893544514975,
+      "task_name": "Find test files"
+    },
+    "task_007": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 404,
+      "time_median": 0.2224770466486613,
+      "task_name": "Find configuration files"
+    },
+    "task_008": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 457,
+      "time_median": 0.2192116101582845,
+      "task_name": "Find async functions"
+    },
+    "task_009": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 452,
+      "time_median": 0.22104607423146566,
+      "task_name": "Find class definitions"
+    },
+    "task_010": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 425,
+      "time_median": 0.21721299489339194,
+      "task_name": "Find docstrings"
+    },
+    "task_011": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 423,
+      "time_median": 0.21883149147033693,
+      "task_name": "Find error handling"
+    },
+    "task_012": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 454,
+      "time_median": 0.22108858426411945,
+      "task_name": "Find type hints"
+    }
+  },
+  "cli": {
+    "task_001": {
+      "passed": 0,
+      "total": 30,
+      "pass_rate": 0.0,
+      "tokens_median": 214,
+      "time_median": 0.22022547721862792,
+      "task_name": "Find TODO comments"
+    },
+    "task_002": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 266,
+      "time_median": 0.2253912607828776,
+      "task_name": "Count Python files"
+    },
+    "task_003": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 258,
+      "time_median": 0.21733264923095702,
+      "task_name": "Find all markdown files"
+    },
+    "task_004": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 254,
+      "time_median": 0.21928495566050213,
+      "task_name": "Find function definitions"
+    },
+    "task_005": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 259,
+      "time_median": 0.21880440711975097,
+      "task_name": "Find import statements"
+    },
+    "task_006": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 274,
+      "time_median": 0.221435022354126,
+      "task_name": "Find test files"
+    },
+    "task_007": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 267,
+      "time_median": 0.2195210854212443,
+      "task_name": "Find configuration files"
+    },
+    "task_008": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 298,
+      "time_median": 0.21939414342244465,
+      "task_name": "Find async functions"
+    },
+    "task_009": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 293,
+      "time_median": 0.21814319292704265,
+      "task_name": "Find class definitions"
+    },
+    "task_010": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 261,
+      "time_median": 0.21788491408030192,
+      "task_name": "Find docstrings"
+    },
+    "task_011": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 259,
+      "time_median": 0.21749163468678792,
+      "task_name": "Find error handling"
+    },
+    "task_012": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 295,
+      "time_median": 0.21910909016927083,
+      "task_name": "Find type hints"
+    }
+  },
+  "bm25": {
+    "task_001": {
+      "passed": 0,
+      "total": 30,
+      "pass_rate": 0.0,
+      "tokens_median": 368,
+      "time_median": 0.21730396747589112,
+      "task_name": "Find TODO comments"
+    },
+    "task_002": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 445,
+      "time_median": 0.22548898855845134,
+      "task_name": "Count Python files"
+    },
+    "task_003": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 426,
+      "time_median": 0.2166161855061849,
+      "task_name": "Find all markdown files"
+    },
+    "task_004": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 405,
+      "time_median": 0.21702934106191,
+      "task_name": "Find function definitions"
+    },
+    "task_005": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 423,
+      "time_median": 0.21692684491475422,
+      "task_name": "Find import statements"
+    },
+    "task_006": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 431,
+      "time_median": 0.21727867921193442,
+      "task_name": "Find test files"
+    },
+    "task_007": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 404,
+      "time_median": 0.21727717717488607,
+      "task_name": "Find configuration files"
+    },
+    "task_008": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 457,
+      "time_median": 0.21637825965881347,
+      "task_name": "Find async functions"
+    },
+    "task_009": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 452,
+      "time_median": 0.21733838717142742,
+      "task_name": "Find class definitions"
+    },
+    "task_010": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 425,
+      "time_median": 0.21756587823232015,
+      "task_name": "Find docstrings"
+    },
+    "task_011": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 423,
+      "time_median": 0.21666399637858072,
+      "task_name": "Find error handling"
+    },
+    "task_012": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 454,
+      "time_median": 0.21675679683685303,
+      "task_name": "Find type hints"
+    }
+  },
+  "dump": {
+    "task_001": {
+      "passed": 0,
+      "total": 30,
+      "pass_rate": 0.0,
+      "tokens_median": 6713,
+      "time_median": 0.29496411482493085,
+      "task_name": "Find TODO comments"
+    },
+    "task_002": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 6712,
+      "time_median": 0.3054519017537435,
+      "task_name": "Count Python files"
+    },
+    "task_003": {
+      "passed": 0,
+      "total": 30,
+      "pass_rate": 0.0,
+      "tokens_median": 6707,
+      "time_median": 0.29785356521606443,
+      "task_name": "Find all markdown files"
+    },
+    "task_004": {
+      "passed": 0,
+      "total": 30,
+      "pass_rate": 0.0,
+      "tokens_median": 6712,
+      "time_median": 0.3020572344462077,
+      "task_name": "Find function definitions"
+    },
+    "task_005": {
+      "passed": 0,
+      "total": 30,
+      "pass_rate": 0.0,
+      "tokens_median": 6708,
+      "time_median": 0.29651066462198894,
+      "task_name": "Find import statements"
+    },
+    "task_006": {
+      "passed": 0,
+      "total": 30,
+      "pass_rate": 0.0,
+      "tokens_median": 6716,
+      "time_median": 0.2986876090367635,
+      "task_name": "Find test files"
+    },
+    "task_007": {
+      "passed": 0,
+      "total": 30,
+      "pass_rate": 0.0,
+      "tokens_median": 6716,
+      "time_median": 0.30558438301086427,
+      "task_name": "Find configuration files"
+    },
+    "task_008": {
+      "passed": 30,
+      "total": 30,
+      "pass_rate": 1.0,
+      "tokens_median": 6710,
+      "time_median": 0.29999723434448244,
+      "task_name": "Find async functions"
+    },
+    "task_009": {
+      "passed": 0,
+      "total": 30,
+      "pass_rate": 0.0,
+      "tokens_median": 6705,
+      "time_median": 0.2966999848683675,
+      "task_name": "Find class definitions"
+    },
+    "task_010": {
+      "passed": 0,
+      "total": 30,
+      "pass_rate": 0.0,
+      "tokens_median": 6710,
+      "time_median": 0.296081813176473,
+      "task_name": "Find docstrings"
+    },
+    "task_011": {
+      "passed": 0,
+      "total": 30,
+      "pass_rate": 0.0,
+      "tokens_median": 6708,
+      "time_median": 0.29600403308868406,
+      "task_name": "Find error handling"
+    },
+    "task_012": {
+      "passed": 0,
+      "total": 30,
+      "pass_rate": 0.0,
+      "tokens_median": 6707,
+      "time_median": 0.29548665682474773,
+      "task_name": "Find type hints"
+    }
+  }
+}

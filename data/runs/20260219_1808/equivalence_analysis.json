@@ -1,0 +1,20 @@
+{
+  "cli_vs_heuristic": {
+    "cli_rate": 0.9166666666666666,
+    "heuristic_rate": 0.9166666666666666,
+    "diff": 0.0,
+    "diff_ci_lower": -0.02433915772405215,
+    "diff_ci_upper": 0.03313785840405492,
+    "equivalence_margin": 0.05,
+    "equivalent": true
+  },
+  "token_efficiency": {
+    "cli_tokens": 263.5,
+    "heuristic_tokens": 425.5,
+    "savings_percent": 38.07285546415981
+  },
+  "negative_control": {
+    "dump_rate": 0.16666666666666666,
+    "degradation_confirmed": true
+  }
+}
