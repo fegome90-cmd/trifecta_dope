@@ -18,7 +18,9 @@ _log_bypass() {
 
   local script="$REPO_ROOT/scripts/hooks/log_bypass_telemetry.py"
   if [[ -f "$script" ]]; then
-    python3 "$script" "$bypass_type" "$reason" --bypass-key "$bypass_key" >/dev/null 2>&1 || true
+    if ! python3 "$script" "$bypass_type" "$reason" --bypass-key "$bypass_key" >/dev/null 2>&1; then
+      log "[hooks] WARNING: telemetry logging failed for bypass: $bypass_type - $reason" >&2
+    fi
   fi
 }
 

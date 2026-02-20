@@ -3,6 +3,7 @@ import time
 import os
 import hashlib
 import re
+import tempfile
 from pathlib import Path
 from typing import Dict
 
@@ -299,6 +300,19 @@ class Telemetry:
 
         if changed:
             try:
-                events_file.write_text("\n".join(normalized_lines) + ("\n" if normalized_lines else ""))
+                content = "\n".join(normalized_lines) + ("\n" if normalized_lines else "")
+                # Atomic write: write to temp file, then rename (POSIX atomic)
+                fd, tmp_path = tempfile.mkstemp(dir=events_file.parent, suffix=".tmp")
+                try:
+                    with os.fdopen(fd, "w") as f:
+                        f.write(content)
+                    os.replace(tmp_path, events_file)
+                except OSError:
+                    # Clean up temp file on failure
+                    try:
+                        os.unlink(tmp_path)
+                    except OSError:
+                        pass
+                    return
             except OSError:
                 return

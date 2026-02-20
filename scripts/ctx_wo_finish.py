@@ -719,8 +719,31 @@ def validate_minimum_evidence(wo_id: str, root: Path) -> Result[None, str]:
             content = tests_log.read_text()
         except (OSError, PermissionError) as e:
             return Err(f"EVIDENCE_INVALID: cannot read tests.log: {e}")
-        if content.count("ERROR") > 10:
-            return Err(f"EVIDENCE_INVALID: tests.log contains {content.count('ERROR')} errors")
+        # Check for pytest failure indicators (avoid false positives from headers)
+        # Pattern 1: FAILED lines indicate actual test failures
+        # Pattern 2: Summary line with non-zero failures/errors
+        # Pattern 3: ERROR: at line start (common error format, not in file paths)
+        failed_tests = len(re.findall(r"^FAILED\s+", content, re.MULTILINE))
+        error_lines = len(re.findall(r"^ERROR:", content, re.MULTILINE))
+        summary_match = re.search(
+            r"=\s*(\d+)\s+(?:passed|failed|error|skipped|deselected)[^=]*"
+            r"(?:,\s*(\d+)\s*failed)?[^=]*"
+            r"(?:,\s*(\d+)\s*error(?:s)?)?",
+            content,
+        )
+        summary_failures = int(summary_match.group(2) or 0) if summary_match else 0
+        summary_errors = int(summary_match.group(3) or 0) if summary_match else 0
+
+        # Threshold: >10 ERROR lines is excessive (same as original logic)
+        if error_lines > 10:
+            return Err(f"EVIDENCE_INVALID: tests.log contains {error_lines} errors")
+
+        if failed_tests > 0 or summary_failures > 0 or summary_errors > 0:
+            total_issues = failed_tests + summary_failures + summary_errors
+            return Err(
+                f"EVIDENCE_INVALID: tests.log contains {total_issues} test failure(s) "
+                f"(FAILED={failed_tests}, failures={summary_failures}, errors={summary_errors})"
+            )
 
     # verdict.json is mandatory.
     verdict_file = handoff_dir / "verdict.json"
