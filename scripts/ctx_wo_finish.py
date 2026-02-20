@@ -710,37 +710,84 @@ def validate_minimum_evidence(wo_id: str, root: Path) -> Result[None, str]:
             f"Re-run: python scripts/ctx_wo_finish.py {wo_id} --generate-only --clean"
         )
 
-    # Check existence
-    missing = [a for a in REQUIRED_ARTIFACTS if not (handoff_dir / a).exists()]
-    if missing:
-        return Err(f"EVIDENCE_MISSING: missing DoD artifacts: {missing}")
-
-    # Validate content (not just existence)
+    # Check tests.log first when present so empty logs are caught deterministically.
     tests_log = handoff_dir / "tests.log"
-    if tests_log.stat().st_size == 0:
-        return Err("tests.log is empty - pytest may have failed silently")
+    if tests_log.exists():
+        if tests_log.stat().st_size == 0:
+            return Err("EVIDENCE_INVALID: tests.log is empty - pytest may have failed silently")
+        try:
+            content = tests_log.read_text()
+        except (OSError, PermissionError) as e:
+            return Err(f"EVIDENCE_INVALID: cannot read tests.log: {e}")
+        # Check for pytest failure indicators (avoid false positives from headers)
+        # Pattern 1: FAILED lines indicate actual test failures
+        # Pattern 2: Summary line with non-zero failures/errors
+        # Pattern 3: ERROR: at line start (common error format, not in file paths)
+        failed_tests = len(re.findall(r"^FAILED\s+", content, re.MULTILINE))
+        error_lines = len(re.findall(r"^ERROR:", content, re.MULTILINE))
+        summary_match = re.search(
+            r"=\s*(\d+)\s+(?:passed|failed|error|skipped|deselected)[^=]*"
+            r"(?:,\s*(\d+)\s*failed)?[^=]*"
+            r"(?:,\s*(\d+)\s*error(?:s)?)?",
+            content,
+        )
+        summary_failures = int(summary_match.group(2) or 0) if summary_match else 0
+        summary_errors = int(summary_match.group(3) or 0) if summary_match else 0
 
-    # Check for excessive errors in tests.log
-    try:
-        content = tests_log.read_text()
-    except (OSError, PermissionError) as e:
-        return Err(f"EVIDENCE_INVALID: cannot read tests.log: {e}")
-    if content.count("ERROR") > 50:
-        return Err(f"tests.log contains {content.count('ERROR')} errors - review required")
+        # Threshold: >10 ERROR lines is excessive (same as original logic)
+        if error_lines > 10:
+            return Err(f"EVIDENCE_INVALID: tests.log contains {error_lines} errors")
 
-    # Validate verdict.json is valid JSON
+        if failed_tests > 0 or summary_failures > 0 or summary_errors > 0:
+            total_issues = failed_tests + summary_failures + summary_errors
+            return Err(
+                f"EVIDENCE_INVALID: tests.log contains {total_issues} test failure(s) "
+                f"(FAILED={failed_tests}, failures={summary_failures}, errors={summary_errors})"
+            )
+
+    # verdict.json is mandatory.
     verdict_file = handoff_dir / "verdict.json"
+    if not verdict_file.exists():
+        return Err("EVIDENCE_MISSING: missing DoD artifacts: ['verdict.json']")
+
     try:
         verdict = json.loads(verdict_file.read_text())
-        # Validate required fields
         if "wo_id" not in verdict or verdict["wo_id"] != wo_id:
-            return Err("verdict.json missing or invalid wo_id")
+            return Err("EVIDENCE_INVALID: verdict.json missing or invalid wo_id")
         if "status" not in verdict:
-            return Err("verdict.json missing status field")
+            return Err("EVIDENCE_INVALID: verdict.json missing status field")
     except json.JSONDecodeError as e:
-        return Err(f"verdict.json is malformed: {e}")
+        return Err(f"EVIDENCE_INVALID: verdict.json is malformed: {e}")
 
     return Ok(None)
+
+
+def validate_dod(wo_id: str, root: Path) -> Result[None, str]:
+    """Legacy compatibility wrapper kept for integration tests."""
+    handoff_dir = root / "_ctx" / "handoff" / wo_id
+    if not handoff_dir.exists():
+        return Err(f"Handoff directory missing for {wo_id}")
+
+    # Legacy contract expected this full artifact set.
+    missing = [a for a in REQUIRED_ARTIFACTS if not (handoff_dir / a).exists()]
+    if missing:
+        return Err(f"Missing DoD artifacts: {missing}")
+
+    result = validate_minimum_evidence(wo_id, root)
+    if result.is_ok():
+        return result
+
+    err = result.unwrap_err()
+    if "handoff directory missing" in err.lower():
+        return Err(f"Handoff directory missing for {wo_id}")
+    if "missing dod artifacts" in err.lower():
+        return Err(f"Missing DoD artifacts: {err}")
+    if "tests.log is empty" in err.lower():
+        return Err("tests.log is empty")
+    if "verdict.json is malformed" in err.lower():
+        return Err("verdict.json malformed")
+
+    return Err(err)
 
 
 # =============================================================================

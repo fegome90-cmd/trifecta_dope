@@ -2,12 +2,9 @@
 set -euo pipefail
 source "$(dirname "$0")/common.sh"
 
-# Get commit message (first line only)
-COMMIT_MSG=$(git log -1 --format=%s 2>/dev/null || echo "")
-
-# Check for emergency bypass in commit message (not env var)
-if [[ "$COMMIT_MSG" == *"[emergency]"* ]] || [[ "$COMMIT_MSG" == *"[bypass]"* ]]; then
-  log "[hooks] emergency/bypass detected in commit message, allowing WO closure"
+# Check all bypass mechanisms (env var, commit message, file marker)
+# Uses should_bypass() from common.sh which logs telemetry
+if should_bypass; then
   exit 0
 fi
 

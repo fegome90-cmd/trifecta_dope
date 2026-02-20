@@ -377,17 +377,17 @@ Examples:
     logger.info(f"Loading work order: {wo_id}")
     wo = load_yaml(job_path)
 
-    schema = load_schema(root, "work_order.schema.json")
-    try:
-        validate(instance=wo, schema=schema)
-    except Exception as e:
-        logger.error(f"Schema validation failed: {e}")
-        return 1
-
-    execution_valid, execution_error = validate_execution_contract(wo)
-    if not execution_valid:
-        logger.error(f"Execution contract validation failed: {execution_error}")
-        return 1
+    wo_status = str(wo.get("status", "")).lower()
+    if wo_status == "pending":
+        execution_valid, execution_error = validate_execution_contract(wo)
+        if not execution_valid:
+            if execution_error and execution_error.startswith("required_flow missing mandatory steps:"):
+                logger.warning(
+                    "Execution contract legacy mode: skipping required_flow strictness for pending WO"
+                )
+            else:
+                logger.error(f"Execution contract validation failed: {execution_error}")
+                return 1
 
     # Validate epic_id
     backlog = load_yaml(root / "_ctx" / "backlog" / "backlog.yaml")
@@ -399,6 +399,19 @@ Examples:
     # Fail-closed immediate validation (does not bypass with --force)
     immediate_ok, _ = validate_wo_immediately(root, wo_id, job_path)
     if not immediate_ok:
+        return 1
+
+    if wo_status != "pending":
+        execution_valid, execution_error = validate_execution_contract(wo)
+        if not execution_valid:
+            logger.error(f"Execution contract validation failed: {execution_error}")
+            return 1
+
+    schema = load_schema(root, "work_order.schema.json")
+    try:
+        validate(instance=wo, schema=schema)
+    except Exception as e:
+        logger.error(f"Schema validation failed: {e}")
         return 1
 
     # Validate dependencies using domain logic

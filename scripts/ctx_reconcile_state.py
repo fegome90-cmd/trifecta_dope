@@ -284,6 +284,7 @@ def main():
     fixtures_root: Path | None = None
     if args.fixtures:
         fixtures_root = repo_root / "tests" / "fixtures" / "reconcile" / args.fixtures
+        repo_root = fixtures_root.resolve()
 
     worktree_text = read_worktrees(repo_root, fixtures_root)
     worktrees = parse_worktrees(worktree_text)

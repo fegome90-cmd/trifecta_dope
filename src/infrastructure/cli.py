@@ -114,9 +114,14 @@ def _resolve_segment(segment: str, require_ctx: bool = False) -> Path:
         raise typer.Exit(code=1)
 
 
-def _get_telemetry(segment: str, level: str) -> Telemetry:
+def _get_telemetry(segment: str, level: str, require_ctx: bool = True) -> Telemetry:
     """Initialize telemetry."""
-    path = _resolve_segment(segment, require_ctx=True)
+    if require_ctx:
+        path = _resolve_segment(segment, require_ctx=True)
+    else:
+        # Allow precondition handlers (e.g., ctx build/sync/create) to classify
+        # invalid paths without failing early or mutating target segment paths.
+        path = Path.cwd().resolve()
     env_level = os.environ.get("TRIFECTA_TELEMETRY_LEVEL", level)
     return Telemetry(path, level=env_level)
 
@@ -267,7 +272,7 @@ def build(
     from src.application.exceptions import InvalidConfigScopeError, InvalidSegmentPathError
     from src.cli.error_cards import render_error_card
 
-    telemetry = _get_telemetry(segment, telemetry_level)
+    telemetry = _get_telemetry(segment, telemetry_level, require_ctx=False)
     start_time = time.time()
     _, file_system, _ = _get_dependencies(segment, telemetry)
 
@@ -457,7 +462,7 @@ def search(
 
     To ENABLE linting: omit --no-lint flag or set TRIFECTA_LINT=1
     """
-    telemetry = _get_telemetry(segment, telemetry_level)
+    telemetry = _get_telemetry(segment, telemetry_level, require_ctx=False)
     start_time = time.time()
     _, file_system, _ = _get_dependencies(segment, telemetry)
 
@@ -507,7 +512,7 @@ def get(
     telemetry_level: str = typer.Option("lite", "--telemetry", help=HELP_TELEMETRY),
 ) -> None:
     """Retrieve full content for specific chunks."""
-    telemetry = _get_telemetry(segment, telemetry_level)
+    telemetry = _get_telemetry(segment, telemetry_level, require_ctx=False)
     start_time = time.time()
     _, file_system, _ = _get_dependencies(segment, telemetry)
 
@@ -591,7 +596,7 @@ def validate(
     telemetry_level: str = typer.Option("lite", "--telemetry", help=HELP_TELEMETRY),
 ) -> None:
     """Validate Context Pack health."""
-    telemetry = _get_telemetry(segment, telemetry_level)
+    telemetry = _get_telemetry(segment, telemetry_level, require_ctx=False)
     start_time = time.time()
     _, file_system, _ = _get_dependencies(segment, telemetry)
 
@@ -633,7 +638,7 @@ def stats(
     telemetry_level: str = typer.Option("lite", "--telemetry", help=HELP_TELEMETRY),
 ) -> None:
     """Show telemetry statistics for the segment."""
-    telemetry = _get_telemetry(segment, telemetry_level)
+    telemetry = _get_telemetry(segment, telemetry_level, require_ctx=False)
     start_time = time.time()
     _, file_system, _ = _get_dependencies(segment, telemetry)
 
@@ -1089,7 +1094,7 @@ def sync(
     from src.infrastructure.segment_state import resolve_segment_state
     from src.infrastructure.validators import validate_segment_structure_with_segment_id
 
-    telemetry = _get_telemetry(segment, telemetry_level)
+    telemetry = _get_telemetry(segment, telemetry_level, require_ctx=False)
     start_time = time.time()
     _, file_system, _ = _get_dependencies(segment, telemetry)
 
@@ -1413,7 +1418,7 @@ def create(
     target_dir = Path(segment).resolve()
 
     template_renderer, _, _ = _get_dependencies(str(target_dir))
-    telemetry = _get_telemetry(str(target_dir), "lite")
+    telemetry = _get_telemetry(str(target_dir), "lite", require_ctx=False)
     start_time = time.time()
 
     if not target_dir.exists():

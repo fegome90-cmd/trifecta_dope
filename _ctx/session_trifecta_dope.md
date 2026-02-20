@@ -1374,3 +1374,38 @@ Created WO-0055 (P1) to fix hook bypass system issues discovered during WO-0050 
 - **Commands**: ctx_wo_take.py WO-0055
 - **Pack SHA**: `14335542276ff407`
 
+## 2026-02-19 16:45 UTC
+- **Summary**: Finished Work Order WO-0058 (status: done)
+- **Commands**: ctx_wo_finish.py WO-0058 --result done
+- **Pack SHA**: `14335542276ff407`
+
+## 2026-02-19 18:18 UTC
+- **Summary**: Added custom HN benchmark dataset + configurable benchmark runner + custom run results
+- **Files**: scripts/run_hn_benchmark.py, tests/unit/test_run_hn_benchmark.py, data/hn_custom_testing_set.yaml, data/hn_runs_custom_set.csv, docs/hn_results_custom_set.md
+- **Commands**: make install, uv run pytest tests/unit/test_run_hn_benchmark.py -q, uv run python scripts/run_hn_benchmark.py --queries-file data/hn_custom_testing_set.yaml --trials 5 --output-csv data/hn_runs_custom_set.csv
+- **Pack SHA**: `7f58ad64cffa5861`
+
+## 2026-02-19 18:32 UTC
+- **Summary**: Executed HN benchmark hardening plan: fail-closed exit code, truth-mode scenario fix, ctx.get inclusion, baseline mode, docs/schema alignment, and hardening tests
+- **Files**: scripts/run_hn_benchmark.py, scripts/run_hn_benchmark.sh, tests/unit/test_hn_benchmark_hardening.py, tests/unit/test_run_hn_benchmark.py, docs/hn_methodology.md, docs/hn_results.md, data/hn_logs/README.md, docs/plans/2026-02-19-hn-benchmark-hardening.md
+- **Commands**: uv run pytest tests/unit/test_run_hn_benchmark.py tests/unit/test_hn_benchmark_hardening.py -q, uv run ruff check scripts/run_hn_benchmark.py tests/unit/test_run_hn_benchmark.py tests/unit/test_hn_benchmark_hardening.py, uv run python scripts/run_hn_benchmark.py --trials 1 --output-csv data/hn_runs_smoke_postfix.csv, uv run python scripts/run_hn_benchmark.py --truth-mode --trials 1 --output-csv data/hn_runs_truth_smoke_postfix2.csv
+- **Pack SHA**: `c8653de111ba4cf2`
+
+## 2026-02-19 19:07 UTC
+- **Summary**: Closed HN/system fixes batch: restored hook bypass contract, resolved LSP READY invariant conflicts, reintroduced validate_dod compatibility, hardened telemetry event schema normalization, fixed ctx sync error-card precondition path, and updated prime path constraints. Verified with make gate-all PASS.
+- **Files**: src/infrastructure/lsp_client.py, src/infrastructure/telemetry.py, src/application/search_get_usecases.py, src/infrastructure/cli.py, scripts/ctx_wo_finish.py, scripts/hooks/common.sh, scripts/hooks/pre-commit, _ctx/prime_trifecta_dope.md
+- **Commands**: make install, uv run pytest tests/integration -q, make gate-all
+- **Pack SHA**: `b6e584d8ec19ba83`
+
+## 2026-02-19 19:19 UTC
+- **Summary**: Executed HN benchmark with 5 scenarios (baseline, bm25, embeddings, cli, heuristic), N=10 each; generated 50 CSV rows and per-run bundle/manifest artifacts under data/hn_logs; updated methodology/results docs and benchmark runner for offline embeddings + retrieval metrics + per-scenario CSV output.
+- **Files**: scripts/run_hn_benchmark.py, scripts/run_hn_benchmark.sh, data/hn_runs.csv, docs/hn_methodology.md, docs/hn_results.md, data/hn_logs/*
+- **Commands**: python3 scripts/run_hn_benchmark.py --method all --trials 10 --output-csv data/hn_runs.csv
+- **Pack SHA**: `03d069b3960f3d24`
+
+## 2026-02-20 03:25 UTC
+- **Summary**: Resultado: code review WO-0055 usando trifecta + diff. Hallazgos: test_bypass.sh falla por source path; bypass no auditable (sin hook_bypass.jsonl); WO movidos a failed mantienen status=running; archivo test.txt residual.
+- **Files**: scripts/hooks/test_bypass.sh, scripts/hooks/prevent_manual_wo_closure.sh, scripts/hooks/common.sh, scripts/hooks/pre-commit, _ctx/jobs/failed/WO-0046.yaml, _ctx/jobs/failed/WO-0048.yaml, test.txt
+- **Commands**: trifecta ctx sync, trifecta ctx search, trifecta ctx get, git diff, make hooks-check, bash scripts/hooks/test_bypass.sh
+- **Pack SHA**: `35d76cbdbafa1f97`
+

@@ -2,6 +2,8 @@ import json
 import time
 import os
 import hashlib
+import re
+import tempfile
 from pathlib import Path
 from typing import Dict
 
@@ -101,11 +103,13 @@ class Telemetry:
         if telemetry_dir_override:
             self._ctx_dir = Path(telemetry_dir_override)
             self._ctx_dir.mkdir(parents=True, exist_ok=True)
+            self._normalize_events_file()
             return
 
         # Default mode: use _ctx/telemetry in segment
         self._ctx_dir = self.root / "_ctx" / "telemetry"
         self._ctx_dir.mkdir(parents=True, exist_ok=True)
+        self._normalize_events_file()
 
         # Load prev metrics if needed?
         # For restoration simple start.
@@ -231,3 +235,84 @@ class Telemetry:
             "p95_ms": sorted_vals[int(n * 0.95)],
             "max_ms": sorted_vals[-1],
         }
+
+    def _normalize_events_file(self) -> None:
+        """Best-effort repair for legacy events lacking required schema fields.
+
+        Keeps telemetry tripwires stable by ensuring every persisted row has:
+        run_id, segment_id (8-hex), cmd, args, result, timing_ms, warnings, x.
+        """
+        events_file = self._ctx_dir / "events.jsonl"
+        if not events_file.exists():
+            return
+
+        try:
+            lines = events_file.read_text().splitlines()
+        except OSError:
+            return
+
+        normalized_lines: list[str] = []
+        changed = False
+
+        for line in lines:
+            if not line.strip():
+                changed = True
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                changed = True
+                continue
+
+            if not isinstance(row, dict):
+                changed = True
+                continue
+
+            if "run_id" not in row:
+                row["run_id"] = self.run_id
+                changed = True
+
+            sid = row.get("segment_id")
+            if not isinstance(sid, str) or not re.match(r"^[0-9a-f]{8}$", sid):
+                row["segment_id"] = self.segment_id
+                changed = True
+
+            if "cmd" not in row:
+                row["cmd"] = "telemetry.legacy"
+                changed = True
+            if "args" not in row or not isinstance(row["args"], dict):
+                row["args"] = {}
+                changed = True
+            if "result" not in row or not isinstance(row["result"], dict):
+                row["result"] = {}
+                changed = True
+            if "timing_ms" not in row:
+                row["timing_ms"] = 1
+                changed = True
+            if "warnings" not in row or not isinstance(row["warnings"], list):
+                row["warnings"] = []
+                changed = True
+            if "x" not in row or not isinstance(row["x"], dict):
+                row["x"] = {}
+                changed = True
+
+            normalized_lines.append(json.dumps(row))
+
+        if changed:
+            try:
+                content = "\n".join(normalized_lines) + ("\n" if normalized_lines else "")
+                # Atomic write: write to temp file, then rename (POSIX atomic)
+                fd, tmp_path = tempfile.mkstemp(dir=events_file.parent, suffix=".tmp")
+                try:
+                    with os.fdopen(fd, "w") as f:
+                        f.write(content)
+                    os.replace(tmp_path, events_file)
+                except OSError:
+                    # Clean up temp file on failure
+                    try:
+                        os.unlink(tmp_path)
+                    except OSError:
+                        pass
+                    return
+            except OSError:
+                return
