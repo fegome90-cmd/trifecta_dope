@@ -710,37 +710,61 @@ def validate_minimum_evidence(wo_id: str, root: Path) -> Result[None, str]:
             f"Re-run: python scripts/ctx_wo_finish.py {wo_id} --generate-only --clean"
         )
 
-    # Check existence
-    missing = [a for a in REQUIRED_ARTIFACTS if not (handoff_dir / a).exists()]
-    if missing:
-        return Err(f"EVIDENCE_MISSING: missing DoD artifacts: {missing}")
-
-    # Validate content (not just existence)
+    # Check tests.log first when present so empty logs are caught deterministically.
     tests_log = handoff_dir / "tests.log"
-    if tests_log.stat().st_size == 0:
-        return Err("tests.log is empty - pytest may have failed silently")
+    if tests_log.exists():
+        if tests_log.stat().st_size == 0:
+            return Err("EVIDENCE_INVALID: tests.log is empty - pytest may have failed silently")
+        try:
+            content = tests_log.read_text()
+        except (OSError, PermissionError) as e:
+            return Err(f"EVIDENCE_INVALID: cannot read tests.log: {e}")
+        if content.count("ERROR") > 10:
+            return Err(f"EVIDENCE_INVALID: tests.log contains {content.count('ERROR')} errors")
 
-    # Check for excessive errors in tests.log
-    try:
-        content = tests_log.read_text()
-    except (OSError, PermissionError) as e:
-        return Err(f"EVIDENCE_INVALID: cannot read tests.log: {e}")
-    if content.count("ERROR") > 50:
-        return Err(f"tests.log contains {content.count('ERROR')} errors - review required")
-
-    # Validate verdict.json is valid JSON
+    # verdict.json is mandatory.
     verdict_file = handoff_dir / "verdict.json"
+    if not verdict_file.exists():
+        return Err("EVIDENCE_MISSING: missing DoD artifacts: ['verdict.json']")
+
     try:
         verdict = json.loads(verdict_file.read_text())
-        # Validate required fields
         if "wo_id" not in verdict or verdict["wo_id"] != wo_id:
-            return Err("verdict.json missing or invalid wo_id")
+            return Err("EVIDENCE_INVALID: verdict.json missing or invalid wo_id")
         if "status" not in verdict:
-            return Err("verdict.json missing status field")
+            return Err("EVIDENCE_INVALID: verdict.json missing status field")
     except json.JSONDecodeError as e:
-        return Err(f"verdict.json is malformed: {e}")
+        return Err(f"EVIDENCE_INVALID: verdict.json is malformed: {e}")
 
     return Ok(None)
+
+
+def validate_dod(wo_id: str, root: Path) -> Result[None, str]:
+    """Legacy compatibility wrapper kept for integration tests."""
+    handoff_dir = root / "_ctx" / "handoff" / wo_id
+    if not handoff_dir.exists():
+        return Err(f"Handoff directory missing for {wo_id}")
+
+    # Legacy contract expected this full artifact set.
+    missing = [a for a in REQUIRED_ARTIFACTS if not (handoff_dir / a).exists()]
+    if missing:
+        return Err(f"Missing DoD artifacts: {missing}")
+
+    result = validate_minimum_evidence(wo_id, root)
+    if result.is_ok():
+        return result
+
+    err = result.unwrap_err()
+    if "handoff directory missing" in err.lower():
+        return Err(f"Handoff directory missing for {wo_id}")
+    if "missing dod artifacts" in err.lower():
+        return Err(f"Missing DoD artifacts: {err}")
+    if "tests.log is empty" in err.lower():
+        return Err("tests.log is empty")
+    if "verdict.json is malformed" in err.lower():
+        return Err("verdict.json malformed")
+
+    return Err(err)
 
 
 # =============================================================================

@@ -82,7 +82,7 @@ last_updated: 2026-02-16
 
 ### Context & Search
 10. `trifecta_dope/src/domain/context_models.py`
-11. `trifecta_dope/src/application/chunking.py`
+11. `trifecta_dope/src/application/telemetry_health.py`
 12. `trifecta_dope/src/infrastructure/file_system.py`
 
 ### Bug Documentation
@@ -99,7 +99,7 @@ last_updated: 2026-02-16
 1. `trifecta_dope/braindope.md`
 2. `trifecta_dope/docs/CONTRACTS.md`
 3. `trifecta_dope/CLAUDE.md`
-4. `trifecta_dope/docs/adr/`
+4. `trifecta_dope/docs/backlog/README.md`
 
 ## [MAP] Architecture Diagram
 

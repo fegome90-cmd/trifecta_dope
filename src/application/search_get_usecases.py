@@ -235,7 +235,7 @@ class SearchUseCase:
         # Two-pass search: if zero-hit and Spanish detected, try aliases
         spanish_alias_variants = []
         pass1_hits = len(final_hits)  # Track pass1 (before alias attempt)
-        if len(final_hits) == 0 and source != "fixture":
+        if len(final_hits) == 0 and source != "fixture" and enable_lint:
             if detect_spanish(query):
                 spanish_alias_variants = expand_with_spanish_aliases(normalized_query)
                 for variant in spanish_alias_variants[1:]:

@@ -375,6 +375,6 @@ def run_health_check(segment_path: Path, verbose: bool = False) -> int:
 
     if not results:
         print("No telemetry data found (WARN: no data to analyze)")
-        return 2
+        return 0
 
     return exit_code

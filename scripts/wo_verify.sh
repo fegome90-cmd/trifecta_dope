@@ -61,6 +61,7 @@ shift
 
 ROOT="."
 ALLOW_DIRTY=""
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -247,6 +248,9 @@ fi
 LOG_DIR="$ROOT/_ctx/logs/$WO_ID"
 mkdir -p "$LOG_DIR"
 export LOG_DIR ROOT WO_ID
+if [[ -n "$ALLOW_DIRTY" ]]; then
+  export ALLOW_DIRTY=1
+fi
 
 # Cleanup trap: Write verdict on crash (catchable signals only)
 # SIGKILL cannot be caught - this is a Unix limitation
@@ -278,7 +282,7 @@ fi
 START="$(utc_now)"
 export START
 
-if ! uv run python "$ROOT/scripts/ctx_scope_lint.py" "${SCOPE_ARGS[@]}"; then
+if ! uv run python "$SCRIPT_DIR/ctx_scope_lint.py" "${SCOPE_ARGS[@]}"; then
   echo "ERROR: Scope lint failed for $WO_ID" >&2
   END="$(utc_now)"
   export END

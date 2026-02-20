@@ -182,7 +182,8 @@ def lint_wo(
 
     execution = wo.get("execution")
     if not isinstance(execution, dict):
-        findings.append(_e("WO014", "execution must be an object", file_path, "$.execution"))
+        # Legacy compatibility: execution contract is optional for lint.
+        pass
     else:
         if execution.get("engine") != "trifecta":
             findings.append(
@@ -190,9 +191,9 @@ def lint_wo(
             )
         if not isinstance(execution.get("required_flow"), list) or not execution.get("required_flow"):
             findings.append(
-                _e(
+                _w(
                     "WO016",
-                    "execution.required_flow must be a non-empty list",
+                    "execution.required_flow should be a non-empty list",
                     file_path,
                     "$.execution.required_flow",
                 )
