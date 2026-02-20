@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 import time
 from dataclasses import dataclass
@@ -14,6 +15,9 @@ from tiktoken import Encoding  # type: ignore[import-not-found]
 import tiktoken
 
 getcontext().prec = 28
+
+TOKENIZER_MODEL = os.getenv("TOKENIZER_MODEL", "gpt-4.1")
+ENC = tiktoken.encoding_for_model(TOKENIZER_MODEL)
 
 ROOT = Path(__file__).resolve().parents[1]
 EVENTS = ROOT / "_ctx/telemetry/events.jsonl"
@@ -58,12 +62,8 @@ class Costs:
         return self.cost_in + self.cost_out
 
 
-def _enc() -> Encoding:
-    return tiktoken.encoding_for_model("gpt-4.1")
-
-
 def tok_text(text: str) -> int:
-    return len(_enc().encode(text))
+    return len(ENC.encode(text))
 
 
 def tok_json(obj: Any) -> int:
@@ -94,11 +94,23 @@ def write_synthesis_telemetry(
 
 
 def load_event(run_id: str, cmd: str) -> dict[str, Any]:
+    matches: list[tuple[datetime, dict[str, Any]]] = []
     for line in EVENTS.read_text(encoding="utf-8").splitlines():
         row = cast(dict[str, Any], json.loads(line))
         if row.get("run_id") == run_id and row.get("cmd") == cmd:
-            return row
-    raise RuntimeError(f"Missing event run_id={run_id} cmd={cmd}")
+            try:
+                ts = parse_ts(row.get("ts", ""))
+                matches.append((ts, row))
+            except Exception:
+                continue
+
+    if not matches:
+        raise RuntimeError(f"Missing event run_id={run_id} cmd={cmd}")
+
+    if len(matches) > 1:
+        matches.sort(key=lambda x: x[0], reverse=True)
+
+    return matches[0][1]
 
 
 def parse_ts(ts: str) -> datetime:
@@ -185,7 +197,9 @@ def detect_synth_in_status(search_ev: dict[str, Any], get_ev: dict[str, Any]) ->
     result["status"] = "ESTIMATED"
     result["tokens"] = candidate_tokens
     result["type"] = "ESTIMADO"
-    result["reason"] = "synthesis_prompt.txt no tiene linkage explícito (run_id/interaction_id) con la interacción auditada, usado como ESTIMADO"
+    result["reason"] = (
+        "synthesis_prompt.txt no tiene linkage explícito (run_id/interaction_id) con la interacción auditada, usado como ESTIMADO"
+    )
     return result
 
 
@@ -199,17 +213,32 @@ def build_report(data: dict[str, Any]) -> str:
     lines.append("A) Definición del experimento")
     lines.append("- Experimento: 'required artifacts en cierre de WO'.")
     lines.append("- Interacción definida: tools + síntesis final.")
-    lines.append("- Precio congelado GPT-5.2: INPUT=1.75, OUTPUT=14.00, CACHED_INPUT=0.175 (cached no aplicado).")
-    lines.append("- Método de tokens: tiktoken `encoding_for_model(\"gpt-4.1\")`, UTF-8, JSON canónico para args/result.")
+    lines.append(
+        "- Precio congelado GPT-5.2: INPUT=1.75, OUTPUT=14.00, CACHED_INPUT=0.175 (cached no aplicado)."
+    )
+    lines.append(
+        f'- Método de tokens: tiktoken `encoding_for_model("{TOKENIZER_MODEL}")`, UTF-8, JSON canónico para args/result.'
+    )
+    lines.append(
+        "- Nota: payload_tokens_in/out mide el tamaño del JSON que cruza la frontera PCC, no tokens del modelo."
+    )
     lines.append("")
 
     lines.append("B) Datos medidos")
     lines.append("| Item | Tokens In | Tokens Out | Fuente | Tipo |")
     lines.append("|---|---:|---:|---|---|")
-    lines.append(f"| ctx.search ({a['runs']['search_run_id']}) | {a['tools']['search']['tokens_in']} | {a['tools']['search']['tokens_out']} | {EVENTS} | MEDIDO |")
-    lines.append(f"| ctx.get ({a['runs']['get_run_id']}) | {a['tools']['get']['tokens_in']} | {a['tools']['get']['tokens_out']} | {EVENTS} | MEDIDO |")
-    lines.append(f"| A tools totals | {a['tools']['totals']['tokens_in']} | {a['tools']['totals']['tokens_out']} | {EVENTS} | MEDIDO |")
-    lines.append(f"| Synthesis OUT | 0 | {data['synthesis']['out_tokens']} | {SYNTHESIS_OUT_FILE} | MEDIDO |")
+    lines.append(
+        f"| ctx.search ({a['runs']['search_run_id']}) | {a['tools']['search']['tokens_in']} | {a['tools']['search']['tokens_out']} | {EVENTS} | MEDIDO |"
+    )
+    lines.append(
+        f"| ctx.get ({a['runs']['get_run_id']}) | {a['tools']['get']['tokens_in']} | {a['tools']['get']['tokens_out']} | {EVENTS} | MEDIDO |"
+    )
+    lines.append(
+        f"| A tools totals | {a['tools']['totals']['tokens_in']} | {a['tools']['totals']['tokens_out']} | {EVENTS} | MEDIDO |"
+    )
+    lines.append(
+        f"| Synthesis OUT | 0 | {data['synthesis']['out_tokens']} | {SYNTHESIS_OUT_FILE} | MEDIDO |"
+    )
     lines.append(
         f"| Synthesis IN | {data['synthesis']['in_tokens'] if data['synthesis']['in_tokens'] is not None else 'MISSING'} | 0 | {data['synthesis']['in_source']} | {data['synthesis']['in_type']} |"
     )
@@ -227,7 +256,9 @@ def build_report(data: dict[str, Any]) -> str:
     lines.append("D) Baselines B1/B2/B3 (input dumping medido)")
     for key in ("B1", "B2", "B3"):
         row = b[key]
-        lines.append(f"- {key}: TOKENS_IN={row['tokens_in']} COST_IN={row['cost_in']} (MEDIDO, dedupe)")
+        lines.append(
+            f"- {key}: TOKENS_IN={row['tokens_in']} COST_IN={row['cost_in']} (MEDIDO, dedupe)"
+        )
     lines.append("")
 
     lines.append("E) Resultados tools-only")
@@ -246,13 +277,19 @@ def build_report(data: dict[str, Any]) -> str:
     lines.append("")
 
     lines.append("G) Limitaciones")
-    lines.append("- tools-only y synthesis final OUT están medidos; synthesis IN de la interacción original no está medido de forma trazable.")
+    lines.append(
+        "- tools-only y synthesis final OUT están medidos; synthesis IN de la interacción original no está medido de forma trazable."
+    )
     lines.append("- B1/B2/B3 no tienen síntesis manual persistida (prompt+out) por escenario.")
     lines.append("")
 
     lines.append("H) Próxima instrumentación mínima")
-    lines.append("- En cada respuesta final, persistir `interaction_id`, `synthesis_prompt_tokens`, `synthesis_out_tokens` en telemetry.")
-    lines.append("- Crear artefactos por baseline: `b*_synthesis_prompt.txt` y `b*_synthesis_out.txt`.")
+    lines.append(
+        "- En cada respuesta final, persistir `interaction_id`, `synthesis_prompt_tokens`, `synthesis_out_tokens` en telemetry."
+    )
+    lines.append(
+        "- Crear artefactos por baseline: `b*_synthesis_prompt.txt` y `b*_synthesis_out.txt`."
+    )
     lines.append("- Repro command: `python3 scripts/audit_tokens.py`.")
 
     return "\n".join(lines) + "\n"
@@ -267,7 +304,7 @@ def main() -> None:
     search_in = tok_json(ev_search["args"])
     search_out = tok_json(ev_search["result"])
     get_in = tok_json(ev_get["args"])
-    get_out = int(ev_get["result"]["total_tokens"])
+    get_out = tok_json(ev_get["result"])
 
     total_in_a_tools = search_in + get_in
     total_out_a_tools = search_out + get_out
@@ -316,12 +353,13 @@ def main() -> None:
                     "tokens_in": search_in,
                     "tokens_out": search_out,
                     "type": "MEDIDO",
+                    "method": "payload_tokens (tok_json)",
                 },
                 "get": {
                     "tokens_in": get_in,
                     "tokens_out": get_out,
                     "type": "MEDIDO",
-                    "tokens_out_source": "ctx.get.result.total_tokens",
+                    "method": "payload_tokens (tok_json)",
                 },
                 "totals": {
                     "tokens_in": total_in_a_tools,
@@ -391,6 +429,7 @@ def main() -> None:
         },
         "pricing": {
             "model": "GPT-5.2",
+            "tokenizer_model": TOKENIZER_MODEL,
             "input_per_1m": str(INPUT_PER_1M),
             "output_per_1m": str(OUTPUT_PER_1M),
             "cached_input_per_1m": str(CACHED_INPUT_PER_1M),

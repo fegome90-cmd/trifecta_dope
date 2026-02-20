@@ -1,0 +1,5 @@
+scenario,run_id,status,baseline_context_tokens,baseline_query_tokens,baseline_total_tokens,pcc_query_tokens,pcc_tool_args_tokens,pcc_tool_result_tokens,pcc_total_tokens,cost_est,wall_time_s,tool_calls,avg_tool_rtt_ms,p95_tool_rtt_ms,zero_hit_rate,corpus_rev,tau,model,temperature,timestamp,status_grade,tokens_grade,verdict
+baseline,baseline_001,ok,898266,6,898272,0,0,0,0,0,0.6925539970397949,0,0,0,0,ceaf20c62377,0.3,minimax-m2.5:free,N/A,2026-02-19T15:26:32.940824,valid,ESTIMATED,OK
+baseline,baseline_002,ok,898266,6,898272,0,0,0,0,0,0.5641269683837891,0,0,0,0,ceaf20c62377,0.3,minimax-m2.5:free,N/A,2026-02-19T15:26:32.949251,valid,ESTIMATED,OK
+cli,cli_001,ok,0,0,0,6,66,468,540,0,0.8729181289672852,5,174.26223754882812,176.67007446289062,0.0,ceaf20c62377,0.3,minimax-m2.5:free,N/A,2026-02-19T15:26:32.957167,invalid,ESTIMATED,TRIPWIRE_1: Usage missing from provider
+cli,cli_002,ok,0,0,0,6,66,468,540,0,0.901695966720581,5,180.04436492919922,188.71593475341797,0.0,ceaf20c62377,0.3,minimax-m2.5:free,N/A,2026-02-19T15:26:32.965135,invalid,ESTIMATED,TRIPWIRE_1: Usage missing from provider
