@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
-# Pre-commit guard: disallow manual WO closures.
-# Expected closure transition per WO:
-#   D _ctx/jobs/running/WO-XXXX.yaml
-#   A _ctx/jobs/done|failed/WO-XXXX.yaml
-# plus closed metadata (status, verified_at_sha, closed_at) in destination file.
-# plus mandatory handoff evidence bundle per WO.
-
 set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+# shellcheck source=scripts/hooks/common.sh
+source "$REPO_ROOT/scripts/hooks/common.sh"
+
+COMMIT_MSG_FILE="${1:-}"
+
+if should_bypass "$COMMIT_MSG_FILE"; then
+  log "[hooks] bypassing prevent_manual_wo_closure (emergency/bypass detected)"
+  exit 0
+fi
 
 CHANGED_STATUS="$(git diff --cached --name-status)"
 
@@ -21,9 +25,7 @@ done <<< "$CHANGED_STATUS"
 [[ ${#CLOSED_WO_FILES[@]} -eq 0 ]] && exit 0
 
 if echo "$CHANGED_STATUS" | grep -qE "^[AMR].*[[:space:]]scripts/(ctx_wo_finish\.py|prevent_manual_wo_closure\.sh)$"; then
-    echo "ERROR: Cannot close WO while mutating closure scripts in same commit."
-    echo "Split into two commits: (1) scripts, (2) WO closure evidence."
-    exit 1
+    fail "Cannot close WO while mutating closure scripts in same commit. Split into two commits."
 fi
 
 for item in "${CLOSED_WO_FILES[@]}"; do
@@ -31,50 +33,34 @@ for item in "${CLOSED_WO_FILES[@]}"; do
     path="${item#*:}"
 
     if [[ "$status" != "A" && "$status" != R* ]]; then
-        echo "TRIFECTA_ERROR_CODE: MANUAL_WO_CLOSURE_BLOCKED"
-        echo "ERROR: Manual edit detected in ${path} (status ${status})."
-        echo "Only closure transitions are allowed."
-        exit 1
+        fail "Manual edit detected in ${path} (status ${status}). Only closure transitions allowed."
     fi
 
     wo_file="$(basename "$path")"
     wo_id="${wo_file%.yaml}"
     if ! echo "$CHANGED_STATUS" | grep -q "^D[[:space:]]_ctx/jobs/running/${wo_id}\.yaml$"; then
-        echo "TRIFECTA_ERROR_CODE: MANUAL_WO_CLOSURE_BLOCKED"
-        echo "ERROR: ${path} added without deleting _ctx/jobs/running/${wo_file}."
-        echo "Use: uv run python scripts/ctx_wo_finish.py ${wo_id} --result done"
-        exit 1
+        fail "${path} added without deleting _ctx/jobs/running/${wo_file}. Use ctx_wo_finish.py"
     fi
 
     if [[ ! -f "$path" ]]; then
-        echo "TRIFECTA_ERROR_CODE: MANUAL_WO_CLOSURE_BLOCKED"
-        echo "ERROR: staged file not found on disk: ${path}"
-        exit 1
+        fail "Staged file not found on disk: ${path}"
     fi
 
     target_state="$(echo "$path" | awk -F'/' '{print $3}')"
     if ! grep -q "^status:[[:space:]]*${target_state}[[:space:]]*$" "$path"; then
-        echo "TRIFECTA_ERROR_CODE: MANUAL_WO_CLOSURE_BLOCKED"
-        echo "ERROR: ${path} has invalid status. Expected status: ${target_state}."
-        exit 1
+        fail "${path} has invalid status. Expected: ${target_state}"
     fi
 
     if ! grep -q "^verified_at_sha:" "$path" || ! grep -q "^closed_at:" "$path"; then
-        echo "TRIFECTA_ERROR_CODE: MANUAL_WO_CLOSURE_BLOCKED"
-        echo "ERROR: ${path} missing closure metadata (verified_at_sha/closed_at)."
-        exit 1
+        fail "${path} missing closure metadata (verified_at_sha/closed_at)"
     fi
 
     if ! echo "$CHANGED_STATUS" | grep -qE "^[AMR].*[[:space:]]_ctx/handoff/${wo_id}/verdict\.json$"; then
-        echo "ERROR: Missing staged handoff verdict for ${wo_id}."
-        echo "Expected: _ctx/handoff/${wo_id}/verdict.json"
-        exit 1
+        fail "Missing staged handoff verdict for ${wo_id}"
     fi
 
     if ! echo "$CHANGED_STATUS" | grep -qE "^[AMR].*[[:space:]]_ctx/handoff/${wo_id}/verification_report\.log$"; then
-        echo "ERROR: Missing staged verification report for ${wo_id}."
-        echo "Expected: _ctx/handoff/${wo_id}/verification_report.log"
-        exit 1
+        fail "Missing staged verification report for ${wo_id}"
     fi
 done
 

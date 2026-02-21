@@ -1,0 +1,166 @@
+{
+  "section_a_tools_only": {
+    "runs": {
+      "search_run_id": "run_1771428828",
+      "get_run_id": "run_1771428838"
+    },
+    "tools": {
+      "search": {
+        "tokens_in": 100,
+        "tokens_out": 132,
+        "type": "MEDIDO"
+      },
+      "get": {
+        "tokens_in": 43,
+        "tokens_out": 255,
+        "type": "MEDIDO",
+        "tokens_out_source": "ctx.get.result.total_tokens"
+      },
+      "totals": {
+        "tokens_in": 143,
+        "tokens_out": 387,
+        "tokens_total": 530,
+        "type": "MEDIDO"
+      },
+      "cost": {
+        "cost_in": "0.00025025",
+        "cost_out": "0.005418",
+        "cost_total": "0.00566825"
+      }
+    }
+  },
+  "synthesis": {
+    "out_tokens": 2157,
+    "out_type": "MEDIDO",
+    "out_source": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/audits/token_audit/synthesis_final.txt",
+    "in_tokens": null,
+    "in_type": "MISSING",
+    "in_source": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/audits/token_audit/synthesis_prompt.txt",
+    "in_reason": "synthesis_prompt.txt existe pero fue generado post-hoc (mtime posterior a la interacción/salida), no se usa como MEDIDO para este experimento",
+    "candidate_tokens": 52,
+    "candidate_type": "ESTIMADO"
+  },
+  "baselines": {
+    "B1": {
+      "tokens_in": 3653,
+      "cost_in": "0.00639275",
+      "files": [
+        {
+          "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/docs/backlog/WORKFLOW.md",
+          "tokens_in": 3653,
+          "type": "MEDIDO"
+        }
+      ],
+      "type": "MEDIDO"
+    },
+    "B2": {
+      "tokens_in": 14485,
+      "cost_in": "0.02534875",
+      "files": [
+        {
+          "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/docs/backlog/WORKFLOW.md",
+          "tokens_in": 3653,
+          "type": "MEDIDO"
+        },
+        {
+          "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/docs/CLI_WORKFLOW.md",
+          "tokens_in": 1394,
+          "type": "MEDIDO"
+        },
+        {
+          "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/docs/guides/work_orders_usage.md",
+          "tokens_in": 3265,
+          "type": "MEDIDO"
+        },
+        {
+          "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/docs/plans/2026-01-05-backlog-wo-dod-pipeline-plan.md",
+          "tokens_in": 6173,
+          "type": "MEDIDO"
+        }
+      ],
+      "type": "MEDIDO"
+    },
+    "B3": {
+      "tokens_in": 27173,
+      "cost_in": "0.04755275",
+      "files": [
+        {
+          "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/docs/backlog/WORKFLOW.md",
+          "tokens_in": 3653,
+          "type": "MEDIDO"
+        },
+        {
+          "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/docs/CLI_WORKFLOW.md",
+          "tokens_in": 1394,
+          "type": "MEDIDO"
+        },
+        {
+          "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/docs/guides/work_orders_usage.md",
+          "tokens_in": 3265,
+          "type": "MEDIDO"
+        },
+        {
+          "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/docs/plans/2026-01-05-backlog-wo-dod-pipeline-plan.md",
+          "tokens_in": 6173,
+          "type": "MEDIDO"
+        },
+        {
+          "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/scripts/ctx_wo_finish.py",
+          "tokens_in": 8526,
+          "type": "MEDIDO"
+        },
+        {
+          "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/scripts/verify.sh",
+          "tokens_in": 3086,
+          "type": "MEDIDO"
+        },
+        {
+          "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/jobs/pending/WO-0056.yaml",
+          "tokens_in": 1076,
+          "type": "MEDIDO"
+        }
+      ],
+      "type": "MEDIDO"
+    }
+  },
+  "savings_tools_only": {
+    "vs_B1": {
+      "delta_tokens_in": 3510,
+      "delta_cost_in": "0.00614250",
+      "savings_pct_in": "96.08540925266903914590747331"
+    },
+    "vs_B2": {
+      "delta_tokens_in": 14342,
+      "delta_cost_in": "0.02509850",
+      "savings_pct_in": "99.01277183293061788056610287"
+    },
+    "vs_B3": {
+      "delta_tokens_in": 27030,
+      "delta_cost_in": "0.04730250",
+      "savings_pct_in": "99.47374231774187612703786847"
+    }
+  },
+  "task_complete": {
+    "status": "blocked",
+    "missing": [
+      "SYNTH_IN_TOKENS",
+      "B1_SYNTH_PROMPT_TOKENS",
+      "B1_SYNTH_OUT_TOKENS",
+      "B2_SYNTH_PROMPT_TOKENS",
+      "B2_SYNTH_OUT_TOKENS",
+      "B3_SYNTH_PROMPT_TOKENS",
+      "B3_SYNTH_OUT_TOKENS"
+    ],
+    "blocked_reason": "No existe medición trazable de SYNTH_IN para la interacción original y faltan síntesis manuales en B1/B2/B3"
+  },
+  "pricing": {
+    "model": "GPT-5.2",
+    "input_per_1m": "1.75",
+    "output_per_1m": "14.00",
+    "cached_input_per_1m": "0.175",
+    "cached_applied": false
+  },
+  "repro": {
+    "command": "python3 scripts/audit_tokens.py"
+  }
+}

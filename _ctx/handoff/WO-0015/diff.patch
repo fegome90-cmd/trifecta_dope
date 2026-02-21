@@ -1,0 +1,40 @@
+diff --git a/src/application/import_extractor.py b/src/application/import_extractor.py
+index 704a015..d84cbdd 100644
+--- a/src/application/import_extractor.py
++++ b/src/application/import_extractor.py
+@@ -26,9 +26,6 @@ class ImportExtractor(ast.NodeVisitor):
+         if node.module == "__builtins__":
+             return
+ 
+-        if node.module is None and node.level > 0:
+-            pass
+-
+         imported_names = tuple(alias.name for alias in node.names)
+ 
+         self.imports.append(
+@@ -42,7 +39,7 @@ class ImportExtractor(ast.NodeVisitor):
+ 
+     def visit_Call(self, node: ast.Call) -> None:
+         if isinstance(node.func, ast.Name) and node.func.id == "__import__":
+-            self.warnings.append("Dynamic import detected at line {node.lineno}")
++            self.warnings.append(f"Dynamic import detected at line {node.lineno}")
+         self.generic_visit(node)
+ 
+ 
+diff --git a/tests/unit/test_import_extractor.py b/tests/unit/test_import_extractor.py
+index 2a72225..594be22 100644
+--- a/tests/unit/test_import_extractor.py
++++ b/tests/unit/test_import_extractor.py
+@@ -61,7 +61,11 @@ from collections import OrderedDict"""
+         source = "x = __import__('os')"
+         result = extract_imports(source)
+         assert len(result.imports) == 0
+-        assert len(result.warnings) > 0
++        # Contract: Signal (Dynamic import) + Artifact (line number)
++        # Using substring checks for wording robustness, but requiring line number for correctness.
++        warning = result.warnings[0]
++        assert "Dynamic import" in warning
++        assert "line 1" in warning
+ 
+     def test_empty_source(self):
+         source = ""

@@ -1,0 +1,1 @@
+Produce un reporte forense de tokens con secciones 1-8 para la interacción de cierre de Work Order, separando tools (ctx.search + ctx.get) y síntesis final, con fórmulas explícitas y costos GPT-5.2.

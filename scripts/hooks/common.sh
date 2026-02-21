@@ -34,6 +34,21 @@ check_commit_msg_bypass() {
   return 1
 }
 
+check_pending_commit_msg_bypass() {
+  local commit_msg_file="${1:-}"
+  local msg=""
+  if [[ -n "$commit_msg_file" && -f "$commit_msg_file" ]]; then
+    msg=$(cat "$commit_msg_file" 2>/dev/null || echo "")
+  elif [[ -f "${REPO_ROOT}/.git/COMMIT_EDITMSG" ]]; then
+    msg=$(cat "${REPO_ROOT}/.git/COMMIT_EDITMSG" 2>/dev/null || echo "")
+  fi
+  if [[ -n "$msg" ]] && { [[ "$msg" == *"[emergency]"* ]] || [[ "$msg" == *"[bypass]"* ]]; }; then
+    _log_bypass "pending_commit_msg" "$msg" "commit_message_marker"
+    return 0
+  fi
+  return 1
+}
+
 check_file_bypass() {
   local marker="$REPO_ROOT/.trifecta_hooks_bypass"
   if [[ -f "$marker" ]]; then
@@ -46,12 +61,18 @@ check_file_bypass() {
 }
 
 should_bypass() {
+  local commit_msg_file="${1:-}"
+  
   if [[ "${TRIFECTA_HOOKS_DISABLE:-0}" == "1" ]]; then
     local reason="${TRIFECTA_WO_BYPASS_REASON:-}"
     if [[ -z "$reason" ]]; then
       fail "TRIFECTA_HOOKS_DISABLE=1 requires TRIFECTA_WO_BYPASS_REASON"
     fi
     _log_bypass "env_var" "$reason" "TRIFECTA_WO_BYPASS_REASON"
+    return 0
+  fi
+
+  if [[ -n "$commit_msg_file" ]] && check_pending_commit_msg_bypass "$commit_msg_file"; then
     return 0
   fi
 
