@@ -145,6 +145,33 @@ print(datetime.now(timezone.utc).isoformat())
 PY
 }
 
+# =============================================================================
+# Transactional cleanup: Move WO from running/ to failed/ and remove lock
+# =============================================================================
+transition_to_failed() {
+  local wo_id="$1"
+  local root="${2:-.}"
+  local running_dir="$root/_ctx/jobs/running"
+  local failed_dir="$root/_ctx/jobs/failed"
+  local yaml_path="$running_dir/${wo_id}.yaml"
+  local lock_path="$running_dir/${wo_id}.lock"
+
+  # Ensure failed/ directory exists
+  mkdir -p "$failed_dir"
+
+  # Move YAML from running/ to failed/
+  if [[ -f "$yaml_path" ]]; then
+    mv "$yaml_path" "$failed_dir/${wo_id}.yaml"
+    echo "INFO: Moved $wo_id to failed/ state" >&2
+  fi
+
+  # Remove lock file
+  if [[ -f "$lock_path" ]]; then
+    rm -f "$lock_path"
+    echo "INFO: Removed lock for $wo_id" >&2
+  fi
+}
+
 write_verdict() {
   local status="$1"
   local failure_stage="${2:-}"
@@ -287,6 +314,8 @@ if ! uv run python "$SCRIPT_DIR/ctx_scope_lint.py" "${SCOPE_ARGS[@]}"; then
   END="$(utc_now)"
   export END
   write_verdict "FAIL" "scope_lint" ""
+  # Transactional cleanup: move to failed/ and remove lock
+  transition_to_failed "$WO_ID" "$ROOT"
   exit 1
 fi
 
@@ -327,6 +356,7 @@ then
   END="$(utc_now)"
   export END
   write_verdict "FAIL" "load_commands" ""
+  transition_to_failed "$WO_ID" "$ROOT"
   exit 1
 fi
 
@@ -356,4 +386,8 @@ export END
 # =============================================================================
 write_verdict "$STATUS" "" "$(printf '%s\n' "${COMMANDS[@]}")"
 
-[[ "$STATUS" == "PASS" ]] || exit 1
+# Transactional cleanup on command failure
+if [[ "$STATUS" != "PASS" ]]; then
+  transition_to_failed "$WO_ID" "$ROOT"
+  exit 1
+fi

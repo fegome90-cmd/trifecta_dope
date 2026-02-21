@@ -1,0 +1,58 @@
+version: 1
+id: WO-0057
+epic_id: E-0002
+title: ctx_wo_finish honors --root for worktree handoff/artifacts
+priority: P1
+status: running
+owner: felipe_gonzalez
+branch: feat/wo-WO-0057
+worktree: ../.worktrees/WO-0057
+scope:
+  allow:
+  - scripts/ctx_wo_finish.py
+  - scripts/wo_verify.sh
+  - tests/integration/test_ctx_wo_finish_root.py
+  - docs/**
+  deny:
+  - .env*
+  - src/domain/**
+verify:
+  commands:
+  - uv run pytest -q tests/integration/test_ctx_wo_finish_root.py
+  - uv run ruff check scripts/ctx_wo_finish.py tests/integration/test_ctx_wo_finish_root.py
+  - uv run mypy --strict scripts/ctx_wo_finish.py tests/integration/test_ctx_wo_finish_root.py
+dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
+  segment: .
+dependencies: []
+governance:
+  must:
+  - Use TDD
+  - Keep fix in scripts/infrastructure only (no domain changes)
+  - Commit (no --no-verify)
+x_objective: 'Fix root resolution in ctx_wo_finish.py so explicit --root is honored
+  in worktree usage.
+
+  All DoD evidence paths (handoff/artifacts/verdict checks) must be derived from provided
+  --root.
+
+  '
+x_items:
+- Add failing integration test that reproduces path leakage to main repo
+- Ensure generate-only with --root writes handoff artifacts under <root>/_ctx/handoff/<WO>
+- Prevent references to main runtime root when --root is explicit
+- Keep backward-compatible behavior when --root is omitted
+diff_budget:
+  max_files: 4
+  max_loc: 220
+stop_conditions:
+  max_iterations: 5
+  max_fail_verify: 2
+started_at: '2026-02-18T15:19:29.502165+00:00'

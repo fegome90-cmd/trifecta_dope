@@ -1,0 +1,137 @@
+version: 1
+id: WO-0055
+epic_id: E-0001
+title: 'Fix WO manual-closure hook: design vs actual mismatch'
+priority: P1
+status: running
+owner: felipe_gonzalez
+branch: feat/wo-WO-0055
+worktree: ../.worktrees/WO-0055
+scope:
+  allow:
+  - scripts/hooks/**
+  - .git/hooks/**
+  - AGENTS.md
+  deny:
+  - _ctx/index/**
+verify:
+  commands:
+  - make hooks-check
+dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
+  segment: .
+created: 2026-02-17
+started: null
+description: 'The WO closure prevention hook has a critical mismatch between design
+  and actual implementation.
+
+
+  PROBLEM:
+
+  - The actual `.git/hooks/pre-commit` is a 24-line stub that only syncs context pack
+
+  - It does NOT call `prevent_manual_wo_closure.sh`
+
+  - It does NOT check for WO closure validity
+
+  - It has NO bypass logic
+
+
+  The comprehensive hook at `scripts/hooks/pre-commit` (53 lines) with bypass mechanisms:
+
+  - TRIFECTA_HOOKS_DISABLE=1 env var bypass
+
+  - [emergency]/[bypass] commit message detection
+
+  - Proper WO closure validation
+
+
+  BUT THIS HOOK IS NOT INSTALLED to `.git/hooks/pre-commit`!
+
+
+  Additionally, the pre-commit framework uses `scripts/prevent_manual_wo_closure.sh`
+  (81 lines)
+
+  which has NO bypass mechanism, creating inconsistency.
+
+
+  Additionally, the hook script at scripts/prevent_manual_wo_closure.sh:74-78 expects
+
+  `verification_report.log` in handoff directory, but `ctx_wo_finish.py` produces
+
+  `tests.log` and `lint.log`. This mismatch causes false negatives in the gate.
+
+
+  NOTE: Current state is FAIL-OPEN (theater), not fail-closed. - .git/hooks/pre-commit
+  = stub, bypass mechanisms do not run - scripts/hooks/pre-commit = real hook with
+  bypass, NOT INSTALLED - Result: documented bypasses are placebo
+
+  '
+impact:
+- WO closure gates can be bypassed by simply not using pre-commit framework
+- Documented bypass mechanisms (TRIFECTA_HOOKS_DISABLE, [emergency]) don't work
+- Security mechanism is effectively a placebo
+deliverables:
+- Install scripts/hooks/pre-commit to .git/hooks/pre-commit OR
+- Update pre-commit framework to use scripts/hooks/prevent_manual_wo_closure.sh with
+  bypass
+- 'Ensure bypass mechanisms work: TRIFECTA_HOOKS_DISABLE=1, TRIFECTA_WO_BYPASS_REASON,
+  [emergency]'
+- Add tests for bypass scenarios (allow/block)
+- Document the correct bypass procedure in AGENTS.md
+- make hooks-check target in Makefile (fails if stub detected)
+- _ctx/telemetry/hook_bypass.jsonl schema and writer
+- CI pipeline with 4 hook bypass tests
+dod:
+- name: 'SSOT: Single pre-commit hook installed'
+  criterion: Makefile target 'make hooks-check' fails if stub detected
+  test: CI test that validates hook is not the stub
+- name: 'Bypass: Real and auditable'
+  criterion: 'Log includes: reason, WO_ID, user, timestamp, commit SHA'
+  test: '2 CI tests: bypass without reason (block), bypass with reason (allow+log)'
+- name: 'Log contract: verification_report.log'
+  criterion: 'Report includes: paths to logs, exit codes, commands, repo version/branch'
+  test: CI test that ctx_wo_finish produces valid report and hook accepts it
+- name: 'CI Tests: 4 minimum'
+  test: 4. ctx_wo_finish produces report + hook accepts it
+- name: 'Documentation: AGENTS.md + MANUAL_WO.md'
+  criterion: Documents make hooks-check for verification
+design_recommendation: 'Priority: Support TRIFECTA_WO_BYPASS_REASON="..." (auditable,
+  scoped to WO only).
+
+  Maintain TRIFECTA_HOOKS_DISABLE=1 as "break glass" (disables ALL hooks).
+
+
+  Pseudo-logic:
+
+  1. If TRIFECTA_HOOKS_DISABLE=1 -> allow, log warning
+
+  2. Else if TRIFECTA_WO_BYPSS_REASON set -> allow, log reason
+
+  3. Else if .git/COMMIT_EDITMSG contains [emergency] -> allow
+
+  4. Else -> validate WO closure via ctx_wo_finish.py logic
+
+  '
+related_files:
+- scripts/hooks/pre-commit
+- scripts/hooks/prevent_manual_wo_closure.sh
+- scripts/prevent_manual_wo_closure.sh
+- .git/hooks/pre-commit
+- .pre-commit-config.yaml
+- AGENTS.md
+evidence:
+- Finding: .git/hooks/pre-commit is 24-line stub, not the 53-line design hook
+- Finding: TRIFECTA_HOOKS_DISABLE bypass exists in design but never executed
+- Finding: '[emergency] bypass exists in scripts/hooks/prevent_manual_wo_closure.sh
+    but never called'
+- Finding: Hook expects verification_report.log but ctx_wo_finish.py produces tests.log/lint.log
+    (design gap at scripts/prevent_manual_wo_closure.sh:74-78)
+started_at: '2026-02-17T15:37:03.663208+00:00'
