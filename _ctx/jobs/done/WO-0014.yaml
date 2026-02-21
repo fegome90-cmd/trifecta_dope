@@ -14,12 +14,9 @@ execution:
   - ctx.search
   - ctx.get
   - session.append:result
+  x_legacy_flow: true
   segment: .
-governance:
-  must:
-  - "Use TDD: Write tests BEFORE implementation (RED \u2192 GREEN)"
-  - Pure function only (no IO in domain)
-  - Commit (no --no-verify)
+governance: {}
 id: WO-0014
 owner: null
 priority: P1
@@ -52,3 +49,8 @@ x_items:
 x_objective: "Implement a pure function that extracts `import` and `from X import\
   \ Y` \nstatements from a Python file using stdlib `ast.walk`.\nReturns a list of\
   \ module dependencies (relative and absolute).\n"
+finished_at: '2026-02-18T14:38:39.994747+00:00'
+x_governance_notes:
+- 'Use TDD: Write tests BEFORE implementation (RED → GREEN)'
+- Pure function only (no IO in domain)
+- Commit (no --no-verify)

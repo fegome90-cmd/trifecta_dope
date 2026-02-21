@@ -26,6 +26,7 @@ execution:
   engine: trifecta
   required_flow:
   - verify
+  x_legacy_flow: true
   segment: .
 trace:
   ticket: null
@@ -45,3 +46,4 @@ x_risks:
 - Parallel process locking (WAL mode not redundant)
 - Implicit segment_id logic in persisted keys
 closed_at: '2026-02-10T07:40:42.291880+00:00'
+finished_at: '2026-02-10T07:40:42.291880+00:00'

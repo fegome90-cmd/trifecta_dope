@@ -31,14 +31,11 @@ execution:
   - ctx.search
   - ctx.get
   - session.append:result
+  x_legacy_flow: true
   segment: .
 dependencies:
 - WO-0057
-governance:
-  must:
-  - Use TDD
-  - Keep fix in scripts/infrastructure only
-  - Commit (no --no-verify)
+governance: {}
 x_objective: 'Ensure WO finish verification gates (ctx_verify_run / wo_verify) can
   run against the intended root context
 
@@ -61,3 +58,8 @@ started_at: '2026-02-18T16:05:57.959632+00:00'
 verified_at_sha: ceaf20c62377dfa84a1eb62cb9516ef66b2cfd84
 closed_at: '2026-02-19T16:45:44.263974+00:00'
 result: done
+finished_at: '2026-02-19T16:45:44.263974+00:00'
+x_governance_notes:
+- Use TDD
+- Keep fix in scripts/infrastructure only
+- Commit (no --no-verify)

@@ -23,6 +23,7 @@ execution:
   engine: trifecta
   required_flow:
   - verify
+  x_legacy_flow: true
   segment: .
 verified_at_sha: 1d80a878b486177e94491fda068028287eddd1d8
 evidence_logs:
@@ -35,7 +36,8 @@ evidence_logs:
 x_legacy: true
 x_branch: job/WO-0009-sync-repo-content
 x_worktree: ../wt-WO-0009
-x_objective: 'Fix ctx sync to index repo content (docs/, src/) in addition to _ctx metadata.
+x_objective: 'Fix ctx sync to index repo content (docs/, src/) in addition to _ctx
+  metadata.
 
 
   Current behavior: ctx sync only indexes skill.md, prime, agent, session.
@@ -47,14 +49,14 @@ x_objective: 'Fix ctx sync to index repo content (docs/, src/) in addition to _c
 
   '
 x_deliverables:
-- "tests/integration/test_ctx_sync_indexes_repo_content.py (RED \u2192 GREEN)"
+- tests/integration/test_ctx_sync_indexes_repo_content.py (RED → GREEN)
 - Fix in sync/build logic to include docs/src
 - Gate script verifying pack contains repo content
 - docs/reports/wo0009_sync_repo_content_fix.md
 x_acceptance_criteria:
 - 'In synthetic fixture: docs/servicio.md appears in context_pack.json'
-- "grep 'SERVICIO_ANCHOR_TOKEN' pack.json \u2260 empty"
-- "ctx search --query 'SERVICIO_ANCHOR_TOKEN' \u2192 hits > 0"
+- grep 'SERVICIO_ANCHOR_TOKEN' pack.json ≠ empty
+- ctx search --query 'SERVICIO_ANCHOR_TOKEN' → hits > 0
 - Test passes in clean worktree
 diff_budget:
   max_files: 20
@@ -85,3 +87,4 @@ x_notes: 'Created to unblock WO-0008.
   Missing: user content from docs/, src/, etc.
 
   '
+finished_at: '2025-12-31T23:59:59Z'

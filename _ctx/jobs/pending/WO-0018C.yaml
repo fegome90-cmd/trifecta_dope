@@ -33,15 +33,9 @@ verified_at_sha: null
 closed_at: null
 run_ids:
 - wo-0018c-docs
-governance:
-  must:
-  - Create feature_flags.md documentation
-  - Create telemetry rotation script
-  - Update backlog.yaml with WO-0012 completion
-  - Use CLI trifecta for runs
-  - Update _ctx/session_trifecta_dope.md
-  - Update backlog.yaml
-x_objective: 'Create missing feature flag documentation and implement telemetry rotation to control growth.
+governance: {}
+x_objective: 'Create missing feature flag documentation and implement telemetry rotation
+  to control growth.
 
   Update backlog to reflect WO-0012 proper completion.
 
@@ -92,10 +86,11 @@ x_micro_tasks:
   - TRIFECTA_AST_PERSIST=0 uv run trifecta <command>
   - '```'
   - ''
-  - '**Telemetry**: Events logged to `_ctx/telemetry/events.jsonl` with `ast.cache.hit` and `ast.cache.miss`
-    metrics.'
+  - '**Telemetry**: Events logged to `_ctx/telemetry/events.jsonl` with `ast.cache.hit`
+    and `ast.cache.miss` metrics.'
   - ''
-  - '**Related**: WO-0012 (AST Persistence Feature Flag), WO-0012.1 (Dev CLI Persistence Default)'
+  - '**Related**: WO-0012 (AST Persistence Feature Flag), WO-0012.1 (Dev CLI Persistence
+    Default)'
   - ''
   - '---'
   - ''
@@ -122,8 +117,8 @@ x_micro_tasks:
   - 'MAX_EVENTS = 1000  # Rotate after 1000 events'
   - 'MAX_SIZE_MB = 10   # Rotate after 10MB'
   - ''
-  - 'def rotate_telemetry(telemetry_file: Path, max_events: int = MAX_EVENTS, max_size_mb: int = MAX_SIZE_MB)
-    -> None:'
+  - 'def rotate_telemetry(telemetry_file: Path, max_events: int = MAX_EVENTS, max_size_mb:
+    int = MAX_SIZE_MB) -> None:'
   - '    """Rotate telemetry file if it exceeds thresholds."""'
   - '    if not telemetry_file.exists():'
   - '        return'
@@ -173,3 +168,11 @@ x_micro_tasks:
   evidence:
   - _ctx/backlog/backlog.yaml
   commit: 'chore(backlog): update WO-0012 status to done'
+x_governance_notes:
+- Create feature_flags.md documentation
+- Create telemetry rotation script
+- Update backlog.yaml with WO-0012 completion
+- Use CLI trifecta for runs
+- Update _ctx/session_trifecta_dope.md
+- Update backlog.yaml
+x_variant_id: true

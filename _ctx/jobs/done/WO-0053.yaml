@@ -27,6 +27,7 @@ execution:
   - ctx.search
   - ctx.get
   - session.append:result
+  x_legacy_flow: true
   segment: .
 dependencies: []
 claim_links:
@@ -35,8 +36,9 @@ claim_links:
   - 'Path traversal prevention: Block ../ escapes outside segment root'
   - 'Invalid WO ID detection: Validate WO IDs match pattern'
   - 'Segment scope validation: Verify path stays within segment boundary'
-objective: 'Implement path validation for CLI inputs preventing: - Path traversal attacks (../ escapes)
-  - Canonicalization inconsistencies - Invalid scope (path outside segment root) - Invalid WO ID formats '
+objective: 'Implement path validation for CLI inputs preventing: - Path traversal
+  attacks (../ escapes) - Canonicalization inconsistencies - Invalid scope (path outside
+  segment root) - Invalid WO ID formats '
 started_at: '2026-02-15T21:50:51.555782+00:00'
 result: done
 verified_at_sha: 81043d5f8e31df1196f418f56d25071442936911
@@ -54,3 +56,4 @@ diff_budget:
   max_files: 5
   max_loc: 200
 closed_at: '2026-02-15T22:12:05.471902+00:00'
+finished_at: '2026-02-15T22:12:05.471902+00:00'

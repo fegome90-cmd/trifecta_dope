@@ -38,4 +38,5 @@ execution:
   engine: trifecta
   required_flow:
   - verify
+  x_legacy_flow: true
   segment: .

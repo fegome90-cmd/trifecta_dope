@@ -26,6 +26,7 @@ execution:
   - ctx.search
   - ctx.get
   - session.append:result
+  x_legacy_flow: true
   segment: .
 trace:
   ticket: null
@@ -37,8 +38,8 @@ claim_links:
   - Reporte que separe zero-hits por segment/pack
   - 'Top 20 queries que fallan + clasificacion: deberian fallar o no'
   - 1-2 intervenciones concretas para bajar ratio
-objective: Diagnosticar el 53.7% zero-hit ratio. Distinguir si viene de suite adversarial o de queries
-  reales. Generar intervencion minima para bajar el ratio.
+objective: Diagnosticar el 53.7% zero-hit ratio. Distinguir si viene de suite adversarial
+  o de queries reales. Generar intervencion minima para bajar el ratio.
 started_at: '2026-02-15T21:10:21.026240+00:00'
 result: done
 verified_at_sha: 430a07875dc03d2034e298d97e708b88c33ce7ad
@@ -50,7 +51,7 @@ deliverables:
 - Reporte zero-hit por query type (test/fixture/interactive/agent)
 - Reporte zero-hit por segment/pack
 - 'Top 20 queries que fallan con clasificacion: expected fail vs unexpected fail'
-- "1-2 intervenciones concretas para bajar ratio (a\xF1adir terminos a prime, etc.)"
+- 1-2 intervenciones concretas para bajar ratio (añadir terminos a prime, etc.)
 diff_budget:
   max_files: 5
   max_loc: 150
@@ -58,3 +59,4 @@ stop_conditions:
   max_iterations: 2
   max_fail_verify: 1
 closed_at: '2026-02-15T21:22:28.633920+00:00'
+finished_at: '2026-02-15T21:22:28.633920+00:00'

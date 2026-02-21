@@ -23,6 +23,7 @@ execution:
   engine: trifecta
   required_flow:
   - verify
+  x_legacy_flow: true
   segment: .
 dependencies:
 - WO-P3.0
@@ -33,12 +34,7 @@ run_ids:
 - baseline-t1
 - wo-0012-t3
 - rollback-test
-governance:
-  must:
-  - Use CLI trifecta for runs
-  - Update _ctx/session_trifecta_dope.md
-  - Update backlog.yaml
-  - Commit enabled/verified state
+governance: {}
 x_objective: 'Safely enable TRIFECTA_AST_PERSIST=1 in Development and CI environments.
 
   Establish monitoring baseline, verify performance impact, and ensure rollback capability.
@@ -73,10 +69,12 @@ x_micro_tasks:
   name: 'T2: Flag Activation (Config)'
   status: done
   commands:
-  - sed -i '' 's/TRIFECTA_AST_PERSIST=0/TRIFECTA_AST_PERSIST=1/g' .env_template || echo "No .env_template"
+  - sed -i '' 's/TRIFECTA_AST_PERSIST=0/TRIFECTA_AST_PERSIST=1/g' .env_template ||
+    echo "No .env_template"
   - grep 'TRIFECTA_AST_PERSIST' pyproject.toml || echo 'Adding to pyproject.toml'
   gates:
-  - grep -q 'TRIFECTA_AST_PERSIST' pyproject.toml || grep -q 'TRIFECTA_AST_PERSIST' Makefile
+  - grep -q 'TRIFECTA_AST_PERSIST' pyproject.toml || grep -q 'TRIFECTA_AST_PERSIST'
+    Makefile
   evidence:
   - pyproject.toml
   commit: 'config: enable AST persistence by default via feature flag'
@@ -87,7 +85,8 @@ x_micro_tasks:
   - TRIFECTA_AST_PERSIST=1 OPS=200 WORKERS=4 RUN_ID=wo-0012-t3 bash eval/scripts/run_ast_cache_soak.sh
     | tee _ctx/logs/wo_0012/t3_run.log
   - python eval/scripts/extract_ast_soak_metrics.py --run-id wo-0012-t3 --out _ctx/metrics/wo_0012_active.json
-  - python eval/scripts/gate_ast_soak.py --in _ctx/metrics/wo_0012_active.json --min-ops 200
+  - python eval/scripts/gate_ast_soak.py --in _ctx/metrics/wo_0012_active.json --min-ops
+    200
   gates:
   - jq -e '.counts."ast.cache.hit" > 100' _ctx/metrics/wo_0012_active.json
   - ls .trifecta/cache/ast_cache_*.db
@@ -115,3 +114,9 @@ x_micro_tasks:
   evidence:
   - Updated backlog
   commit: 'docs(ops): close WO-0012 persistence feature flag'
+finished_at: '2026-01-13T16:20:07.467090+00:00'
+x_governance_notes:
+- Use CLI trifecta for runs
+- Update _ctx/session_trifecta_dope.md
+- Update backlog.yaml
+- Commit enabled/verified state

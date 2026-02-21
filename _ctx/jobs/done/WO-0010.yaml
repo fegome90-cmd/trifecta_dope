@@ -23,8 +23,10 @@ execution:
   engine: trifecta
   required_flow:
   - verify
+  x_legacy_flow: true
   segment: .
 started_at: '2026-02-13T12:36:58.250776+00:00'
 result: done
 verified_at_sha: 84532fbeb119378eef132669cf9c7515c340af6d
 closed_at: '2026-02-13T12:42:14.821519+00:00'
+finished_at: '2026-02-13T12:42:14.821519+00:00'
