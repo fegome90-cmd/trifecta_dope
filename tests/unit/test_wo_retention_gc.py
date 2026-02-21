@@ -16,7 +16,7 @@ import os
 import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -31,7 +31,7 @@ _spec = importlib.util.spec_from_file_location("wo_retention_gc", _SCRIPT_PATH)
 assert _spec is not None, f"Could not load spec from {_SCRIPT_PATH}"
 wo_retention_gc = importlib.util.module_from_spec(_spec)
 _sys.modules["wo_retention_gc"] = wo_retention_gc  # Register before exec for dataclasses
-assert _spec.loader is not None, f"Spec has no loader"
+assert _spec.loader is not None, "Spec has no loader"
 _spec.loader.exec_module(wo_retention_gc)
 
 # Import functions from the loaded module
@@ -73,7 +73,6 @@ def create_old_file(path: Path, content: str = "test", days_old: int = 100) -> N
 
     # Set mtime to days_old days ago
     old_time = datetime.now(timezone.utc) - timedelta(days=days_old)
-    import time
 
     os.utime(path, (old_time.timestamp(), old_time.timestamp()))
 
@@ -400,7 +399,7 @@ class TestRunRetentionGc:
         json_path = temp_repo / "data" / "report.json"
 
         # Run with JSON output
-        report = run_retention_gc(
+        _ = run_retention_gc(
             repo_root=temp_repo,
             dry_run=True,
             retention_days=90,
@@ -511,7 +510,7 @@ class TestEdgeCases:
         old_file = other_dir / "dirty.abc123.patch"
         create_old_file(old_file, days_old=100)
 
-        report = run_retention_gc(
+        _ = run_retention_gc(
             repo_root=temp_repo,
             dry_run=False,
             retention_days=90,
