@@ -255,7 +255,7 @@ class TestRunGc:
 
         with patch("ctx_wo_gc.get_worktrees", return_value=worktrees):
             with patch("ctx_wo_gc.check_worktree_dirty", return_value=False):
-                report = run_gc(tmp_path, dry_run=True, force=False)
+                report = run_gc(tmp_path, dry_run=True, force_dirty=False)
 
         assert report.dry_run is True
         assert report.zombies_found == 1
@@ -283,7 +283,7 @@ class TestRunGc:
             with patch("ctx_wo_gc.check_worktree_dirty", return_value=False):
                 with patch("ctx_wo_gc.remove_worktree") as mock_remove:
                     mock_remove.return_value = (True, "Removed WO-0001")
-                    report = run_gc(tmp_path, dry_run=False, force=False)
+                    report = run_gc(tmp_path, dry_run=False, force_dirty=False)
 
         assert report.dry_run is False
         assert report.zombies_found == 1
@@ -309,7 +309,7 @@ class TestRunGc:
 
         with patch("ctx_wo_gc.get_worktrees", return_value=worktrees):
             with patch("ctx_wo_gc.check_worktree_dirty", return_value=True):
-                report = run_gc(tmp_path, dry_run=False, force=False)
+                report = run_gc(tmp_path, dry_run=False, force_dirty=False)
 
         assert report.zombies_found == 1
         assert report.zombies_removed == 0
@@ -320,7 +320,7 @@ class TestRunGc:
         json_path = tmp_path / "report.json"
 
         with patch("ctx_wo_gc.get_worktrees", return_value=[]):
-            report = run_gc(tmp_path, dry_run=True, force=False, json_path=str(json_path))
+            report = run_gc(tmp_path, dry_run=True, force_dirty=False, json_path=str(json_path))
 
         assert json_path.exists()
         data = json.loads(json_path.read_text())
