@@ -80,6 +80,27 @@ class RollbackResult:
         )
 
 
+def format_session_marker(wo_id: str, marker: str) -> str:
+    """Format a session marker with WO ID prefix.
+
+    Args:
+        wo_id: Work order ID (e.g., "WO-1234")
+        marker: Marker type (e.g., "intent:", "result:")
+
+    Returns:
+        Formatted marker string (e.g., "[WO-1234] intent:")
+
+    Raises:
+        ValueError: If wo_id doesn't match WO-XXXX pattern or marker is empty
+    """
+    import re
+    if not wo_id or not re.match(r"^WO-\d{4}$", wo_id):
+        raise ValueError(f"Invalid WO ID '{wo_id}': must match pattern WO-XXXX")
+    if not marker:
+        raise ValueError("Marker cannot be empty")
+    return f"[{wo_id}] {marker}"
+
+
 def get_branch_name(wo_id: str) -> str:
     """
     Generate branch name from work order ID.

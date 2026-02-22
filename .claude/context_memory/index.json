@@ -1,0 +1,22 @@
+{
+  "bundles": {
+    "wo-cleanup-20260222-1745": {
+      "ts": 1771793154,
+      "ops_count": 15,
+      "bytes_est": 6900,
+      "branch": "fix/wo-0055-code-review-issues",
+      "repo_rev": "866632f",
+      "focus_hash": "15f5bfd0",
+      "exists": true
+    },
+    "wo-branch-cleanup": {
+      "ts": 1771795118,
+      "ops_count": 10,
+      "bytes_est": 6400,
+      "branch": "fix/wo-0055-code-review-issues",
+      "repo_rev": "866632f",
+      "focus_hash": "15f5bfd0",
+      "exists": true
+    }
+  }
+}

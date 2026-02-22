@@ -29,6 +29,7 @@ execution:
   segment: .
 dependencies: []
 started_at: '2026-02-15T17:30:53.857324+00:00'
+x_failed_at: '2026-02-22T17:31:00+00:00'
 verified_at_sha: null
 closed_at: null
 governance:
