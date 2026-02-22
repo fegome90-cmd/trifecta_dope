@@ -80,7 +80,13 @@ def _format_content(data: dict[str, Any]) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Format Work Order YAML files")
-    parser.add_argument("--root", default=".", help="Repository root")
+    parser.add_argument("--root", default=".", help="Repository root (used when --files not given)")
+    parser.add_argument(
+        "--files",
+        nargs="+",
+        metavar="PATH",
+        help="Explicit file paths to format (hooks mode; skips --root scan)",
+    )
     parser.add_argument("--check", action="store_true", help="Only check formatting")
     parser.add_argument("--write", action="store_true", help="Rewrite files in canonical format")
     args = parser.parse_args()
@@ -88,11 +94,16 @@ def main() -> int:
     if args.check == args.write:
         parser.error("choose exactly one mode: --check or --write")
 
-    root = Path(args.root).resolve()
-    needs_format = 0
-    changed = 0
+    # Determine which files to process
+    if args.files:
+        paths = [Path(f).resolve() for f in args.files if Path(f).is_file()]
+    else:
+        root = Path(args.root).resolve()
+        paths = _iter_wo_files(root)
 
-    for path in _iter_wo_files(root):
+    needs_format = 0
+
+    for path in paths:
         try:
             data = yaml.safe_load(path.read_text(encoding="utf-8"))
         except Exception:
@@ -112,12 +123,11 @@ def main() -> int:
             print(f"Needs format: {path}")
         else:
             path.write_text(new_content, encoding="utf-8")
-            changed += 1
             print(f"Formatted: {path}")
 
     if args.check:
         return 1 if needs_format else 0
-    return 0 if changed >= 0 else 1
+    return 0
 
 
 if __name__ == "__main__":

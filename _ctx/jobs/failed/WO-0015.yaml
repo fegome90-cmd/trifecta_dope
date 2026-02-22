@@ -3,8 +3,10 @@ id: WO-0015
 epic_id: E-SCALE
 title: Repository Topology Scanner
 priority: P1
-status: running
+status: failed
 owner: felipe_gonzalez
+branch: feat/wo-WO-0015
+worktree: ../.worktrees/WO-0015
 scope:
   allow:
   - src/application/topology_scanner.py
@@ -28,6 +30,7 @@ execution:
   segment: .
 dependencies:
 - WO-0014
+started_at: '2026-02-18T15:09:14.081495+00:00'
 verified_at_sha: null
 closed_at: null
 governance:
@@ -56,6 +59,3 @@ diff_budget:
 stop_conditions:
   max_iterations: 6
   max_fail_verify: 2
-started_at: '2026-02-18T15:09:14.081495+00:00'
-branch: feat/wo-WO-0015
-worktree: ../.worktrees/WO-0015

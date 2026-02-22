@@ -3,7 +3,7 @@ id: WO-0057
 epic_id: E-0002
 title: ctx_wo_finish honors --root for worktree handoff/artifacts
 priority: P1
-status: running
+status: failed
 owner: felipe_gonzalez
 branch: feat/wo-WO-0057
 worktree: ../.worktrees/WO-0057
@@ -32,16 +32,15 @@ execution:
   - session.append:result
   segment: .
 dependencies: []
+started_at: '2026-02-18T15:19:29.502165+00:00'
 governance:
   must:
   - Use TDD
   - Keep fix in scripts/infrastructure only (no domain changes)
   - Commit (no --no-verify)
-x_objective: 'Fix root resolution in ctx_wo_finish.py so explicit --root is honored
-  in worktree usage.
+x_objective: 'Fix root resolution in ctx_wo_finish.py so explicit --root is honored in worktree usage.
 
-  All DoD evidence paths (handoff/artifacts/verdict checks) must be derived from provided
-  --root.
+  All DoD evidence paths (handoff/artifacts/verdict checks) must be derived from provided --root.
 
   '
 x_items:
@@ -55,4 +54,3 @@ diff_budget:
 stop_conditions:
   max_iterations: 5
   max_fail_verify: 2
-started_at: '2026-02-18T15:19:29.502165+00:00'
