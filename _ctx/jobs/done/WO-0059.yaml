@@ -3,9 +3,10 @@ id: WO-0059
 epic_id: E-0001
 title: 'Fix wo_verify.sh transition_to_failed: set status failed + cleanup running artifacts'
 priority: P1
-status: pending
-owner: null
-branch: null
+status: done
+owner: claude
+branch: fix/wo-0055-code-review-issues
+completed_at: '2026-02-22'
 worktree: null
 scope:
   allow:

@@ -3,7 +3,7 @@ id: WO-0046
 epic_id: E-0003
 title: Fix ctx_wo_finish sync + policy-based diff filter
 priority: P0
-status: running
+status: failed
 owner: felipe_gonzalez
 branch: feat/wo-WO-0046
 worktree: ../.worktrees/WO-0046
