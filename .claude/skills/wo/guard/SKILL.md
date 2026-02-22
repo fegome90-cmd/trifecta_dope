@@ -76,6 +76,18 @@ This skill enforces fail-closed checks before any WO action. It is the **gatekee
 | All DoD artifacts | `ls _ctx/handoff/WO-XXXX/` | 5 files present |
 | WO moved to done | `cat _ctx/jobs/done/WO-XXXX.yaml` | `status: done` |
 
+### SCHEMA VALIDATION Check (PRE-COMMIT)
+
+| Check | Command | Expected |
+|-------|---------|----------|
+| DoD schemas valid | `ctx_backlog_validate.py` | No WO_INVALID_SCHEMA |
+| WO schemas valid | `ctx_backlog_validate.py` | No errors |
+
+**If schema validation fails**:
+1. STOP - Do not commit
+2. Run `wo/repair` Issue 7: "Reconcile Falls with WO_INVALID_SCHEMA"
+3. Fix schemas before proceeding
+
 ## Worktree Check (Deterministic)
 
 **DO NOT** use fragile string matching like `git rev-parse --show-toplevel | grep ".worktrees"`.

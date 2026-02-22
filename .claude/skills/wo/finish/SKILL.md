@@ -143,6 +143,29 @@ THEN STOP - DO NOT PROCEED
 
 Save in: `_ctx/incidents/INCIDENT-WO-XXXX-YYYY-MM-DD.md`
 
+### Bypass Activation Methods
+
+**Method 1: Commit message marker** (commit-msg hook)
+```bash
+git commit -m "fix: [emergency] schema fixes for legacy WOs"
+```
+
+**Method 2: Environment variable** (pre-commit hook)
+```bash
+TRIFECTA_HOOKS_DISABLE=1 \
+TRIFECTA_WO_BYPASS_REASON="Schema fixes for legacy WOs" \
+git commit -m "feat: ..."
+```
+
+**Method 3: File marker**
+```bash
+echo "Schema fixes" > .trifecta_hooks_bypass
+git commit -m "feat: ..."
+rm .trifecta_hooks_bypass
+```
+
+**Note**: The hook `check_pending_commit_msg_bypass()` reads from the pending commit file, not `git log`. This means `[emergency]` in commit message NOW works for new commits.
+
 ### Bypass Commands
 
 ```bash
@@ -184,6 +207,31 @@ BYPASS_USED=true
 INCIDENT_NOTE=_ctx/incidents/INCIDENT-WO-XXXX-2026-02-22.md
 FOLLOWUP_REQUIRED=true
 ```
+
+---
+
+## Hook: validate_wo_metadata_update()
+
+The hook validates that **only allowed keys** are modified in WOs in `done/` or `failed/`:
+
+### Allowed Keys
+- `closed_at`, `closed_by`, `verified_at`, `verified_at_sha`
+- `evidence`, `result`, `x_governance_notes`
+
+### Blocked Modifications
+If you try to modify `required_flow`, `scope`, `title`, etc. in a done/failed WO:
+```
+[hooks] BLOCKED: disallowed key 'required_flow' modified in _ctx/jobs/done/WO-XXXX.yaml
+```
+
+### When This Matters
+
+**Legacy WO schema fixes** (like adding `required_flow`) require bypass because:
+1. These are already-closed WOs
+2. The modifications are for schema compliance, not content changes
+3. Standard workflow uses `ctx_wo_finish.py` which only modifies allowed keys
+
+**Solution**: Use bypass activation method (see above) with INCIDENT NOTE explaining "Schema compliance fix for legacy WO"
 
 ## Cleanup (Optional)
 

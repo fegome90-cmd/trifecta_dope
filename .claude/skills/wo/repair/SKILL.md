@@ -151,6 +151,91 @@ grep "id: E-XXXX" _ctx/backlog/backlog.yaml
 # Or update WO to use existing epic
 ```
 
+### Issue 7: Reconcile Falls with WO_INVALID_SCHEMA
+
+**Symptoms**:
+```
+apply refused: WO_INVALID_SCHEMA
+```
+
+**Root Cause**: WOs or DoDs have invalid schemas that prevent reconcile from running.
+
+**Diagnosis**:
+```bash
+# Identify schema issues
+uv run python scripts/ctx_backlog_validate.py 2>&1 | head -30
+```
+
+**Common Schema Issues**:
+
+1. **DoD con campo `items`** (debe tener campos requeridos):
+   ```yaml
+   # ❌ Inválido
+   dod:
+   - id: XXX
+     items: [...]
+
+   # ✅ Válido
+   dod:
+   - id: XXX
+     title: "..."
+     required_artifacts: [...]
+     required_checks:
+       - name: "check"
+         commands: [...]
+     rules: [...]
+   ```
+
+2. **WO con `required_flow` incompleto**:
+   ```yaml
+   # ❌ Inválido
+   required_flow:
+     - verify
+
+   # ✅ Válido
+   required_flow:
+     - session.append:intent
+     - ctx.sync
+     - ctx.search
+     - ctx.get
+     - session.append:result
+   ```
+
+**Solution**:
+```bash
+# 1. Fix DoD schemas first
+# Edit _ctx/dod/*.yaml to have required fields
+
+# 2. Fix WO required_flow
+# Use script to batch fix:
+python3 -c "
+import re
+from pathlib import Path
+
+old = r'required_flow:\n  - verify\n  segment: \.'
+new = '''required_flow:
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
+  segment: .'''
+
+for f in Path('_ctx/jobs/done').glob('WO-*.yaml'):
+    content = f.read_text()
+    if 'required_flow:\n  - verify' in content:
+        f.write_text(re.sub(old, new, content))
+        print(f'Fixed: {f}')
+"
+
+# 3. Retry reconcile
+uv run python scripts/ctx_reconcile_state.py --apply
+```
+
+**Note**: Modifying WOs in `done/` requires bypass (see `wo/finish` bypass options).
+
+---
+
 ### Issue 6: Scope Violation
 
 **Symptoms**:
