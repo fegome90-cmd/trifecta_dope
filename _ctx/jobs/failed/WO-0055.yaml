@@ -3,10 +3,10 @@ id: WO-0055
 epic_id: E-0001
 title: 'Fix WO manual-closure hook: design vs actual mismatch'
 priority: P1
-status: pending
-owner: null
-branch: null
-worktree: null
+status: failed
+owner: felipe_gonzalez
+branch: feat/wo-WO-0055
+worktree: ../.worktrees/WO-0055
 scope:
   allow:
   - scripts/hooks/**
@@ -27,6 +27,7 @@ execution:
   - ctx.get
   - session.append:result
   segment: .
+started_at: '2026-02-17T15:37:03.663208+00:00'
 created: 2026-02-17
 started: null
 description: 'The WO closure prevention hook has a critical mismatch between design and actual implementation.

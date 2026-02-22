@@ -12,8 +12,11 @@ from typing import Optional
 from src.domain.result import Result, Ok, Err
 
 
-# Pattern for valid WO IDs (WO-XXXX format)
+# Pattern for standard WO IDs (WO-XXXX format) - used for governance references
 WO_ID_PATTERN = re.compile(r"^WO-\d{4}$", re.IGNORECASE)
+
+# Pattern for variant WO IDs (WO-XXXX-variant or WO-PX.X format) - matches schema
+WO_ID_VARIANT_PATTERN = re.compile(r"^WO-[A-Za-z0-9.-]+$", re.IGNORECASE)
 
 
 class WOState(Enum):
@@ -89,9 +92,11 @@ class WorkOrder:
         Raises:
             ValueError: If any invariant is violated
         """
-        # Validate ID format (WO-XXXX)
-        if not self.id or not WO_ID_PATTERN.match(self.id):
-            raise ValueError(f"Invalid WO ID format: '{self.id}'. Expected format: WO-XXXX")
+        # Validate ID format (WO-XXXX or WO-XXXX-variant)
+        if not self.id or not WO_ID_VARIANT_PATTERN.match(self.id):
+            raise ValueError(
+                f"Invalid WO ID format: '{self.id}'. Expected format: WO-XXXX or WO-XXXX-variant"
+            )
 
         # Validate DoD ID is non-empty
         if not self.dod_id or not self.dod_id.strip():

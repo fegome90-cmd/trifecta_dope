@@ -1,7 +1,7 @@
 version: 1
 id: WO-0054
 epic_id: E-0004
-title: "Integrar documentaci\xF3n WO en flujo de scripts (AGENTS + MANUAL_WO)"
+title: Integrar documentación WO en flujo de scripts (AGENTS + MANUAL_WO)
 priority: P2
 status: done
 owner: felipe_gonzalez
@@ -32,3 +32,4 @@ started_at: '2026-02-17T12:55:10.912872+00:00'
 verified_at_sha: 5f6b470c5b69da5003d47ed4baf0d0fde1527193
 closed_at: '2026-02-17T14:36:51.136495+00:00'
 result: done
+finished_at: '2026-02-17T14:36:51.136495+00:00'

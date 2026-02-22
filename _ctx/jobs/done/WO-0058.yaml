@@ -1,0 +1,65 @@
+version: 1
+id: WO-0058
+epic_id: E-0002
+title: ctx_verify_run should respect --root for WO finish verification scope
+priority: P1
+status: done
+owner: felipe_gonzalez
+branch: feat/wo-WO-0058
+worktree: ../.worktrees/WO-0058
+scope:
+  allow:
+  - scripts/ctx_wo_finish.py
+  - scripts/ctx_verify_run.sh
+  - scripts/wo_verify.sh
+  - tests/integration/test_ctx_wo_finish_root.py
+  - docs/**
+  deny:
+  - .env*
+  - src/domain/**
+verify:
+  commands:
+  - uv run pytest -q tests/integration/test_ctx_wo_finish_root.py
+  - uv run ruff check scripts/ctx_wo_finish.py scripts/ctx_verify_run.sh scripts/wo_verify.sh
+    tests/integration/test_ctx_wo_finish_root.py
+dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
+  x_legacy_flow: true
+  segment: .
+dependencies:
+- WO-0057
+governance: {}
+x_objective: 'Ensure WO finish verification gates (ctx_verify_run / wo_verify) can
+  run against the intended root context
+
+  so closing a WO from clean tooling does not fail due unrelated dirty files in another
+  runtime root.
+
+  '
+x_items:
+- Reproduce failure where --root artifact path is correct but verify still targets
+  unrelated runtime state
+- Implement root-consistent verification behavior in WO finish flow
+- Add integration regression test for WO-0015-like scenario
+diff_budget:
+  max_files: 5
+  max_loc: 260
+stop_conditions:
+  max_iterations: 6
+  max_fail_verify: 2
+started_at: '2026-02-18T16:05:57.959632+00:00'
+verified_at_sha: ceaf20c62377dfa84a1eb62cb9516ef66b2cfd84
+closed_at: '2026-02-19T16:45:44.263974+00:00'
+result: done
+finished_at: '2026-02-19T16:45:44.263974+00:00'
+x_governance_notes:
+- Use TDD
+- Keep fix in scripts/infrastructure only
+- Commit (no --no-verify)

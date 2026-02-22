@@ -1,0 +1,18 @@
+{
+  "findings": [
+    {
+      "changed_fields": [
+        "assignee",
+        "description",
+        "labels",
+        "project",
+        "team"
+      ],
+      "dry_run": true,
+      "linear_issue_id": "b33037a7-3ce9-44fe-811f-87c0b9be8590",
+      "severity": "WARN",
+      "wo_id": "WO-0055"
+    }
+  ],
+  "policy_version": "v1"
+}

@@ -1,5 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "See ADR-003 for required_flow conditional validation rationale",
   "type": "object",
   "additionalProperties": true,
   "required": [
@@ -52,13 +53,12 @@
         "required_flow": {
           "type": "array",
           "items": {"type": "string"},
-          "allOf": [
-            {"contains": {"const": "session.append:intent"}},
-            {"contains": {"const": "ctx.sync"}},
-            {"contains": {"const": "ctx.search"}},
-            {"contains": {"const": "ctx.get"}},
-            {"contains": {"const": "session.append:result"}}
-          ]
+          "minItems": 1,
+          "$comment": "Full validation applied conditionally in allOf below"
+        },
+        "x_legacy_flow": {
+          "type": "boolean",
+          "$comment": "Marker for WOs completed before full required_flow enforcement (see ADR-003)"
         }
       }
     },
@@ -116,7 +116,38 @@
         }
       },
       "then": {
-        "required": ["execution"]
+        "required": ["execution"],
+        "properties": {
+          "execution": {
+            "properties": {
+              "required_flow": {
+                "allOf": [
+                  {"contains": {"const": "session.append:intent"}},
+                  {"contains": {"const": "ctx.sync"}},
+                  {"contains": {"const": "ctx.search"}},
+                  {"contains": {"const": "ctx.get"}},
+                  {"contains": {"const": "session.append:result"}}
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {"enum": ["done", "failed"]}
+        }
+      },
+      "then": {
+        "properties": {
+          "execution": {
+            "properties": {
+              "required_flow": {"minItems": 1}
+            }
+          }
+        }
       }
     }
   ]

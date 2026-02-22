@@ -145,6 +145,83 @@ print(datetime.now(timezone.utc).isoformat())
 PY
 }
 
+# =============================================================================
+# Transactional cleanup: Move WO from running/ to failed/ and remove lock
+# =============================================================================
+transition_to_failed() {
+  local wo_id="$1"
+  local root="${2:-.}"
+  local running_dir="$root/_ctx/jobs/running"
+  local failed_dir="$root/_ctx/jobs/failed"
+  local yaml_path="$running_dir/${wo_id}.yaml"
+  local lock_path="$running_dir/${wo_id}.lock"
+  local failed_yaml="$failed_dir/${wo_id}.yaml"
+
+  mkdir -p "$failed_dir"
+
+  # Handle case: already in failed/ (idempotent)
+  if [[ ! -f "$yaml_path" && -f "$failed_yaml" ]]; then
+    echo "INFO: $wo_id already failed; no transition needed" >&2
+  elif [[ -f "$yaml_path" ]]; then
+    mv "$yaml_path" "$failed_yaml"
+
+    # Update status: failed in the YAML content (python3, no uv)
+    python3 - "$wo_id" "$failed_yaml" <<'PY'
+import sys
+from pathlib import Path
+from datetime import datetime, timezone
+import yaml
+
+wo_id = sys.argv[1]
+p = Path(sys.argv[2])
+
+data = {}
+try:
+    loaded = yaml.safe_load(p.read_text(encoding="utf-8"))
+    if isinstance(loaded, dict):
+        data = loaded
+except Exception:
+    data = {"id": wo_id}
+
+data["status"] = "failed"
+data["x_failed_at"] = datetime.now(timezone.utc).isoformat()
+
+p.write_text(yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding="utf-8")
+print(f"INFO: Set status=failed for {wo_id}")
+PY
+
+    echo "INFO: Moved $wo_id to failed/ and set status=failed" >&2
+  fi
+
+  if [[ -f "$lock_path" ]]; then
+    rm -f "$lock_path"
+    echo "INFO: Removed lock for $wo_id" >&2
+  fi
+
+  # Invariant check: count WO YAML files across states
+  local count=0
+  for state in pending running done failed; do
+    if [[ -f "$root/_ctx/jobs/$state/${wo_id}.yaml" ]]; then
+      ((count++)) || true
+    fi
+  done
+
+  # Orphan lock cleanup: no YAML anywhere is OK (just cleaned orphan)
+  if [[ $count -eq 0 ]]; then
+    echo "INFO: Orphan lock cleanup for $wo_id (no WO YAML found)" >&2
+    return 0
+  fi
+
+  # Exactly one YAML = canonical state
+  if [[ $count -eq 1 ]]; then
+    return 0
+  fi
+
+  # More than one = invariant violation
+  echo "ERROR: Invariant violation - found $count WO files for $wo_id" >&2
+  return 1
+}
+
 write_verdict() {
   local status="$1"
   local failure_stage="${2:-}"
@@ -287,6 +364,8 @@ if ! uv run python "$SCRIPT_DIR/ctx_scope_lint.py" "${SCOPE_ARGS[@]}"; then
   END="$(utc_now)"
   export END
   write_verdict "FAIL" "scope_lint" ""
+  # Transactional cleanup: move to failed/ and remove lock
+  transition_to_failed "$WO_ID" "$ROOT"
   exit 1
 fi
 
@@ -327,6 +406,7 @@ then
   END="$(utc_now)"
   export END
   write_verdict "FAIL" "load_commands" ""
+  transition_to_failed "$WO_ID" "$ROOT"
   exit 1
 fi
 
@@ -356,4 +436,8 @@ export END
 # =============================================================================
 write_verdict "$STATUS" "" "$(printf '%s\n' "${COMMANDS[@]}")"
 
-[[ "$STATUS" == "PASS" ]] || exit 1
+# Transactional cleanup on command failure
+if [[ "$STATUS" != "PASS" ]]; then
+  transition_to_failed "$WO_ID" "$ROOT"
+  exit 1
+fi

@@ -26,6 +26,7 @@ execution:
   - ctx.search
   - ctx.get
   - session.append:result
+  x_legacy_flow: true
   segment: .
 trace:
   ticket: null
@@ -35,9 +36,10 @@ claim_links:
   requirements:
   - DeprecationWarning con stacklevel=2 en todas las funciones deprecated
   - Test que verifica que el warning se emite
-  - "Documentaci\xF3n breve en docstring"
-objective: Agregar DeprecationWarning a segment_utils.py para que cualquier uso directo sea detectable.
-  El CI guard excluye este archivo, por lo que necesitamos warnings como segunda linea de defensa.
+  - Documentación breve en docstring
+objective: Agregar DeprecationWarning a segment_utils.py para que cualquier uso directo
+  sea detectable. El CI guard excluye este archivo, por lo que necesitamos warnings
+  como segunda linea de defensa.
 started_at: '2026-02-15T20:42:42.050565+00:00'
 result: done
 verified_at_sha: 3fe9e665a84d893669d0e920e7db30a904e8e254
@@ -45,7 +47,7 @@ assumptions:
 - warnings.warn funciona correctamente en Python
 constraints:
 - Mantener backward compatibility (las funciones siguen existiendo)
-- "No romper c\xF3digo existente que use segment_utils"
+- No romper código existente que use segment_utils
 deliverables:
 - warnings.warn con DeprecationWarning y stacklevel=2 en resolve_segment_root()
 - warnings.warn con DeprecationWarning y stacklevel=2 en compute_segment_id()
@@ -58,3 +60,4 @@ stop_conditions:
   max_iterations: 2
   max_fail_verify: 1
 closed_at: '2026-02-15T20:49:36.434544+00:00'
+finished_at: '2026-02-15T20:49:36.434544+00:00'

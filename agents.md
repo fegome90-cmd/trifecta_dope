@@ -14,6 +14,7 @@ Assuming anything about this project without consulting these files is a breach 
 ### Agent Context Files (MANDATORY - READ THESE FIRST)
 
 These files contain **CURRENT PROJECT STATE, ACTIVE FEATURES, AND ARCHITECTURE DECISIONS**. Ignoring them will result in:
+
 - ✗ Breaking existing implementations
 - ✗ Duplicating work already done
 - ✗ Misunderstanding the current system state
@@ -48,6 +49,7 @@ These files contain **CURRENT PROJECT STATE, ACTIVE FEATURES, AND ARCHITECTURE D
 ### If You Skip These Files
 
 ⛔ **YOU WILL:**
+
 - Propose features that already exist
 - Break working implementations
 - Violate architectural patterns
@@ -56,6 +58,7 @@ These files contain **CURRENT PROJECT STATE, ACTIVE FEATURES, AND ARCHITECTURE D
 - Waste time and tokens
 
 ✅ **INSTEAD:**
+
 1. Read the 4 context files (11 min total)
 2. Then start your task
 3. Reference them constantly
@@ -144,6 +147,7 @@ See `docs/CONTRACTS.md` and architecture docs in `docs/adr/` for complete patter
 ## Source of Truth
 
 ### Repository Documentation
+
 - **README.md** - Project overview, installation
 - **docs/CONTRACTS.md** - API contracts, schemas
 - **docs/CLI_WORKFLOW.md** - Official CLI usage
@@ -155,10 +159,12 @@ See `docs/CONTRACTS.md` and architecture docs in `docs/adr/` for complete patter
 ## Trifecta-Specific Rules
 
 ### _ctx/ Directory Conventions
+
 - **_ctx/logs/**: ONLY .log files (command stdout/stderr). Use /tmp/ for intermediate .md files.
 - **When updating session.md**: Create temp in /tmp/, append with `cat`, then cleanup. Never store .md in _ctx/logs/.
 
 ### Context Pack Workflow
+
 1. `trifecta create --segment .` - Bootstrap metadata
 2. `trifecta ctx sync --segment .` - Build context pack
 3. `trifecta ctx validate --segment .` - Verify integrity
@@ -166,6 +172,7 @@ See `docs/CONTRACTS.md` and architecture docs in `docs/adr/` for complete patter
 5. `trifecta ctx get --segment . --ids "..."` - Retrieve chunks
 
 ### Environment & Ops
+
 - **Scope Separation**: `pyproject.toml` / `pytest-env` is for **Tests**. `.envrc` (direnv) is for **Dev CLI**.
 - **Default Enablement**: Must be verified via CLI *without* env var prefixes.
 - **Audit-Grade Gates**: `exit 0` is not enough. Verify internal state (telemetry backend, file creation).
@@ -204,6 +211,16 @@ uv run python scripts/ctx_wo_finish.py WO-XXXX
 | `ctx_wo_finish.py` | Complete WO with DoD validation |
 | `helpers.py` | Core utilities (worktree, lock, branch) |
 | `ctx_reconcile_state.py` | Repair state inconsistencies |
+| `wo_audit.py` | Forensic auditor (read-only). 9 finding codes P0–P2 |
+| `ctx_wo_gc.py` | GC zombie/ghost worktrees (conservative) |
+| `wo_retention_gc.py` | GC old evidence files (90-day retention) |
+| `wo_weekly_gate.sh` | Weekly CI gate (auditor + GC) |
+
+### CI Integration
+
+- **Workflow**: `.github/workflows/wo-weekly-gate.yml`
+- **Schedule**: Every Monday 06:00 UTC
+- **Artifacts**: 90-day retention (audit report, GC report, logs)
 
 ### Structure & State Machine
 
@@ -263,6 +280,43 @@ uv run trifecta ast symbols "sym://python/mod/src.domain.result" --segment .
 # Run gate
 bash scripts/gate_clean_worktree_repro.sh  # WO-0007 reproducibility
 ```
+
+---
+
+## SQL AST Cache Troubleshooting (VS Code)
+
+Use this when AST cache exists but cannot be visualized in SQL extensions.
+
+### Facts
+
+- AST cache persistence is SQLite, not MySQL/MSSQL.
+- DB path is deterministic under `.trifecta/cache/ast_cache_*.db`.
+- Data stored is symbol skeleton JSON (not full raw AST tree).
+
+### Verify DB Exists and Has Rows
+
+```bash
+uv run trifecta ast symbols "sym://python/mod/src.domain.result" --segment . --persist-cache
+uv run trifecta ast cache-stats --segment .
+sqlite3 .trifecta/cache/ast_cache_*.db "PRAGMA integrity_check;"
+sqlite3 .trifecta/cache/ast_cache_*.db "SELECT count(*) FROM cache;"
+```
+
+### VS Code Extension Rules
+
+- Open the `.db` file, never the `.lock` file.
+- Do not run SQLite queries from MySQL/MSSQL templates (for example files under `...@127.0.0.1@3306/...`).
+- If `mssql.addObjectExplorer` appears and SQL Server is needed, install:
+  - `code --install-extension ms-mssql.mssql`
+- For AST cache inspection, prefer SQLite-native flows:
+  - `alexcvzz.vscode-sqlite` or
+  - `mtxr.sqltools` + `mtxr.sqltools-driver-sqlite`
+
+### Known Symptom
+
+- `TypeError: Cannot read properties of undefined (reading 'split')`
+  - Usually caused by running query/editor context against the wrong connection type.
+  - Fix by selecting the active SQLite connection for the AST `.db` file.
 
 ---
 

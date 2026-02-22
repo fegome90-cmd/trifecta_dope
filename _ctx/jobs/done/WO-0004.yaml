@@ -1,7 +1,8 @@
 version: 1
 id: WO-0004
 epic_id: E-0001
-title: "Integraci\xF3n CLI: flags + pipeline tokenize-after-lint + telemetry sanitizada (Fase 4)"
+title: 'Integración CLI: flags + pipeline tokenize-after-lint + telemetry sanitizada
+  (Fase 4)'
 priority: P0
 status: done
 owner: null
@@ -32,6 +33,7 @@ execution:
   engine: trifecta
   required_flow:
   - verify
+  x_legacy_flow: true
   segment: .
 trace:
   ticket: null
@@ -42,7 +44,8 @@ deliverables:
 - src/infrastructure/cli.py (--no-lint + TRIFECTA_LINT default OFF)
 - tests/unit/test_search_usecase_linter.py
 - tests/integration/test_ctx_search_linter.py (A/B con context_pack.json real JSON)
-- 'tests/integration/test_ctx_search_linter_ab_controlled.py (A/B controlado: OFF=0, ON>0)'
+- 'tests/integration/test_ctx_search_linter_ab_controlled.py (A/B controlado: OFF=0,
+  ON>0)'
 - docs/reports/query_linter_cli_verification.md (evidencia cruda + JSONL ON/OFF)
 - _ctx/logs/ab_off.log + _ctx/logs/ab_on.log
 diff_budget:
@@ -52,6 +55,15 @@ stop_conditions:
   max_iterations: 6
   max_fail_verify: 2
 completed_at: '2026-02-10T02:14:00Z'
-notes: "WO-0004 completado exitosamente. Todos los deliverables implementados y verificados.\n- Feature\
-  \ flag TRIFECTA_LINT con default OFF (conservativo)\n- Pipeline correcto: normalize -> lint -> tokenize\
-  \ -> expand -> search\n- Telemetr\xEDa sanitizada con query_hash\n- 11/11 tests pasando\n"
+notes: 'WO-0004 completado exitosamente. Todos los deliverables implementados y verificados.
+
+  - Feature flag TRIFECTA_LINT con default OFF (conservativo)
+
+  - Pipeline correcto: normalize -> lint -> tokenize -> expand -> search
+
+  - Telemetría sanitizada con query_hash
+
+  - 11/11 tests pasando
+
+  '
+finished_at: '2025-12-31T23:59:59Z'

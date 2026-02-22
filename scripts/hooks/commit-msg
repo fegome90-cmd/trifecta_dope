@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# commit-msg hook: validates WO closure commit message format.
+# Receives the path to the commit message file as $1.
+set -euo pipefail
+
+source "$(dirname "$0")/common.sh"
+
+COMMIT_MSG_FILE="${1:-}"
+[[ -n "$COMMIT_MSG_FILE" && -f "$COMMIT_MSG_FILE" ]] || exit 0
+
+# Bypass checks (env var / file marker / markers in THIS message file)
+if should_bypass "$COMMIT_MSG_FILE"; then
+  exit 0
+fi
+
+# Only enforce when WO done/failed files are staged
+if ! git diff --cached --name-only | grep -qE '^_ctx/jobs/(done|failed)/WO-.*\.ya?ml$'; then
+  exit 0
+fi
+
+msg=$(head -n 1 "$COMMIT_MSG_FILE" | tr -d '\r')
+
+if [[ ! "$msg" =~ ^chore\(wo\):\ (close|verify)\ WO-[0-9]+$ ]]; then
+  fail "WO metadata commit must match:
+  chore(wo): close WO-XXXX
+  chore(wo): verify WO-XXXX
+Got: $msg"
+fi
+
+exit 0

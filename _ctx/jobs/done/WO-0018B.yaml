@@ -18,13 +18,15 @@ scope:
   - scripts/ctx_wo_finish.py
 verify:
   commands:
-  - uv run pytest tests/unit/test_wo_finish_validators.py tests/integration/test_wo_closure.py -v
+  - uv run pytest tests/unit/test_wo_finish_validators.py tests/integration/test_wo_closure.py
+    -v
   - uv run pytest --cov=scripts/ctx_wo_finish.py --cov-report=term-missing
 dod_id: DOD-DEFAULT
 execution:
   engine: trifecta
   required_flow:
   - verify
+  x_legacy_flow: true
   segment: .
 dependencies:
 - WO-0018A
@@ -33,18 +35,9 @@ verified_at_sha: c2bb56b
 closed_at: '2026-01-14T11:28:00-03:00'
 run_ids:
 - wo-0018b-tests
-governance:
-  must:
-  - Create integration tests with real subprocess (no mocks)
-  - Create unit tests for validators
-  - Create tests for CLI argument parsing
-  - Create comprehensive fixtures
-  - "Achieve \u226580% coverage for ctx_wo_finish.py (PARTIAL: 52% achieved)"
-  - Use CLI trifecta for runs
-  - Update _ctx/session_trifecta_dope.md
-  - Update backlog.yaml
-x_objective: 'Add comprehensive test coverage for WO closure workflow covering all failure modes, edge
-  cases,
+governance: {}
+x_objective: 'Add comprehensive test coverage for WO closure workflow covering all
+  failure modes, edge cases,
 
   and integration scenarios identified in the multi-agent review.
 
@@ -126,16 +119,17 @@ x_micro_tasks:
   - test -f tests/fixtures/closure/wo_complete/_ctx/handoff/WO-TEST/verdict.json
   - test ! -f tests/fixtures/closure/wo_missing_tests/_ctx/handoff/WO-TEST/tests.log
   - test -f tests/fixtures/closure/wo_empty_tests/_ctx/handoff/WO-TEST/tests.log
-  - test -s tests/fixtures/closure/wo_empty_tests/_ctx/handoff/WO-TEST/tests.log || [ ! -s tests/fixtures/closure/wo_empty_tests/_ctx/handoff/WO-TEST/tests.log
-    ]
+  - test -s tests/fixtures/closure/wo_empty_tests/_ctx/handoff/WO-TEST/tests.log ||
+    [ ! -s tests/fixtures/closure/wo_empty_tests/_ctx/handoff/WO-TEST/tests.log ]
   evidence:
   - tests/fixtures/closure/**
   commit: 'test(wo): create comprehensive WO closure fixtures'
 - id: T6
-  name: "T6: Verify coverage \u226580%"
+  name: 'T6: Verify coverage ≥80%'
   status: done
   commands:
-  - uv run pytest tests/unit/test_wo_finish_validators.py tests/integration/test_wo_closure.py -v
+  - uv run pytest tests/unit/test_wo_finish_validators.py tests/integration/test_wo_closure.py
+    -v
   - uv run pytest --cov=scripts/ctx_wo_finish.py --cov-report=term-missing
   gates:
   - uv run pytest --cov=scripts/ctx_wo_finish.py --cov-report=term | grep -q 'TOTAL.*[8-9][0-9]%'
@@ -143,3 +137,14 @@ x_micro_tasks:
   - .coverage
   - pytest output
   commit: None
+finished_at: '2026-01-14T11:28:00-03:00'
+x_governance_notes:
+- Create integration tests with real subprocess (no mocks)
+- Create unit tests for validators
+- Create tests for CLI argument parsing
+- Create comprehensive fixtures
+- 'Achieve ≥80% coverage for ctx_wo_finish.py (PARTIAL: 52% achieved)'
+- Use CLI trifecta for runs
+- Update _ctx/session_trifecta_dope.md
+- Update backlog.yaml
+x_variant_id: true

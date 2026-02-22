@@ -31,11 +31,7 @@ dependencies:
 - WO-0016
 verified_at_sha: null
 closed_at: null
-governance:
-  must:
-  - Use TDD
-  - Follow existing CLI patterns (Typer)
-  - Commit (no --no-verify)
+governance: {}
 x_objective: 'Expose Zero-Config Discovery via CLI:
 
   `trifecta ctx discover --root /path/to/repo`
@@ -59,3 +55,7 @@ diff_budget:
 stop_conditions:
   max_iterations: 6
   max_fail_verify: 2
+x_governance_notes:
+- Use TDD
+- Follow existing CLI patterns (Typer)
+- Commit (no --no-verify)

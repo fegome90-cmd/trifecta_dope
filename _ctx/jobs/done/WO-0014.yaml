@@ -1,0 +1,56 @@
+branch: feat/wo-WO-0014
+closed_at: '2026-02-18T14:38:39.994747+00:00'
+dependencies: []
+diff_budget:
+  max_files: 4
+  max_loc: 200
+dod_id: DOD-DEFAULT
+epic_id: E-SCALE
+execution:
+  engine: trifecta
+  required_flow:
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
+  x_legacy_flow: true
+  segment: .
+governance: {}
+id: WO-0014
+owner: null
+priority: P1
+scope:
+  allow:
+  - src/application/import_extractor.py
+  - src/domain/discovery_models.py
+  - tests/unit/test_import_extractor.py
+  - docs/**
+  deny:
+  - .env*
+  - src/infrastructure/**
+started_at: '2026-02-13T20:09:58.298898+00:00'
+status: done
+stop_conditions:
+  max_fail_verify: 2
+  max_iterations: 5
+title: Import Extractor using stdlib AST
+verified_at_sha: 660ab27266486153fb78b7d0c7f575ecac64233c
+verify:
+  commands:
+  - uv run pytest -q tests/unit/test_import_extractor.py
+version: 1
+worktree: ../.worktrees/WO-0014
+x_items:
+- 'Create `extract_imports(source: str) -> list[ImportInfo]` function'
+- 'Handle: `import X`, `from X import Y`, `from . import Z` (relative)'
+- Unit tests for each import type
+- 'Edge case: dynamic imports (`__import__`) logged as warning, not extracted'
+x_objective: "Implement a pure function that extracts `import` and `from X import\
+  \ Y` \nstatements from a Python file using stdlib `ast.walk`.\nReturns a list of\
+  \ module dependencies (relative and absolute).\n"
+finished_at: '2026-02-18T14:38:39.994747+00:00'
+x_governance_notes:
+- 'Use TDD: Write tests BEFORE implementation (RED → GREEN)'
+- Pure function only (no IO in domain)
+- Commit (no --no-verify)

@@ -102,3 +102,11 @@ repos:
         language: system
         pass_filenames: false
         files: ^_ctx/jobs/(pending|running|done|failed)/WO-.*\.ya?ml$
+
+      - id: wo-audit-gate
+        name: WO Audit Gate (split-brain/zombie/ghost/lock)
+        entry: uv run python scripts/wo_audit.py --fail-on split_brain,running_without_lock,ghost_worktree,zombie_worktree --out /tmp/wo_audit_gate.json
+        language: system
+        pass_filenames: false
+        files: '^(_ctx/jobs/|\.worktrees/)'
+        verbose: true

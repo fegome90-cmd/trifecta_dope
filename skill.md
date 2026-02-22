@@ -3,6 +3,7 @@ name: trifecta_dope
 description: Use when working on Verification
 ---
 ## Overview
+
 Verification
 
 ## ⚠️ ONBOARDING OBLIGATORIO ⚠️
@@ -19,19 +20,21 @@ Verification
 1. **make install** - Siempre comienza con `make install` para sincronizar dependencias
 
 2. **Search → Get (Con Instrucciones, NO Keywords)**
-   
+
    ❌ **MAL (keyword):**
+
    ```bash
    trifecta ctx search --segment . --query "telemetry" --limit 6
    ```
-   
+
    ✅ **BIEN (instrucción):**
+
    ```bash
    trifecta ctx search --segment . \
      --query "Encuentra documentación sobre cómo implementar el sistema de telemetría con event schema y ejemplos de uso" \
      --limit 6
    ```
-   
+
    Luego: `trifecta ctx get --segment . --ids "id1,id2" --mode excerpt --budget-token-est 900`
 
 3. **Log Evidence** - Registra en `session.md` vía `trifecta session append --segment . --summary "..."`
@@ -55,6 +58,34 @@ Read `docs/backlog/README.md` for workflow details.
 
 ---
 
+## WO Hygiene Toolkit
+
+Scripts para diagnóstico, limpieza y validación del estado de WOs. Ver documentación completa en → **[`docs/backlog/MANUAL_WO.md`](docs/backlog/MANUAL_WO.md)** (ciclo de vida, DoD, troubleshooting) y **[`agents.md`](agents.md)** (quick workflow).
+
+| Script | Rol | Comando rápido |
+|--------|-----|----------------|
+| `wo_audit.py` | Auditor forense (read-only). 9 finding codes P0–P2 | `uv run python scripts/wo_audit.py --out /tmp/a.json` |
+| `ctx_wo_gc.py` | GC de zombie/ghost worktrees. Conservador (no borra dirty sin `--force`) | `uv run python scripts/ctx_wo_gc.py --dry-run` |
+| `wo_retention_gc.py` | GC de evidencia antigua (90 días). Solo borra patches hasheados | `uv run python scripts/wo_retention_gc.py --dry-run` |
+| `wo_weekly_gate.sh` | Gate semanal CI. Corre auditor + GC, falla si P0 > 0 | `bash scripts/wo_weekly_gate.sh` |
+| `ctx_wo_preflight.py` | Validador pre-take (linting + format). Exit 1 si errores | `make wo-preflight WO=WO-XXXX` |
+| `ctx_wo_lint.py` | Linter YAML strict. Reglas de schema + semántica | `make wo-lint` |
+| `ctx_wo_fmt.py` | Formatter canónico de YAMLs | `make wo-fmt` |
+| `wo_verify.sh` | Motor de cierre. Incluye `transition_to_failed()` para prevenir `fail_but_running` | interno vía `ctx_wo_finish.py` |
+
+**Finding codes del auditor** (9 total): `split_brain` P0, `running_without_lock` P0, `ghost_worktree` P0, `fail_but_running` P0, `lock_without_running` P1, `zombie_worktree` P1, `running_without_worktree` P1, `duplicate_yaml` P2, `pending_in_done` P2.
+
+```bash
+# Fail CI si se detectan anomalías críticas
+uv run python scripts/wo_audit.py --out /tmp/audit.json --fail-on split_brain,fail_but_running
+# GC apply (dirty worktrees exportan patch a _ctx/handoff/WO-XXXX/dirty.patch)
+uv run python scripts/ctx_wo_gc.py --apply --force
+# Retention GC (limpia patches antiguos, protege decision.md)
+uv run python scripts/wo_retention_gc.py --apply --days 90
+```
+
+---
+
 ### Session Evidence Protocol (The 4-Step Cycle)
 
 ```bash
@@ -75,6 +106,7 @@ trifecta session append --segment . --summary "Completed: found and reviewed con
 ```
 
 Or use **Makefile shortcuts**:
+
 ```bash
 make install              # Sync dependencies
 make ctx-search Q="instruction" SEGMENT=.
@@ -85,6 +117,7 @@ make gate-all            # Full test gate before commit
 ## When to Use
 
 **Use skill.md when:**
+
 - Necesitas sincronizar contexto de un segmento (vía Trifecta CLI)
 - Implementando cambios en código/docs del segmento
 - Realizando handoff entre sesiones (log en session.md)
@@ -95,8 +128,12 @@ make gate-all            # Full test gate before commit
 - Gestionando cache de AST persistente (`trifecta ast cache-stats/clear-cache`)
 - Buscando en español (sistema Spanish Aliases activo)
 - Gestionando Work Orders via `ctx_wo_take.py` / `ctx_wo_finish.py`
+- Diagnosticando anomalías de estado de WOs (`wo_audit.py`)
+- Limpiando zombie/ghost worktrees (`ctx_wo_gc.py`)
+- Validando WOs antes de ejecutarlos (`ctx_wo_preflight.py`)
 
 **Triggers to activate:**
+
 - Entraste al workspace sin leer skill.md + prime + agent + session
 - El CLI falla con "SEGMENT_NOT_INITIALIZED" Error Card
 - `ctx validate` reporta stale pack
@@ -105,11 +142,13 @@ make gate-all            # Full test gate before commit
 - Necesitas verificar estadísticas de cache de AST o limpiar cache persistente
 
 **⚠️ NO usar (experimental/inmaduro):**
+
 - `trifecta obsidian` - Integración no aprobada, en desarrollo
 
 ## Core Pattern
 
 ### The Context Cycle (Search -> Get)
+
 1. **Search**: Encuentra el `chunk_id` relevante.
 2. **Get (Excerpt)**: Lee un resumen/inicio para confirmar relevancia.
 3. **Get (Raw)**: Carga el contenido completo solo si es necesario y cabe en el presupuesto.
@@ -138,51 +177,26 @@ make gate-all            # Full test gate before commit
 | **Chart telemetry** | `trifecta telemetry chart -s . --type hits` |
 | **Check git status** | `git status` (before each commit) |
 
-## Common Mistakes
+> ℹ️ WO commands → ver sección **WO Hygiene Toolkit** arriba · [`agents.md`](agents.md) · [`docs/backlog/MANUAL_WO.md`](docs/backlog/MANUAL_WO.md)
 
-| Mistake | Why Bad | Fix |
-|---------|---------|-----|
-| Using keywords instead of instructions | Produce noise/zero-hits | Use `--query "Find documentation about how to implement X"` |
-| Exceeding token budget in single ctx.get | Degrades agent attention | Use `--mode excerpt` + budget ~900 tokens max |
-| Absolute paths in commands | Not portable, breaks on different machines | Use relative paths or `SEGMENT=.` |
-| Ignoring ctx validate failures | Pack may be stale/corrupted | STOP → `make ctx-sync` → re-validate |
-| Skipping session.md logging | Lose continuity between agent runs | Always `trifecta session append` after significant work |
-| Executing legacy ingestion scripts | Data corruption, duplication | Use `trifecta ctx sync` (official command) |
+## Common Mistakes & Zero-Hit Recovery
 
-## Zero-Hit Recovery Protocol
+| Mistake | Fix |
+|---------|-----|
+| Keywords en lugar de instrucciones → 0 hits | `--query "Find documentation about how to implement X"` |
+| Token budget excedido en un solo ctx.get | `--mode excerpt` + `--budget-token-est 900` |
+| `ctx validate` falla silenciosamente | STOP → `make ctx-sync` → re-validate |
+| Skipping session.md logging | `trifecta session append --segment . --summary "..."` |
 
-Si `ctx.search` retorna **0 hits**, sigue este protocolo:
+**Zero hits?** Pack está en **inglés** → traduce la query. Si sigue en 0: cambia scope (`ctx.search` busca docs/, no `src/`) → usa `trifecta ast symbols "sym://python/mod/..."` para código fuente.
 
-### Step 1: Verificar idioma
-- El context pack está en **inglés**
-- Query en español → traduce a inglés y reintenta
-- Ejemplo: "servicio" → "service"
-
-### Step 2: Verificar scope
-- `ctx.search` busca en **documentación** (docs/, README, skill.md)
-- Para buscar **código fuente** → usa `trifecta ast symbols "sym://python/mod/..."`
-- `ctx.search` NO indexa `src/` por diseño
-
-### Step 3: Ampliar query
-| Mal (keyword) | Bien (instrucción) |
-|---------------|---------------------|
-| `"telemetry"` | `"Find telemetry event schema documentation"` |
-| `"config"` | `"How to configure segment initialization"` |
-| `"error"` | `"Error handling patterns in context pack"` |
-
-### Step 4: Escalar (max 3 intentos)
-```
-Intento 1 → 0 hits → Refinar query (Step 1-3)
-Intento 2 → 0 hits → Cambiar scope (docs → code via ast symbols)
-Intento 3 → 0 hits → Usar fallback: `trifecta load --mode fullfiles --task "..."`
-```
-
-### Diferencia ctx.search vs ast symbols
 | Herramienta | Busca en | Usa para |
 |-------------|----------|----------|
 | `ctx.search` | docs/, README, skill.md, _ctx/ | Documentación, guías |
 | `ast symbols` | src/ (código Python) | Clases, funciones, módulos |
 
+> Troubleshooting detallado de WOs → **[`docs/backlog/TROUBLESHOOTING.md`](docs/backlog/TROUBLESHOOTING.md)**
+
 ---
 
-**Profile**: `impl_patch` | **Updated**: 2026-02-16 | **Verified Against**: CLI v2.0, Makefile, session.md 2026-02-16, Zero-Hit Analysis Report, agent.md 2026-02-16
+**Profile**: `impl_patch` | **Updated**: 2026-02-21 | **Verified Against**: CLI v2.0, Makefile, session.md 2026-02-21, `wo_audit.py`, `ctx_wo_gc.py`, `ctx_wo_preflight.py`, `ctx_wo_lint.py`, `ctx_wo_fmt.py`, `wo_verify.sh` (transactional fix)

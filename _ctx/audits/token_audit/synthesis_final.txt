@@ -1,0 +1,125 @@
+SECCIÓN 1 — DEFINICIÓN DEL EXPERIMENTO
+- Tarea exacta evaluada: identificar artefactos requeridos para cierre de Work Orders (query exacta usada en A: "Find documentation about required artifacts in Work Order closure including tests.log lint.log handoff.md verification_report").
+- Definición de “interacción”: `1 tarea completa = 1 ctx.search + 1 ctx.get + 1 síntesis final`.
+- Modelo de precio elegido: **A) GPT-5.2**.
+- Constantes:
+  - `INPUT_PER_1M = 1.75`
+  - `OUTPUT_PER_1M = 14.00`
+  - `CACHED_INPUT_PER_1M = 0.175` (no usado en este reporte)
+- Método de conteo de tokens (MEDIDOS):
+  - Input/Output estructurado (`args`/`result`) tokenizado con `tiktoken.encoding_for_model("gpt-4.1")` sobre JSON canónico.
+  - Excerpt de `ctx.get`: `result.total_tokens` de `_ctx/telemetry/events.jsonl` (campo medido por Trifecta).
+  - Baselines manuales: tokenización directa del contenido UTF-8 de archivos.
+  - Output manual de LLM: **MODELADO** como constante igual a output de A (`ratio=1.0`) para comparar tareas equivalentes.
+
+SECCIÓN 2 — DATOS MEDIDOS
+| Item | Tokens In | Tokens Out | Fuente | Tipo |
+|---|---:|---:|---|---|
+| A `ctx.search` (`run_1771428828`) | 100 | 132 | `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/telemetry/events.jsonl` | MEDIDO |
+| A `ctx.get` (`run_1771428838`) | 43 | 255 | `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/telemetry/events.jsonl` | MEDIDO |
+| B1 lectura manual archivos | 3653 | 0 | `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/docs/backlog/WORKFLOW.md` | MEDIDO |
+| B2 lectura manual archivos | 14485 | 0 | lista B2 (abajo) | MEDIDO |
+| B3 lectura manual archivos | 27173 | 0 | lista B3 (abajo) | MEDIDO |
+| Output LLM para B1/B2/B3 | 0 | 387 | igualado a output A | MODELADO |
+
+SECCIÓN 3 — ESCENARIO A (TRIFECTA)
+- Lista exacta de comandos ejecutados:
+  - `trifecta ctx search --segment . --query "Find documentation about required artifacts in Work Order closure including tests.log lint.log handoff.md verification_report" --limit 6`
+  - `trifecta ctx get --segment . --ids "repo:docs/backlog/WORKFLOW.md:724afc1c0b" --mode excerpt --budget-token-est 2000`
+- Input tokens:
+  - `ctx.search args`: 100
+  - `ctx.get args`: 43
+  - `TOTAL_IN_A = 143`
+- Output tokens:
+  - hits (`ctx.search result`): 132
+  - excerpts (`ctx.get result.total_tokens`): 255
+  - symbols: 0
+  - report: 0
+  - `TOTAL_OUT_A = 387`
+- TOTAL:
+  - `TOTAL_A = TOTAL_IN_A + TOTAL_OUT_A = 143 + 387 = 530`
+- COSTO:
+  - `COST_IN_A = 143 * 1.75 / 1,000,000 = 0.00025025`
+  - `COST_OUT_A = 387 * 14 / 1,000,000 = 0.005418`
+  - `COST_A = 0.00566825`
+
+SECCIÓN 4 — ESCENARIO B1 (MANUAL ESTRICTO)
+- Archivos estrictamente necesarios (equivalentes a lo realmente usado en A):
+  - `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/docs/backlog/WORKFLOW.md`
+- Dedupe: sin duplicados.
+- Input tokens:
+  - `TOTAL_IN_B1 = 3653`
+- Output tokens:
+  - `TOTAL_OUT_B1 = 387` (MODELADO, `ratio=1.0` respecto a A)
+- TOTAL:
+  - `TOTAL_B1 = 3653 + 387 = 4040`
+- COSTO:
+  - `COST_IN_B1 = 3653 * 1.75 / 1,000,000 = 0.00639275`
+  - `COST_OUT_B1 = 387 * 14 / 1,000,000 = 0.005418`
+  - `COST_B1 = 0.01181075`
+
+SECCIÓN 5 — ESCENARIO B2 (REALISTA)
+- Supuestos explícitos:
+  - Humano abre varios documentos candidatos devueltos por search antes de cerrar diagnóstico.
+- Archivos añadidos (dedupe aplicado):
+  - `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/docs/backlog/WORKFLOW.md`
+  - `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/docs/CLI_WORKFLOW.md`
+  - `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/docs/guides/work_orders_usage.md`
+  - `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/docs/plans/2026-01-05-backlog-wo-dod-pipeline-plan.md`
+- Cálculo:
+  - `TOTAL_IN_B2 = 14485`
+  - `TOTAL_OUT_B2 = 387` (MODELADO, `ratio=1.0`)
+  - `TOTAL_B2 = 14872`
+  - `COST_IN_B2 = 0.02534875`
+  - `COST_OUT_B2 = 0.005418`
+  - `COST_B2 = 0.03076675`
+
+SECCIÓN 6 — ESCENARIO B3 (PEOR CASO)
+- Supuestos explícitos:
+  - Dumping amplio de docs + scripts operativos + WO activo.
+- Archivos/directorios (instanciados a archivos concretos, dedupe aplicado):
+  - B2 +
+  - `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/scripts/ctx_wo_finish.py`
+  - `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/scripts/verify.sh`
+  - `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/jobs/pending/WO-0056.yaml`
+- Cálculo:
+  - `TOTAL_IN_B3 = 27173`
+  - `TOTAL_OUT_B3 = 387` (MODELADO, `ratio=1.0`)
+  - `TOTAL_B3 = 27560`
+  - `COST_IN_B3 = 0.04755275`
+  - `COST_OUT_B3 = 0.005418`
+  - `COST_B3 = 0.05297075`
+
+SECCIÓN 7 — RESULTADOS
+- Ahorro en tokens (`B - A`):
+  - `B1 - A = 4040 - 530 = 3510`
+  - `B2 - A = 14872 - 530 = 14342`
+  - `B3 - A = 27560 - 530 = 27030`
+- Ahorro % exacto por baseline (`ahorro_pct = (TOTAL_B - TOTAL_A) / TOTAL_B * 100`):
+  - `B1: (4040 - 530) / 4040 * 100 = 86.88118811881188118811881188`
+  - `B2: (14872 - 530) / 14872 * 100 = 96.43625605164066702528240990`
+  - `B3: (27560 - 530) / 27560 * 100 = 98.07692307692307692307692308`
+- Ahorro en $ por baseline (In/Out separados):
+  - B1:
+    - `ΔIN$ = 0.00639275 - 0.00025025 = 0.00614250`
+    - `ΔOUT$ = 0.005418 - 0.005418 = 0.000000`
+    - `ΔTOTAL$ = 0.00614250`
+  - B2:
+    - `ΔIN$ = 0.02534875 - 0.00025025 = 0.02509850`
+    - `ΔOUT$ = 0.000000`
+    - `ΔTOTAL$ = 0.02509850`
+  - B3:
+    - `ΔIN$ = 0.04755275 - 0.00025025 = 0.04730250`
+    - `ΔOUT$ = 0.000000`
+    - `ΔTOTAL$ = 0.04730250`
+
+SECCIÓN 8 — LIMITACIONES
+- Supuestos explícitos:
+  - El output de respuesta final del LLM se mantiene constante entre A/B (`ratio=1.0`, MODELADO).
+  - Se tokenizó payload estructurado (`args`/`result`) y archivos completos; no se incluyó ruido de UI/transporte.
+- Dónde hay estimaciones/modelado:
+  - Solo en `TOTAL_OUT_B1/B2/B3 = 387` (MODELADO).
+- Medición adicional que elimina incertidumbre:
+  - Loggear en telemetría tokens reales de prompt final y respuesta final por interacción (`input_tokens`, `output_tokens`) en cada comando y en la capa de síntesis.
+
+“Este reporte es matemáticamente reproducible bajo los supuestos declarados y sin búsquedas web.”

@@ -30,6 +30,7 @@ execution:
   engine: trifecta
   required_flow:
   - verify
+  x_legacy_flow: true
   segment: .
 dependencies: []
 finished_at: '2026-02-10T00:00:00Z'

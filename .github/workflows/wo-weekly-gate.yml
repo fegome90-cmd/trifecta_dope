@@ -1,0 +1,112 @@
+name: WO Weekly Gate
+
+on:
+  schedule:
+    # Run every Monday at 06:00 UTC
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    # Allow manual trigger
+    inputs:
+      reason:
+        description: 'Reason for manual trigger'
+        required: false
+        default: 'Manual health check'
+
+permissions:
+  contents: read
+
+jobs:
+  weekly-gate:
+    name: WO Weekly Gate Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0  # Need full history for git worktree operations
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Create report directory
+        run: mkdir -p data
+
+      - name: Run WO Weekly Gate
+        id: gate
+        run: |
+          echo "Running WO Weekly Gate at $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          
+          # Run the gate script with JSON output
+          bash scripts/wo_weekly_gate.sh --json data 2>&1 | tee data/wo_weekly_gate_stdout.log
+          exit_code=${PIPESTATUS[0]}
+          
+          echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
+          
+          # Create summary report JSON if it doesn't exist
+          if [[ ! -f data/wo_weekly_gate_report.json ]]; then
+            cat > data/wo_weekly_gate_report.json << EOF
+          {
+            "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+            "exit_code": $exit_code,
+            "status": "$([ $exit_code -eq 0 ] && echo 'PASS' || echo 'FAIL')",
+            "trigger": "${{ github.event_name }}"
+          }
+          EOF
+          fi
+          
+          exit $exit_code
+
+      - name: Upload gate artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wo-weekly-gate-reports
+          path: |
+            data/wo_audit_*.json
+            data/wo_gc_*.json
+            data/wo_weekly_gate_*.json
+            data/wo_weekly_gate_stdout.log
+          retention-days: 90
+
+      - name: Summary on success
+        if: success()
+        run: |
+          echo "## ✅ WO Weekly Gate PASSED" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp**: $(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_STEP_SUMMARY
+          echo "**P0 Issues**: 0" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Reports" >> $GITHUB_STEP_SUMMARY
+          echo "- Audit: \`data/wo_audit_*.json\`" >> $GITHUB_STEP_SUMMARY
+          echo "- GC: \`data/wo_gc_*.json\`" >> $GITHUB_STEP_SUMMARY
+
+      - name: Summary on failure
+        if: failure()
+        run: |
+          echo "## ❌ WO Weekly Gate FAILED" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp**: $(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Action Required" >> $GITHUB_STEP_SUMMARY
+          echo "1. Download the \`wo-weekly-gate-reports\` artifact" >> $GITHUB_STEP_SUMMARY
+          echo "2. Review \`wo_weekly_gate_stdout.log\` for details" >> $GITHUB_STEP_SUMMARY
+          echo "3. Check audit report for P0 issues" >> $GITHUB_STEP_SUMMARY
+          echo "4. Review whitelist TTL if expired" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Quick Commands" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "# View P0 findings" >> $GITHUB_STEP_SUMMARY
+          echo "cat data/wo_audit_*.json | jq '.findings[] | select(.severity == \"P0\")'" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# View action required items" >> $GITHUB_STEP_SUMMARY
+          echo "cat data/wo_gc_*.json | jq '.action_required'" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
