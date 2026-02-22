@@ -233,9 +233,10 @@ class SearchUseCase:
         build_sha = _get_build_sha()
 
         # Two-pass search: if zero-hit and Spanish detected, try aliases
+        # Spanish alias expansion works independently of lint flag
         spanish_alias_variants = []
         pass1_hits = len(final_hits)  # Track pass1 (before alias attempt)
-        if len(final_hits) == 0 and source != "fixture" and enable_lint:
+        if len(final_hits) == 0 and source != "fixture":
             if detect_spanish(query):
                 spanish_alias_variants = expand_with_spanish_aliases(normalized_query)
                 for variant in spanish_alias_variants[1:]:
