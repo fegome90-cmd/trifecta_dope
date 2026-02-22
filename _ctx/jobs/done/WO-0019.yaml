@@ -3,17 +3,21 @@ id: WO-0019
 epic_id: E-0013
 title: Migrate Legacy WOs to Schema v1
 priority: P2
-status: pending
-owner: null
+status: done
+owner: felipe_gonzalez
+branch: feat/wo-WO-0019
+worktree: ../.worktrees/WO-0019
 scope:
   allow:
   - _ctx/jobs/**/*.yaml
   - docs/backlog/schema/**
   - scripts/schema_validation.py
+  - scripts/add_legacy_flow_marker.py
+  - scripts/fix_wo_schema_violations.py
+  - src/domain/wo_entities.py
+  - docs/adr/ADR-003-required-flow-evolution.md
   deny:
-  - src/domain/**
   - tests/**
-  - src/infrastructure/**
 verify:
   commands:
   - python3 scripts/schema_validation.py --root .
@@ -31,8 +35,10 @@ dependencies:
 - WO-0018B
 - WO-0011
 - WO-0018A
-verified_at_sha: null
-closed_at: null
+started_at: '2026-02-21T21:32:23.654635+00:00'
+finished_at: '2026-02-22T14:09:00Z'
+verified_at_sha: 8c66087
+closed_at: '2026-02-22T15:03:00Z'
 run_ids:
 - wo-0019-inventory
 - wo-0019-migrate

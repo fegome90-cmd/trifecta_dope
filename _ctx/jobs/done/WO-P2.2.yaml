@@ -54,3 +54,5 @@ x_notes: 'Completed 2026-01-06.
   Tests: 4 contractual + 5 regression = 9/9 PASSED
 
   '
+finished_at: '2025-12-31T23:59:59Z'
+x_variant_id: true

@@ -1,0 +1,22 @@
+{
+  "wo_id": "WO-0019",
+  "generated_at": "2026-02-22T14:42:00Z",
+  "commands": [
+    "uv run python scripts/schema_validation.py --root .",
+    "make gate-all"
+  ],
+  "files": {
+    "schema_validation.txt": "Full schema validation output",
+    "test_gate.txt": "Full test gate output"
+  },
+  "summary": {
+    "schema_passed": 53,
+    "schema_failed": 0,
+    "tests_passed": 1149,
+    "tests_breakdown": {
+      "unit": 940,
+      "integration": 167,
+      "acceptance": 42
+    }
+  }
+}

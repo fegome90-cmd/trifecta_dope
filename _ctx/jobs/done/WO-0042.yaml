@@ -40,7 +40,7 @@ trace:
   - WO-0043
 claim_links:
   requirements:
-  - "segment_id determin\xEDstico para mismos inputs"
+  - segment_id determinístico para mismos inputs
   - segment_root resuelto consistentemente
   - daemon socket path derivado de segment_id
   - cache db path derivado de segment_id
@@ -49,11 +49,16 @@ claim_links:
   constraints:
   - No breaking changes en CLI args
   - Mantener paths cortos para AF_UNIX limit
-objective: "Crear un \xFAnico resolver oficial (SSOT) para segment_id, segment_root, daemon socket path,\n\
-  cache db path, y telemetry grouping. Resolver identidades divergentes que rompen el sistema.\n"
+objective: 'Crear un único resolver oficial (SSOT) para segment_id, segment_root,
+  daemon socket path,
+
+  cache db path, y telemetry grouping. Resolver identidades divergentes que rompen
+  el sistema.
+
+  '
 deliverables:
 - SSOT resolver unificado en src/domain/segment_resolver.py
-- "Mismos inputs \u21D2 mismo segment_id siempre (determin\xEDstico)"
+- Mismos inputs ⇒ mismo segment_id siempre (determinístico)
 - Tests cubren SEGMENT=. y rutas absolutas
 - Error codes coherentes independientes de orden de preconditions
 - 'Refactor: todos los usos migrados al SSOT resolver'
@@ -64,3 +69,4 @@ diff_budget:
 stop_conditions:
   max_iterations: 6
   max_fail_verify: 2
+finished_at: '2025-12-31T23:59:59Z'

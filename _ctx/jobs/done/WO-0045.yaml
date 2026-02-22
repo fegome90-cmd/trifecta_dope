@@ -28,6 +28,7 @@ execution:
   - ctx.search
   - ctx.get
   - session.append:result
+  x_legacy_flow: true
   segment: .
 trace:
   ticket: null
@@ -45,18 +46,23 @@ claim_links:
   constraints:
   - No silent fallback
   - Keep verification deterministic
-objective: "Forzar que cada Work Order ejecute el flujo Trifecta completo como condici\xF3n\nno negociable,\
-  \ con contrato en schema, enforcement en take/finish, gate por WO\ny hook anti-bypass.\n"
-summary: 'Enforce Trifecta as mandatory execution engine for all WOs using fail-closed validation, evidence
-  requirements, and anti-bypass commit controls.
+objective: 'Forzar que cada Work Order ejecute el flujo Trifecta completo como condición
+
+  no negociable, con contrato en schema, enforcement en take/finish, gate por WO
+
+  y hook anti-bypass.
+
+  '
+summary: 'Enforce Trifecta as mandatory execution engine for all WOs using fail-closed
+  validation, evidence requirements, and anti-bypass commit controls.
 
   '
 deliverables:
 - Schema exige execution.engine, execution.required_flow y execution.segment
 - ctx_wo_take.py falla si falta contrato o engine != trifecta
-- "ctx_wo_finish.py bloquea running->done sin evidencia m\xEDnima"
+- ctx_wo_finish.py bloquea running->done sin evidencia mínima
 - ctx_verify_run.sh ejecuta verify.commands y falla en primer error
-- "prevent_manual_wo_closure.sh bloquea cierre manual sin transici\xF3n v\xE1lida + evidencia"
+- prevent_manual_wo_closure.sh bloquea cierre manual sin transición válida + evidencia
 - 'No loophole: modificar scripts no permite saltar gates'
 - Tests cubren happy path, missing contract, wrong engine, missing evidence, bypass
 diff_budget:
@@ -81,3 +87,4 @@ evidence:
     - handoff.md
     - report.md
     - artifact_manifest.json
+finished_at: '2025-12-31T23:59:59Z'

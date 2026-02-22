@@ -1,7 +1,7 @@
 version: 1
 id: WO-0008
 epic_id: E-0001
-title: "A/B Linter Reproducibility (OFF=0, ON>0) en fixture sint\xE9tico"
+title: A/B Linter Reproducibility (OFF=0, ON>0) en fixture sintético
 priority: P1
 status: done
 owner: null
@@ -35,18 +35,25 @@ x_legacy: true
 x_final_report: docs/reports/wo0008_ab_linter_reproducibility.md
 x_branch: job/WO-0008-ab-linter-synthetic
 x_worktree: ../wt-WO-0008
-x_objective: "Validar que el linter A/B es reproducible en fixture sint\xE9tico:\n- OFF (--no-lint): query\
-  \ vaga retorna 0 hits\n- ON (TRIFECTA_LINT=1): misma query retorna >0 hits por expansi\xF3n\n\nDepende\
-  \ de WO-0007 (bootstrap funcional).\n"
+x_objective: 'Validar que el linter A/B es reproducible en fixture sintético:
+
+  - OFF (--no-lint): query vaga retorna 0 hits
+
+  - ON (TRIFECTA_LINT=1): misma query retorna >0 hits por expansión
+
+
+  Depende de WO-0007 (bootstrap funcional).
+
+  '
 x_deliverables:
 - tests/integration/test_ctx_search_linter_ab_synthetic.py con fixture mini
 - Test OFF=0, ON>0 validado en fixtures autogenerados
 - docs/reports/linter_ab_reproducibility.md (comandos + evidencia)
 x_acceptance_criteria:
-- "Fixture genera configs/anchors.yaml + aliases.yaml v\xE1lidos"
-- "Query vaga 'servicio' (1 token) dispara expansi\xF3n en ON"
+- Fixture genera configs/anchors.yaml + aliases.yaml válidos
+- Query vaga 'servicio' (1 token) dispara expansión en ON
 - 'OFF: hits == 0 o ids == []'
-- "ON: hits > 0 o ids no vac\xEDos"
+- 'ON: hits > 0 o ids no vacíos'
 - Test pasa en limpio (no depende de _ctx preexistente del repo principal)
 diff_budget:
   max_files: 15
@@ -54,10 +61,10 @@ diff_budget:
 x_dependencies:
 - wo_id: WO-0007
 x_risks:
-- "Linter config podr\xEDa no disparar expansi\xF3n si anchors/aliases mal dise\xF1ados"
-- "Query podr\xEDa no matchear contenido del fixture"
+- Linter config podría no disparar expansión si anchors/aliases mal diseñados
+- Query podría no matchear contenido del fixture
 x_mitigation:
-- "Dise\xF1ar fixture con token expl\xEDcito que est\xE9 en anchors"
+- Diseñar fixture con token explícito que esté en anchors
 - Validar config con test unitario previo
 x_notes: 'Splitteado de WO-0007 para aislar linter A/B de bootstrap validation.
 
@@ -67,3 +74,4 @@ x_notes: 'Splitteado de WO-0007 para aislar linter A/B de bootstrap validation.
   WO-0008 valida: linter OFF=0 ON>0 en fixture.
 
   '
+finished_at: '2025-12-31T23:59:59Z'

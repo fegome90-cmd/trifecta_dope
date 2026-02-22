@@ -20,7 +20,8 @@ scope:
   - '**/production.*'
 verify:
   commands:
-  - uv run pytest tests/integration/test_ready_semantics_documented_and_enforced.py -v
+  - uv run pytest tests/integration/test_ready_semantics_documented_and_enforced.py
+    -v
   - uv run pytest tests/integration/test_lsp_contract_fallback.py -v
 dod_id: DOD-DEFAULT
 execution:
@@ -32,6 +33,7 @@ execution:
   - ctx.get
   - session.append:result
   - verify
+  x_legacy_flow: true
   segment: .
 trace:
   ticket: null
@@ -49,8 +51,12 @@ claim_links:
   constraints:
   - No aumentar latency de cold start > 200ms
   - Mantener backward compatibility en eventos existentes
-objective: "Introducir READY invariants m\xEDnimos para garantizar que READY realmente significa operativo.\n\
-  READY actual significa \"inicializado\" pero no garantiza capacidad de servir requests.\n"
+objective: 'Introducir READY invariants mínimos para garantizar que READY realmente
+  significa operativo.
+
+  READY actual significa "inicializado" pero no garantiza capacidad de servir requests.
+
+  '
 started_at: '2026-02-16T00:34:10.799968+00:00'
 result: done
 verified_at_sha: 6426f1efea1f36f982f7866463662900bdb43e6e
@@ -60,7 +66,7 @@ deliverables:
 - Workspace root = segment root correcto
 - Request health/ping o capability-check responde en <X ms
 - Evento lsp.state_change incluye reason + failed_invariant
-- "Si falla invariante \u2192 no puede reportarse READY"
+- Si falla invariante → no puede reportarse READY
 diff_budget:
   max_files: 6
   max_loc: 250
@@ -68,3 +74,4 @@ stop_conditions:
   max_iterations: 5
   max_fail_verify: 2
 closed_at: '2026-02-16T00:59:20.255319+00:00'
+finished_at: '2026-02-16T00:59:20.255319+00:00'

@@ -30,9 +30,10 @@ fi
 git config core.hooksPath "$HOOKS_DIR"
 echo "✅ Set core.hooksPath to: $HOOKS_DIR"
 
-# Ensure pre-commit is executable
+# Ensure hooks are executable
 chmod +x "$HOOKS_DIR/pre-commit"
-echo "✅ Made pre-commit executable"
+chmod +x "$HOOKS_DIR/commit-msg" 2>/dev/null || true
+echo "✅ Made pre-commit and commit-msg executable"
 
 # Check for uv
 if command -v uv &>/dev/null; then

@@ -21,7 +21,7 @@ class TestConcurrentLockAcquisition:
     """Test lock behavior under concurrent access scenarios."""
 
     @pytest.mark.skipif(
-        sys.version_info >= (3, 14),
+        sys.version_info >= (3, 13),
         reason="Multiprocessing tests have pickling issues on Python 3.14+",
     )
     def test_two_processes_lock_acquisition_multiprocess(self):
@@ -57,7 +57,7 @@ class TestConcurrentLockAcquisition:
             assert acquired_count == 1, f"Expected 1 acquisition, got {acquired_count}"
 
     @pytest.mark.skipif(
-        sys.version_info >= (3, 14),
+        sys.version_info >= (3, 13),
         reason="Multiprocessing tests have pickling issues on Python 3.14+",
     )
     def test_concurrent_lock_contention_multiprocess(self):

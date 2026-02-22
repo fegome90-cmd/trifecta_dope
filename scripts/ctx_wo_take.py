@@ -381,7 +381,9 @@ Examples:
     if wo_status == "pending":
         execution_valid, execution_error = validate_execution_contract(wo)
         if not execution_valid:
-            if execution_error and execution_error.startswith("required_flow missing mandatory steps:"):
+            if execution_error and execution_error.startswith(
+                "required_flow missing mandatory steps:"
+            ):
                 logger.warning(
                     "Execution contract legacy mode: skipping required_flow strictness for pending WO"
                 )
@@ -566,9 +568,12 @@ Examples:
     print(f"  Worktree:  {wo['worktree']}")
     print(f"  Owner:     {owner}")
 
-    # Record in Trifecta Session Log
+    # Record in Trifecta Session Log with intent marker
     try:
-        summary = f"Taken Work Order {wo_id}"
+        # Extract title for intent marker
+        wo_title = wo.get("title", "No description")
+        intent_marker = f"[{wo_id}] intent: {wo_title}"
+        summary = f"Taken Work Order {wo_id}: {wo_title}"
         commands = f"ctx_wo_take.py {wo_id}"
         # Execute trifecta session append via subprocess
         subprocess.run(
@@ -581,7 +586,7 @@ Examples:
                 "--segment",
                 ".",
                 "--summary",
-                summary,
+                f"{summary}\n{intent_marker}",
                 "--commands",
                 commands,
             ],
@@ -590,7 +595,7 @@ Examples:
             text=True,
             check=False,
         )
-        logger.info(f"✓ Recorded take in Trifecta session log")
+        logger.info(f"✓ Recorded take in Trifecta session log with intent marker")
     except Exception as e:
         logger.warning(f"Failed to record in Trifecta session log: {e}")
 

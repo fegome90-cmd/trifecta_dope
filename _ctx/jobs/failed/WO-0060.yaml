@@ -1,0 +1,31 @@
+version: 1
+id: WO-0060
+epic_id: E-0012
+title: WO-0057 Hardening test suite coverage for TTL and SSOT markers
+priority: P1
+status: failed
+owner: felipe_gonzalez
+branch: feat/wo-WO-0060
+worktree: ../.worktrees/WO-0060
+scope:
+  allow:
+  - scripts/**
+  - tests/**
+  deny:
+  - .env*
+verify:
+  commands:
+  - uv run pytest -q tests/unit/test_helpers_lock_ttl.py tests/unit/test_ssot_session_marker.py
+    tests/integration/test_wo_take_concurrency.py tests/integration/test_export_wo_index_atomicity.py
+dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  segment: .
+  required_flow:
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
+started_at: '2026-02-22T19:35:01.489605+00:00'
+x_failed_at: '2026-02-22T20:31:55.602286+00:00'

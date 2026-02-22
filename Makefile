@@ -88,6 +88,15 @@ wo-new:
 wo-preflight:
 	$(UV) python scripts/ctx_wo_preflight.py $(WO)
 
+wo-retention-gc:
+	$(UV) python scripts/wo_retention_gc.py --dry-run
+
+wo-retention-gc-apply:
+	$(UV) python scripts/wo_retention_gc.py --apply
+
+wo-retention-gc-json:
+	$(UV) python scripts/wo_retention_gc.py --dry-run --json _ctx/logs/retention_gc.json
+
 gate-all: test-unit test-integration test-acceptance
 	@echo "✅ GATE PASSED: Unit + Integration + Acceptance (Fast)"
 

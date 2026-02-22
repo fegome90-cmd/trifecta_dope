@@ -54,3 +54,8 @@ _ctx/linear_sync/index.jsonl
 _ctx/linear_sync/state.json
 _ctx/linear_sync/status_map.json
 _ctx/linear_sync/mcp_debug.log
+
+# Data and generated assets
+data/
+bundle
+manifest

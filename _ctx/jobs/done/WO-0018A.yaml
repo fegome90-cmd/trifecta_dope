@@ -33,18 +33,20 @@ result: superseded
 verified_at_sha: e18fe9a
 x_superseded_by: WO-0018B
 x_superseded_reason: 'All commits merged to main via PR #22 (feat/wo-WO-0018B)'
-closed_at: 2026-02-10 14:28:30+00:00
+closed_at: &id001 2026-02-10 14:28:30+00:00
 run_ids:
 - wo-0018a-fix
 - wo-0018a-verify
-governance:
-  must:
-  - All work completed via WO-0018B
-x_objective: 'Retroactively fix WO-0012 manual closure by generating proper DoD artifacts and re-closing
-  via ctx_wo_finish.py.
+governance: {}
+x_objective: 'Retroactively fix WO-0012 manual closure by generating proper DoD artifacts
+  and re-closing via ctx_wo_finish.py.
 
   Add process guards to prevent future manual WO closures from bypassing validation.
 
   NOTE: All work superseded and completed via WO-0018B.
 
   '
+finished_at: *id001
+x_governance_notes:
+- All work completed via WO-0018B
+x_variant_id: true

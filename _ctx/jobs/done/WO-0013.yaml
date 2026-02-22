@@ -28,13 +28,7 @@ dependencies:
 - WO-0012.1
 verified_at_sha: c2bb56b
 closed_at: '2026-01-14T11:35:00-03:00'
-governance:
-  must:
-  - Use CLI trifecta for verification
-  - Extract metrics from _ctx/telemetry/events.jsonl
-  - Update _ctx/session_trifecta_dope.md
-  - Update WO/backlog
-  - Commit (no --no-verify)
+governance: {}
 x_objective: 'Measure real-world adoption of AST persistence in dev environment.
 
   Monitor lock contention, integrity, and cache growth.
@@ -45,3 +39,10 @@ x_items:
 - Analyze lock_wait rates and timeout occurrences
 - Monitor DB size growth over time
 - Identify any regressions or anomalies
+finished_at: '2026-01-14T11:35:00-03:00'
+x_governance_notes:
+- Use CLI trifecta for verification
+- Extract metrics from _ctx/telemetry/events.jsonl
+- Update _ctx/session_trifecta_dope.md
+- Update WO/backlog
+- Commit (no --no-verify)

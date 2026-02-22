@@ -1,0 +1,30 @@
+version: 1
+id: WO-0059
+epic_id: E-0001
+title: 'Fix wo_verify.sh transition_to_failed: set status failed + cleanup running artifacts'
+priority: P1
+status: done
+owner: claude
+branch: fix/wo-0055-code-review-issues
+completed_at: '2026-02-22'
+worktree: null
+scope:
+  allow:
+  - scripts/wo_verify.sh
+  - tests/**
+  deny:
+  - .env*
+  - '**/production.*'
+verify:
+  commands:
+  - scripts/verify.sh
+dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  segment: .
+  required_flow:
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result

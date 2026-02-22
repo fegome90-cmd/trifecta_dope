@@ -1,7 +1,7 @@
 version: 1
 id: WO-0044
 epic_id: E-LSP-CONTRACT
-title: "Telemetr\xEDa m\xEDnima de salud LSP"
+title: Telemetría mínima de salud LSP
 priority: P0
 status: done
 scope:
@@ -40,8 +40,8 @@ trace:
   - WO-0041
 claim_links:
   requirements:
-  - "M\xE9tricas de salud emitidas en cada operaci\xF3n cr\xEDtica"
-  - "Dashboard/report b\xE1sico funcional"
+  - Métricas de salud emitidas en cada operación crítica
+  - Dashboard/report básico funcional
   - Eventos de error incluyen contexto suficiente
   assumptions:
   - Telemetry system base funciona
@@ -49,18 +49,22 @@ claim_links:
   constraints:
   - No impactar performance de requests (>5% latency)
   - Mantener compatibilidad con eventos existentes
-objective: "Agregar m\xE9tricas/eventos m\xEDnimos de salud LSP para no operar a ciegas.\nDetectar problemas\
-  \ antes de que causen fallos silenciosos.\n"
+objective: 'Agregar métricas/eventos mínimos de salud LSP para no operar a ciegas.
+
+  Detectar problemas antes de que causen fallos silenciosos.
+
+  '
 deliverables:
 - Contador lsp.thread_alive_after_join (edge case en shutdown)
 - Contador lsp.ready_fail_invariant (cuando invariantes fallan)
-- "Latencia p95 de request b\xE1sica (hover/ping)"
+- Latencia p95 de request básica (hover/ping)
 - 'Evento lsp.daemon_status con: state, uptime, last_request_ms, root_ok'
-- "Dashboard/report b\xE1sico: trifecta telemetry health -s ."
-- "Tests de telemetr\xEDa: verificar eventos emitidos correctamente"
+- 'Dashboard/report básico: trifecta telemetry health -s .'
+- 'Tests de telemetría: verificar eventos emitidos correctamente'
 diff_budget:
   max_files: 8
   max_loc: 350
 stop_conditions:
   max_iterations: 5
   max_fail_verify: 2
+finished_at: '2025-12-31T23:59:59Z'

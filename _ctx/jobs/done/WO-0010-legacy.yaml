@@ -19,22 +19,29 @@ verify:
   - uv run python eval/scripts/run_field_exercises_ab.py --validate
   - grep 'zero_hit_rate:' docs/reports/field_exercises_v1_results.md
 dod_id: DOD-FIELD_EXERCISES
-x_objective: "Validar el sistema de b\xFAsqueda con queries reales del mundo real.\n\
-  \nDataset: 20 queries representativas de casos de uso reales\nA/B: Comparar OFF\
-  \ (sin linter) vs ON (con linter)\nM\xE9tricas: hit_rate, zero_hit_rate, precision@5\n\
-  Gate: zero_hit_rate < 30% (al menos 70% de queries retornan resultados)\n"
+x_objective: 'Validar el sistema de búsqueda con queries reales del mundo real.
+
+
+  Dataset: 20 queries representativas de casos de uso reales
+
+  A/B: Comparar OFF (sin linter) vs ON (con linter)
+
+  Métricas: hit_rate, zero_hit_rate, precision@5
+
+  Gate: zero_hit_rate < 30% (al menos 70% de queries retornan resultados)
+
+  '
 x_deliverables:
 - eval/field_exercises_v1.yaml (20 queries reales con expected hits)
 - eval/scripts/run_field_exercises_ab.py (runner automatizado)
-- "docs/reports/field_exercises_v1_results.md (m\xE9tricas + an\xE1lisis)"
+- docs/reports/field_exercises_v1_results.md (métricas + análisis)
 - _ctx/logs/field_ex_{off,on}.log (evidencia CLI)
 x_acceptance_criteria:
-- "Dataset tiene 20 queries variadas (t\xE9cnicas, conceptuales, vagas, espec\xED\
-  ficas)"
-- "Cada query tiene expected_min_hits (baseline m\xEDnimo)"
-- "Runner ejecuta: OFF \u2192 captura hits, ON \u2192 captura hits"
+- Dataset tiene 20 queries variadas (técnicas, conceptuales, vagas, específicas)
+- Cada query tiene expected_min_hits (baseline mínimo)
+- 'Runner ejecuta: OFF → captura hits, ON → captura hits'
 - 'Reporte muestra: zero_hit_rate, avg_hits, delta ON-OFF'
-- "Gate: zero_hit_rate_on < 30% (m\xE1ximo 6 queries sin resultados)"
+- 'Gate: zero_hit_rate_on < 30% (máximo 6 queries sin resultados)'
 diff_budget:
   max_files: 8
   max_loc: 300
@@ -42,17 +49,21 @@ x_dependencies:
 - wo_id: WO-0008
 - wo_id: WO-0009
 x_risks:
-- "Queries demasiado espec\xEDficas \u2192 falsos negativos (no match por dataset\
-  \ peque\xF1o)"
+- Queries demasiado específicas → falsos negativos (no match por dataset pequeño)
 - Zero-hit rate puede ser alto si dataset incompleto
 x_mitigation:
-- "Mezclar tipos de query: 30% t\xE9cnicas, 30% conceptuales, 40% discovery"
+- 'Mezclar tipos de query: 30% técnicas, 30% conceptuales, 40% discovery'
 - Usar queries que sabemos que deben matchear contenido existente
-- "Si zero_hit_rate > 30%, documentar queries problem\xE1ticas para iteraci\xF3n"
-x_notes: "Este WO establece el primer benchmark cuantitativo del sistema de b\xFA\
-  squeda.\n\nNo es un test unitario: es una evaluaci\xF3n de calidad en queries reales.\n\
-  Si el gate falla, indica que el sistema necesita mejoras (no que el c\xF3digo est\xE1\
-  \ roto).\n"
+- Si zero_hit_rate > 30%, documentar queries problemáticas para iteración
+x_notes: 'Este WO establece el primer benchmark cuantitativo del sistema de búsqueda.
+
+
+  No es un test unitario: es una evaluación de calidad en queries reales.
+
+  Si el gate falla, indica que el sistema necesita mejoras (no que el código está
+  roto).
+
+  '
 execution:
   engine: trifecta
   required_flow:
@@ -62,3 +73,5 @@ execution:
   - ctx.get
   - session.append:result
   segment: .
+finished_at: '2025-12-31T23:59:59Z'
+x_variant_id: true

@@ -28,7 +28,9 @@ execution:
   segment: .
 dependencies:
 - WO-0012
-finished_at: null
+finished_at: '2025-12-31T23:59:59Z'
 result: done
 verified_at_sha: null
-x_objective: Enable AST persistence defaults for dev CLI paths while preserving rollback via env var override.
+x_objective: Enable AST persistence defaults for dev CLI paths while preserving rollback
+  via env var override.
+x_variant_id: true

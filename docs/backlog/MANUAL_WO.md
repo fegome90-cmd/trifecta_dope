@@ -169,6 +169,40 @@ Si cualquiera falla → estado `FAILED`, no `DONE`.
 | **Backlog** | `ctx_backlog_validate.py`| Validar integridad del backlog global y epics. |
 | **Higiene** | `ctx_wo_fmt.py` | Mantener formato canónico de YAMLs. |
 | **Higiene** | `ctx_wo_lint.py` | Validar contratos YAML (Strict Mode). |
+| **Limpieza** | `wo_retention_gc.py` | GC de artefactos antiguos en handoff/ (90 días). |
+
+### Retention GC (Limpieza de Evidencia Antigua)
+
+El script `wo_retention_gc.py` limpia artefactos viejos del directorio `_ctx/handoff/`:
+
+**Archivos Elegibles (pueden borrarse):**
+
+* `dirty.*.patch` — Patches hasheados (ej: `dirty.abc123.patch`)
+* `dirty.patch.sha256` — Checksums de patches
+
+**Archivos Protegidos (NUNCA se borran):**
+
+* `decision.md` — Registro de decisiones
+* `handoff.md` — Notas de handoff
+* `verdict.json` — Veredicto del WO
+* `diff.patch` — Patch limpio (no hasheado)
+* `dirty.patch` — Symlink al patch actual
+
+**Protecciones Adicionales:**
+
+* WOs activos (running/pending) nunca se tocan
+* WOs con decisión incompleta (ACTION_REQUIRED) se protegen
+
+```bash
+# Ver qué se borraría (dry-run)
+make wo-retention-gc
+
+# Aplicar limpieza
+make wo-retention-gc-apply
+
+# Con período personalizado
+uv run python scripts/wo_retention_gc.py --apply --days 30
+```
 
 ### Gates Automáticos (Hooks)
 

@@ -1,0 +1,84 @@
+uv run pytest -q tests/unit
+........................................................................ [  7%]
+........................................................................ [ 15%]
+........................................................................ [ 22%]
+........................................................................ [ 30%]
+..............s..............................................ss......... [ 38%]
+........................................................................ [ 45%]
+........................................................................ [ 53%]
+........................................................................ [ 61%]
+........................................................................ [ 68%]
+........................................................................ [ 76%]
+........................................................................ [ 83%]
+........................................................................ [ 91%]
+........................................................................ [ 99%]
+.......                                                                  [100%]
+=============================== warnings summary ===============================
+tests/unit/test_ctx_wo_gc.py:353
+  /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/tests/unit/test_ctx_wo_gc.py:353: PytestUnknownMarkWarning: Unknown pytest.mark.integration - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.integration
+
+tests/unit/test_search_usecase_linter.py::test_linter_expands_vague_query
+tests/unit/test_search_usecase_linter.py::test_guided_query_not_expanded
+  /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/src/application/search_get_usecases.py:164: DeprecationWarning: resolve_segment_root() is deprecated. Use get_segment_root() from src.domain.segment_resolver instead.
+    repo_root = resolve_segment_root(target_path)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+940 passed, 3 skipped, 3 warnings in 86.77s (0:01:26)
+uv run pytest -q tests/integration
+.s...................................................................... [ 42%]
+...................................................s.................... [ 85%]
+.........................                                                [100%]
+=============================== warnings summary ===============================
+tests/integration/test_ctx_search_linter.py::test_vague_query_expansion_with_linter_enabled
+tests/integration/test_ctx_search_linter.py::test_guided_query_not_expanded
+tests/integration/test_ctx_search_linter.py::test_missing_config_disables_linter
+tests/integration/test_ctx_search_linter.py::test_semi_query_classification
+  /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/src/application/search_get_usecases.py:164: DeprecationWarning: resolve_segment_root() is deprecated. Use get_segment_root() from src.domain.segment_resolver instead.
+    repo_root = resolve_segment_root(target_path)
+
+tests/integration/test_lsp_daemon.py::test_daemon_spawn_and_connect
+  /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/tests/integration/test_lsp_daemon.py:51: DeprecationWarning: compute_segment_id() is deprecated. Use get_segment_fingerprint() or resolve_segment_ref() from src.domain.segment_resolver instead.
+    seg_id = compute_segment_id(root)
+
+tests/integration/test_lsp_daemon.py::test_daemon_spawn_and_connect
+tests/integration/test_lsp_daemon.py::test_daemon_singleton_lock
+tests/integration/test_lsp_daemon.py::test_ttl_shutdown_cleans_files
+tests/integration/test_lsp_daemon.py::test_no_blocking_on_cold_start
+  /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/tests/integration/test_lsp_daemon.py:29: DeprecationWarning: compute_segment_id() is deprecated. Use get_segment_fingerprint() or resolve_segment_ref() from src.domain.segment_resolver instead.
+    seg_id = compute_segment_id(tmp_path)
+
+tests/integration/test_lsp_daemon.py::test_daemon_singleton_lock
+  /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/tests/integration/test_lsp_daemon.py:75: DeprecationWarning: compute_segment_id() is deprecated. Use get_segment_fingerprint() or resolve_segment_ref() from src.domain.segment_resolver instead.
+    seg_id = compute_segment_id(root)
+
+tests/integration/test_lsp_daemon.py::test_ttl_shutdown_cleans_files
+  /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/tests/integration/test_lsp_daemon.py:111: DeprecationWarning: compute_segment_id() is deprecated. Use get_segment_fingerprint() or resolve_segment_ref() from src.domain.segment_resolver instead.
+    seg_id = compute_segment_id(root)
+
+tests/integration/test_lsp_daemon.py::test_no_blocking_on_cold_start
+  /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/tests/integration/test_lsp_daemon.py:141: DeprecationWarning: compute_segment_id() is deprecated. Use get_segment_fingerprint() or resolve_segment_ref() from src.domain.segment_resolver instead.
+    seg_id = compute_segment_id(root)
+
+tests/integration/test_segment_id_invariants.py::test_segment_id_is_hash8
+  /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/tests/integration/test_segment_id_invariants.py:10: DeprecationWarning: resolve_segment_root() is deprecated. Use get_segment_root() from src.domain.segment_resolver instead.
+    root = resolve_segment_root()
+
+tests/integration/test_segment_id_invariants.py::test_segment_id_singleton_per_run
+  /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/tests/integration/test_segment_id_invariants.py:29: DeprecationWarning: resolve_segment_root() is deprecated. Use get_segment_root() from src.domain.segment_resolver instead.
+    root = resolve_segment_root()
+
+tests/integration/test_segment_id_invariants.py::test_resolve_root_consistency
+  /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/tests/integration/test_segment_id_invariants.py:51: DeprecationWarning: resolve_segment_root() is deprecated. Use get_segment_root() from src.domain.segment_resolver instead.
+    root = resolve_segment_root()
+
+tests/integration/test_segment_id_invariants.py::test_resolve_root_consistency
+  /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/tests/integration/test_segment_id_invariants.py:56: DeprecationWarning: compute_segment_id() is deprecated. Use get_segment_fingerprint() or resolve_segment_ref() from src.domain.segment_resolver instead.
+    sid = compute_segment_id(root)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+167 passed, 2 skipped, 16 warnings in 19.52s
+uv run pytest -q tests/acceptance -m "not slow"
+..........................................                               [100%]
+42 passed, 4 deselected in 7.83s
+✅ GATE PASSED: Unit + Integration + Acceptance (Fast)
