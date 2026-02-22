@@ -20,8 +20,11 @@ dod_id: DOD-DEFAULT
 execution:
   engine: trifecta
   required_flow:
-  - verify
-  x_legacy_flow: true
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
   segment: .
 dependencies:
 - WO-0012

@@ -37,6 +37,9 @@ x_notes: 'v2.1 Update: Added pure Spanish queries and integrity gates.
 execution:
   engine: trifecta
   required_flow:
-  - verify
-  x_legacy_flow: true
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
   segment: .

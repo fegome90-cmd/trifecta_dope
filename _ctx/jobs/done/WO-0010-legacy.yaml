@@ -67,8 +67,11 @@ x_notes: 'Este WO establece el primer benchmark cuantitativo del sistema de bús
 execution:
   engine: trifecta
   required_flow:
-  - verify
-  x_legacy_flow: true
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
   segment: .
 finished_at: '2025-12-31T23:59:59Z'
 x_variant_id: true
