@@ -22,7 +22,11 @@ dod_id: DOD-REPRODUCIBILITY
 execution:
   engine: trifecta
   required_flow:
-  - verify
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
   segment: .
 verified_at_sha: 1d80a878b486177e94491fda068028287eddd1d8
 evidence_logs:

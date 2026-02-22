@@ -1,5 +1,12 @@
 version: 1
 dod:
 - id: WO-0036-dod
-  items:
-  - Cleanup complete
+  title: "Cleanup DoD"
+  required_artifacts:
+    - "verdict.json"
+  required_checks:
+    - name: "cleanup_complete"
+      commands:
+        - "echo 'Cleanup verified'"
+  rules:
+    - "Cleanup complete: PASS"

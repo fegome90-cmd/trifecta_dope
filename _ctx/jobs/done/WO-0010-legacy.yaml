@@ -56,5 +56,9 @@ x_notes: "Este WO establece el primer benchmark cuantitativo del sistema de b\xF
 execution:
   engine: trifecta
   required_flow:
-  - verify
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
   segment: .
