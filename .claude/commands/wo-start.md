@@ -6,20 +6,28 @@ description: Start work on a WO - from pending to working in worktree
 
 Take a pending WO and set up isolated development environment.
 
+**HARD RULES:**
+- MUST run from CLEAN worktree (no uncommitted changes)
+- MUST pass reconcile + audit P0 + preflight/lint guards BEFORE take
+- MUST complete in <10s (deep audit is separate)
+- NO silent fallback - any guard FAIL → STOP → suggest /wo-repair
+
 ## Usage
 
 ```
 /wo-start WO-XXXX
 ```
 
-## Pipeline
+## Pipeline (v2 - Hardened)
 
-1. **wo/status** (read-only snapshot)
-2. **wo/guard PRE-TAKE** (invariantes mínimas)
-3. Si WO no existe → **wo/create** (bootstrap + preflight)
-4. **wo/take** (crea lock + worktree + branch)
-5. **wo/guard POST-TAKE** (verifica worktree correcto)
-6. **wo/work** (imprime reglas y allowed next actions)
+0. **wo/dirty-check** - Verify clean worktree [BLOCKING]
+1. **wo/status** - Read-only snapshot
+2. **wo/reconcile** - State drift check [BLOCKING]
+3. **wo/audit-p0** - P0-only audit (<10s) [BLOCKING]
+4. **wo/guard PRE-TAKE** - Preflight + lint [BLOCKING]
+5. **wo/take** - Creates lock + worktree + branch
+6. **wo/guard POST-TAKE** - Verifies worktree correct
+7. **wo/work** - Prints rules and allowed next actions
 
 ## If Guard Fails
 
@@ -57,6 +65,16 @@ NEXT_ALLOWED=["edit within scope","run verify","commit small","/wo-finish","/wo-
 
 ## Process
 
+### Step 0: Dirty Check [BLOCKING]
+
+```bash
+if [ -n "$(git status --porcelain)" ]; then
+  echo "BLOCKING: Dirty worktree - commit or stash changes first"
+  echo "PROHIBITED: /wo-start with uncommitted changes"
+  exit 1
+fi
+```
+
 ### Step 1: Status Snapshot
 
 ```bash
@@ -64,7 +82,26 @@ uv run python scripts/ctx_wo_take.py --status
 uv run python scripts/ctx_wo_take.py --list
 ```
 
-### Step 2: Guard PRE-TAKE
+### Step 2: Reconcile Preflight [BLOCKING]
+
+```bash
+uv run python scripts/ctx_reconcile_state.py --dry-run
+# Expected: "No drift detected" or abort with /wo-repair
+```
+
+### Step 3: Audit P0-Only [BLOCKING]
+
+```bash
+uv run python scripts/wo_audit.py --fast-p0 --out /tmp/wo_audit_p0.json --fail-on split_brain,fail_but_running
+# Expected: exit 0 (no P0 findings) or abort with /wo-repair
+```
+
+### Step 4: Guard PRE-TAKE (Preflight + Lint) [BLOCKING]
+
+```bash
+uv run python scripts/ctx_wo_preflight.py WO-XXXX
+uv run python scripts/ctx_wo_lint.py --strict --wo-id WO-XXXX
+```
 
 - No conflicting locks (from OTHER WOs)
 - System healthy
