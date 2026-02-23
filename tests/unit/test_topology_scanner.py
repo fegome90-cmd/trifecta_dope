@@ -108,16 +108,18 @@ class TestScanTopologySkipPatterns:
     """Tests for directory/file skip patterns."""
 
     def test_skips_pycache(self, tmp_path: Path) -> None:
-        """__pycache__ directories should be skipped."""
+        """__pycache__ directories should be skipped, including .py files inside."""
         pycache = tmp_path / "__pycache__"
         pycache.mkdir()
         (pycache / "test.pyc").write_text("")
+        (pycache / "cached.py").write_text("x = 1")  # .py file that should be skipped
         (tmp_path / "main.py").write_text("pass")
 
         result = scan_topology(tmp_path)
 
         assert len(result.files) == 1
         assert result.files[0].module_name == "main"
+        assert not any("cached" in str(f.path) for f in result.files)
 
     def test_skips_venv(self, tmp_path: Path) -> None:
         """.venv directories should be skipped."""
@@ -145,26 +147,33 @@ class TestScanTopologySkipPatterns:
         assert len(result.files) == 1
 
     def test_skips_node_modules(self, tmp_path: Path) -> None:
-        """node_modules directories should be skipped."""
+        """node_modules directories should be skipped, including .py files inside."""
         node_modules = tmp_path / "node_modules"
         node_modules.mkdir()
         (node_modules / "package").mkdir()
+        (node_modules / "package" / "index.js").write_text("")
+        (node_modules / "package" / "helper.py").write_text("x = 1")  # .py that should be skipped
         (tmp_path / "main.py").write_text("pass")
 
         result = scan_topology(tmp_path)
 
         assert len(result.files) == 1
+        assert result.files[0].module_name == "main"
+        assert not any("helper" in str(f.path) for f in result.files)
 
     def test_skips_git(self, tmp_path: Path) -> None:
-        """.git directories should be skipped."""
+        """.git directories should be skipped, including .py files inside."""
         git_dir = tmp_path / ".git"
         git_dir.mkdir()
         (git_dir / "config").write_text("")
+        (git_dir / "hook.py").write_text("x = 1")  # .py file that should be skipped
         (tmp_path / "main.py").write_text("pass")
 
         result = scan_topology(tmp_path)
 
         assert len(result.files) == 1
+        assert result.files[0].module_name == "main"
+        assert not any("hook" in str(f.path) for f in result.files)
 
 
 class TestScanTopologyErrors:

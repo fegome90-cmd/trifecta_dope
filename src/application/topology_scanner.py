@@ -15,6 +15,9 @@ from src.domain.discovery_models import ImportInfo
 # Directories to skip during scanning
 SKIP_DIRS = frozenset({"__pycache__", ".venv", "venv", "node_modules", ".git"})
 
+# Warning prefix for syntax errors (from ImportExtractor)
+SYNTAX_ERROR_PREFIX = "Syntax error"
+
 
 @dataclass(frozen=True)
 class FileInfo:
@@ -63,7 +66,7 @@ def _path_to_module(file_path: Path, root: Path) -> str:
 
     # Remove .py extension from filename
     if parts and parts[-1].endswith(".py"):
-        parts[-1] = parts[-1][:-3]
+        parts[-1] = parts[-1].removesuffix(".py")
 
     # Remove __init__ from package module name
     if parts and parts[-1] == "__init__":
@@ -86,7 +89,7 @@ def _scan_file(file_path: Path, root: Path) -> tuple[FileInfo, None] | tuple[Non
         result = extract_imports(source)
         # Check for syntax errors in warnings
         for warning in result.warnings:
-            if "Syntax error" in warning:
+            if SYNTAX_ERROR_PREFIX in warning:
                 return None, f"{rel_path}: SyntaxError: {warning}"
         return (
             FileInfo(
