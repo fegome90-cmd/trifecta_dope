@@ -89,11 +89,11 @@ def _scan_file(file_path: Path, root: Path) -> tuple[FileInfo, None] | tuple[Non
         result = extract_imports(source)
         # Check for syntax errors in warnings
         for warning in result.warnings:
-            if SYNTAX_ERROR_PREFIX in warning:
+            if warning.startswith(SYNTAX_ERROR_PREFIX):
                 return None, f"{rel_path}: SyntaxError: {warning}"
         return (
             FileInfo(
-                path=Path(rel_path),
+                path=file_path.relative_to(root),
                 module_name=_path_to_module(file_path, root),
                 imports=result.imports,
                 line_count=result.line_count,
