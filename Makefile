@@ -6,7 +6,7 @@ UV := uv run
 
 .PHONY: help install start \
 	test test-unit test-integration test-acceptance test-roadmap test-slow gate-all \
-	wo-lint wo-lint-json wo-fmt wo-fmt-check wo-new wo-preflight \
+	wo-lint wo-lint-json wo-fmt wo-fmt-check wo-new wo-preflight wo-integrity \
 	audit \
 	ctx-sync ctx-search ctx-get ctx-stats \
 	create
@@ -97,7 +97,12 @@ wo-retention-gc-apply:
 wo-retention-gc-json:
 	$(UV) python scripts/wo_retention_gc.py --dry-run --json _ctx/logs/retention_gc.json
 
-gate-all: test-unit test-integration test-acceptance
+wo-integrity:
+	@echo "=== WO Integrity Gate ==="
+	$(UV) python scripts/wo_audit.py --out /tmp/wo_integrity.json --fail-on split_brain,fail_but_running
+	@echo "WO Integrity: PASS"
+
+gate-all: test-unit test-integration test-acceptance wo-integrity
 	@echo "✅ GATE PASSED: Unit + Integration + Acceptance (Fast)"
 
 audit: gate-all
