@@ -12,14 +12,14 @@ Recover determinism when there's drift (locks, worktrees, state inconsistencies)
 /wo-repair [WO-XXXX|--all]
 ```
 
-## Pipeline
+## Pipeline (v2 - Hardened)
 
-1. **wo/status** (foto completa)
-2. **wo/guard** (si hay WO especificado: check invariantes)
-3. **wo/repair**:
-   - Primero `ctx_reconcile_state.py --dry-run`
-   - Solo si plan seguro → `--apply`
-4. Si es "abortar" → **wo/abort** (deriva a repair o script oficial, NO rm/mv manual)
+1. **wo/snapshot** - Forensic snapshot before repair
+2. **wo/status** - Full status audit
+3. **wo/reconcile --apply** - Fix state drift
+4. **wo/gc --apply** - Remove zombie/ghost worktrees
+5. **wo/integrity** - Verify no P0 findings [BLOCKING]
+6. If es "abortar" → **wo/abort** (deriva a script oficial, NO rm/mv manual)
 
 ## Required Output
 
@@ -42,7 +42,37 @@ Recover determinism when there's drift (locks, worktrees, state inconsistencies)
 
 ## Process
 
-### Step 1: Status Snapshot
+### Step 1: Forensic Snapshot (Before Any Changes)
+
+```bash
+timestamp=$(date +%Y%m%d_%H%M%S)
+snapshot_file="_ctx/incidents/FORENSIC-$(date +%Y-%m-%d).md"
+
+# Capture current state
+uv run python scripts/wo_audit.py --out /tmp/wo_audit_pre.json
+
+# Create snapshot file
+cat > "$snapshot_file" << 'EOF'
+# FORENSIC SNAPSHOT
+Generated: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+## WO Audit Summary
+$(cat /tmp/wo_audit_pre.json | jq -r '.summary')
+
+## Worktrees
+$(git worktree list)
+
+## Running WOs
+$(ls -la _ctx/jobs/running/*.yaml 2>/dev/null || echo "None")
+
+## Locks
+$(ls -la _ctx/jobs/running/*.lock 2>/dev/null || echo "None")
+EOF
+
+echo "Snapshot saved: $snapshot_file"
+```
+
+### Step 2: Status Snapshot
 
 ```bash
 uv run python scripts/ctx_wo_take.py --status
@@ -50,7 +80,7 @@ git worktree list
 ls _ctx/jobs/running/*.lock 2>/dev/null
 ```
 
-### Step 2: Diagnose Problems
+### Step 3: Diagnose Problems
 
 Common problems:
 | Problem | Diagnosis Command |
@@ -59,25 +89,33 @@ Common problems:
 | Orphaned worktree | `git worktree list` (worktree without running WO) |
 | State mismatch | `ctx_reconcile_state.py --dry-run` |
 | Lock without YAML | `ls _ctx/jobs/running/*.lock` vs `ls _ctx/jobs/running/*.yaml` |
+| Zombie worktree | `ctx_wo_gc.py --dry-run` (worktree for done/failed WO) |
 
-### Step 3: Preview Fix
+### Step 4: Apply Reconcile
 
 ```bash
+# Preview first
 uv run python scripts/ctx_reconcile_state.py --dry-run
-```
 
-**Review the plan before applying!**
-
-### Step 4: Apply Fix (if safe)
-
-```bash
+# Apply if safe
 uv run python scripts/ctx_reconcile_state.py --apply
 ```
 
-### Step 5: Verify
+### Step 5: Apply Garbage Collection
 
 ```bash
-uv run python scripts/ctx_wo_take.py --status
+# Preview zombie/ghost worktrees
+uv run python scripts/ctx_wo_gc.py --dry-run
+
+# Apply cleanup
+uv run python scripts/ctx_wo_gc.py --apply
+```
+
+### Step 6: Verify Integrity
+
+```bash
+make wo-integrity
+# Expected: "WO Integrity: PASS"
 ```
 
 ## ⛔ NEVER
