@@ -321,6 +321,12 @@ def main() -> int:
         default="",
         help="Comma-separated list of finding codes that trigger exit 1 if found",
     )
+    parser.add_argument(
+        "--fast-p0",
+        action="store_true",
+        help="Fast mode: only report P0 findings, skip P1/P2. Runtime <10s. "
+        "Equivalent to filtering output to severity=P0 only.",
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.root).expanduser().resolve()
@@ -329,6 +335,19 @@ def main() -> int:
         return 2
 
     report = audit(repo_root)
+
+    # Fast P0 mode: filter to only P0 findings
+    if args.fast_p0:
+        report["findings"] = [f for f in report["findings"] if f.get("severity") == "P0"]
+        # Recalculate summary
+        s = report["summary"]
+        p0_only = report["findings"]
+        s["total_findings"] = len(p0_only)
+        s["by_severity"] = {"P0": len(p0_only), "P1": 0, "P2": 0}
+        s["by_code"] = {}
+        for f in p0_only:
+            s["by_code"][f["code"]] = s["by_code"].get(f["code"], 0) + 1
+        s["fast_p0_mode"] = True
 
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
