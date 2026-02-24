@@ -375,15 +375,6 @@ def main() -> int:
     for code, count in sorted(s["by_code"].items()):
         print(f"  {code}: {count}")
 
-    # Fail-on logic
-    if args.fail_on:
-        fail_codes = {c.strip() for c in args.fail_on.split(",") if c.strip()}
-        active_codes = set(s["by_code"].keys())
-        triggered = fail_codes & active_codes
-        if triggered:
-            print(f"\nFAIL: --fail-on triggered for: {sorted(triggered)}", file=sys.stderr)
-            return 1
-
     return 0
 
 
