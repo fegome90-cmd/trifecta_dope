@@ -336,7 +336,20 @@ def main() -> int:
 
     report = audit(repo_root)
 
-    # Fast P0 mode: filter to only P0 findings
+    # Fail-on logic: check BEFORE --fast-p0 filtering to avoid silently hiding P1/P2
+    # This ensures --fail-on works correctly even when --fast-p0 is used
+    if args.fail_on:
+        fail_codes = {c.strip() for c in args.fail_on.split(",") if c.strip()}
+        original_codes = {f["code"] for f in report["findings"]}
+        triggered = fail_codes & original_codes
+        if triggered:
+            # Even if --fast-p0 hides the finding, we still fail
+            print(f"\nFAIL: --fail-on triggered for: {sorted(triggered)}", file=sys.stderr)
+            if args.fast_p0:
+                print(f"NOTE: Some triggered codes were P1/P2 and hidden by --fast-p0", file=sys.stderr)
+            return 1
+
+    # Fast P0 mode: filter to only P0 findings (after fail-on check)
     if args.fast_p0:
         report["findings"] = [f for f in report["findings"] if f.get("severity") == "P0"]
         # Recalculate summary
