@@ -278,6 +278,12 @@ def _find_verdict_failures(repo_root: Path, running_yamls: set[str]) -> list[dic
 
 
 def _find_duplicate_yamls(wo_state: dict[str, list[str]]) -> list[dict[str, Any]]:
+    """Find multiple YAML files with the same normalized WO ID.
+
+    This catches cases like:
+    - WO-0008.yaml and WO-0008_job.yaml in any state directories
+    - Variants with same base ID should be consolidated
+    """
     findings: list[dict[str, Any]] = []
     seen: dict[str, list[str]] = {}
     for wo_id in wo_state:
@@ -286,20 +292,18 @@ def _find_duplicate_yamls(wo_state: dict[str, list[str]]) -> list[dict[str, Any]
 
     for base, variants in sorted(seen.items()):
         if len(variants) > 1:
-            all_states = []
-            for v in variants:
-                all_states.extend(wo_state.get(v, []))
-            if len(all_states) != len(set(all_states)):
-                findings.append(
-                    {
-                        "code": "duplicate_yaml",
-                        "severity": "P2",
-                        "wo_id": base,
-                        "variants": variants,
-                        "message": f"Multiple YAML files for same WO: {variants}",
-                        "invariant_violated": "One WO ID must have exactly one canonical YAML.",
-                    }
-                )
+            # Multiple YAML files exist with the same normalized WO ID
+            # This is the finding - no need for state comparison
+            findings.append(
+                {
+                    "code": "duplicate_yaml",
+                    "severity": "P2",
+                    "wo_id": base,
+                    "variants": variants,
+                    "message": f"Multiple YAML files for same WO: {variants}",
+                    "invariant_violated": "One WO ID must have exactly one canonical YAML.",
+                }
+            )
     return findings
 
 
