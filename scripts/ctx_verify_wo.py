@@ -27,6 +27,7 @@ import argparse
 import json
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -53,7 +54,14 @@ def load_wo_yaml(root: Path, wo_id: str) -> tuple[dict[str, Any] | None, list[st
         if path.exists():
             found_states.append(state)
             if wo_data is None:
-                wo_data = yaml.safe_load(path.read_text())
+                try:
+                    wo_data = yaml.safe_load(path.read_text())
+                except yaml.YAMLError as e:
+                    print(f"ERROR: Failed to parse {path}: {e}", file=sys.stderr)
+                    return None, found_states
+                except OSError as e:
+                    print(f"ERROR: Failed to read {path}: {e}", file=sys.stderr)
+                    return None, found_states
 
     return wo_data, found_states
 
@@ -77,8 +85,6 @@ def run_command(cmd: str, log_dir: Path, index: int, timeout: int = 300) -> tupl
     Returns:
         (passed, output, duration_seconds)
     """
-    import time
-
     log_file = log_dir / f"command_{index:02d}.log"
 
     start = time.monotonic()

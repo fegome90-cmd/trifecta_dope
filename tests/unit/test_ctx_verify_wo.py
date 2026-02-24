@@ -78,9 +78,10 @@ def test_load_wo_yaml_finds_running(wo_repo):
     running_dir = wo_repo / "_ctx" / "jobs" / "running"
     (running_dir / "WO-UNIT1.yaml").write_text(wo_yaml_with_commands("WO-UNIT1", ["echo test"]))
 
-    result = load_wo_yaml(wo_repo, "WO-UNIT1")
+    result, states = load_wo_yaml(wo_repo, "WO-UNIT1")
     assert result is not None
     assert result["id"] == "WO-UNIT1"
+    assert "running" in states
 
 
 def test_load_wo_yaml_finds_pending(wo_repo):
@@ -90,9 +91,10 @@ def test_load_wo_yaml_finds_pending(wo_repo):
     pending_dir = wo_repo / "_ctx" / "jobs" / "pending"
     (pending_dir / "WO-UNIT2.yaml").write_text(wo_yaml_with_commands("WO-UNIT2", ["echo test"]))
 
-    result = load_wo_yaml(wo_repo, "WO-UNIT2")
+    result, states = load_wo_yaml(wo_repo, "WO-UNIT2")
     assert result is not None
     assert result["id"] == "WO-UNIT2"
+    assert "pending" in states
 
 
 def test_load_wo_yaml_finds_done(wo_repo):
@@ -102,8 +104,9 @@ def test_load_wo_yaml_finds_done(wo_repo):
     done_dir = wo_repo / "_ctx" / "jobs" / "done"
     (done_dir / "WO-UNIT3.yaml").write_text(wo_yaml_with_commands("WO-UNIT3", ["echo test"]))
 
-    result = load_wo_yaml(wo_repo, "WO-UNIT3")
+    result, states = load_wo_yaml(wo_repo, "WO-UNIT3")
     assert result is not None
+    assert "done" in states
 
 
 def test_load_wo_yaml_finds_failed(wo_repo):
@@ -113,16 +116,18 @@ def test_load_wo_yaml_finds_failed(wo_repo):
     failed_dir = wo_repo / "_ctx" / "jobs" / "failed"
     (failed_dir / "WO-UNIT4.yaml").write_text(wo_yaml_with_commands("WO-UNIT4", ["echo test"]))
 
-    result = load_wo_yaml(wo_repo, "WO-UNIT4")
+    result, states = load_wo_yaml(wo_repo, "WO-UNIT4")
     assert result is not None
+    assert "failed" in states
 
 
 def test_load_wo_yaml_not_found_returns_none(wo_repo):
-    """ctx_verify_wo.py must return None for non-existent WO."""
+    """ctx_verify_wo.py must return (None, []) for non-existent WO."""
     from ctx_verify_wo import load_wo_yaml
 
-    result = load_wo_yaml(wo_repo, "WO-NONEXISTENT")
+    result, states = load_wo_yaml(wo_repo, "WO-NONEXISTENT")
     assert result is None
+    assert states == []
 
 
 def test_detect_split_brain(wo_repo):
@@ -133,19 +138,12 @@ def test_detect_split_brain(wo_repo):
     (running_dir / "WO-SPLIT.yaml").write_text(wo_yaml_with_commands("WO-SPLIT", ["echo test"]))
     (done_dir / "WO-SPLIT.yaml").write_text(wo_yaml_with_commands("WO-SPLIT", ["echo test"]))
 
-    # Run ctx_verify_wo.py
+    # Run ctx_verify_wo.py as script
+    script_path = Path(__file__).parent.parent.parent / "scripts" / "ctx_verify_wo.py"
     result = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "ctx_verify_wo",
-            "WO-SPLIT",
-            "--root",
-            str(wo_repo),
-        ],
+        [sys.executable, str(script_path), "WO-SPLIT", "--root", str(wo_repo)],
         capture_output=True,
         text=True,
-        cwd=wo_repo,
     )
 
     # MUST exit 2 for split-brain
@@ -161,24 +159,17 @@ def test_no_verify_commands_fails(wo_repo):
     running_dir = wo_repo / "_ctx" / "jobs" / "running"
     (running_dir / "WO-NO-CMDS.yaml").write_text(wo_yaml_no_commands("WO-NO-CMDS"))
 
+    script_path = Path(__file__).parent.parent.parent / "scripts" / "ctx_verify_wo.py"
     result = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "ctx_verify_wo",
-            "WO-NO-CMDS",
-            "--root",
-            str(wo_repo),
-        ],
+        [sys.executable, str(script_path), "WO-NO-CMDS", "--root", str(wo_repo)],
         capture_output=True,
         text=True,
-        cwd=wo_repo,
     )
 
     # MUST exit 2 for missing verify.commands
     assert result.returncode == 2, (
         f"Expected exit 2 for missing verify.commands, got {result.returncode}. "
-        f"stdout: {result.stdout}"
+        f"stdout: {result.stdout}, stderr: {result.stderr}"
     )
     assert "verify.commands" in result.stdout.lower() or "verify.commands" in result.stderr.lower()
 
@@ -190,23 +181,16 @@ def test_commands_pass_returns_0(wo_repo):
         wo_yaml_with_commands("WO-PASS", ["echo 'test 1'", "echo 'test 2'"])
     )
 
+    script_path = Path(__file__).parent.parent.parent / "scripts" / "ctx_verify_wo.py"
     result = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "ctx_verify_wo",
-            "WO-PASS",
-            "--root",
-            str(wo_repo),
-        ],
+        [sys.executable, str(script_path), "WO-PASS", "--root", str(wo_repo)],
         capture_output=True,
         text=True,
-        cwd=wo_repo,
     )
 
     assert result.returncode == 0, (
         f"Expected exit 0 for passing commands, got {result.returncode}. "
-        f"stdout: {result.stdout}"
+        f"stdout: {result.stdout}, stderr: {result.stderr}"
     )
     assert "PASS" in result.stdout
 
@@ -218,23 +202,16 @@ def test_command_fail_returns_1(wo_repo):
         wo_yaml_with_commands("WO-FAIL", ["echo 'pass'", "exit 1"])
     )
 
+    script_path = Path(__file__).parent.parent.parent / "scripts" / "ctx_verify_wo.py"
     result = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "ctx_verify_wo",
-            "WO-FAIL",
-            "--root",
-            str(wo_repo),
-        ],
+        [sys.executable, str(script_path), "WO-FAIL", "--root", str(wo_repo)],
         capture_output=True,
         text=True,
-        cwd=wo_repo,
     )
 
     assert result.returncode == 1, (
         f"Expected exit 1 for failing command, got {result.returncode}. "
-        f"stdout: {result.stdout}"
+        f"stdout: {result.stdout}, stderr: {result.stderr}"
     )
     assert "FAIL" in result.stdout
 
@@ -247,22 +224,14 @@ def test_json_output(wo_repo):
     )
 
     json_path = wo_repo / "report.json"
+    script_path = Path(__file__).parent.parent.parent / "scripts" / "ctx_verify_wo.py"
     result = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "ctx_verify_wo",
-            "WO-JSON",
-            "--root",
-            str(wo_repo),
-            "--json",
-            str(json_path),
-        ],
+        [sys.executable, str(script_path), "WO-JSON", "--root", str(wo_repo), "--json", str(json_path)],
         capture_output=True,
         text=True,
-        cwd=wo_repo,
     )
 
+    assert result.returncode == 0, f"Script failed: {result.stderr}"
     assert json_path.exists(), "JSON report not created"
     report = json.loads(json_path.read_text())
     assert report["wo_id"] == "WO-JSON"
