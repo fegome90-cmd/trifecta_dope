@@ -278,6 +278,12 @@ def _find_verdict_failures(repo_root: Path, running_yamls: set[str]) -> list[dic
 
 
 def _find_duplicate_yamls(wo_state: dict[str, list[str]]) -> list[dict[str, Any]]:
+    """Find multiple YAML files with the same normalized WO ID.
+
+    This catches cases like:
+    - WO-0008.yaml and WO-0008_job.yaml in any state directories
+    - Variants with same base ID should be consolidated
+    """
     findings: list[dict[str, Any]] = []
     seen: dict[str, list[str]] = {}
     for wo_id in wo_state:
@@ -286,20 +292,18 @@ def _find_duplicate_yamls(wo_state: dict[str, list[str]]) -> list[dict[str, Any]
 
     for base, variants in sorted(seen.items()):
         if len(variants) > 1:
-            all_states = []
-            for v in variants:
-                all_states.extend(wo_state.get(v, []))
-            if len(all_states) != len(set(all_states)):
-                findings.append(
-                    {
-                        "code": "duplicate_yaml",
-                        "severity": "P2",
-                        "wo_id": base,
-                        "variants": variants,
-                        "message": f"Multiple YAML files for same WO: {variants}",
-                        "invariant_violated": "One WO ID must have exactly one canonical YAML.",
-                    }
-                )
+            # Multiple YAML files exist with the same normalized WO ID
+            # This is the finding - no need for state comparison
+            findings.append(
+                {
+                    "code": "duplicate_yaml",
+                    "severity": "P2",
+                    "wo_id": base,
+                    "variants": variants,
+                    "message": f"Multiple YAML files for same WO: {variants}",
+                    "invariant_violated": "One WO ID must have exactly one canonical YAML.",
+                }
+            )
     return findings
 
 
@@ -321,6 +325,12 @@ def main() -> int:
         default="",
         help="Comma-separated list of finding codes that trigger exit 1 if found",
     )
+    parser.add_argument(
+        "--fast-p0",
+        action="store_true",
+        help="Fast mode: only report P0 findings, skip P1/P2. Runtime <10s. "
+        "Equivalent to filtering output to severity=P0 only.",
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.root).expanduser().resolve()
@@ -329,6 +339,32 @@ def main() -> int:
         return 2
 
     report = audit(repo_root)
+
+    # Fail-on logic: check BEFORE --fast-p0 filtering to avoid silently hiding P1/P2
+    # This ensures --fail-on works correctly even when --fast-p0 is used
+    if args.fail_on:
+        fail_codes = {c.strip() for c in args.fail_on.split(",") if c.strip()}
+        original_codes = {f["code"] for f in report["findings"]}
+        triggered = fail_codes & original_codes
+        if triggered:
+            # Even if --fast-p0 hides the finding, we still fail
+            print(f"\nFAIL: --fail-on triggered for: {sorted(triggered)}", file=sys.stderr)
+            if args.fast_p0:
+                print(f"NOTE: Some triggered codes were P1/P2 and hidden by --fast-p0", file=sys.stderr)
+            return 1
+
+    # Fast P0 mode: filter to only P0 findings (after fail-on check)
+    if args.fast_p0:
+        report["findings"] = [f for f in report["findings"] if f.get("severity") == "P0"]
+        # Recalculate summary
+        s = report["summary"]
+        p0_only = report["findings"]
+        s["total_findings"] = len(p0_only)
+        s["by_severity"] = {"P0": len(p0_only), "P1": 0, "P2": 0}
+        s["by_code"] = {}
+        for f in p0_only:
+            s["by_code"][f["code"]] = s["by_code"].get(f["code"], 0) + 1
+        s["fast_p0_mode"] = True
 
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -342,15 +378,6 @@ def main() -> int:
     )
     for code, count in sorted(s["by_code"].items()):
         print(f"  {code}: {count}")
-
-    # Fail-on logic
-    if args.fail_on:
-        fail_codes = {c.strip() for c in args.fail_on.split(",") if c.strip()}
-        active_codes = set(s["by_code"].keys())
-        triggered = fail_codes & active_codes
-        if triggered:
-            print(f"\nFAIL: --fail-on triggered for: {sorted(triggered)}", file=sys.stderr)
-            return 1
 
     return 0
 

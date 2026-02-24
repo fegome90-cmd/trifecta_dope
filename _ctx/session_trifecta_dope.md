@@ -1431,3 +1431,6 @@ Created WO-0055 (P1) to fix hook bypass system issues discovered during WO-0050 
 - **Summary**: Produced audit report for Trifecta code review evaluation. Verdict: REQUEST_CHANGES due to critical audit trail gap in _log_bypass().
 - **Pack SHA**: `14335542276ff407`
 
+
+[WO-0015] intent: Implement Repository Topology Scanner with TDD - scan_topology(root: Path) -> TopologyMap
+[WO-0015] result: COMPLETE - 17 tests passing, 135 LOC implementation, ruff/mypy clean

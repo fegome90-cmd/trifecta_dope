@@ -64,16 +64,27 @@ grep "\[WO-XXXX\] intent:" _ctx/session.md
 grep "\[WO-XXXX\] result:" _ctx/session.md
 ```
 
-### Step 1: Run Verify Commands
+### Step 1: Run WO-Scoped Verification (Gate WO)
+
+**ONLY runs verify.commands from WO YAML - NOT full suite.**
 
 ```bash
-# From WO YAML
-grep -A 5 "verify:" _ctx/jobs/running/WO-XXXX.yaml
+# Run scoped verification
+uv run python scripts/ctx_verify_wo.py WO-XXXX
 
-# Execute each
-uv run pytest tests/unit/test_xxx.py
-uv run ruff check src/
+# Exit codes:
+#   0: All WO commands passed
+#   1: One or more commands failed
+#   2: Usage error (missing WO, split-brain, no commands)
 ```
+
+**HARD RULES:**
+- If WO has NO verify.commands → FAIL (exit 2), NO fallback PASS
+- If WO found in >1 state → FAIL (exit 2) with split-brain error
+- Full suite (unit/integration/acceptance) runs in CI, NOT during finish
+
+**NOTE:** Full test suite (unit/integration/acceptance) runs in CI as Gate Release.
+Do NOT run `make gate-all` during wo-finish - that's for CI only.
 
 ### Step 2: Log Result (if not done)
 
