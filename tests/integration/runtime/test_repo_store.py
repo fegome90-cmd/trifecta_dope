@@ -2,7 +2,7 @@ import pytest
 from pathlib import Path
 import tempfile
 import shutil
-from src.platform.repo_store import RepoStore, RepoRecord
+from src.platform.repo_store import RepoStore
 
 
 class TestRepoStore:
