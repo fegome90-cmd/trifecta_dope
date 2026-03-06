@@ -45,6 +45,12 @@ from src.infrastructure.telemetry import Telemetry
 from src.infrastructure.templates import TemplateRenderer
 from src.application.obsidian_sync_use_case import create_sync_use_case
 from src.application.linear_sync_use_case import LinearSyncUseCase
+from src.application.status_use_case import StatusUseCase
+from src.application.doctor_use_case import DoctorUseCase
+from src.application.repo_use_case import RepoUseCase
+from src.application.index_use_case import IndexUseCase
+from src.application.query_use_case import QueryUseCase
+from src.application.daemon_use_case import DaemonUseCase
 from src.infrastructure.obsidian_config import ObsidianConfigManager
 
 
@@ -2160,6 +2166,268 @@ def main() -> None:
         typer.echo(f"Error: {e}", err=True)
         typer.echo(traceback.format_exc(), err=True)
         sys.exit(1)
+
+
+# =============================================================================
+# Status, Doctor, Repo, Index, Query, Daemon Commands (WO-0042 + WO-0043)
+# =============================================================================
+
+
+@app.command("status")
+def status_cmd(
+    repo: str = typer.Option(..., "--repo", "-r", help="Repository path"),
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+) -> None:
+    """Show status of a repository."""
+    use_case = StatusUseCase()
+    status = use_case.execute(repo)
+
+    if json_output:
+        output = {
+            "repo_id": status.segment_ref.id,
+            "path": str(status.segment_ref.root_abs),
+            "slug": status.segment_ref.slug,
+            "has_ctx_dir": status.has_ctx_dir,
+            "has_context_pack": status.has_context_pack,
+            "has_telemetry": status.has_telemetry,
+            "has_skill_md": status.has_skill_md,
+            "has_prime": status.has_prime,
+            "has_agent": status.has_agent,
+            "has_session": status.has_session,
+        }
+        typer.echo(json.dumps(output, indent=2))
+    else:
+        typer.echo(f"Status for {status.segment_ref.slug}")
+        typer.echo(f"  Path: {status.segment_ref.root_abs}")
+        typer.echo(f"  ID: {status.segment_ref.id}")
+        typer.echo(f"  _ctx/: {'✓' if status.has_ctx_dir else '✗'}")
+        typer.echo(f"  context_pack.json: {'✓' if status.has_context_pack else '✗'}")
+        typer.echo(f"  telemetry: {'✓' if status.has_telemetry else '✗'}")
+        typer.echo(f"  skill.md: {'✓' if status.has_skill_md else '✗'}")
+        typer.echo(f"  prime_*.md: {'✓' if status.has_prime else '✗'}")
+        typer.echo(f"  agent*.md: {'✓' if status.has_agent else '✗'}")
+        typer.echo(f"  session_*.md: {'✓' if status.has_session else '✗'}")
+
+
+@app.command("doctor")
+def doctor_cmd(
+    repo: str = typer.Option(..., "--repo", "-r", help="Repository path"),
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+) -> None:
+    """Diagnose issues in a repository."""
+    use_case = DoctorUseCase()
+    diagnosis = use_case.execute(repo)
+
+    if json_output:
+        output = {
+            "score": diagnosis.health_score,
+            "healthy": diagnosis.health_score >= 70,
+            "issues": diagnosis.issues,
+        }
+        typer.echo(json.dumps(output, indent=2))
+    else:
+        typer.echo(f"Doctor diagnosis for {diagnosis.segment_ref.slug}")
+        typer.echo(f"  Health score: {diagnosis.health_score}/100")
+        typer.echo(f"  Healthy: {'✓' if diagnosis.health_score >= 70 else '✗'}")
+        if diagnosis.issues:
+            typer.echo("  Issues:")
+            for issue in diagnosis.issues:
+                typer.echo(f"    - {issue}")
+
+
+@app.command("repo")
+def repo_cmd() -> None:
+    """Repository management commands."""
+    typer.echo("Use: repo register, repo list, repo show")
+
+
+@app.command("repo-register")
+def repo_register(
+    repo: str = typer.Argument(..., help="Repository path to register"),
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+) -> None:
+    """Register a repository."""
+    use_case = RepoUseCase()
+    result = use_case.register(repo)
+
+    if json_output:
+        output = {"repo_id": result.repo_id, "path": result.path}
+        typer.echo(json.dumps(output, indent=2))
+    else:
+        typer.echo(f"Registered: {result.repo_id}")
+
+
+@app.command("repo-list")
+def repo_list(json_output: bool = typer.Option(False, "--json", help="Output as JSON")) -> None:
+    """List registered repositories."""
+    use_case = RepoUseCase()
+    repos = use_case.list_repos()
+
+    if json_output:
+        output = [{"repo_id": r.repo_id, "path": r.path} for r in repos]
+        typer.echo(json.dumps(output, indent=2))
+    else:
+        if not repos:
+            typer.echo("No registered repositories")
+        else:
+            for r in repos:
+                typer.echo(f"{r.repo_id}: {r.path}")
+
+
+@app.command("repo-show")
+def repo_show(
+    repo_id: str = typer.Argument(..., help="Repository ID"),
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+) -> None:
+    """Show repository details."""
+    use_case = RepoUseCase()
+    repo = use_case.show(repo_id)
+
+    if repo is None:
+        typer.echo(f"Repository not found: {repo_id}", err=True)
+        raise typer.Exit(1)
+
+    if json_output:
+        output = {"repo_id": repo.repo_id, "path": repo.path, "slug": repo.slug}
+        typer.echo(json.dumps(output, indent=2))
+    else:
+        typer.echo(f"Repository: {repo.repo_id}")
+        typer.echo(f"  Path: {repo.path}")
+        typer.echo(f"  Slug: {repo.slug}")
+
+
+@app.command("index")
+def index_cmd(
+    repo: str = typer.Option(..., "--repo", "-r", help="Repository path"),
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+) -> None:
+    """Index a repository for search."""
+    from src.domain.segment_resolver import resolve_segment_ref
+
+    ref = resolve_segment_ref(repo)
+    runtime_dir = (
+        Path.home() / ".local" / "share" / "trifecta" / "repos" / ref.fingerprint / "runtime"
+    )
+    use_case = IndexUseCase(runtime_dir)
+    result = use_case.execute(ref.root_abs)
+
+    if json_output:
+        typer.echo(json.dumps(result, indent=2))
+    else:
+        typer.echo(f"Indexed {result.get('indexed', 0)} files")
+
+
+@app.command("query")
+def query_cmd(
+    query: str = typer.Argument(..., help="Search query"),
+    repo: str = typer.Option(..., "--repo", "-r", help="Repository path"),
+    limit: int = typer.Option(10, "--limit", "-l", help="Max results"),
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+) -> None:
+    """Search indexed repository."""
+    from src.domain.segment_resolver import resolve_segment_ref
+
+    ref = resolve_segment_ref(repo)
+    runtime_dir = (
+        Path.home() / ".local" / "share" / "trifecta" / "repos" / ref.fingerprint / "runtime"
+    )
+    use_case = QueryUseCase(runtime_dir)
+    result = use_case.execute(query, limit)
+
+    if json_output:
+        typer.echo(json.dumps(result, indent=2))
+    else:
+        typer.echo(f"Found {result.get('count', 0)} results")
+        for r in result.get("results", []):
+            typer.echo(f"  {r.get('file')}")
+            typer.echo(f"    {r.get('snippet')}")
+
+
+daemon_app = typer.Typer(help="Daemon management commands")
+app.add_typer(daemon_app, name="daemon")
+
+
+@daemon_app.command("start")
+def daemon_start(
+    repo: str = typer.Option(..., "--repo", "-r", help="Repository path"),
+) -> None:
+    """Start daemon for repository."""
+    from src.domain.segment_resolver import resolve_segment_ref
+
+    ref = resolve_segment_ref(repo)
+    runtime_dir = (
+        Path.home() / ".local" / "share" / "trifecta" / "repos" / ref.fingerprint / "runtime"
+    )
+    use_case = DaemonUseCase(runtime_dir)
+    result = use_case.start()
+
+    if result.get("running"):
+        typer.echo("Daemon started")
+    else:
+        typer.echo("Failed to start daemon", err=True)
+        raise typer.Exit(1)
+
+
+@daemon_app.command("stop")
+def daemon_stop(
+    repo: str = typer.Option(..., "--repo", "-r", help="Repository path"),
+) -> None:
+    """Stop daemon for repository."""
+    from src.domain.segment_resolver import resolve_segment_ref
+
+    ref = resolve_segment_ref(repo)
+    runtime_dir = (
+        Path.home() / ".local" / "share" / "trifecta" / "repos" / ref.fingerprint / "runtime"
+    )
+    use_case = DaemonUseCase(runtime_dir)
+    result = use_case.stop()
+
+    typer.echo("Daemon stopped")
+
+
+@daemon_app.command("status")
+def daemon_status(
+    repo: str = typer.Option(..., "--repo", "-r", help="Repository path"),
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+) -> None:
+    """Show daemon status for repository."""
+    from src.domain.segment_resolver import resolve_segment_ref
+
+    ref = resolve_segment_ref(repo)
+    runtime_dir = (
+        Path.home() / ".local" / "share" / "trifecta" / "repos" / ref.fingerprint / "runtime"
+    )
+    use_case = DaemonUseCase(runtime_dir)
+    result = use_case.status()
+
+    if json_output:
+        typer.echo(json.dumps(result, indent=2))
+    else:
+        status_str = "running" if result.get("running") else "not running"
+        typer.echo(f"Daemon: {status_str}")
+        if result.get("pid"):
+            typer.echo(f"  PID: {result['pid']}")
+
+
+@daemon_app.command("restart")
+def daemon_restart(
+    repo: str = typer.Option(..., "--repo", "-r", help="Repository path"),
+) -> None:
+    """Restart daemon for repository."""
+    from src.domain.segment_resolver import resolve_segment_ref
+
+    ref = resolve_segment_ref(repo)
+    runtime_dir = (
+        Path.home() / ".local" / "share" / "trifecta" / "repos" / ref.fingerprint / "runtime"
+    )
+    use_case = DaemonUseCase(runtime_dir)
+    result = use_case.restart()
+
+    if result.get("running"):
+        typer.echo("Daemon restarted")
+    else:
+        typer.echo("Failed to restart daemon", err=True)
+        raise typer.Exit(1)
 
 
 if __name__ == "__main__":

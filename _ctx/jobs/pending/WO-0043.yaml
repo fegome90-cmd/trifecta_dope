@@ -1,7 +1,7 @@
 version: 1
 id: WO-0043
 epic_id: E-V1
-title: SQLite + Daemon + Operación Real
+title: "SQLite + Daemon + Operaci\xF3n Real"
 priority: P0
 status: pending
 owner: null
@@ -9,88 +9,22 @@ branch: job/WO-0043
 worktree: ../.worktrees/WO-0043
 scope:
   allow:
-  - src/trifecta/platform/daemon_manager.py
-  - src/trifecta/platform/repo_store.py
-  - src/trifecta/platform/health.py
-  - src/trifecta/application/index_use_case.py
-  - src/trifecta/application/query_use_case.py
-  - src/trifecta/application/daemon_use_case.py
-  - src/trifecta/infrastructure/sqlite/**
-  - src/trifecta/interfaces/cli/**
+  - src/platform/daemon_manager.py
+  - src/platform/repo_store.py
+  - src/platform/health.py
+  - src/application/index_use_case.py
+  - src/application/query_use_case.py
+  - src/application/daemon_use_case.py
+  - src/infrastructure/sqlite/**
+  - src/cli/**
   - tests/integration/runtime/**
   - tests/integration/daemon/**
   deny: []
-deliverables:
-- Real Repo Store (repo_store.py with SQLite)
-- Per-repo SQLite (ast.db, anchors.db, search.db, runtime.db)
-- Daemon Manager (start/stop/status/restart, on-demand, reuse, TTL, recovery)
-- Health check real
-- Index/Query wiring
-- V1 commands (index, query, daemon start/stop/status/restart)
-objective: |
-  1. Real Repo Store:
-     - repo_store.py with SQLite
-     - CRUD of registered repos
-     - Isolation by repo_id
-
-  2. Per-repo SQLite:
-     - ast.db, anchors.db, search.db, runtime.db
-     - Versioned schemas
-     - Reindex doesn't affect other repos
-
-  3. Daemon Manager:
-     - daemon_manager.py
-     - start/stop/status/restart
-     - On-demand: lifts if doesn't exist
-     - Reuses if already healthy
-     - TTL for idle
-     - Recovery on dead socket
-
-  4. Health:
-     - health.py
-     - Real healthcheck
-     - Runtime readiness
-
-  5. Index/Query Wiring:
-     - index_use_case.py
-     - query_use_case.py
-     - Wiring to search.db
-
-  6. Remaining V1 commands:
-     - trifecta index --repo <path>
-     - trifecta query --repo <path> "query"
-     - trifecta daemon start|stop|status|restart --repo <path>
-
-  Recovery test detail:
-  # 1. Start daemon
-  runner = CliRunner()
-  result = runner.invoke(daemon_start, ["--repo", fixture_repo])
-
-  # 2. Get PID from runtime
-  pid_file = Path(f"{runtime_dir}/daemon/pid")
-  original_pid = pid_file.read_text().strip()
-
-  # 3. Kill daemon process directly (NOT pkill -f)
-  os.kill(int(original_pid), signal.SIGTERM)
-
-  # 4. Verify status detects death
-  result = runner.invoke(daemon_status, ["--repo", fixture_repo])
-  assert "not running" in result.output or "recovering" in result.output
-
-  # 5. Verify daemon can be restarted
-  result = runner.invoke(daemon_start, ["--repo", fixture_repo])
-  assert result.exit_code == 0
 verify:
   commands:
   - uv run pytest -q tests/integration/runtime/ -k "test_daemon or test_store"
-  - uv run ruff check src/trifecta/platform/
+  - uv run ruff check src/platform/
   - uv run pytest -q tests/integration/daemon/test_recovery.py -k "test_daemon_recovers_on_death"
-diff_budget:
-  max_files: 20
-  max_loc: 800
-stop_conditions:
-  max_iterations: 12
-  max_fail_verify: 3
 dod_id: DOD-DEFAULT
 execution:
   engine: trifecta
@@ -107,3 +41,31 @@ trace:
   related_wos:
   - WO-0041
   - WO-0042
+objective: "1. Real Repo Store:\n   - repo_store.py with SQLite\n   - CRUD of registered repos\n   - Isolation\
+  \ by repo_id\n\n2. Per-repo SQLite:\n   - ast.db, anchors.db, search.db, runtime.db\n   - Versioned\
+  \ schemas\n   - Reindex doesn't affect other repos\n\n3. Daemon Manager:\n   - daemon_manager.py\n \
+  \  - start/stop/status/restart\n   - On-demand: lifts if doesn't exist\n   - Reuses if already healthy\n\
+  \   - TTL for idle\n   - Recovery on dead socket\n\n4. Health:\n   - health.py\n   - Real healthcheck\n\
+  \   - Runtime readiness\n\n5. Index/Query Wiring:\n   - index_use_case.py\n   - query_use_case.py\n\
+  \   - Wiring to search.db\n\n6. Remaining V1 commands:\n   - trifecta index --repo <path>\n   - trifecta\
+  \ query --repo <path> \"query\"\n   - trifecta daemon start|stop|status|restart --repo <path>\n\nRecovery\
+  \ test detail:\n# 1. Start daemon\nrunner = CliRunner()\nresult = runner.invoke(daemon_start, [\"--repo\"\
+  , fixture_repo])\n\n# 2. Get PID from runtime\npid_file = Path(f\"{runtime_dir}/daemon/pid\")\noriginal_pid\
+  \ = pid_file.read_text().strip()\n\n# 3. Kill daemon process directly (NOT pkill -f)\nos.kill(int(original_pid),\
+  \ signal.SIGTERM)\n\n# 4. Verify status detects death\nresult = runner.invoke(daemon_status, [\"--repo\"\
+  , fixture_repo])\nassert \"not running\" in result.output or \"recovering\" in result.output\n\n# 5.\
+  \ Verify daemon can be restarted\nresult = runner.invoke(daemon_start, [\"--repo\", fixture_repo])\n\
+  assert result.exit_code == 0\n"
+deliverables:
+- Real Repo Store (repo_store.py with SQLite)
+- Per-repo SQLite (ast.db, anchors.db, search.db, runtime.db)
+- Daemon Manager (start/stop/status/restart, on-demand, reuse, TTL, recovery)
+- Health check real
+- Index/Query wiring
+- V1 commands (index, query, daemon start/stop/status/restart)
+diff_budget:
+  max_files: 20
+  max_loc: 800
+stop_conditions:
+  max_iterations: 12
+  max_fail_verify: 3

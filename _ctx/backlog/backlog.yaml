@@ -171,7 +171,7 @@ epics:
     Goal: Native-first runtime with repo_id SSOT, CLI thin client, SQLite storage,
     and daemon operation.
 
-    Principle: 0041 defines → 0042 exposes → 0043 operates
+    Principle: WO-0041 defines → WO-0042 exposes → WO-0043 operates
 
     '
   status: pending

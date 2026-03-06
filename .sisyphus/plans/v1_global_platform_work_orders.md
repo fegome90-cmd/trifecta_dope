@@ -6,7 +6,7 @@
 > 
 > **Entregables**: 1 Epic + 4 Work Orders
 > 
-> **Principio clave**: 0041 define → 0042 expone → 0043 opera
+> **Principio clave**: WO-0041 define → WO-0042 expone → WO-0043 opera
 
 ---
 
@@ -143,10 +143,10 @@ segment_id o runtime_key = identifica worktree/contexto específico
 
 ---
 
-### Tarea 2: WO-0040 - Roadmap Master (Tracking-Only)
+### Tarea 2: E-V1-WO0 - Roadmap Master (Tracking-Only)
 
 **What to do**:
-- Crear `_ctx/jobs/pending/WO-0040.yaml`
+- Crear `_ctx/jobs/pending/E-V1-WO0.yaml`
 
 **Scope**:
 - allow: docs/plans/*, backlog.yaml, WO-*.yaml
@@ -167,16 +167,16 @@ commands:
 
 ---
 
-### Tarea 3: WO-0041 - SSOT + Contratos + Skeleton
+### Tarea 3: E-V1-WO1 - SSOT + Contratos + Skeleton
 
 **What to do**:
-- Crear `_ctx/jobs/pending/WO-0041.yaml`
+- Crear `_ctx/jobs/pending/E-V1-WO1.yaml`
 
 **Scope (allow)**:
 ```
-src/trifecta/domain/**
-src/trifecta/platform/registry.py        # contract-only
-src/trifecta/platform/runtime_manager.py # skeleton-only
+src/domain/**
+src/platform/registry.py        # contract-only
+src/platform/runtime_manager.py # skeleton-only
 docs/plans/**
 tests/unit/**
 tests/contracts/**
@@ -185,9 +185,9 @@ tests/contracts/**
 **Scope (deny)**:
 ```
 src/infrastructure/cli.py
-src/trifecta/platform/daemon_manager.py
-src/trifecta/platform/repo_store.py
-src/trifecta/infrastructure/sqlite/**
+src/platform/daemon_manager.py
+src/platform/repo_store.py
+src/infrastructure/sqlite/**
 ```
 
 **Objective**:
@@ -242,7 +242,7 @@ class SegmentRef:
 commands:
   - uv run pytest -q tests/unit/test_segment_ref.py
   - uv run pytest -q tests/contracts/test_segment_ref_contract.py
-  - uv run ruff check src/trifecta/domain/
+  - uv run ruff check src/domain/
   # Grep guards más semánticos:
   - rg "compute_segment_id|normalize_segment_id|sha256.*path" src/ --type py | wc -l  # debe ser 0
 ```
@@ -257,27 +257,27 @@ commands:
 
 ---
 
-### Tarea 4: WO-0042 - CLI Adelgazado + Repo Commands
+### Tarea 4: E-V1-WO2 - CLI Adelgazado + Repo Commands
 
 **What to do**:
-- Crear `_ctx/jobs/pending/WO-0042.yaml`
-- **Dependencia**: WO-0041
+- Crear `_ctx/jobs/pending/E-V1-WO2.yaml`
+- **Dependencia**: E-V1-WO1
 
 **Scope (allow)**:
 ```
-src/trifecta/application/status_use_case.py
-src/trifecta/application/doctor_use_case.py
-src/trifecta/application/repo_use_case.py
-src/trifecta/interfaces/cli/**
+src/application/status_use_case.py
+src/application/doctor_use_case.py
+src/application/repo_use_case.py
+src/interfaces/cli/**
 src/infrastructure/cli.py   # wrapper/compat
 tests/integration/cli/**
 ```
 
 **Scope (deny)**:
 ```
-src/trifecta/platform/daemon_manager.py
-src/trifecta/platform/repo_store.py
-src/trifecta/infrastructure/sqlite/**
+src/platform/daemon_manager.py
+src/platform/repo_store.py
+src/infrastructure/sqlite/**
 ```
 
 **Objective**:
@@ -301,14 +301,14 @@ src/trifecta/infrastructure/sqlite/**
    - JSON schema estable
 
 4. Wrapper legacy:
-   - src/infrastructure/cli.py delega a src/trifecta/interfaces/cli/
+   - src/infrastructure/cli.py delega a src/interfaces/cli/
 ```
 
 **Verify (focalizado)**:
 ```yaml
 commands:
   - uv run pytest -q tests/integration/cli/ -k "test_status or test_doctor or test_repo"
-  - uv run ruff check src/trifecta/interfaces/cli/
+  - uv run ruff check src/interfaces/cli/
   # Verificar --json con entrypoint de test controlado:
   - uv run pytest -q tests/integration/cli/test_status_json.py -k "test_status_json_valid"
 ```
@@ -321,22 +321,22 @@ commands:
 
 ---
 
-### Tarea 5: WO-0043 - SQLite + Daemon + Operación Real
+### Tarea 5: E-V1-WO3 - SQLite + Daemon + Operación Real
 
 **What to do**:
-- Crear `_ctx/jobs/pending/WO-0043.yaml`
-- **Dependencias**: WO-0041, WO-0042
+- Crear `_ctx/jobs/pending/E-V1-WO3.yaml`
+- **Dependencias**: E-V1-WO1, E-V1-WO2
 
 **Scope (allow)**:
 ```
-src/trifecta/platform/daemon_manager.py
-src/trifecta/platform/repo_store.py
-src/trifecta/platform/health.py
-src/trifecta/application/index_use_case.py
-src/trifecta/application/query_use_case.py
-src/trifecta/application/daemon_use_case.py
-src/trifecta/infrastructure/sqlite/**
-src/trifecta/interfaces/cli/**
+src/platform/daemon_manager.py
+src/platform/repo_store.py
+src/platform/health.py
+src/application/index_use_case.py
+src/application/query_use_case.py
+src/application/daemon_use_case.py
+src/infrastructure/sqlite/**
+src/interfaces/cli/**
 tests/integration/runtime/**
 tests/integration/daemon/**
 ```
@@ -387,7 +387,7 @@ tests/integration/daemon/**
 ```yaml
 commands:
   - uv run pytest -q tests/integration/runtime/ -k "test_daemon or test_store"
-  - uv run ruff check src/trifecta/platform/
+  - uv run ruff check src/platform/
   # Verify recovery con kill dirigido:
   - uv run pytest -q tests/integration/daemon/test_recovery.py -k "test_daemon_recovers_on_death"
 ```
@@ -424,10 +424,10 @@ assert result.exit_code == 0
 
 ---
 
-## Layout Final src/trifecta/
+## Layout Final src/
 
 ```
-src/trifecta/
+src/
 ├── domain/
 │   ├── segment_ref.py      # ✅ SSOT + SegmentRef object
 │   ├── repo_ref.py         # ✅ Repo reference
@@ -491,7 +491,7 @@ src/trifecta/
 uv run python scripts/ctx_backlog_validate.py --strict
 
 # 4. Ejecutar
-uv run python scripts/ctx_wo_take.py WO-0041
+uv run python scripts/ctx_wo_take.py E-V1-WO1
 ```
 
 ---
@@ -499,8 +499,8 @@ uv run python scripts/ctx_wo_take.py WO-0041
 ## Success Criteria
 
 - [ ] 1 Epic + 4 WOs creados y validados
-- [ ] WO-0041: SSOT + SegmentRef object + contracts
-- [ ] WO-0042: CLI delgada + --json estable
-- [ ] WO-0043: SQLite + daemon + recovery
+- [ ] E-V1-WO1: SSOT + SegmentRef object + contracts
+- [ ] E-V1-WO2: CLI delgada + --json estable
+- [ ] E-V1-WO3: SQLite + daemon + recovery
 - [ ] Criterios arquitectónicos cumplidos
 - [ ] Criterios operacionales cumplidos
