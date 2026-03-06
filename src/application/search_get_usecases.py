@@ -3,6 +3,7 @@
 import hashlib
 import os
 import subprocess
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal, Optional
 
@@ -11,6 +12,37 @@ from src.application.zero_hit_tracker import create_zero_hit_tracker
 from src.application.spanish_aliases import detect_spanish, expand_with_spanish_aliases
 from src.infrastructure.file_system import FileSystemAdapter
 from src.domain.query_linter import LinterPlan
+
+
+@dataclass
+class SearchPipelineResult:
+    """Resultados del pipeline de búsqueda compartido.
+
+    Encapsula todos los datos del pipeline de búsqueda para evitar
+    duplicación de código entre execute() y execute_with_explanation().
+    """
+
+    # Query processing
+    query: str
+    normalized_query: str
+    is_valid: bool
+    validation_error: str | None
+
+    # Linter results
+    lint_plan: LinterPlan
+    query_for_expander: str
+
+    # Expansion results
+    expanded_terms: list[tuple[str, float]]  # (term, weight)
+    expansion_meta: dict[str, Any]
+
+    # Search results
+    combined_results: dict[str, tuple[Any, float]]  # chunk_id -> (hit, max_score)
+    sorted_hits: list[tuple[Any, float]]  # Sorted (hit, score) pairs
+    final_hits: list[Any]  # SearchHit objects
+
+    # Term tracking (solo para execute_with_explanation)
+    matched_terms: dict[str, list[str]]  # chunk_id -> terms that matched
 
 
 def _detect_source() -> str:
