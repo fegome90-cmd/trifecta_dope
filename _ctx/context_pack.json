@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "segment": "trifecta_dope",
-  "created_at": "2026-03-06T13:56:03.859691",
+  "created_at": "2026-03-06T14:00:12.403272",
   "digest": "",
   "source_files": [
     {
@@ -25,7 +25,7 @@
     {
       "path": "_ctx/session_trifecta_dope.md",
       "sha256": "02ccaee4fa716fac6975573213cec1ba73b1a343a5cef2a51eb6e1ceb6abde7f",
-      "mtime": 1772816129.5768545,
+      "mtime": 1772816198.8467286,
       "chars": 75976
     },
     {
@@ -67,7 +67,7 @@
     {
       "path": "CLAUDE.md",
       "sha256": "d0db6da0c8ef36b71ab27e99c17d4b1e42fd1486973c17753f25433188ff5d8b",
-      "mtime": 1772803351.7827067,
+      "mtime": 1772816198.8365846,
       "chars": 1461
     },
     {
@@ -421,7 +421,7 @@
     {
       "path": "docs/plans/2026-03-06-e-v1-platform-report.md",
       "sha256": "0bf6b43b2bfada47b71f7857abc9fc0ce3705b90e1f6b4f4923518eae95eaf8a",
-      "mtime": 1772813306.041371,
+      "mtime": 1772816198.8479273,
       "chars": 10381
     },
     {
@@ -511,7 +511,7 @@
     {
       "path": "docs/plans/adr-003-native-runtime-layout.md",
       "sha256": "a2d8f1c5b02971d0a87a63ffc98e8f7501c9790411a2ebc618f29310b750b0eb",
-      "mtime": 1772809111.225655,
+      "mtime": 1772816198.8480995,
       "chars": 858
     },
     {
@@ -631,7 +631,7 @@
     {
       "path": "docs/plans/2026-03-06-code-review-fixes.md",
       "sha256": "f01dfe2e04b16ad7245e28048b47082f5bdb007db7548b74cee19194e5bb2621",
-      "mtime": 1772809693.583488,
+      "mtime": 1772816198.847852,
       "chars": 4036
     },
     {
@@ -655,7 +655,7 @@
     {
       "path": "docs/plans/adr-001-segment-ref-ssot.md",
       "sha256": "e0c3c88997daf5b3b5f76ceb170cca3ff8efc906d0b5ff3880646a6ec408648e",
-      "mtime": 1772809093.5300431,
+      "mtime": 1772816198.8479834,
       "chars": 716
     },
     {
@@ -727,7 +727,7 @@
     {
       "path": "docs/plans/adr-002-platform-runtime.md",
       "sha256": "a129239b43efe1690990479e7fe94afcb4fbadf7b50b2baf686e47f54f6f4153",
-      "mtime": 1772809102.9608994,
+      "mtime": 1772816198.848035,
       "chars": 614
     },
     {
@@ -1483,7 +1483,7 @@
     {
       "path": "docs/reports/WO-SYSTEM-IMPROVEMENTS-2026-02-23.md",
       "sha256": "f0a52930d507ca9528a0af86c2bae23df5a48373b5792ff1fc7d9a9ebbb26504",
-      "mtime": 1772803351.8172483,
+      "mtime": 1772816198.848198,
       "chars": 5244
     },
     {
@@ -1669,49 +1669,49 @@
     {
       "path": "src/platform/runtime_manager.py",
       "sha256": "8d346b47a17a30ac3b5b399a131a3e2ec93468d52b2a884d9b923fa8d3c9a397",
-      "mtime": 1772809069.7939196,
+      "mtime": 1772816198.8500874,
       "chars": 1402
     },
     {
       "path": "src/platform/daemon_manager.py",
       "sha256": "baf98852061f60419088e897bf8d1e7644cec07cf78229e60ced8903211c433b",
-      "mtime": 1772815394.0278924,
+      "mtime": 1772816198.8498344,
       "chars": 3227
     },
     {
       "path": "src/platform/registry.py",
       "sha256": "5cdf040f656ecb54d6a3e49577fce49120ce7e8d7e74b39dd9478b1f633b5e90",
-      "mtime": 1772809164.7367609,
+      "mtime": 1772816198.8499885,
       "chars": 1572
     },
     {
       "path": "src/platform/health.py",
       "sha256": "4f6747157461f5882822e2cb535670aef1c3ee7f8b625e100b14408000e8cdd2",
-      "mtime": 1772815393.7571566,
+      "mtime": 1772816198.8499389,
       "chars": 1500
     },
     {
       "path": "src/platform/__init__.py",
       "sha256": "a523caff0c92a9858a4622a4a65aae674513521966d804a9cf236044947efe6e",
-      "mtime": 1772809759.8309927,
+      "mtime": 1772816198.8497238,
       "chars": 1050
     },
     {
       "path": "src/platform/contracts.py",
       "sha256": "0761a78cb6f2bc6cb2837b3a3980d6dbb360bf404dbd05f24b21c018da3224ef",
-      "mtime": 1772810622.380984,
+      "mtime": 1772816198.8497744,
       "chars": 2395
     },
     {
       "path": "src/platform/errors.py",
       "sha256": "bc7874cd0b1081923fb4cdc6f658124bd81232dd919208a00d9128e79e386521",
-      "mtime": 1772809019.4776113,
+      "mtime": 1772816198.849886,
       "chars": 3394
     },
     {
       "path": "src/platform/repo_store.py",
       "sha256": "10db3e2944536ad622592a9a4f1fc5623dab49ebbc401504decf23161bedd1c5",
-      "mtime": 1772806690.8488197,
+      "mtime": 1772816198.8500402,
       "chars": 2697
     },
     {
@@ -1777,7 +1777,7 @@
     {
       "path": "src/application/search_get_usecases.py",
       "sha256": "95a072f308d8a19b9e3bf94651fe8305569ccc661a503c0f654490ee3662a5a6",
-      "mtime": 1772813101.2800703,
+      "mtime": 1772816198.8486693,
       "chars": 25976
     },
     {
@@ -1801,13 +1801,13 @@
     {
       "path": "src/application/query_use_case.py",
       "sha256": "f391660e44d9abffa6d4ea401f082fe77b5a8576b07127c276755f7ea2767a1b",
-      "mtime": 1772815393.6391876,
+      "mtime": 1772816198.8485487,
       "chars": 892
     },
     {
       "path": "src/application/skill_lint_use_case.py",
       "sha256": "4e011d3e3b8d4bbb73cc4090f60ed412821a253de366781b36be58a0cc55e2b0",
-      "mtime": 1772803351.8186812,
+      "mtime": 1772816198.8487277,
       "chars": 2480
     },
     {
@@ -1819,7 +1819,7 @@
     {
       "path": "src/application/daemon_use_case.py",
       "sha256": "b54e05e3d393b93f62720e5a301b25786d1ef1d233d890919791fccc13653da1",
-      "mtime": 1772805469.080304,
+      "mtime": 1772816198.8483555,
       "chars": 1068
     },
     {
@@ -1843,7 +1843,7 @@
     {
       "path": "src/application/query_normalizer.py",
       "sha256": "f6c329714c0c4af42f23b57869e12ebb0341799f99564d58e7517399c583cea1",
-      "mtime": 1772810998.0894592,
+      "mtime": 1772816198.848496,
       "chars": 2579
     },
     {
@@ -1915,7 +1915,7 @@
     {
       "path": "src/application/zero_hit_reports.py",
       "sha256": "ec97380b6b0966e3405526d0d41fa6149ccb5c44758f5057c162269ffdf98599",
-      "mtime": 1772810998.0895445,
+      "mtime": 1772816198.8488348,
       "chars": 7515
     },
     {
@@ -1939,7 +1939,7 @@
     {
       "path": "src/application/index_use_case.py",
       "sha256": "e8aa3b1b386f98ee89f74da58a1b6d26910b5eafb762a4516700a77c664e9862",
-      "mtime": 1772815439.788144,
+      "mtime": 1772816198.8484097,
       "chars": 1718
     },
     {
@@ -2065,7 +2065,7 @@
     {
       "path": "src/infrastructure/cli.py",
       "sha256": "da55929fe864f7dc9785402495abddacf2a98d847a850f4ba3f6c0ed4cc89547",
-      "mtime": 1772816046.4741714,
+      "mtime": 1772816198.8491175,
       "chars": 97503
     },
     {
@@ -2125,7 +2125,7 @@
     {
       "path": "src/infrastructure/skills_fs.py",
       "sha256": "e93a012bea37bc9bda5a3af6b0c30690f85d655cda800e33f900f984bfb2e8e1",
-      "mtime": 1772803351.82186,
+      "mtime": 1772816198.849665,
       "chars": 5160
     },
     {
@@ -2233,7 +2233,7 @@
     {
       "path": "src/domain/skill_contracts.py",
       "sha256": "e138b1e48409ea7ab20c432e659a91e70bee1e6daceabdd4e1bf1388db339462",
-      "mtime": 1772803351.819188,
+      "mtime": 1772816198.8489094,
       "chars": 4483
     },
     {
@@ -2317,7 +2317,7 @@
     {
       "path": "agents.md",
       "sha256": "3fc2458470ac35a17be080fe2bbd25cc02a926e060d8e68a1734fd6fcc7b5dec",
-      "mtime": 1772803351.816883,
+      "mtime": 1772816198.8477697,
       "chars": 11139
     },
     {
@@ -2329,7 +2329,7 @@
     {
       "path": "CLAUDE.md",
       "sha256": "d0db6da0c8ef36b71ab27e99c17d4b1e42fd1486973c17753f25433188ff5d8b",
-      "mtime": 1772803351.7827067,
+      "mtime": 1772816198.8365846,
       "chars": 1461
     },
     {
