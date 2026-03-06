@@ -46,10 +46,11 @@ class DaemonManager:
             return False
         self._runtime_dir.mkdir(parents=True, exist_ok=True)
         self._socket_path.parent.mkdir(parents=True, exist_ok=True)
+        log_file = self._log_path.open("a")
         proc = subprocess.Popen(
             ["python", "-m", "trifecta", "daemon", "run"],
             cwd=str(self._runtime_dir),
-            stdout=open(self._log_path, "a"),
+            stdout=log_file,
             stderr=subprocess.STDOUT,
             start_new_session=True,
         )
@@ -87,7 +88,7 @@ class DaemonManager:
             try:
                 pid = int(self._pid_path.read_text().strip())
                 os.kill(pid, 0)
-            except (ProcessLookupError, ValueError):
+            except (ProcessLookupError, PermissionError, ValueError):
                 pid = None
         running = pid is not None and self._socket_path.exists()
         return DaemonStatus(

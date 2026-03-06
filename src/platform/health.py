@@ -46,5 +46,5 @@ class HealthChecker:
             pid = int(pid_path.read_text().strip())
             os.kill(pid, 0)
             return True
-        except (ProcessLookupError, ValueError):
+        except (ProcessLookupError, PermissionError, ValueError):
             return False

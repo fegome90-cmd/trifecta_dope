@@ -30,9 +30,13 @@ class IndexUseCase:
                 continue
             try:
                 content = py_file.read_text(errors="ignore")
+                file_path = str(py_file)
+                # Use INSERT OR REPLACE to avoid duplicates on re-index
+                # FTS5 doesn't have unique constraints, so we delete first
+                conn.execute("DELETE FROM search_fts WHERE file = ?", (file_path,))
                 conn.execute(
                     "INSERT INTO search_fts (file, content) VALUES (?, ?)",
-                    (str(py_file), content),
+                    (file_path, content),
                 )
                 count += 1
             except Exception:

@@ -1,5 +1,4 @@
 """Unit tests for skill contracts validation (domain layer, pure Python)."""
-import pytest
 
 
 class TestSkillInputValidation:

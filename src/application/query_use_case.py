@@ -14,7 +14,7 @@ class QueryUseCase:
         conn.row_factory = sqlite3.Row
         cur = conn.execute(
             "SELECT file, snippet(search_fts, 1, '<b>', '</b>', '...', 64) as snippet "
-            "FROM search_fts WHERE search_fts MATCH ? ORDER BY rank LIMIT ?",
+            "FROM search_fts WHERE search_fts MATCH ? ORDER BY bm25(search_fts) LIMIT ?",
             (query, limit),
         )
         results = [dict(row) for row in cur.fetchall()]

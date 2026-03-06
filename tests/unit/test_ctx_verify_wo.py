@@ -5,8 +5,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
-
 
 def test_returns_1_when_wo_not_found(tmp_path: Path) -> None:
     """Should return 1 when WO YAML doesn't exist."""

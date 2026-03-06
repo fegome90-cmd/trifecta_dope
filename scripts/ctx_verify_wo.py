@@ -59,9 +59,22 @@ import yaml
 
 
 def get_wo_verify_commands(wo_yaml: Path) -> list[str]:
-    """Extract verify commands from WO YAML."""
+    """Extract verify commands from WO YAML.
+
+    Handles multiple formats:
+    - list of strings: ["cmd1", "cmd2"]
+    - single string: "cmd1" (converted to list)
+    - missing/invalid: [] (empty list)
+    """
     data = yaml.safe_load(wo_yaml.read_text())
-    return data.get("verify", {}).get("commands", [])
+    if data is None:
+        return []
+    commands = data.get("verify", {}).get("commands", [])
+    if isinstance(commands, str):
+        return [commands]
+    if not isinstance(commands, list):
+        return []
+    return [str(c) for c in commands if c is not None]
 
 
 def main() -> int:
