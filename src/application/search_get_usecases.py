@@ -546,17 +546,13 @@ class SearchUseCase:
 
         This is the --explain contract.
         """
-        from src.infrastructure.alias_loader import AliasLoader
-        from src.application.query_normalizer import QueryNormalizer
-        from src.application.query_expander import QueryExpander
-        from src.infrastructure.segment_utils import resolve_segment_root
-        from src.infrastructure.config_loader import ConfigLoader
-        from src.domain.query_linter import lint_query
+        # Execute the shared search pipeline with term tracking enabled
+        result = self._execute_search_pipeline(
+            target_path, query, limit, enable_lint, track_matched_terms=True
+        )
 
-        # B2 Intervention: Validate query early (same as execute method)
-        is_valid, error_msg = QueryNormalizer.validate(query)
-        if not is_valid:
-            # Return explanation with rejection info
+        # Early return for invalid queries
+        if not result.is_valid:
             return {
                 "query": query,
                 "normalized_query": "",
@@ -573,99 +569,40 @@ class SearchUseCase:
                 },
                 "hits": [],
                 "total_hits": 0,
-                "error": f"Query rejected: {error_msg}",
+                "error": f"Query rejected: {result.validation_error}",
             }
 
-        # Load aliases
-        alias_loader = AliasLoader(target_path)
-        aliases = alias_loader.load()
+        # Build hits with explanation from pipeline result
+        hits_explained = [
+            {
+                "ref": hit.id,
+                "score": round(score, 2),
+                "tokens_est": hit.token_est,
+                "signals": {
+                    "matched_terms": result.matched_terms.get(hit.id, []),
+                },
+            }
+            for hit, score in result.sorted_hits
+        ]
 
-        # Normalize query
-        normalized_query = QueryNormalizer.normalize(query)
-
-        # Apply Query Linter
-        lint_plan: LinterPlan
-        if enable_lint:
-            repo_root = resolve_segment_root(target_path)
-            anchors_cfg = ConfigLoader.load_anchors(repo_root)
-            aliases_cfg = ConfigLoader.load_linter_aliases(repo_root)
-            lint_plan = lint_query(normalized_query, anchors_cfg, aliases_cfg)
-            if anchors_cfg.get("_missing_config") or aliases_cfg.get("_missing_config"):
-                lint_plan["query_class"] = "disabled_missing_config"
-                lint_plan["changed"] = False
-                lint_plan["changes"] = {"added_strong": [], "added_weak": [], "reasons": []}
-                query_for_expander = normalized_query
-            else:
-                query_for_expander = (
-                    lint_plan["expanded_query"] if lint_plan["changed"] else normalized_query
-                )
-        else:
-            lint_plan = _build_disabled_lint_plan(normalized_query)
-            query_for_expander = normalized_query
-
-        # Tokenize AFTER linter
-        tokens = QueryNormalizer.tokenize(query_for_expander)
-
-        # Expand with aliases
-        expander = QueryExpander(aliases)
-        expanded_terms = expander.expand(query_for_expander, tokens)
-        expansion_meta = expander.get_expansion_metadata(expanded_terms)
-
-        # Execute search
-        service = ContextService(target_path)
-        combined_results: dict[str, tuple[Any, float]] = {}
-
-        matched_terms: dict[str, list[str]] = {}  # chunk_id -> terms that matched
-
-        for term, weight in expanded_terms:
-            result = service.search(term, k=limit * 2)
-            for hit in result.hits:
-                weighted_score = hit.score * weight
-                if hit.id not in combined_results or weighted_score > combined_results[hit.id][1]:
-                    combined_results[hit.id] = (hit, weighted_score)
-                # Track which terms matched this chunk
-                if hit.id not in matched_terms:
-                    matched_terms[hit.id] = []
-                if term not in matched_terms[hit.id]:
-                    matched_terms[hit.id].append(term)
-
-        # Sort and limit
-        sorted_hits = sorted(combined_results.values(), key=lambda x: x[1], reverse=True)[:limit]
-
-        # Build hits with explanation
-        hits_explained = []
-        for hit, score in sorted_hits:
-            hits_explained.append(
-                {
-                    "ref": hit.id,
-                    "score": round(score, 2),
-                    "tokens_est": hit.token_est,
-                    "signals": {
-                        "matched_terms": matched_terms.get(hit.id, []),
-                    },
-                }
-            )
-
-        # Build explanation
-        explanation = {
-            "query": query,
-            "normalized_query": normalized_query,
+        # Build explanation from pipeline result
+        return {
+            "query": result.query,
+            "normalized_query": result.normalized_query,
             "linter": {
-                "class": lint_plan["query_class"],
-                "expanded": lint_plan["changed"],
-                "added_strong": lint_plan["changes"]["added_strong"],
-                "added_weak": lint_plan["changes"]["added_weak"],
+                "class": result.lint_plan["query_class"],
+                "expanded": result.lint_plan["changed"],
+                "added_strong": result.lint_plan["changes"]["added_strong"],
+                "added_weak": result.lint_plan["changes"]["added_weak"],
             },
             "expansions": {
-                "alias_expanded": expansion_meta["alias_expanded"],
-                "alias_terms_count": expansion_meta["alias_terms_count"],
-                "expanded_terms": [t for t, w in expanded_terms[:10]],  # Top 10
+                "alias_expanded": result.expansion_meta["alias_expanded"],
+                "alias_terms_count": result.expansion_meta["alias_terms_count"],
+                "expanded_terms": [t for t, _ in result.expanded_terms[:10]],  # Top 10
             },
             "hits": hits_explained,
             "total_hits": len(hits_explained),
         }
-
-        return explanation
 
 
 class GetChunkUseCase:
