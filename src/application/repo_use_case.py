@@ -1,12 +1,15 @@
 """Repo Use Case - Register/List/Show repositories using SegmentRef as SSOT."""
 
 import json
+import logging
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
 from src.domain.segment_resolver import resolve_segment_ref
 
 
+logger = logging.getLogger(__name__)
 REGISTRY_FILE = "trifecta_repos.json"
 
 
@@ -28,9 +31,14 @@ class RepoUseCase:
 
         Args:
             registry_path: Optional path to registry file. Defaults to ~/.trifecta/repos.json
+                            or TRIFECTA_REPO_REGISTRY env var if set.
         """
         if registry_path is None:
-            registry_path = Path.home() / ".trifecta" / REGISTRY_FILE
+            env_path = os.environ.get("TRIFECTA_REPO_REGISTRY")
+            if env_path:
+                registry_path = Path(env_path)
+            else:
+                registry_path = Path.home() / ".trifecta" / REGISTRY_FILE
         self._registry_path = registry_path
 
     def register(self, repo_path: str | Path) -> RepoEntry:
@@ -69,7 +77,8 @@ class RepoUseCase:
 
         try:
             data = json.loads(self._registry_path.read_text())
-        except (json.JSONDecodeError, IOError):
+        except (json.JSONDecodeError, IOError) as e:
+            logger.warning(f"Failed to read registry: {e}")
             return []
 
         repos = []

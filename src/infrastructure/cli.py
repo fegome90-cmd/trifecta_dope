@@ -273,8 +273,6 @@ def status_cmd(
     status = use_case.execute(repo)
 
     if json_output:
-        import json
-
         output = {
             "repo_id": status.segment_ref.id,
             "path": str(status.segment_ref.root_abs),
@@ -311,8 +309,6 @@ def doctor_cmd(
     diagnosis = use_case.execute(repo)
 
     if json_output:
-        import json
-
         output = {
             "repo_id": diagnosis.segment_ref.id,
             "path": str(diagnosis.segment_ref.root_abs),
@@ -351,8 +347,6 @@ def repo_register(
     entry = use_case.register(path)
 
     if json_output:
-        import json
-
         output = {
             "repo_id": entry.repo_id,
             "path": entry.path,
@@ -373,8 +367,6 @@ def repo_list(json_output: bool = typer.Option(False, "--json", help="Output as 
     repos = use_case.list_repos()
 
     if json_output:
-        import json
-
         output = {"repos": [{"repo_id": r.repo_id, "path": r.path, "slug": r.slug} for r in repos]}
         typer.echo(json.dumps(output, indent=2))
     else:
@@ -400,8 +392,6 @@ def repo_show(
         raise typer.Exit(code=1)
 
     if json_output:
-        import json
-
         output = {
             "repo_id": entry.repo_id,
             "path": entry.path,
