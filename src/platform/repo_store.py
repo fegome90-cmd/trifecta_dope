@@ -34,15 +34,24 @@ class RepoStore:
         conn.close()
 
     def add(self, repo_id: str, root_path: Path) -> RepoRecord:
+        canonical_path = Path(root_path).resolve()
         now = datetime.datetime.now(timezone.utc).isoformat()
         conn = sqlite3.connect(self._db_path)
+        existing = conn.execute(
+            "SELECT root_path FROM repos WHERE root_path = ?", (str(canonical_path),)
+        )
+        if existing.fetchone():
+            conn.close()
+            raise ValueError(f"repo already registered at {canonical_path}")
         conn.execute(
             "INSERT OR REPLACE INTO repos (repo_id, root_path, created_at, last_accessed) VALUES (?, ?, ?, ?)",
-            (repo_id, str(root_path), now, now),
+            (repo_id, str(canonical_path), now, now),
         )
         conn.commit()
         conn.close()
-        return RepoRecord(repo_id=repo_id, root_path=root_path, created_at=now, last_accessed=now)
+        return RepoRecord(
+            repo_id=repo_id, root_path=canonical_path, created_at=now, last_accessed=now
+        )
 
     def get(self, repo_id: str) -> Optional[RepoRecord]:
         conn = sqlite3.connect(self._db_path)
