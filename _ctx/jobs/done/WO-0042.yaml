@@ -3,7 +3,8 @@ id: WO-0042
 epic_id: E-V1
 title: CLI Adelgazado + Repo Commands
 priority: P0
-status: running
+status: done
+result: done
 owner: felipe_gonzalez
 branch: job/WO-0042
 worktree: ../.worktrees/WO-0042
@@ -20,20 +21,20 @@ scope:
   - src/trifecta/platform/repo_store.py
   - src/trifecta/infrastructure/sqlite/**
 deliverables:
-- "Thin CLI facade (parse args \u2192 validate \u2192 use case \u2192 render)"
+- Thin CLI facade (parse args → validate → use case → render)
 - No manual repo_id calculation
 - No daemon lifting
 - No arbitrary DB opening
 - V1 Commands (status, doctor, repo register/list/show)
 - Stable output with --json flag and clear exit codes
 - Legacy wrapper (src/infrastructure/cli.py delegates to interfaces)
-objective: "1. Thin CLI facade:\n   - parse args \u2192 validate \u2192 use case \u2192\
-  \ render\n   - NO building repo_id manually\n   - NO lifting daemons\n   - NO opening\
-  \ arbitrary DBs\n\n2. V1 Commands:\n   - trifecta status --repo <path>\n   - trifecta\
-  \ doctor --repo <path>\n   - trifecta repo register <path>\n   - trifecta repo list\n\
-  \   - trifecta repo show <repo_id>\n\n3. Stable output:\n   - --json flag\n   -\
-  \ Clear exit codes (0=ok, 1=error, 2=validation)\n   - Stable JSON schema\n\n4.\
-  \ Legacy wrapper:\n   - src/infrastructure/cli.py delegates to src/trifecta/interfaces/cli/\n"
+objective: "1. Thin CLI facade:\n   - parse args → validate → use case → render\n\
+  \   - NO building repo_id manually\n   - NO lifting daemons\n   - NO opening arbitrary\
+  \ DBs\n\n2. V1 Commands:\n   - trifecta status --repo <path>\n   - trifecta doctor\
+  \ --repo <path>\n   - trifecta repo register <path>\n   - trifecta repo list\n \
+  \  - trifecta repo show <repo_id>\n\n3. Stable output:\n   - --json flag\n   - Clear\
+  \ exit codes (0=ok, 1=error, 2=validation)\n   - Stable JSON schema\n\n4. Legacy\
+  \ wrapper:\n   - src/infrastructure/cli.py delegates to src/trifecta/interfaces/cli/\n"
 verify:
   commands:
   - uv run pytest -q tests/integration/cli/ -k "test_status or test_doctor or test_repo"
@@ -62,3 +63,4 @@ trace:
   - WO-0041
   - WO-0043
 started_at: '2026-03-06T12:37:50.401860+00:00'
+x_failed_at: '2026-03-06T13:34:23.439851+00:00'
