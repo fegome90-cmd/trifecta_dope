@@ -1,0 +1,22 @@
+{
+  "agent": "code_quality",
+  "generated_at": "2026-03-05T18:08:02.364646",
+  "status": "completed",
+  "duration_ms": 0,
+  "error": null,
+  "findings": [
+    {
+      "severity": "Baja",
+      "title": "Sin smells claros en plan (heurística)",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+        "line": 1,
+        "snippet": "No matches"
+      },
+      "risk": "smells pueden emerger al implementar",
+      "recommendation": "Mantener cambios atómicos y medir complejidad por PR.",
+      "agent": "code_quality",
+      "confidence": 1.0
+    }
+  ]
+}

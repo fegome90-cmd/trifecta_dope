@@ -2,9 +2,7 @@
 
 import json
 import tempfile
-from pathlib import Path
 
-import pytest
 from typer.testing import CliRunner
 
 from src.infrastructure.cli import app
@@ -49,10 +47,8 @@ def test_doctor_command_json():
 
 def test_repo_list_empty():
     """Test repo list when no repos registered."""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        registry = Path(tmpdir) / "repos.json"
-        result = runner.invoke(app, ["repo", "list"])
-        assert result.exit_code == 0
+    result = runner.invoke(app, ["repo", "list"])
+    assert result.exit_code == 0
 
 
 def test_repo_register():

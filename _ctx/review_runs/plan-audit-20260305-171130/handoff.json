@@ -1,0 +1,1668 @@
+{
+  "schema_version": "2.0",
+  "handoff_version": "2.0",
+  "generated_at": "2026-03-05T17:11:33.179508",
+  "run_id": "plan-audit-20260305-171130",
+  "session_name": "plan-audit",
+  "plan_path": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+  "agent_outputs": {
+    "logic": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-171130/agent-logic.json",
+    "code_quality": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-171130/agent-code-quality.json",
+    "silent_failure": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-171130/agent-silent-failure.json",
+    "testing_static": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-171130/agent-testing-static.json"
+  },
+  "findings": [
+    {
+      "severity": "Media",
+      "title": "Necesidad de observabilidad y semántica HTTP",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 6,
+        "snippet": "**Status**: `PENDING`"
+      },
+      "risk": "detección tardía de incidentes",
+      "recommendation": "Agregar checklist de errores y logs estructurados.",
+      "agent": "silent_failure",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Media",
+      "title": "Necesidad de observabilidad y semántica HTTP",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 29,
+        "snippet": "8. **Comandos de gestión** (global status, cache cleanup, daemon management)"
+      },
+      "risk": "detección tardía de incidentes",
+      "recommendation": "Agregar checklist de errores y logs estructurados.",
+      "agent": "silent_failure",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Media",
+      "title": "Necesidad de observabilidad y semántica HTTP",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 36,
+        "snippet": "- **Error handling**: Mensajes claros y accionables"
+      },
+      "risk": "detección tardía de incidentes",
+      "recommendation": "Agregar checklist de errores y logs estructurados.",
+      "agent": "silent_failure",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Media",
+      "title": "Necesidad de observabilidad y semántica HTTP",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 140,
+        "snippet": "- `status`: Show global status"
+      },
+      "risk": "detección tardía de incidentes",
+      "recommendation": "Agregar checklist de errores y logs estructurados.",
+      "agent": "silent_failure",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Media",
+      "title": "Necesidad de observabilidad y semántica HTTP",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 154,
+        "snippet": "4. [ ] Implementar `trifecta global status`"
+      },
+      "risk": "detección tardía de incidentes",
+      "recommendation": "Agregar checklist de errores y logs estructurados.",
+      "agent": "silent_failure",
+      "confidence": 0.2
+    },
+    {
+      "severity": "Media",
+      "title": "Necesidad de observabilidad y semántica HTTP",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 158,
+        "snippet": "- Show telemetry status"
+      },
+      "risk": "detección tardía de incidentes",
+      "recommendation": "Agregar checklist de errores y logs estructurados.",
+      "agent": "silent_failure",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Media",
+      "title": "Necesidad de observabilidad y semántica HTTP",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 204,
+        "snippet": "6. [ ] Implementar `trifecta status` (updated)"
+      },
+      "risk": "detección tardía de incidentes",
+      "recommendation": "Agregar checklist de errores y logs estructurados.",
+      "agent": "silent_failure",
+      "confidence": 0.2
+    },
+    {
+      "severity": "Media",
+      "title": "Necesidad de observabilidad y semántica HTTP",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 205,
+        "snippet": "- Show repo status"
+      },
+      "risk": "detección tardía de incidentes",
+      "recommendation": "Agregar checklist de errores y logs estructurados.",
+      "agent": "silent_failure",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Media",
+      "title": "Necesidad de observabilidad y semántica HTTP",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 207,
+        "snippet": "- Show daemon status"
+      },
+      "risk": "detección tardía de incidentes",
+      "recommendation": "Agregar checklist de errores y logs estructurados.",
+      "agent": "silent_failure",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Media",
+      "title": "Necesidad de observabilidad y semántica HTTP",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 312,
+        "snippet": "4. [ ] Mejorar mensajes de error"
+      },
+      "risk": "detección tardía de incidentes",
+      "recommendation": "Agregar checklist de errores y logs estructurados.",
+      "agent": "silent_failure",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Media",
+      "title": "Necesidad de observabilidad y semántica HTTP",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 409,
+        "snippet": "- Warning en log si fingerprint colisiona con existente"
+      },
+      "risk": "detección tardía de incidentes",
+      "recommendation": "Agregar checklist de errores y logs estructurados.",
+      "agent": "silent_failure",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Media",
+      "title": "Riesgo de degradación ambigua",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 419,
+        "snippet": "- Fallback a paths locales si `~/.trifecta/` no existe"
+      },
+      "risk": "cliente puede interpretar estado incorrecto",
+      "recommendation": "Explicitar mapeo estado lógico -> HTTP.",
+      "agent": "silent_failure",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Media",
+      "title": "Necesidad de observabilidad y semántica HTTP",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 430,
+        "snippet": "- Error descriptivo si hay conflicto"
+      },
+      "risk": "detección tardía de incidentes",
+      "recommendation": "Agregar checklist de errores y logs estructurados.",
+      "agent": "silent_failure",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Media",
+      "title": "Necesidad de observabilidad y semántica HTTP",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 553,
+        "snippet": "- [ ] `trifecta global status` muestra información correcta"
+      },
+      "risk": "detección tardía de incidentes",
+      "recommendation": "Agregar checklist de errores y logs estructurados.",
+      "agent": "silent_failure",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Media",
+      "title": "Necesidad de observabilidad y semántica HTTP",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 564,
+        "snippet": "- [ ] Mensajes de error claros y accionables"
+      },
+      "risk": "detección tardía de incidentes",
+      "recommendation": "Agregar checklist de errores y logs estructurados.",
+      "agent": "silent_failure",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Media",
+      "title": "Falla en bun run lint",
+      "evidence": {
+        "file": "runtime",
+        "line": 0,
+        "snippet": "exit_code=1"
+      },
+      "risk": "quality gate inestable",
+      "recommendation": "Corregir errores o separar scope de validación.",
+      "agent": "testing_static",
+      "confidence": 1.0
+    },
+    {
+      "severity": "Media",
+      "title": "Falla en bun run typecheck:app",
+      "evidence": {
+        "file": "runtime",
+        "line": 0,
+        "snippet": "exit_code=1"
+      },
+      "risk": "quality gate inestable",
+      "recommendation": "Corregir errores o separar scope de validación.",
+      "agent": "testing_static",
+      "confidence": 1.0
+    },
+    {
+      "severity": "Baja",
+      "title": "Sin red flags lógicas por heurística",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 1,
+        "snippet": "No matches"
+      },
+      "risk": "pueden existir casos no detectados automáticamente",
+      "recommendation": "Hacer revisión manual de contradicciones entre fases y criterios.",
+      "agent": "logic",
+      "confidence": 1.0
+    },
+    {
+      "severity": "Baja",
+      "title": "Sin smells claros en plan (heurística)",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 1,
+        "snippet": "No matches"
+      },
+      "risk": "smells pueden emerger al implementar",
+      "recommendation": "Mantener cambios atómicos y medir complejidad por PR.",
+      "agent": "code_quality",
+      "confidence": 1.0
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 39,
+        "snippet": "- **Testing**: Cobertura >80% para nuevo código"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 244,
+        "snippet": "### FASE 6: Testing (4-6 horas)"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 246,
+        "snippet": "**Objetivo**: Comprehensive testing de la nueva arquitectura"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 249,
+        "snippet": "1. [ ] Unit tests para `GlobalConfigManager`"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 250,
+        "snippet": "- `test_load_default_config()`"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 251,
+        "snippet": "- `test_load_custom_config()`"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 252,
+        "snippet": "- `test_merge_with_repo_config()`"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 253,
+        "snippet": "- `test_validate_schema()`"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 255,
+        "snippet": "2. [ ] Unit tests para `GlobalConfigManager`"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 256,
+        "snippet": "- `test_load_config()`"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 257,
+        "snippet": "- `test_save_config()`"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 258,
+        "snippet": "- `test_merge_with_repo()`"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 259,
+        "snippet": "- `test_validate_config()`"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 261,
+        "snippet": "3. [ ] Unit tests para paths globalizados"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 262,
+        "snippet": "- `test_get_global_root()`"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 263,
+        "snippet": "- `test_get_global_cache_dir()`"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 264,
+        "snippet": "- `test_get_ast_cache_db_path_with_fingerprint()`"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 265,
+        "snippet": "- `test_get_daemon_lock_path()`"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 267,
+        "snippet": "4. [ ] Integration tests para migración"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 268,
+        "snippet": "- `test_repo_migrate_full()`"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 269,
+        "snippet": "- `test_repo_migrate_preserves_config()`"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 270,
+        "snippet": "- `test_repo_migrate_preserves_cache()`"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 271,
+        "snippet": "- `test_repo_cleanup_old()`"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 273,
+        "snippet": "5. [ ] Integration tests para comandos globales"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 274,
+        "snippet": "- `test_global_install_creates_structure()`"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 275,
+        "snippet": "- `test_global_status_shows_info()`"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 276,
+        "snippet": "- `test_global_cache_cleanup()`"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 278,
+        "snippet": "6. [ ] E2E tests para flujo completo"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 279,
+        "snippet": "- `test_global_install_then_repo_init()`"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 280,
+        "snippet": "- `test_repo_init_then_ctx_sync()`"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 281,
+        "snippet": "- `test_repo_migrate_then_cleanup()`"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 284,
+        "snippet": "- `tests/unit/test_global_config.py`"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 285,
+        "snippet": "- `tests/unit/test_global_config_manager.py`"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 286,
+        "snippet": "- `tests/unit/test_global_paths.py`"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 287,
+        "snippet": "- `tests/integration/test_repo_migrate.py`"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 288,
+        "snippet": "- `tests/integration/test_global_commands.py`"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 289,
+        "snippet": "- `tests/e2e/test_global_architecture.py`"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 377,
+        "snippet": "### 4.4 Tests (Nuevos)"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 379,
+        "snippet": "- `tests/unit/test_global_config.py` (NEW)"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 380,
+        "snippet": "- `tests/unit/test_global_config_manager.py` (NEW)"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 381,
+        "snippet": "- `tests/unit/test_global_paths.py` (NEW)"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 382,
+        "snippet": "- `tests/integration/test_repo_migrate.py` (NEW)"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 383,
+        "snippet": "- `tests/integration/test_global_commands.py` (NEW)"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 384,
+        "snippet": "- `tests/e2e/test_global_architecture.py` (NEW)"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 459,
+        "snippet": "### 6.1 Unit Tests"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 461,
+        "snippet": "**Objetivo**: Cobertura >80% para nuevo código"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 463,
+        "snippet": "**Tests requeridos**:"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 472,
+        "snippet": "**Tools**: pytest, pytest-cov, coverage"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 474,
+        "snippet": "### 6.2 Integration Tests"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 478,
+        "snippet": "**Tests requeridos**:"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 479,
+        "snippet": "- `test_repo_migrate_full()`: Migración completa"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 480,
+        "snippet": "- `test_repo_migrate_preserves_config()`: Config migrado correctamente"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 481,
+        "snippet": "- `test_repo_migrate_preserves_cache()`: Cache migrado correctamente"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 482,
+        "snippet": "- `test_global_install_creates_structure()`: Directorios creados"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 483,
+        "snippet": "- `test_global_status_shows_info()`: Información correcta"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 484,
+        "snippet": "- `test_global_cache_cleanup()`: Cleanup funciona"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 486,
+        "snippet": "**Setup**: Temp directories para cada test"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 488,
+        "snippet": "### 6.3 E2E Tests"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 492,
+        "snippet": "**Tests requeridos**:"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 493,
+        "snippet": "- `test_global_install_then_repo_init()`: Flujo nuevo usuario"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 494,
+        "snippet": "- `test_repo_init_then_ctx_sync()`: Context sync funciona"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 495,
+        "snippet": "- `test_repo_migrate_then_cleanup()`: Migración completa"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 496,
+        "snippet": "- `test_backward_compatibility()`: Paths locales si flag no set"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 500,
+        "snippet": "### 6.4 Regression Tests"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 504,
+        "snippet": "**Tests requeridos**:"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 505,
+        "snippet": "- Todos los tests existentes deben pasar"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 506,
+        "snippet": "- `test_ast_symbols()`: Funciona con paths globales"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 507,
+        "snippet": "- `test_ctx_sync()`: Context pack se genera"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 508,
+        "snippet": "- `test_ctx_search()`: Búsqueda funciona"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 510,
+        "snippet": "**Automation**: CI pipeline runs all tests on PR"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 512,
+        "snippet": "### 6.5 Manual Testing"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 516,
+        "snippet": "**Tests manuales**:"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 535,
+        "snippet": "- Testing extensivo requerido"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 559,
+        "snippet": "- [ ] Cobertura de tests >80%"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "line": 560,
+        "snippet": "- [ ] Todos los tests existentes pasan"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    }
+  ],
+  "raw_patch_candidates": [
+    {
+      "id": "patch-1",
+      "priority": "Media",
+      "source_agent": "silent_failure",
+      "change_summary": "Agregar checklist de errores y logs estructurados.",
+      "risk_if_not_applied": "detección tardía de incidentes",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-2",
+      "priority": "Media",
+      "source_agent": "silent_failure",
+      "change_summary": "Agregar checklist de errores y logs estructurados.",
+      "risk_if_not_applied": "detección tardía de incidentes",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-3",
+      "priority": "Media",
+      "source_agent": "silent_failure",
+      "change_summary": "Agregar checklist de errores y logs estructurados.",
+      "risk_if_not_applied": "detección tardía de incidentes",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-4",
+      "priority": "Media",
+      "source_agent": "silent_failure",
+      "change_summary": "Agregar checklist de errores y logs estructurados.",
+      "risk_if_not_applied": "detección tardía de incidentes",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-5",
+      "priority": "Media",
+      "source_agent": "silent_failure",
+      "change_summary": "Agregar checklist de errores y logs estructurados.",
+      "risk_if_not_applied": "detección tardía de incidentes",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-6",
+      "priority": "Media",
+      "source_agent": "silent_failure",
+      "change_summary": "Agregar checklist de errores y logs estructurados.",
+      "risk_if_not_applied": "detección tardía de incidentes",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-7",
+      "priority": "Media",
+      "source_agent": "silent_failure",
+      "change_summary": "Agregar checklist de errores y logs estructurados.",
+      "risk_if_not_applied": "detección tardía de incidentes",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-8",
+      "priority": "Media",
+      "source_agent": "silent_failure",
+      "change_summary": "Agregar checklist de errores y logs estructurados.",
+      "risk_if_not_applied": "detección tardía de incidentes",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-9",
+      "priority": "Media",
+      "source_agent": "silent_failure",
+      "change_summary": "Agregar checklist de errores y logs estructurados.",
+      "risk_if_not_applied": "detección tardía de incidentes",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-10",
+      "priority": "Media",
+      "source_agent": "silent_failure",
+      "change_summary": "Agregar checklist de errores y logs estructurados.",
+      "risk_if_not_applied": "detección tardía de incidentes",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-11",
+      "priority": "Media",
+      "source_agent": "silent_failure",
+      "change_summary": "Agregar checklist de errores y logs estructurados.",
+      "risk_if_not_applied": "detección tardía de incidentes",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-12",
+      "priority": "Media",
+      "source_agent": "silent_failure",
+      "change_summary": "Explicitar mapeo estado lógico -> HTTP.",
+      "risk_if_not_applied": "cliente puede interpretar estado incorrecto",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-13",
+      "priority": "Media",
+      "source_agent": "silent_failure",
+      "change_summary": "Agregar checklist de errores y logs estructurados.",
+      "risk_if_not_applied": "detección tardía de incidentes",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-14",
+      "priority": "Media",
+      "source_agent": "silent_failure",
+      "change_summary": "Agregar checklist de errores y logs estructurados.",
+      "risk_if_not_applied": "detección tardía de incidentes",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-15",
+      "priority": "Media",
+      "source_agent": "silent_failure",
+      "change_summary": "Agregar checklist de errores y logs estructurados.",
+      "risk_if_not_applied": "detección tardía de incidentes",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-16",
+      "priority": "Media",
+      "source_agent": "testing_static",
+      "change_summary": "Corregir errores o separar scope de validación.",
+      "risk_if_not_applied": "quality gate inestable",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-17",
+      "priority": "Media",
+      "source_agent": "testing_static",
+      "change_summary": "Corregir errores o separar scope de validación.",
+      "risk_if_not_applied": "quality gate inestable",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-18",
+      "priority": "Baja",
+      "source_agent": "logic",
+      "change_summary": "Hacer revisión manual de contradicciones entre fases y criterios.",
+      "risk_if_not_applied": "pueden existir casos no detectados automáticamente",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-19",
+      "priority": "Baja",
+      "source_agent": "code_quality",
+      "change_summary": "Mantener cambios atómicos y medir complejidad por PR.",
+      "risk_if_not_applied": "smells pueden emerger al implementar",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-20",
+      "priority": "Baja",
+      "source_agent": "testing_static",
+      "change_summary": "Mantener pruebas mínimas por ruta crítica.",
+      "risk_if_not_applied": "ninguno",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-21",
+      "priority": "Baja",
+      "source_agent": "testing_static",
+      "change_summary": "Mantener pruebas mínimas por ruta crítica.",
+      "risk_if_not_applied": "ninguno",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-22",
+      "priority": "Baja",
+      "source_agent": "testing_static",
+      "change_summary": "Mantener pruebas mínimas por ruta crítica.",
+      "risk_if_not_applied": "ninguno",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-23",
+      "priority": "Baja",
+      "source_agent": "testing_static",
+      "change_summary": "Mantener pruebas mínimas por ruta crítica.",
+      "risk_if_not_applied": "ninguno",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-24",
+      "priority": "Baja",
+      "source_agent": "testing_static",
+      "change_summary": "Mantener pruebas mínimas por ruta crítica.",
+      "risk_if_not_applied": "ninguno",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-25",
+      "priority": "Baja",
+      "source_agent": "testing_static",
+      "change_summary": "Mantener pruebas mínimas por ruta crítica.",
+      "risk_if_not_applied": "ninguno",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-26",
+      "priority": "Baja",
+      "source_agent": "testing_static",
+      "change_summary": "Mantener pruebas mínimas por ruta crítica.",
+      "risk_if_not_applied": "ninguno",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-27",
+      "priority": "Baja",
+      "source_agent": "testing_static",
+      "change_summary": "Mantener pruebas mínimas por ruta crítica.",
+      "risk_if_not_applied": "ninguno",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-28",
+      "priority": "Baja",
+      "source_agent": "testing_static",
+      "change_summary": "Mantener pruebas mínimas por ruta crítica.",
+      "risk_if_not_applied": "ninguno",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-29",
+      "priority": "Baja",
+      "source_agent": "testing_static",
+      "change_summary": "Mantener pruebas mínimas por ruta crítica.",
+      "risk_if_not_applied": "ninguno",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-30",
+      "priority": "Baja",
+      "source_agent": "testing_static",
+      "change_summary": "Mantener pruebas mínimas por ruta crítica.",
+      "risk_if_not_applied": "ninguno",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    }
+  ],
+  "deduplicated_patch_candidates": [
+    {
+      "id": "patch-dedup-1",
+      "priority": "Media",
+      "change_summary": "Agregar checklist de errores y logs estructurados.",
+      "risk_if_not_applied": "detección tardía de incidentes",
+      "source_agents": [
+        "silent_failure"
+      ],
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-dedup-2",
+      "priority": "Media",
+      "change_summary": "Explicitar mapeo estado lógico -> HTTP.",
+      "risk_if_not_applied": "cliente puede interpretar estado incorrecto",
+      "source_agents": [
+        "silent_failure"
+      ],
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-dedup-3",
+      "priority": "Media",
+      "change_summary": "Corregir errores o separar scope de validación.",
+      "risk_if_not_applied": "quality gate inestable",
+      "source_agents": [
+        "testing_static"
+      ],
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-dedup-4",
+      "priority": "Baja",
+      "change_summary": "Hacer revisión manual de contradicciones entre fases y criterios.",
+      "risk_if_not_applied": "pueden existir casos no detectados automáticamente",
+      "source_agents": [
+        "logic"
+      ],
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-dedup-5",
+      "priority": "Baja",
+      "change_summary": "Mantener cambios atómicos y medir complejidad por PR.",
+      "risk_if_not_applied": "smells pueden emerger al implementar",
+      "source_agents": [
+        "code_quality"
+      ],
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-dedup-6",
+      "priority": "Baja",
+      "change_summary": "Mantener pruebas mínimas por ruta crítica.",
+      "risk_if_not_applied": "ninguno",
+      "source_agents": [
+        "testing_static"
+      ],
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    }
+  ],
+  "decision_rules": {
+    "allowed_user_decisions": [
+      "approved",
+      "rejected",
+      "deferred"
+    ],
+    "default": "deferred",
+    "requires_user_confirmation": true
+  },
+  "execution_summary": {
+    "total_duration_ms": 20,
+    "agents_completed": 4,
+    "agents_failed": 0,
+    "agents_timeout": 0,
+    "session_cleaned_up": true,
+    "overall_confidence": 0.89
+  },
+  "next_step_for_parent_agent": "Presentar deduplicated_patch_candidates al usuario, capturar user_decision por patch y aplicar solo approved."
+}

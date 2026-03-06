@@ -1,0 +1,131 @@
+{
+  "agent": "testing_static",
+  "generated_at": "2026-03-05T18:08:02.378628",
+  "status": "completed",
+  "duration_ms": 14,
+  "error": null,
+  "findings": [
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+        "line": 58,
+        "snippet": "2. Validar búsquedas de smoke test:"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+        "line": 60,
+        "snippet": "- `ctx search --query \"python testing\"`"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+        "line": 72,
+        "snippet": "3. Medir cobertura (% skills encontrables por query representativa)."
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+        "line": 106,
+        "snippet": "### Smoke tests"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+        "line": 110,
+        "snippet": "### Tests de regresión operativa"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Baja",
+      "title": "Referencia a testing/quality gates",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+        "line": 117,
+        "snippet": "- `coverage_rate` en set de queries representativas"
+      },
+      "risk": "ninguno",
+      "recommendation": "Mantener pruebas mínimas por ruta crítica.",
+      "agent": "testing_static",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Media",
+      "title": "Falla en bun run lint",
+      "evidence": {
+        "file": "runtime",
+        "line": 0,
+        "snippet": "exit_code=1"
+      },
+      "risk": "quality gate inestable",
+      "recommendation": "Corregir errores o separar scope de validación.",
+      "agent": "testing_static",
+      "confidence": 1.0
+    },
+    {
+      "severity": "Media",
+      "title": "Falla en bun run typecheck:app",
+      "evidence": {
+        "file": "runtime",
+        "line": 0,
+        "snippet": "exit_code=1"
+      },
+      "risk": "quality gate inestable",
+      "recommendation": "Corregir errores o separar scope de validación.",
+      "agent": "testing_static",
+      "confidence": 1.0
+    }
+  ],
+  "commands": [
+    {
+      "command": "bun run lint",
+      "exit_code": 1,
+      "ok": false,
+      "stdout_tail": "",
+      "stderr_tail": "error: Script not found \"lint\"",
+      "error": null
+    },
+    {
+      "command": "bun run typecheck:app",
+      "exit_code": 1,
+      "ok": false,
+      "stdout_tail": "",
+      "stderr_tail": "error: Script not found \"typecheck:app\"",
+      "error": null
+    }
+  ]
+}

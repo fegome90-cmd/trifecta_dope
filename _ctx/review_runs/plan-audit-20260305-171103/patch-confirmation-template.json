@@ -1,0 +1,19 @@
+{
+  "run_id": "plan-audit-20260305-171103",
+  "decisions": [
+    {
+      "patch_id": "patch-dedup-1",
+      "user_decision": "deferred",
+      "user_notes": "",
+      "approved_by": "",
+      "approved_at": ""
+    },
+    {
+      "patch_id": "patch-dedup-2",
+      "user_decision": "deferred",
+      "user_notes": "",
+      "approved_by": "",
+      "approved_at": ""
+    }
+  ]
+}

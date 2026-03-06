@@ -3,7 +3,6 @@
 import re
 from typing import List, Tuple
 
-from src.domain.result import Ok, Err
 
 
 class QueryValidationError(Exception):

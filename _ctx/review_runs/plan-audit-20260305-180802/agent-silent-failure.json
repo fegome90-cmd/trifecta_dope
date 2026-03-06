@@ -1,0 +1,48 @@
+{
+  "agent": "silent_failure",
+  "generated_at": "2026-03-05T18:08:02.364671",
+  "status": "completed",
+  "duration_ms": 0,
+  "error": null,
+  "findings": [
+    {
+      "severity": "Media",
+      "title": "Necesidad de observabilidad y semántica HTTP",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+        "line": 6,
+        "snippet": "**Status**: `PENDING`"
+      },
+      "risk": "detección tardía de incidentes",
+      "recommendation": "Agregar checklist de errores y logs estructurados.",
+      "agent": "silent_failure",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Media",
+      "title": "Riesgo de degradación ambigua",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+        "line": 65,
+        "snippet": "1. Definir convención: primero consultar skills-hub antes de fallback local."
+      },
+      "risk": "cliente puede interpretar estado incorrecto",
+      "recommendation": "Explicitar mapeo estado lógico -> HTTP.",
+      "agent": "silent_failure",
+      "confidence": 0.9
+    },
+    {
+      "severity": "Media",
+      "title": "Riesgo de degradación ambigua",
+      "evidence": {
+        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+        "line": 112,
+        "snippet": "- Si skills-hub falla, fallback a rutas actuales"
+      },
+      "risk": "cliente puede interpretar estado incorrecto",
+      "recommendation": "Explicitar mapeo estado lógico -> HTTP.",
+      "agent": "silent_failure",
+      "confidence": 0.9
+    }
+  ]
+}

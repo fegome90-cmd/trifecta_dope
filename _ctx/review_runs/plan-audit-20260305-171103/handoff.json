@@ -1,0 +1,262 @@
+{
+  "schema_version": "2.0",
+  "handoff_version": "2.0",
+  "generated_at": "2026-03-05T17:11:05.649381",
+  "run_id": "plan-audit-20260305-171103",
+  "session_name": "plan-audit",
+  "plan_path": ".pi/plan/trifecta-global-architecture.md",
+  "agent_outputs": {
+    "logic": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-171103/agent-logic.json",
+    "code_quality": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-171103/agent-code-quality.json",
+    "silent_failure": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-171103/agent-silent-failure.json",
+    "testing_static": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-171103/agent-testing-static.json"
+  },
+  "findings": [
+    {
+      "severity": "Alta",
+      "title": "Auditoría incompleta: Agente logic (failed)",
+      "evidence": {
+        "file": "runtime",
+        "line": 0,
+        "snippet": "Plan not found: .pi/plan/trifecta-global-architecture.md"
+      },
+      "risk": "Fase de revisión no completada, riesgos potenciales no detectados.",
+      "recommendation": "Verificar logs de la sesión tmux y re-ejecutar si es necesario.",
+      "agent": "logic",
+      "confidence": 1.0
+    },
+    {
+      "severity": "Alta",
+      "title": "Auditoría incompleta: Agente code_quality (failed)",
+      "evidence": {
+        "file": "runtime",
+        "line": 0,
+        "snippet": "Plan not found: .pi/plan/trifecta-global-architecture.md"
+      },
+      "risk": "Fase de revisión no completada, riesgos potenciales no detectados.",
+      "recommendation": "Verificar logs de la sesión tmux y re-ejecutar si es necesario.",
+      "agent": "code_quality",
+      "confidence": 1.0
+    },
+    {
+      "severity": "Alta",
+      "title": "Auditoría incompleta: Agente silent_failure (failed)",
+      "evidence": {
+        "file": "runtime",
+        "line": 0,
+        "snippet": "Plan not found: .pi/plan/trifecta-global-architecture.md"
+      },
+      "risk": "Fase de revisión no completada, riesgos potenciales no detectados.",
+      "recommendation": "Verificar logs de la sesión tmux y re-ejecutar si es necesario.",
+      "agent": "silent_failure",
+      "confidence": 1.0
+    },
+    {
+      "severity": "Alta",
+      "title": "Auditoría incompleta: Agente testing_static (failed)",
+      "evidence": {
+        "file": "runtime",
+        "line": 0,
+        "snippet": "Plan not found: .pi/plan/trifecta-global-architecture.md"
+      },
+      "risk": "Fase de revisión no completada, riesgos potenciales no detectados.",
+      "recommendation": "Verificar logs de la sesión tmux y re-ejecutar si es necesario.",
+      "agent": "testing_static",
+      "confidence": 1.0
+    },
+    {
+      "severity": "Media",
+      "title": "Agent logic failed",
+      "evidence": {
+        "file": ".pi/plan/trifecta-global-architecture.md",
+        "line": 0,
+        "snippet": "Plan not found: .pi/plan/trifecta-global-architecture.md"
+      },
+      "risk": "analysis incomplete",
+      "recommendation": "Check agent implementation and plan format",
+      "agent": "logic",
+      "confidence": 1.0
+    },
+    {
+      "severity": "Media",
+      "title": "Agent code_quality failed",
+      "evidence": {
+        "file": ".pi/plan/trifecta-global-architecture.md",
+        "line": 0,
+        "snippet": "Plan not found: .pi/plan/trifecta-global-architecture.md"
+      },
+      "risk": "analysis incomplete",
+      "recommendation": "Check agent implementation and plan format",
+      "agent": "code_quality",
+      "confidence": 1.0
+    },
+    {
+      "severity": "Media",
+      "title": "Agent silent_failure failed",
+      "evidence": {
+        "file": ".pi/plan/trifecta-global-architecture.md",
+        "line": 0,
+        "snippet": "Plan not found: .pi/plan/trifecta-global-architecture.md"
+      },
+      "risk": "analysis incomplete",
+      "recommendation": "Check agent implementation and plan format",
+      "agent": "silent_failure",
+      "confidence": 1.0
+    },
+    {
+      "severity": "Media",
+      "title": "Agent testing_static failed",
+      "evidence": {
+        "file": ".pi/plan/trifecta-global-architecture.md",
+        "line": 0,
+        "snippet": "Plan not found: .pi/plan/trifecta-global-architecture.md"
+      },
+      "risk": "analysis incomplete",
+      "recommendation": "Check agent implementation and plan format",
+      "agent": "testing_static",
+      "confidence": 1.0
+    }
+  ],
+  "raw_patch_candidates": [
+    {
+      "id": "patch-1",
+      "priority": "Alta",
+      "source_agent": "logic",
+      "change_summary": "Verificar logs de la sesión tmux y re-ejecutar si es necesario.",
+      "risk_if_not_applied": "Fase de revisión no completada, riesgos potenciales no detectados.",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-2",
+      "priority": "Alta",
+      "source_agent": "code_quality",
+      "change_summary": "Verificar logs de la sesión tmux y re-ejecutar si es necesario.",
+      "risk_if_not_applied": "Fase de revisión no completada, riesgos potenciales no detectados.",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-3",
+      "priority": "Alta",
+      "source_agent": "silent_failure",
+      "change_summary": "Verificar logs de la sesión tmux y re-ejecutar si es necesario.",
+      "risk_if_not_applied": "Fase de revisión no completada, riesgos potenciales no detectados.",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-4",
+      "priority": "Alta",
+      "source_agent": "testing_static",
+      "change_summary": "Verificar logs de la sesión tmux y re-ejecutar si es necesario.",
+      "risk_if_not_applied": "Fase de revisión no completada, riesgos potenciales no detectados.",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-5",
+      "priority": "Media",
+      "source_agent": "logic",
+      "change_summary": "Check agent implementation and plan format",
+      "risk_if_not_applied": "analysis incomplete",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-6",
+      "priority": "Media",
+      "source_agent": "code_quality",
+      "change_summary": "Check agent implementation and plan format",
+      "risk_if_not_applied": "analysis incomplete",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-7",
+      "priority": "Media",
+      "source_agent": "silent_failure",
+      "change_summary": "Check agent implementation and plan format",
+      "risk_if_not_applied": "analysis incomplete",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-8",
+      "priority": "Media",
+      "source_agent": "testing_static",
+      "change_summary": "Check agent implementation and plan format",
+      "risk_if_not_applied": "analysis incomplete",
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    }
+  ],
+  "deduplicated_patch_candidates": [
+    {
+      "id": "patch-dedup-1",
+      "priority": "Alta",
+      "change_summary": "Verificar logs de la sesión tmux y re-ejecutar si es necesario.",
+      "risk_if_not_applied": "Fase de revisión no completada, riesgos potenciales no detectados.",
+      "source_agents": [
+        "logic",
+        "code_quality",
+        "silent_failure",
+        "testing_static"
+      ],
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    },
+    {
+      "id": "patch-dedup-2",
+      "priority": "Media",
+      "change_summary": "Check agent implementation and plan format",
+      "risk_if_not_applied": "analysis incomplete",
+      "source_agents": [
+        "logic",
+        "code_quality",
+        "silent_failure",
+        "testing_static"
+      ],
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "deferred",
+      "user_notes": ""
+    }
+  ],
+  "decision_rules": {
+    "allowed_user_decisions": [
+      "approved",
+      "rejected",
+      "deferred"
+    ],
+    "default": "deferred",
+    "requires_user_confirmation": true
+  },
+  "execution_summary": {
+    "total_duration_ms": 0,
+    "agents_completed": 0,
+    "agents_failed": 4,
+    "agents_timeout": 0,
+    "session_cleaned_up": true,
+    "overall_confidence": 1.0
+  },
+  "next_step_for_parent_agent": "Presentar deduplicated_patch_candidates al usuario, capturar user_decision por patch y aplicar solo approved."
+}

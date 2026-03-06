@@ -7,7 +7,7 @@ and build SHA to enable precise measurement of zero-hit reduction interventions.
 import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 from collections import defaultdict
 
 

@@ -1,0 +1,78 @@
+version: 1
+id: WO-0041
+epic_id: E-V1
+title: SSOT + Contratos + Skeleton
+priority: P0
+status: failed
+owner: felipe_gonzalez
+branch: job/WO-0041
+worktree: ../.worktrees/WO-0041
+scope:
+  allow:
+  - src/trifecta/domain/**
+  - src/trifecta/platform/registry.py
+  - src/trifecta/platform/runtime_manager.py
+  - docs/plans/**
+  - tests/unit/**
+  - tests/contracts/**
+  deny:
+  - src/infrastructure/cli.py
+  - src/trifecta/platform/daemon_manager.py
+  - src/trifecta/platform/repo_store.py
+  - src/trifecta/infrastructure/sqlite/**
+deliverables:
+- 3 ADRs in docs/plans/ (SegmentRef SSOT, Platform Runtime, Native-first Runtime Layout)
+- SegmentRef / RepoRef modules with resolve_segment_ref() - SINGLE SOURCE OF TRUTH
+- SegmentRef Contract Object (frozen dataclass with all fields)
+- Base contracts (errors.py, contracts.py)
+- Deprecated wrappers with warnings
+- Contract tests in tests/contracts/
+- Minimal registry (contract-only, no implementation)
+- Skeleton runtime_manager (interface only, no implementation)
+objective: "1. ADRs (3):\n   - ADR: SegmentRef SSOT\n   - ADR: Platform Runtime\n\
+  \   - ADR: Native-first Runtime Layout\n\n2. SegmentRef / RepoRef:\n   - segment_ref.py\n\
+  \   - repo_ref.py\n   - resolve_segment_ref() - SINGLE SOURCE OF TRUTH\n   - Returns\
+  \ SegmentRef object\n\n3. SegmentRef Contract (CROSS-OBJECT):\n   @dataclass(frozen=True)\n\
+  \   class SegmentRef:\n       repo_root: Path\n       repo_id: str             \
+  \       # hash(canonical_path)\n       segment_root: Path\n       segment_id: str\
+  \                 # runtime key\n       runtime_dir: Path\n       registry_key:\
+  \ str\n       telemetry_dir: Path\n       config_dir: Path\n       cache_dir: Path\n\
+  \n4. Base contracts:\n   - errors.py (PlatformError, RepoNotFoundError, SegmentNotFoundError)\n\
+  \   - contracts.py (repo_id contract, segment_id contract)\n\n5. Deprecated wrappers:\n\
+  \   - Legacy functions that delegate to resolve_segment_ref()\n   - Deprecation\
+  \ warnings\n\n6. Contract tests:\n   - tests/contracts/test_segment_ref_contract.py\n\
+  \   - Verifies all use cases use official resolver\n\n7. Minimal registry (contract-only):\n\
+  \   - Interface/abstract defined\n   - NO implementation\n\n8. Skeleton runtime_manager:\n\
+  \   - Interface defined\n   - NO implementation\n"
+verify:
+  commands:
+  - uv run pytest -q tests/unit/test_segment_ref.py
+  - uv run pytest -q tests/contracts/test_segment_ref_contract.py
+  - uv run ruff check src/trifecta/domain/
+  - rg "compute_segment_id|normalize_segment_id|sha256.*path" src/ --type py | wc
+    -l
+diff_budget:
+  max_files: 15
+  max_loc: 600
+stop_conditions:
+  max_iterations: 10
+  max_fail_verify: 3
+dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - session.append:result
+  - verify
+  segment: .
+trace:
+  ticket: null
+  related_wos:
+  - WO-0040
+  - WO-0042
+  - WO-0043
+started_at: '2026-03-06T12:11:48.727233+00:00'
+x_failed_at: '2026-03-06T12:30:09.826184+00:00'

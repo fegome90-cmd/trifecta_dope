@@ -1,0 +1,2 @@
+# Agent Silent_Failure
+- [Media] Agent silent_failure failed (.pi/plan/trifecta-global-architecture.md:0)

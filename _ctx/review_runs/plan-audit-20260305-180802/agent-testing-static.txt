@@ -1,0 +1,9 @@
+# Agent Testing_Static
+- [Baja] Referencia a testing/quality gates (/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md:58)
+- [Baja] Referencia a testing/quality gates (/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md:60)
+- [Baja] Referencia a testing/quality gates (/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md:72)
+- [Baja] Referencia a testing/quality gates (/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md:106)
+- [Baja] Referencia a testing/quality gates (/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md:110)
+- [Baja] Referencia a testing/quality gates (/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md:117)
+- [Media] Falla en bun run lint (runtime:0)
+- [Media] Falla en bun run typecheck:app (runtime:0)

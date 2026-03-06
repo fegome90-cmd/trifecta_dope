@@ -3,6 +3,7 @@
 import hashlib
 import os
 import subprocess
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal, Optional
 
@@ -11,6 +12,37 @@ from src.application.zero_hit_tracker import create_zero_hit_tracker
 from src.application.spanish_aliases import detect_spanish, expand_with_spanish_aliases
 from src.infrastructure.file_system import FileSystemAdapter
 from src.domain.query_linter import LinterPlan
+
+
+@dataclass
+class SearchPipelineResult:
+    """Resultados del pipeline de búsqueda compartido.
+
+    Encapsula todos los datos del pipeline de búsqueda para evitar
+    duplicación de código entre execute() y execute_with_explanation().
+    """
+
+    # Query processing
+    query: str
+    normalized_query: str
+    is_valid: bool
+    validation_error: str | None
+
+    # Linter results
+    lint_plan: LinterPlan
+    query_for_expander: str
+
+    # Expansion results
+    expanded_terms: list[tuple[str, float]]  # (term, weight)
+    expansion_meta: dict[str, Any]
+
+    # Search results
+    combined_results: dict[str, tuple[Any, float]]  # chunk_id -> (hit, max_score)
+    sorted_hits: list[tuple[Any, float]]  # Sorted (hit, score) pairs
+    final_hits: list[Any]  # SearchHit objects
+
+    # Term tracking (solo para execute_with_explanation)
+    matched_terms: dict[str, list[str]]  # chunk_id -> terms that matched
 
 
 def _detect_source() -> str:
@@ -97,12 +129,151 @@ def _classify_zero_hit_reason(
     return "unknown"
 
 
+def _build_disabled_lint_plan(normalized_query: str) -> LinterPlan:
+    """Build a disabled lint plan for when linting is off."""
+    return {
+        "original_query": normalized_query,
+        "query_class": "disabled",
+        "token_count": 0,
+        "anchors_detected": {"strong": [], "weak": [], "aliases_matched": []},
+        "expanded_query": normalized_query,
+        "changed": False,
+        "changes": {"added_strong": [], "added_weak": [], "reasons": []},
+    }
+
+
 class SearchUseCase:
     """Wrapper for ctx.search with telemetry."""
 
     def __init__(self, file_system: FileSystemAdapter, telemetry: Any = None) -> None:
         self.file_system = file_system
         self.telemetry = telemetry
+
+    def _execute_search_pipeline(
+        self,
+        target_path: Path,
+        query: str,
+        limit: int = 5,
+        enable_lint: bool = False,
+        track_matched_terms: bool = False,
+    ) -> SearchPipelineResult:
+        """
+        Execute the shared search pipeline.
+
+        This method extracts the common logic between execute() and
+        execute_with_explanation() to eliminate ~90% code duplication.
+
+        Args:
+            target_path: Segment path to search
+            query: Raw search query
+            limit: Max results to return
+            enable_lint: If True, apply query linter for anchor guidance
+            track_matched_terms: If True, track which terms matched each chunk
+
+        Returns:
+            SearchPipelineResult with all pipeline data
+        """
+        from src.infrastructure.alias_loader import AliasLoader
+        from src.application.query_normalizer import QueryNormalizer
+        from src.application.query_expander import QueryExpander
+        from src.infrastructure.segment_utils import resolve_segment_root
+        from src.infrastructure.config_loader import ConfigLoader
+        from src.domain.query_linter import lint_query
+
+        # B2 Intervention: Validate query early
+        is_valid, error_msg = QueryNormalizer.validate(query)
+        if not is_valid:
+            return SearchPipelineResult(
+                query=query,
+                normalized_query="",
+                is_valid=False,
+                validation_error=error_msg,
+                lint_plan=_build_disabled_lint_plan(""),
+                query_for_expander="",
+                expanded_terms=[],
+                expansion_meta={"alias_expanded": False, "alias_terms_count": 0},
+                combined_results={},
+                sorted_hits=[],
+                final_hits=[],
+                matched_terms={},
+            )
+
+        # Load aliases
+        alias_loader = AliasLoader(target_path)
+        aliases = alias_loader.load()
+
+        # Normalize query
+        normalized_query = QueryNormalizer.normalize(query)
+
+        # Apply Query Linter (anchor-based classification + expansion)
+        lint_plan: LinterPlan
+        query_for_expander: str
+        if enable_lint:
+            repo_root = resolve_segment_root(target_path)
+            anchors_cfg = ConfigLoader.load_anchors(repo_root)
+            aliases_cfg = ConfigLoader.load_linter_aliases(repo_root)
+            lint_plan = lint_query(normalized_query, anchors_cfg, aliases_cfg)
+
+            # If config missing, force disabled state
+            if anchors_cfg.get("_missing_config") or aliases_cfg.get("_missing_config"):
+                lint_plan["query_class"] = "disabled_missing_config"
+                lint_plan["changed"] = False
+                lint_plan["changes"] = {"added_strong": [], "added_weak": [], "reasons": []}
+                query_for_expander = normalized_query
+            else:
+                query_for_expander = (
+                    lint_plan["expanded_query"] if lint_plan["changed"] else normalized_query
+                )
+        else:
+            lint_plan = _build_disabled_lint_plan(normalized_query)
+            query_for_expander = normalized_query
+
+        # CRITICAL: Tokenize AFTER linter decides final query
+        tokens = QueryNormalizer.tokenize(query_for_expander)
+
+        # Expand query with aliases
+        expander = QueryExpander(aliases)
+        expanded_terms = expander.expand(query_for_expander, tokens)
+
+        # Get expansion metadata
+        expansion_meta = expander.get_expansion_metadata(expanded_terms)
+
+        # Execute search for each term and combine results
+        service = ContextService(target_path)
+        combined_results: dict[str, tuple[Any, float]] = {}  # chunk_id -> (hit, max_score)
+        matched_terms: dict[str, list[str]] = {}  # chunk_id -> terms that matched
+
+        for term, weight in expanded_terms:
+            result = service.search(term, k=limit * 2)  # Get more to allow for de-dupe
+            for hit in result.hits:
+                weighted_score = hit.score * weight
+                if hit.id not in combined_results or weighted_score > combined_results[hit.id][1]:
+                    combined_results[hit.id] = (hit, weighted_score)
+                # Track matched terms only if requested
+                if track_matched_terms:
+                    if hit.id not in matched_terms:
+                        matched_terms[hit.id] = []
+                    if term not in matched_terms[hit.id]:
+                        matched_terms[hit.id].append(term)
+
+        # Sort by weighted score and take top N
+        sorted_hits = sorted(combined_results.values(), key=lambda x: x[1], reverse=True)[:limit]
+        final_hits = [hit for hit, _ in sorted_hits]
+
+        return SearchPipelineResult(
+            query=query,
+            normalized_query=normalized_query,
+            is_valid=True,
+            validation_error=None,
+            lint_plan=lint_plan,
+            query_for_expander=query_for_expander,
+            expanded_terms=expanded_terms,
+            expansion_meta=expansion_meta,
+            combined_results=combined_results,
+            sorted_hits=sorted_hits,
+            final_hits=final_hits,
+            matched_terms=matched_terms if track_matched_terms else {},
+        )
 
     def execute(
         self, target_path: Path, query: str, limit: int = 5, enable_lint: bool = False
@@ -125,94 +296,35 @@ class SearchUseCase:
         Returns:
             Formatted search results string
         """
-        from src.infrastructure.alias_loader import AliasLoader
-        from src.application.query_normalizer import QueryNormalizer
-        from src.application.query_expander import QueryExpander
-        from src.infrastructure.segment_utils import resolve_segment_root
-        from src.infrastructure.config_loader import ConfigLoader
-        from src.domain.query_linter import lint_query
+        # Execute the shared search pipeline
+        result = self._execute_search_pipeline(target_path, query, limit, enable_lint)
 
-        # B2 Intervention: Validate query early to prevent zero-hit searches
-        is_valid, error_msg = QueryNormalizer.validate(query)
-        if not is_valid:
-            # Record telemetry for rejected query
+        # Early return for invalid queries WITH telemetry
+        if not result.is_valid:
             if self.telemetry:
                 source = _detect_source()
                 build_sha = _get_build_sha()
                 self.telemetry.incr("ctx_search_rejected_invalid_query_count")
                 self.telemetry.event(
                     "ctx.search.rejected",
-                    {"query_preview": str(query)[:50], "reason": error_msg},
+                    {"query_preview": str(query)[:50], "reason": result.validation_error},
                     {"hits": 0, "rejected": True},
                     1,
                     source=source,
                     build_sha=build_sha,
-                    rejection_reason=error_msg,
+                    rejection_reason=result.validation_error,
                 )
-            return f"❌ Query rejected: {error_msg}"
+            return f"❌ Query rejected: {result.validation_error}"
 
-        # Load aliases
-        alias_loader = AliasLoader(target_path)
-        aliases = alias_loader.load()
+        # Create mutable copies for Spanish fallback (which may modify these)
+        combined_results: dict[str, tuple[Any, float]] = dict(result.combined_results)
+        final_hits: list[Any] = list(result.final_hits)
+        sorted_hits: list[tuple[Any, float]] = list(result.sorted_hits)
 
-        # Normalize query
-        normalized_query = QueryNormalizer.normalize(query)
-
-        # Apply Query Linter (anchor-based classification + expansion)
-        lint_plan: LinterPlan
-        if enable_lint:
-            repo_root = resolve_segment_root(target_path)
-            anchors_cfg = ConfigLoader.load_anchors(repo_root)
-            aliases_cfg = ConfigLoader.load_linter_aliases(repo_root)
-
-            lint_plan = lint_query(normalized_query, anchors_cfg, aliases_cfg)
-
-            # If config missing, force disabled state
-            if anchors_cfg.get("_missing_config") or aliases_cfg.get("_missing_config"):
-                lint_plan["query_class"] = "disabled_missing_config"
-                lint_plan["changed"] = False
-                lint_plan["changes"] = {"added_strong": [], "added_weak": [], "reasons": []}
-                query_for_expander = normalized_query
-            else:
-                query_for_expander = (
-                    lint_plan["expanded_query"] if lint_plan["changed"] else normalized_query
-                )
-        else:
-            lint_plan = {
-                "original_query": normalized_query,
-                "query_class": "disabled",
-                "token_count": 0,
-                "anchors_detected": {"strong": [], "weak": [], "aliases_matched": []},
-                "expanded_query": normalized_query,
-                "changed": False,
-                "changes": {"added_strong": [], "added_weak": [], "reasons": []},
-            }
-            query_for_expander = normalized_query
-
-        # CRITICAL: Tokenize AFTER linter decides final query
-        tokens = QueryNormalizer.tokenize(query_for_expander)
-
-        # Expand query with aliases
-        expander = QueryExpander(aliases)
-        expanded_terms = expander.expand(query_for_expander, tokens)
-
-        # Execute search for each term and combine results
-        service = ContextService(target_path)
-        combined_results: dict[str, tuple[Any, float]] = {}  # chunk_id -> (hit, max_score)
-
-        for term, weight in expanded_terms:
-            result = service.search(term, k=limit * 2)  # Get more to allow for de-dupe
-            for hit in result.hits:
-                weighted_score = hit.score * weight
-                if hit.id not in combined_results or weighted_score > combined_results[hit.id][1]:
-                    combined_results[hit.id] = (hit, weighted_score)
-
-        # Sort by weighted score and take top N
-        sorted_hits = sorted(combined_results.values(), key=lambda x: x[1], reverse=True)[:limit]
-        final_hits = [hit for hit, _ in sorted_hits]
-
-        # Get expansion metadata for telemetry
-        expansion_meta = expander.get_expansion_metadata(expanded_terms)
+        # Extract values from pipeline result for telemetry and fallback logic
+        normalized_query = result.normalized_query
+        lint_plan = result.lint_plan
+        expansion_meta = result.expansion_meta
 
         # Sanitize query for telemetry (NEVER store raw query)
         query_preview = query[:200]  # Truncate preview
@@ -239,9 +351,11 @@ class SearchUseCase:
         if len(final_hits) == 0 and source != "fixture":
             if detect_spanish(query):
                 spanish_alias_variants = expand_with_spanish_aliases(normalized_query)
+                # Create service for Spanish fallback search
+                service = ContextService(target_path)
                 for variant in spanish_alias_variants[1:]:
-                    result = service.search(variant, k=limit * 2)
-                    for hit in result.hits:
+                    variant_result = service.search(variant, k=limit * 2)
+                    for hit in variant_result.hits:
                         if hit.id not in combined_results:
                             combined_results[hit.id] = (hit, hit.score * 0.8)
                     if combined_results:
@@ -367,6 +481,79 @@ class SearchUseCase:
             output.append(f"   Preview: {hit.preview[:120]}...\n")
 
         return "\n".join(output)
+
+    def execute_with_explanation(
+        self, target_path: Path, query: str, limit: int = 5, enable_lint: bool = False
+    ) -> dict:
+        """
+        Execute search and return structured explanation.
+
+        Returns a JSON-serializable dict with:
+        - query: Original query
+        - normalized_query: Normalized query
+        - linter: Linter metadata (class, expanded, changes)
+        - expansions: Alias expansion metadata
+        - hits: List of search hits with explanation
+
+        This is the --explain contract.
+        """
+        # Execute the shared search pipeline with term tracking enabled
+        result = self._execute_search_pipeline(
+            target_path, query, limit, enable_lint, track_matched_terms=True
+        )
+
+        # Early return for invalid queries
+        if not result.is_valid:
+            return {
+                "query": query,
+                "normalized_query": "",
+                "linter": {
+                    "class": "rejected",
+                    "expanded": False,
+                    "added_strong": [],
+                    "added_weak": [],
+                },
+                "expansions": {
+                    "alias_expanded": False,
+                    "alias_terms_count": 0,
+                    "expanded_terms": [],
+                },
+                "hits": [],
+                "total_hits": 0,
+                "error": f"Query rejected: {result.validation_error}",
+            }
+
+        # Build hits with explanation from pipeline result
+        hits_explained = [
+            {
+                "ref": hit.id,
+                "score": round(score, 2),
+                "tokens_est": hit.token_est,
+                "signals": {
+                    "matched_terms": result.matched_terms.get(hit.id, []),
+                },
+            }
+            for hit, score in result.sorted_hits
+        ]
+
+        # Build explanation from pipeline result
+        return {
+            "query": result.query,
+            "normalized_query": result.normalized_query,
+            "linter": {
+                "class": result.lint_plan["query_class"],
+                "expanded": result.lint_plan["changed"],
+                "added_strong": result.lint_plan["changes"]["added_strong"],
+                "added_weak": result.lint_plan["changes"]["added_weak"],
+            },
+            "expansions": {
+                "alias_expanded": result.expansion_meta["alias_expanded"],
+                "alias_terms_count": result.expansion_meta["alias_terms_count"],
+                "expanded_terms": [t for t, _ in result.expanded_terms[:10]],  # Top 10
+            },
+            "hits": hits_explained,
+            "total_hits": len(hits_explained),
+        }
 
 
 class GetChunkUseCase:

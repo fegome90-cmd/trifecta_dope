@@ -99,7 +99,6 @@ epics:
   - WO-0035
   - WO-0036
   - WO-0037
-  - WO-0038
   - WO-0039
   x_generated_at: '2026-02-11T17:30:00-03:00'
 - id: E-0004
@@ -165,3 +164,21 @@ epics:
   wo_queue:
   - WO-0045
   generated_at: '2026-02-13T00:00:00Z'
+- id: E-V1
+  title: Trifecta V1 Global Platform
+  description: 'Convert Trifecta into a local platform usable from anywhere on the Mac.
+
+    Goal: Native-first runtime with repo_id SSOT, CLI thin client, SQLite storage,
+    and daemon operation.
+
+    Principle: WO-0041 defines → WO-0042 exposes → WO-0043 operates
+
+    '
+  status: pending
+  priority: P0
+  wo_queue:
+  - WO-0040
+  - WO-0041
+  - WO-0042
+  - WO-0043
+  generated_at: '2026-03-06T00:00:00Z'
