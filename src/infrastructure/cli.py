@@ -2616,6 +2616,11 @@ def daemon_run() -> None:
 
     server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     server.bind(str(socket_path))
+
+    import stat
+
+    os.chmod(socket_path, stat.S_IRUSR | stat.S_IWUSR)
+
     server.listen(1)
     server.settimeout(1.0)
 
@@ -2634,7 +2639,28 @@ def daemon_run() -> None:
         try:
             try:
                 conn, _ = server.accept()
-                data = conn.recv(1024).decode().strip()
+
+                conn.settimeout(5.0)
+                try:
+                    data = conn.recv(256)
+                    if not data:
+                        conn.close()
+                        continue
+
+                    data = data.decode("utf-8", errors="replace").strip()
+
+                    if len(data) > 128:
+                        conn.sendall(b"ERROR: Command too long\n")
+                        conn.close()
+                        continue
+                except socket.timeout:
+                    conn.sendall(b"ERROR: Timeout\n")
+                    conn.close()
+                    continue
+                except Exception as e:
+                    conn.sendall(f"ERROR: {str(e)}\n".encode())
+                    conn.close()
+                    continue
 
                 if data == "PING":
                     conn.sendall(b"PONG\n")
@@ -2645,6 +2671,8 @@ def daemon_run() -> None:
                         "status": "ok",
                         "pid": os.getpid(),
                         "uptime": int(time.time() - start_time),
+                        "version": "1.0.0",
+                        "protocol": ["PING", "HEALTH", "SHUTDOWN"],
                     }
                     conn.sendall(json.dumps(status).encode() + b"\n")
                 elif data == "SHUTDOWN":
