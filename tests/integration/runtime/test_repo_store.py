@@ -20,7 +20,7 @@ class TestRepoStore:
     def test_add_and_get(self, store):
         record = store.add("test-repo-123", Path("/tmp/test"))
         assert record.repo_id == "test-repo-123"
-        assert record.root_path == Path("/tmp/test")
+        assert record.root_path == Path("/tmp/test").resolve()
 
         retrieved = store.get("test-repo-123")
         assert retrieved is not None

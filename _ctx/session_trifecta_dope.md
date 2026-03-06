@@ -1495,3 +1495,9 @@ Created WO-0055 (P1) to fix hook bypass system issues discovered during WO-0050 
   - PID verification: OS-level, not just `ps`
 - **Commands**: read daemon_manager.py, repo_store.py, contracts.py
 - **Pack SHA**: (unchanged)
+## 2026-03-06 20:16 UTC
+- **Summary**: WO-M3 + WO-M4 completed: Schema versioning with fail-closed semantics, SQLite contention characterization with Option B (internal serialization) policy documented
+- **Files**: src/platform/repo_store.py, tests/integration/test_schema_version.py, tests/integration/test_sqlite_contention.py, docs/adr/adr-sqlite-contention-policy.md, tests/integration/runtime/test_repo_store.py
+- **Commands**: pytest tests/integration/test_schema_version.py, pytest tests/integration/test_sqlite_contention.py, pytest tests/integration/runtime/
+- **Pack SHA**: `03f7e3678657c9a7`
+

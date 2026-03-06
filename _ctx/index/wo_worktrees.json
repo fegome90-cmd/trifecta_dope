@@ -1,9 +1,9 @@
 {
   "version": 1,
   "schema": "trifecta.sidecar.wo_index.v1",
-  "generated_at": "2026-03-06T12:37:50.965318+00:00",
+  "generated_at": "2026-03-06T20:13:16.049407+00:00",
   "repo_root": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope",
-  "git_head_sha_repo_root": "d1de7fd978385bb668bb99d43e1e211efbf64448",
+  "git_head_sha_repo_root": "60cc8c36472986f987f310a6f188add428dacf89",
   "work_orders": [
     {
       "id": "WO-0037",
@@ -225,22 +225,6 @@
       "branch": null,
       "worktree_head_sha": null,
       "wo_yaml_path": "_ctx/jobs/pending/WO-0034.yaml",
-      "created_at": "",
-      "closed_at": null,
-      "last_error": null
-    },
-    {
-      "id": "WO-0042",
-      "title": "CLI Adelgazado + Repo Commands",
-      "status": "running",
-      "priority": "P0",
-      "owner": "felipe_gonzalez",
-      "epic_id": "E-V1",
-      "worktree_path": "../.worktrees/WO-0042",
-      "worktree_exists": true,
-      "branch": "job/WO-0042",
-      "worktree_head_sha": "3ad97d11e27d188fc684560342b6cda141efd877",
-      "wo_yaml_path": "_ctx/jobs/running/WO-0042.yaml",
       "created_at": "",
       "closed_at": null,
       "last_error": null
@@ -694,6 +678,22 @@
       "last_error": null
     },
     {
+      "id": "WO-0042",
+      "title": "CLI Adelgazado + Repo Commands",
+      "status": "done",
+      "priority": "P0",
+      "owner": "felipe_gonzalez",
+      "epic_id": "E-V1",
+      "worktree_path": "../.worktrees/WO-0042",
+      "worktree_exists": true,
+      "branch": "job/WO-0042",
+      "worktree_head_sha": "9c69f86494762e9eb9dafb4d0c281d6f07fac6e7",
+      "wo_yaml_path": "_ctx/jobs/done/WO-0042.yaml",
+      "created_at": "",
+      "closed_at": null,
+      "last_error": null
+    },
+    {
       "id": "WO-0054",
       "title": "Integrar documentaci\u00f3n WO en flujo de scripts (AGENTS + MANUAL_WO)",
       "status": "done",
@@ -797,9 +797,9 @@
       "owner": "felipe_gonzalez",
       "epic_id": "E-V1",
       "worktree_path": "../.worktrees/WO-0041",
-      "worktree_exists": true,
+      "worktree_exists": false,
       "branch": "job/WO-0041",
-      "worktree_head_sha": "5bb37c16e3491a23393b315d8d50b35c88797a63",
+      "worktree_head_sha": null,
       "wo_yaml_path": "_ctx/jobs/failed/WO-0041.yaml",
       "created_at": "",
       "closed_at": null,

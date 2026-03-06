@@ -15,12 +15,43 @@ class RepoRecord:
 
 
 class RepoStore:
+    SCHEMA_VERSION = 1
+
     def __init__(self, db_path: Path) -> None:
         self._db_path = db_path
+        self._validate_or_init_schema()
         self._init_db()
 
-    def _init_db(self) -> None:
+    def _validate_or_init_schema(self) -> None:
         self._db_path.parent.mkdir(parents=True, exist_ok=True)
+
+        if not self._db_path.exists():
+            conn = sqlite3.connect(self._db_path)
+            conn.execute("CREATE TABLE schema_version (version INTEGER PRIMARY KEY)")
+            conn.execute("INSERT INTO schema_version VALUES (?)", (self.SCHEMA_VERSION,))
+            conn.commit()
+            conn.close()
+            return
+
+        conn = sqlite3.connect(self._db_path)
+        cur = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='schema_version'"
+        )
+        if cur.fetchone() is None:
+            conn.close()
+            raise RuntimeError(f"schema version mismatch: expected {self.SCHEMA_VERSION}, got none")
+
+        cur = conn.execute("SELECT version FROM schema_version")
+        row = cur.fetchone()
+        conn.close()
+
+        if row is None or row[0] != self.SCHEMA_VERSION:
+            actual_version = row[0] if row else "none"
+            raise RuntimeError(
+                f"schema version mismatch: expected {self.SCHEMA_VERSION}, got {actual_version}"
+            )
+
+    def _init_db(self) -> None:
         conn = sqlite3.connect(self._db_path)
         conn.execute(
             "CREATE TABLE IF NOT EXISTS repos ("
@@ -37,12 +68,13 @@ class RepoStore:
         canonical_path = Path(root_path).resolve()
         now = datetime.datetime.now(timezone.utc).isoformat()
         conn = sqlite3.connect(self._db_path)
-        existing = conn.execute(
-            "SELECT root_path FROM repos WHERE root_path = ?", (str(canonical_path),)
-        )
-        if existing.fetchone():
+
+        cur = conn.execute("SELECT repo_id FROM repos WHERE root_path = ?", (str(canonical_path),))
+        existing_row = cur.fetchone()
+        if existing_row and existing_row[0] != repo_id:
             conn.close()
             raise ValueError(f"repo already registered at {canonical_path}")
+
         conn.execute(
             "INSERT OR REPLACE INTO repos (repo_id, root_path, created_at, last_accessed) VALUES (?, ?, ?, ?)",
             (repo_id, str(canonical_path), now, now),
