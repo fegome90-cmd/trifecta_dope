@@ -48,8 +48,15 @@ class DaemonManager:
         self._socket_path.parent.mkdir(parents=True, exist_ok=True)
         log_file = self._log_path.open("a")
         proc = subprocess.Popen(
-            ["python", "-m", "trifecta", "daemon", "run"],
-            cwd=str(self._runtime_dir),
+            [
+                "python",
+                "-m",
+                "src.infrastructure.cli",
+                "daemon",
+                "run",
+                "--runtime-dir",
+                str(self._runtime_dir),
+            ],
             stdout=log_file,
             stderr=subprocess.STDOUT,
             start_new_session=True,

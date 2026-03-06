@@ -2585,6 +2585,106 @@ def daemon_restart(
         raise typer.Exit(1)
 
 
+@daemon_app.command("run")
+def daemon_run(
+    runtime_dir: str = typer.Option(
+        ".", "--runtime-dir", "-d", help="Runtime directory (default: cwd)"
+    ),
+) -> None:
+    """Run daemon process (internal command, spawned by 'daemon start').
+
+    This command creates a Unix socket server that listens for health check
+    requests. It is designed to be spawned as a background process by the
+    'daemon start' command.
+
+    Protocol:
+    - Client sends: PING\\n
+    - Server responds: PONG\\n
+
+    The daemon creates:
+    - {runtime_dir}/daemon/socket - Unix socket for communication
+    - {runtime_dir}/daemon/pid - PID file for process tracking
+    """
+    import os
+    import signal
+    import socket
+    import sys
+
+    runtime_path = Path(runtime_dir).resolve()
+    daemon_dir = runtime_path / "daemon"
+    socket_path = daemon_dir / "socket"
+    pid_path = daemon_dir / "pid"
+
+    # Ensure daemon directory exists
+    daemon_dir.mkdir(parents=True, exist_ok=True)
+
+    # Clean up stale socket if exists
+    if socket_path.exists():
+        socket_path.unlink()
+
+    # Write PID file
+    pid_path.write_text(str(os.getpid()))
+
+    # Global flag for graceful shutdown
+    shutdown_requested = False
+
+    def handle_signal(signum: int, frame: object) -> None:
+        nonlocal shutdown_requested
+        shutdown_requested = True
+        # Clean up on shutdown
+        try:
+            if socket_path.exists():
+                socket_path.unlink()
+        except Exception:
+            pass
+        try:
+            if pid_path.exists():
+                pid_path.unlink()
+        except Exception:
+            pass
+        sys.exit(0)
+
+    # Register signal handlers
+    signal.signal(signal.SIGTERM, handle_signal)
+    signal.signal(signal.SIGINT, handle_signal)
+
+    # Create Unix socket server
+    server_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    server_socket.bind(str(socket_path))
+    server_socket.listen(1)
+    server_socket.settimeout(1.0)  # Allow periodic shutdown check
+
+    try:
+        while not shutdown_requested:
+            try:
+                conn, _ = server_socket.accept()
+                try:
+                    data = conn.recv(1024).decode().strip()
+                    if data == "PING":
+                        conn.sendall(b"PONG\n")
+                finally:
+                    conn.close()
+            except socket.timeout:
+                # Timeout allows checking shutdown flag
+                continue
+            except Exception:
+                # Log errors but keep running
+                continue
+    finally:
+        server_socket.close()
+        try:
+            if socket_path.exists():
+                socket_path.unlink()
+        except Exception:
+            pass
+        try:
+            if pid_path.exists():
+                pid_path.unlink()
+        except Exception:
+            pass
+
+
 if __name__ == "__main__":
     main()
 # Audit Trigger
