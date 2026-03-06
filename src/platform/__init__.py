@@ -1,6 +1,7 @@
 # Platform layer - runtime, registry, daemon management
 
 __all__ = [
+    "DEFAULT_FINGERPRINT_LENGTH",
     "compute_repo_id",
     "compute_runtime_key",
     "get_repo_runtime_dir",
@@ -22,6 +23,7 @@ __all__ = [
 ]
 
 from src.platform.contracts import (
+    DEFAULT_FINGERPRINT_LENGTH,
     compute_repo_id,
     compute_runtime_key,
     get_repo_runtime_dir,
