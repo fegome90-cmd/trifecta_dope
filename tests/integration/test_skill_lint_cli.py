@@ -95,3 +95,22 @@ class TestSkillLintCLI:
         code, out, err = run_cli(["skill", "lint"])
         # Should not error, just report what it finds (or empty if no skills/)
         assert "Skill Lint Report" in out or "0 skills found" in out
+
+    def test_lint_invalid_format_rejected(self):
+        """Verify invalid format value is rejected with error."""
+        code, out, err = run_cli(["skill", "lint", "tests/fixtures/skills/", "--format", "invalid"])
+        assert code == 1
+        assert "Invalid format" in out or "Invalid format" in err
+
+    def test_lint_valid_formats_work(self):
+        """Verify both valid format values work."""
+        # text format
+        code, out, _ = run_cli(["skill", "lint", "tests/fixtures/skills/", "--format", "text"])
+        assert code == 0
+        assert "Skill Lint Report" in out
+
+        # json format
+        code, out, _ = run_cli(["skill", "lint", "tests/fixtures/skills/", "--format", "json"])
+        assert code == 0
+        data = json.loads(out)
+        assert "total" in data

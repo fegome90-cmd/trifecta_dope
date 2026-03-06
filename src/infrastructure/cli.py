@@ -480,6 +480,15 @@ def search(
     start_time = time.time()
     _, file_system, _ = _get_dependencies(segment, telemetry)
 
+    # Validate explain_format
+    valid_formats = ("text", "json")
+    if explain_format not in valid_formats:
+        typer.echo(
+            f"Error: Invalid explain-format '{explain_format}'. Must be one of: {', '.join(valid_formats)}",
+            err=True,
+        )
+        raise typer.Exit(1)
+
     use_case = SearchUseCase(file_system, telemetry)
 
     try:
@@ -498,11 +507,13 @@ def search(
                 typer.echo(f"\n🔍 Search Explanation for: '{query}'\n")
                 typer.echo(f"  Normalized: {explanation['normalized_query']}")
                 typer.echo(f"  Linter class: {explanation['linter']['class']}")
-                if explanation['linter']['expanded']:
-                    typer.echo(f"  Linter added: {explanation['linter']['added_strong'] + explanation['linter']['added_weak']}")
+                if explanation["linter"]["expanded"]:
+                    typer.echo(
+                        f"  Linter added: {explanation['linter']['added_strong'] + explanation['linter']['added_weak']}"
+                    )
                 typer.echo(f"  Alias expanded: {explanation['expansions']['alias_expanded']}")
                 typer.echo(f"\n  Hits ({explanation['total_hits']}):\n")
-                for hit in explanation['hits']:
+                for hit in explanation["hits"]:
                     typer.echo(f"    [{hit['score']:.2f}] {hit['ref']}")
                     typer.echo(f"           Terms: {hit['signals']['matched_terms']}")
                     typer.echo(f"           Tokens: ~{hit['tokens_est']}\n")
@@ -1433,8 +1444,10 @@ def ctx_reset(
 @skill_app.command("lint")
 def skill_lint(
     paths: list[str] = typer.Argument(None, help="Paths to skills directories or SKILL.md files"),
-    strict: bool = typer.Option(False, "--strict", help="Exit with error code if any skill is invalid"),
-    format: str = typer.Option("text", "--format", "-f", help="Output format: text or json"),
+    strict: bool = typer.Option(
+        False, "--strict", help="Exit with error code if any skill is invalid"
+    ),
+    output_format: str = typer.Option("text", "--format", "-f", help="Output format: text or json"),
 ) -> None:
     """
     Lint skill metadata in SKILL.md files.
@@ -1449,6 +1462,15 @@ def skill_lint(
     from pathlib import Path
     from src.application.skill_lint_use_case import lint_skills
 
+    # Validate output format
+    valid_formats = ("text", "json")
+    if output_format not in valid_formats:
+        typer.echo(
+            f"Error: Invalid format '{output_format}'. Must be one of: {', '.join(valid_formats)}",
+            err=True,
+        )
+        raise typer.Exit(1)
+
     # Default to skills/ if no paths provided
     if not paths:
         paths = ["skills"]
@@ -1456,7 +1478,7 @@ def skill_lint(
     path_objs = [Path(p) for p in paths]
     report = lint_skills(path_objs)
 
-    if format == "json":
+    if output_format == "json":
         typer.echo(json.dumps(report.to_dict(), indent=2))
     else:
         # Text format

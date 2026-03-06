@@ -174,3 +174,43 @@ class TestSearchExplainJsonContract:
         data = json.loads(out)
 
         assert data["total_hits"] == len(data["hits"])
+
+    def test_explain_invalid_format_rejected(self):
+        """Verify invalid explain-format value is rejected with error."""
+        code, out, err = run_cli([
+            "ctx", "search",
+            "--query", "test",
+            "--segment", ".",
+            "--limit", "1",
+            "--explain",
+            "--explain-format", "xml"
+        ])
+        assert code == 1
+        assert "Invalid explain-format" in out or "Invalid explain-format" in err
+
+    def test_explain_valid_formats_work(self):
+        """Verify both valid explain-format values work."""
+        # json format
+        code, out, _ = run_cli([
+            "ctx", "search",
+            "--query", "test",
+            "--segment", ".",
+            "--limit", "1",
+            "--explain",
+            "--explain-format", "json"
+        ])
+        assert code == 0
+        data = json.loads(out)
+        assert "query" in data
+
+        # text format
+        code, out, _ = run_cli([
+            "ctx", "search",
+            "--query", "test",
+            "--segment", ".",
+            "--limit", "1",
+            "--explain",
+            "--explain-format", "text"
+        ])
+        assert code == 0
+        assert "Search Explanation" in out

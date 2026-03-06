@@ -47,6 +47,7 @@ The 8 unrelated test failures that blocked WO-0015 closure demonstrated
 that mixing "local quality" with "global debt" creates a throughput prison.
 This script separates those concerns: WO closure only requires WO-scoped tests.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -97,7 +98,12 @@ Gate separation:
     commands = get_wo_verify_commands(wo_yaml)
 
     if not commands:
-        print("No verify.commands found in WO YAML")
+        # WARNING: Empty verify.commands bypasses WO closure gates.
+        # ctx_wo_lint.py enforces non-empty verify.commands (WO009).
+        # If you see this warning, the WO may not have been properly linted.
+        print("⚠️  WARNING: No verify.commands found in WO YAML")
+        print("   This bypasses verification gates. Ensure WO was linted with ctx_wo_lint.py")
+        print("   Returning success for backward compatibility, but this may indicate a problem.")
         return 0
 
     print(f"=== WO-Scoped Verify: {args.wo_id} ===")
@@ -106,6 +112,9 @@ Gate separation:
 
     for i, cmd in enumerate(commands, 1):
         print(f"[{i}/{len(commands)}] {cmd}")
+        # NOTE: shell=True is used here because commands are developer-defined
+        # in WO YAML files, not user input. The security risk is acceptable
+        # because WO YAMLs are version-controlled and reviewed.
         result = subprocess.run(cmd, shell=True, cwd=root)
         if result.returncode != 0:
             print(f"FAILED: {cmd}")

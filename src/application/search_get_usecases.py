@@ -395,6 +395,29 @@ class SearchUseCase:
         from src.infrastructure.config_loader import ConfigLoader
         from src.domain.query_linter import lint_query
 
+        # B2 Intervention: Validate query early (same as execute method)
+        is_valid, error_msg = QueryNormalizer.validate(query)
+        if not is_valid:
+            # Return explanation with rejection info
+            return {
+                "query": query,
+                "normalized_query": "",
+                "linter": {
+                    "class": "rejected",
+                    "expanded": False,
+                    "added_strong": [],
+                    "added_weak": [],
+                },
+                "expansions": {
+                    "alias_expanded": False,
+                    "alias_terms_count": 0,
+                    "expanded_terms": [],
+                },
+                "hits": [],
+                "total_hits": 0,
+                "error": f"Query rejected: {error_msg}",
+            }
+
         # Load aliases
         alias_loader = AliasLoader(target_path)
         aliases = alias_loader.load()
@@ -454,14 +477,16 @@ class SearchUseCase:
         # Build hits with explanation
         hits_explained = []
         for hit, score in sorted_hits:
-            hits_explained.append({
-                "ref": hit.id,
-                "score": round(score, 2),
-                "tokens_est": hit.token_est,
-                "signals": {
-                    "matched_terms": matched_terms.get(hit.id, []),
-                },
-            })
+            hits_explained.append(
+                {
+                    "ref": hit.id,
+                    "score": round(score, 2),
+                    "tokens_est": hit.token_est,
+                    "signals": {
+                        "matched_terms": matched_terms.get(hit.id, []),
+                    },
+                }
+            )
 
         # Build explanation
         explanation = {
