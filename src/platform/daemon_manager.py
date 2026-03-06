@@ -14,6 +14,21 @@ class DaemonStatus:
     socket_path: Optional[Path] = None
 
 
+ALLOWED_BASES = [
+    Path("~/.local/share/trifecta").expanduser().resolve(),
+    Path("~/.config/trifecta").expanduser().resolve(),
+    Path("~/.cache/trifecta").expanduser().resolve(),
+]
+
+
+def _is_path_safe(path: Path) -> bool:
+    try:
+        resolved = path.resolve()
+        return any(str(resolved).startswith(str(base)) for base in ALLOWED_BASES)
+    except Exception:
+        return False
+
+
 class DaemonManager:
     DAEMON_TTL_IDLE = 300
     DAEMON_START_TIMEOUT = 5
@@ -27,11 +42,13 @@ class DaemonManager:
     def start(self) -> bool:
         if self.is_running():
             return True
+        if not _is_path_safe(self._runtime_dir):
+            return False
         self._runtime_dir.mkdir(parents=True, exist_ok=True)
         self._socket_path.parent.mkdir(parents=True, exist_ok=True)
         proc = subprocess.Popen(
             ["python", "-m", "trifecta", "daemon", "run"],
-            cwd=self._runtime_dir,
+            cwd=str(self._runtime_dir),
             stdout=open(self._log_path, "a"),
             stderr=subprocess.STDOUT,
             start_new_session=True,
