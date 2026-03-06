@@ -1,6 +1,7 @@
 import os
 import signal
 import subprocess
+import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -47,12 +48,19 @@ class DaemonManager:
         self._runtime_dir.mkdir(parents=True, exist_ok=True)
         self._socket_path.parent.mkdir(parents=True, exist_ok=True)
         log_file = self._log_path.open("a")
+        python_exe = sys.executable
+        import src.infrastructure.cli as cli_module
+
+        cli_path = Path(cli_module.__file__)
+        env = os.environ.copy()
+        env["TRIFECTA_RUNTIME_DIR"] = str(self._runtime_dir)
         proc = subprocess.Popen(
-            ["python", "-m", "trifecta", "daemon", "run"],
+            [python_exe, str(cli_path), "daemon", "run"],
             cwd=str(self._runtime_dir),
             stdout=log_file,
             stderr=subprocess.STDOUT,
             start_new_session=True,
+            env=env,
         )
         for _ in range(self.DAEMON_START_TIMEOUT * 10):
             if self._socket_path.exists():

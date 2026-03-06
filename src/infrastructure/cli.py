@@ -2585,6 +2585,67 @@ def daemon_restart(
         raise typer.Exit(1)
 
 
+@daemon_app.command("run")
+def daemon_run() -> None:
+    import os
+    import signal
+    import socket
+    import sys
+    import time
+
+    runtime_dir_env = os.environ.get("TRIFECTA_RUNTIME_DIR")
+    if not runtime_dir_env:
+        typer.echo("Error: TRIFECTA_RUNTIME_DIR not set", err=True)
+        raise typer.Exit(1)
+
+    from src.platform.daemon_manager import ALLOWED_BASES
+
+    runtime_dir = Path(runtime_dir_env).resolve()
+    if not any(str(runtime_dir).startswith(str(base)) for base in ALLOWED_BASES):
+        typer.echo("Error: Invalid runtime directory", err=True)
+        raise typer.Exit(1)
+
+    socket_path = runtime_dir / "daemon" / "socket"
+    pid_path = runtime_dir / "daemon" / "pid"
+
+    socket_path.parent.mkdir(parents=True, exist_ok=True)
+    pid_path.write_text(str(os.getpid()))
+
+    if socket_path.exists():
+        socket_path.unlink()
+
+    server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    server.bind(str(socket_path))
+    server.listen(1)
+    server.settimeout(1.0)
+
+    running = True
+
+    def shutdown_signal(signum, frame):
+        nonlocal running
+        running = False
+
+    signal.signal(signal.SIGTERM, shutdown_signal)
+    signal.signal(signal.SIGINT, shutdown_signal)
+
+    while running:
+        try:
+            try:
+                conn, _ = server.accept()
+                conn.close()
+            except socket.timeout:
+                continue
+        except Exception as e:
+            sys.stderr.write(f"Daemon error: {e}\n")
+            break
+
+    server.close()
+    if socket_path.exists():
+        socket_path.unlink()
+    if pid_path.exists():
+        pid_path.unlink()
+
+
 if __name__ == "__main__":
     main()
 # Audit Trigger
