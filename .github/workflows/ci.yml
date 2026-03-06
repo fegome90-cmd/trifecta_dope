@@ -118,6 +118,9 @@ jobs:
       - name: Run WO lint
         run: make wo-lint
 
+      - name: Run skill lint
+        run: uv run trifecta skill lint --strict --format json
+
       - name: Export WO lint JSON telemetry
         run: |
           mkdir -p _ctx/telemetry
