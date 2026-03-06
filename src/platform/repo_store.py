@@ -1,5 +1,7 @@
 import sqlite3
+import datetime
 from dataclasses import dataclass
+from datetime import timezone
 from pathlib import Path
 from typing import Optional
 
@@ -32,9 +34,7 @@ class RepoStore:
         conn.close()
 
     def add(self, repo_id: str, root_path: Path) -> RepoRecord:
-        import datetime
-
-        now = datetime.datetime.utcnow().isoformat()
+        now = datetime.datetime.now(timezone.utc).isoformat()
         conn = sqlite3.connect(self._db_path)
         conn.execute(
             "INSERT OR REPLACE INTO repos (repo_id, root_path, created_at, last_accessed) VALUES (?, ?, ?, ?)",
