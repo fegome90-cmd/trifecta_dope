@@ -38,6 +38,9 @@ from src.application.use_cases import (
     ValidateContextPackUseCase,
     ValidateTrifectaUseCase,
 )
+from src.application.status_use_case import StatusUseCase
+from src.application.doctor_use_case import DoctorUseCase
+from src.application.repo_use_case import RepoUseCase
 from src.domain.models import TrifectaConfig
 
 from src.infrastructure.file_system import FileSystemAdapter
@@ -93,6 +96,10 @@ app.add_typer(linear_app, name="linear")
 # Legacy Burn-Down
 legacy_app = typer.Typer(help="Legacy Burn-Down commands", cls=TrifectaGroup)
 app.add_typer(legacy_app, name="legacy")
+
+# Repo Management
+repo_app = typer.Typer(help="Repository registry commands", cls=TrifectaGroup)
+app.add_typer(repo_app, name="repo")
 
 HELP_SEGMENT = "Target segment path (e.g., 'debug_terminal' or '.')"
 HELP_TELEMETRY = "Telemetry level: off, lite (default), full"
@@ -249,6 +256,164 @@ def ctx_stats(
             typer.echo("\n  Top Warnings:")
             for w in warnings:
                 typer.echo(f"    - {w}")
+
+
+# =============================================================================
+# Status and Doctor Commands
+# =============================================================================
+
+
+@app.command("status")
+def status_cmd(
+    repo: str = typer.Option(..., "--repo", "-r", help="Repository path"),
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+) -> None:
+    """Show status of a repository."""
+    use_case = StatusUseCase()
+    status = use_case.execute(repo)
+
+    if json_output:
+        import json
+
+        output = {
+            "repo_id": status.segment_ref.id,
+            "path": str(status.segment_ref.root_abs),
+            "slug": status.segment_ref.slug,
+            "has_ctx_dir": status.has_ctx_dir,
+            "has_context_pack": status.has_context_pack,
+            "has_telemetry": status.has_telemetry,
+            "has_skill_md": status.has_skill_md,
+            "has_prime": status.has_prime,
+            "has_agent": status.has_agent,
+            "has_session": status.has_session,
+        }
+        typer.echo(json.dumps(output, indent=2))
+    else:
+        typer.echo(f"Status for {status.segment_ref.slug}")
+        typer.echo(f"  Path: {status.segment_ref.root_abs}")
+        typer.echo(f"  ID: {status.segment_ref.id}")
+        typer.echo(f"  _ctx/: {'✓' if status.has_ctx_dir else '✗'}")
+        typer.echo(f"  context_pack.json: {'✓' if status.has_context_pack else '✗'}")
+        typer.echo(f"  telemetry: {'✓' if status.has_telemetry else '✗'}")
+        typer.echo(f"  skill.md: {'✓' if status.has_skill_md else '✗'}")
+        typer.echo(f"  prime_*.md: {'✓' if status.has_prime else '✗'}")
+        typer.echo(f"  agent*.md: {'✓' if status.has_agent else '✗'}")
+        typer.echo(f"  session_*.md: {'✓' if status.has_session else '✗'}")
+
+
+@app.command("doctor")
+def doctor_cmd(
+    repo: str = typer.Option(..., "--repo", "-r", help="Repository path"),
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+) -> None:
+    """Diagnose issues in a repository."""
+    use_case = DoctorUseCase()
+    diagnosis = use_case.execute(repo)
+
+    if json_output:
+        import json
+
+        output = {
+            "repo_id": diagnosis.segment_ref.id,
+            "path": str(diagnosis.segment_ref.root_abs),
+            "health_score": diagnosis.health_score,
+            "issues": diagnosis.issues,
+            "warnings": diagnosis.warnings,
+        }
+        typer.echo(json.dumps(output, indent=2))
+    else:
+        typer.echo(f"Doctor Diagnosis for {diagnosis.segment_ref.slug}")
+        typer.echo(f"  Health Score: {diagnosis.health_score}/100")
+        if diagnosis.issues:
+            typer.echo("  Issues:")
+            for issue in diagnosis.issues:
+                typer.echo(f"    - {issue}")
+        if diagnosis.warnings:
+            typer.echo("  Warnings:")
+            for warning in diagnosis.warnings:
+                typer.echo(f"    - {warning}")
+        if not diagnosis.issues and not diagnosis.warnings:
+            typer.echo("  ✓ No issues found")
+
+
+# =============================================================================
+# Repo Commands
+# =============================================================================
+
+
+@repo_app.command("register")
+def repo_register(
+    path: str = typer.Argument(..., help="Repository path to register"),
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+) -> None:
+    """Register a repository."""
+    use_case = RepoUseCase()
+    entry = use_case.register(path)
+
+    if json_output:
+        import json
+
+        output = {
+            "repo_id": entry.repo_id,
+            "path": entry.path,
+            "slug": entry.slug,
+            "fingerprint": entry.fingerprint,
+        }
+        typer.echo(json.dumps(output, indent=2))
+    else:
+        typer.echo(f"Registered: {entry.slug}")
+        typer.echo(f"  ID: {entry.repo_id}")
+        typer.echo(f"  Path: {entry.path}")
+
+
+@repo_app.command("list")
+def repo_list(json_output: bool = typer.Option(False, "--json", help="Output as JSON")) -> None:
+    """List registered repositories."""
+    use_case = RepoUseCase()
+    repos = use_case.list_repos()
+
+    if json_output:
+        import json
+
+        output = {"repos": [{"repo_id": r.repo_id, "path": r.path, "slug": r.slug} for r in repos]}
+        typer.echo(json.dumps(output, indent=2))
+    else:
+        if not repos:
+            typer.echo("No registered repositories")
+        else:
+            typer.echo(f"Registered Repositories ({len(repos)}):")
+            for repo in repos:
+                typer.echo(f"  - {repo.slug}: {repo.repo_id}")
+
+
+@repo_app.command("show")
+def repo_show(
+    repo_id: str = typer.Argument(..., help="Repository ID to show"),
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+) -> None:
+    """Show details of a registered repository."""
+    use_case = RepoUseCase()
+    entry = use_case.show(repo_id)
+
+    if entry is None:
+        typer.echo(f"Repository not found: {repo_id}", err=True)
+        raise typer.Exit(code=1)
+
+    if json_output:
+        import json
+
+        output = {
+            "repo_id": entry.repo_id,
+            "path": entry.path,
+            "slug": entry.slug,
+            "fingerprint": entry.fingerprint,
+        }
+        typer.echo(json.dumps(output, indent=2))
+    else:
+        typer.echo(f"Repository: {entry.slug}")
+        typer.echo(f"  ID: {entry.repo_id}")
+        typer.echo(f"  Path: {entry.path}")
+        typer.echo(f"  Fingerprint: {entry.fingerprint}")
 
 
 # =============================================================================
