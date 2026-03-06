@@ -296,86 +296,35 @@ class SearchUseCase:
         Returns:
             Formatted search results string
         """
-        from src.infrastructure.alias_loader import AliasLoader
-        from src.application.query_normalizer import QueryNormalizer
-        from src.application.query_expander import QueryExpander
-        from src.infrastructure.segment_utils import resolve_segment_root
-        from src.infrastructure.config_loader import ConfigLoader
-        from src.domain.query_linter import lint_query
+        # Execute the shared search pipeline
+        result = self._execute_search_pipeline(target_path, query, limit, enable_lint)
 
-        # B2 Intervention: Validate query early to prevent zero-hit searches
-        is_valid, error_msg = QueryNormalizer.validate(query)
-        if not is_valid:
-            # Record telemetry for rejected query
+        # Early return for invalid queries WITH telemetry
+        if not result.is_valid:
             if self.telemetry:
                 source = _detect_source()
                 build_sha = _get_build_sha()
                 self.telemetry.incr("ctx_search_rejected_invalid_query_count")
                 self.telemetry.event(
                     "ctx.search.rejected",
-                    {"query_preview": str(query)[:50], "reason": error_msg},
+                    {"query_preview": str(query)[:50], "reason": result.validation_error},
                     {"hits": 0, "rejected": True},
                     1,
                     source=source,
                     build_sha=build_sha,
-                    rejection_reason=error_msg,
+                    rejection_reason=result.validation_error,
                 )
-            return f"❌ Query rejected: {error_msg}"
+            return f"❌ Query rejected: {result.validation_error}"
 
-        # Load aliases
-        alias_loader = AliasLoader(target_path)
-        aliases = alias_loader.load()
+        # Create mutable copies for Spanish fallback (which may modify these)
+        combined_results: dict[str, tuple[Any, float]] = dict(result.combined_results)
+        final_hits: list[Any] = list(result.final_hits)
+        sorted_hits: list[tuple[Any, float]] = list(result.sorted_hits)
 
-        # Normalize query
-        normalized_query = QueryNormalizer.normalize(query)
-
-        # Apply Query Linter (anchor-based classification + expansion)
-        lint_plan: LinterPlan
-        if enable_lint:
-            repo_root = resolve_segment_root(target_path)
-            anchors_cfg = ConfigLoader.load_anchors(repo_root)
-            aliases_cfg = ConfigLoader.load_linter_aliases(repo_root)
-
-            lint_plan = lint_query(normalized_query, anchors_cfg, aliases_cfg)
-
-            # If config missing, force disabled state
-            if anchors_cfg.get("_missing_config") or aliases_cfg.get("_missing_config"):
-                lint_plan["query_class"] = "disabled_missing_config"
-                lint_plan["changed"] = False
-                lint_plan["changes"] = {"added_strong": [], "added_weak": [], "reasons": []}
-                query_for_expander = normalized_query
-            else:
-                query_for_expander = (
-                    lint_plan["expanded_query"] if lint_plan["changed"] else normalized_query
-                )
-        else:
-            lint_plan = _build_disabled_lint_plan(normalized_query)
-            query_for_expander = normalized_query
-
-        # CRITICAL: Tokenize AFTER linter decides final query
-        tokens = QueryNormalizer.tokenize(query_for_expander)
-
-        # Expand query with aliases
-        expander = QueryExpander(aliases)
-        expanded_terms = expander.expand(query_for_expander, tokens)
-
-        # Execute search for each term and combine results
-        service = ContextService(target_path)
-        combined_results: dict[str, tuple[Any, float]] = {}  # chunk_id -> (hit, max_score)
-
-        for term, weight in expanded_terms:
-            result = service.search(term, k=limit * 2)  # Get more to allow for de-dupe
-            for hit in result.hits:
-                weighted_score = hit.score * weight
-                if hit.id not in combined_results or weighted_score > combined_results[hit.id][1]:
-                    combined_results[hit.id] = (hit, weighted_score)
-
-        # Sort by weighted score and take top N
-        sorted_hits = sorted(combined_results.values(), key=lambda x: x[1], reverse=True)[:limit]
-        final_hits = [hit for hit, _ in sorted_hits]
-
-        # Get expansion metadata for telemetry
-        expansion_meta = expander.get_expansion_metadata(expanded_terms)
+        # Extract values from pipeline result for telemetry and fallback logic
+        normalized_query = result.normalized_query
+        lint_plan = result.lint_plan
+        expansion_meta = result.expansion_meta
 
         # Sanitize query for telemetry (NEVER store raw query)
         query_preview = query[:200]  # Truncate preview
@@ -402,9 +351,11 @@ class SearchUseCase:
         if len(final_hits) == 0 and source != "fixture":
             if detect_spanish(query):
                 spanish_alias_variants = expand_with_spanish_aliases(normalized_query)
+                # Create service for Spanish fallback search
+                service = ContextService(target_path)
                 for variant in spanish_alias_variants[1:]:
-                    result = service.search(variant, k=limit * 2)
-                    for hit in result.hits:
+                    variant_result = service.search(variant, k=limit * 2)
+                    for hit in variant_result.hits:
                         if hit.id not in combined_results:
                             combined_results[hit.id] = (hit, hit.score * 0.8)
                     if combined_results:
