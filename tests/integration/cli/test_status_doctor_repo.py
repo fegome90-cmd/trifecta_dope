@@ -2,9 +2,7 @@
 
 import json
 import tempfile
-from pathlib import Path
 
-import pytest
 from typer.testing import CliRunner
 
 from src.infrastructure.cli import app
@@ -34,7 +32,7 @@ def test_doctor_command_basic():
     """Test basic doctor command output."""
     result = runner.invoke(app, ["doctor", "--repo", "."])
     assert result.exit_code == 0
-    assert "Health score:" in result.stdout
+    assert "Health Score:" in result.stdout
 
 
 def test_doctor_command_json():
@@ -42,49 +40,41 @@ def test_doctor_command_json():
     result = runner.invoke(app, ["doctor", "--repo", ".", "--json"])
     assert result.exit_code == 0
     data = json.loads(result.stdout)
-    assert "score" in data
+    assert "health_score" in data
     assert "issues" in data
-    assert "healthy" in data
+    assert "warnings" in data
 
 
-def test_repo_list_empty(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_repo_list_empty():
     """Test repo list when no repos registered."""
-    registry = tmp_path / "repos.json"
-    monkeypatch.setenv("TRIFECTA_REPO_REGISTRY", str(registry))
-    result = runner.invoke(app, ["repo-list"])
+    result = runner.invoke(app, ["repo", "list"])
     assert result.exit_code == 0
 
 
-def test_repo_register(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_repo_register():
     """Test registering a repository."""
-    registry = tmp_path / "repos.json"
-    monkeypatch.setenv("TRIFECTA_REPO_REGISTRY", str(registry))
     with tempfile.TemporaryDirectory() as tmpdir:
-        result = runner.invoke(app, ["repo-register", tmpdir])
+        result = runner.invoke(app, ["repo", "register", tmpdir])
         assert result.exit_code == 0
         assert "Registered:" in result.stdout
 
 
-def test_repo_show(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_repo_show():
     """Test showing a registered repository."""
-    registry = tmp_path / "repos.json"
-    monkeypatch.setenv("TRIFECTA_REPO_REGISTRY", str(registry))
     with tempfile.TemporaryDirectory() as tmpdir:
-        runner.invoke(app, ["repo-register", tmpdir])
-        result = runner.invoke(app, ["repo-list", "--json"])
+        runner.invoke(app, ["repo", "register", tmpdir])
+        result = runner.invoke(app, ["repo", "list", "--json"])
         data = json.loads(result.stdout)
-        repo_id = data[0]["repo_id"]
+        repo_id = data["repos"][0]["repo_id"]
 
-        result = runner.invoke(app, ["repo-show", repo_id])
+        result = runner.invoke(app, ["repo", "show", repo_id])
         assert result.exit_code == 0
         assert repo_id in result.stdout
 
 
-def test_repo_show_not_found(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_repo_show_not_found():
     """Test showing a non-existent repository."""
-    registry = tmp_path / "repos.json"
-    monkeypatch.setenv("TRIFECTA_REPO_REGISTRY", str(registry))
-    result = runner.invoke(app, ["repo-show", "nonexistent_id"])
+    result = runner.invoke(app, ["repo", "show", "nonexistent_id"])
     assert result.exit_code == 1
     output = result.stdout + (result.stderr or "")
     assert "not found" in output.lower()

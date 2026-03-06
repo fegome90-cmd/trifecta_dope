@@ -1,0 +1,26 @@
+{
+  "active_plan": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.sisyphus/plans/e-v1-global-platform.md",
+  "started_at": "2026-03-06T10:00:00.000Z",
+  "completed_at": null,
+  "plan_name": "e-v1-global-platform",
+  "status": "in_progress",
+  "wos": {
+    "E-V1-WO1": {
+      "title": "SSOT + Contratos + Skeleton",
+      "status": "pending",
+      "dependencies": []
+    },
+    "E-V1-WO2": {
+      "title": "CLI Adelgazado + Repo Commands",
+      "status": "completed",
+      "dependencies": ["E-V1-WO1"],
+      "completed_at": "2026-03-06T10:07:00.000Z"
+    },
+    "E-V1-WO3": {
+      "title": "SQLite + Daemon + Operación Real",
+      "status": "pending",
+      "dependencies": ["E-V1-WO1", "E-V1-WO2"]
+    }
+  },
+  "nomenclature": "E-V1-WO# para evitar colisiones con WO-004X existentes"
+}
