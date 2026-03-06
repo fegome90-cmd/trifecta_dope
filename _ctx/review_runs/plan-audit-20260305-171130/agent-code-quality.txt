@@ -1,0 +1,2 @@
+# Agent Code_Quality
+- [Baja] Sin smells claros en plan (heurística) (/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md:1)

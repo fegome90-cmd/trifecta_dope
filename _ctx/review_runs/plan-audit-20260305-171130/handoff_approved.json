@@ -1,0 +1,68 @@
+{
+  "schema_version": "2.0",
+  "handoff_version": "2.0",
+  "generated_at": "2026-03-05T17:15:00.000000",
+  "run_id": "plan-audit-20260305-171130",
+  "session_name": "plan-audit",
+  "plan_path": ".pi/plan/trifecta-global-architecture.md",
+  "agent_outputs": {
+    "logic": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-171130/agent-logic.json",
+    "code_quality": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-171130/agent-code-quality.json",
+    "silent_failure": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-171130/agent-silent-failure.json",
+    "testing_static": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-171130/agent-testing-static.json"
+  },
+  "findings": [],
+  "raw_patch_candidates": [],
+  "deduplicated_patch_candidates": [
+    {
+      "id": "patch-dedup-1",
+      "priority": "Media",
+      "change_summary": "Agregar checklist de errores y logs estructurados.",
+      "risk_if_not_applied": "detección tardía de incidentes",
+      "source_agents": [
+        "logic",
+        "code_quality",
+        "silent_failure",
+        "testing_static"
+      ],
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "approved",
+      "user_notes": "Aprobado por usuario - 2026-03-05 17:15"
+    },
+    {
+      "id": "patch-dedup-2",
+      "priority": "Media",
+      "change_summary": "Revisar implementación del plan y validar formato.",
+      "risk_if_not_applied": "analysis incomplete",
+      "source_agents": [
+        "logic",
+        "code_quality",
+        "silent_failure",
+        "testing_static"
+      ],
+      "status": "proposed",
+      "requires_user_confirmation": true,
+      "user_decision": "approved",
+      "user_notes": "Aprobado por usuario - 2026-03-05 17:15"
+    }
+  ],
+  "decision_rules": {
+    "allowed_user_decisions": [
+      "approved",
+      "rejected",
+      "deferred"
+    ],
+    "default": "deferred",
+    "requires_user_confirmation": true
+  },
+  "execution_summary": {
+    "total_duration_ms": 2000,
+    "agents_completed": 4,
+    "agents_failed": 0,
+    "agents_timeout": 0,
+    "session_cleaned_up": true,
+    "overall_confidence": 1.0
+  },
+  "next_step_for_parent_agent": "Todos los parches están aprobados. Pasar a FASE 3: Ejecución."
+}

@@ -46,3 +46,11 @@ uv run pytest -m "not slow"
 ```
 
 See [skill.md](skill.md) for detailed commands, patterns, and troubleshooting.
+
+---
+
+## Global Skills Lookup
+
+```bash
+skill-hub "refactor"
+```

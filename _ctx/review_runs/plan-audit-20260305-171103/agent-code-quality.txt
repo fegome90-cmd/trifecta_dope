@@ -1,0 +1,2 @@
+# Agent Code_Quality
+- [Media] Agent code_quality failed (.pi/plan/trifecta-global-architecture.md:0)

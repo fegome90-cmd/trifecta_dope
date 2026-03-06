@@ -33,7 +33,7 @@ result: superseded
 verified_at_sha: e18fe9a
 x_superseded_by: WO-0018B
 x_superseded_reason: 'All commits merged to main via PR #22 (feat/wo-WO-0018B)'
-closed_at: &id001 2026-02-10 14:28:30+00:00
+closed_at: &id001 '2026-02-10T14:28:30+00:00'
 run_ids:
 - wo-0018a-fix
 - wo-0018a-verify
