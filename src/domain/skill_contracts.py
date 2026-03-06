@@ -11,13 +11,12 @@ Date: 2026-03-05
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Literal
 
 from src.domain.result import Ok, Err, Result
 
 
-# Valid input types for skill inputs
-InputType = Literal["string", "file", "json", "boolean", "number"]
+# Valid input types for skill inputs (used in validation, not type annotation)
+VALID_INPUT_TYPES: tuple[str, ...] = ("string", "file", "json", "boolean", "number")
 
 
 @dataclass(frozen=True)
@@ -51,10 +50,9 @@ def validate_skill_input(inp: SkillInput) -> Result[SkillInput, list[SkillValida
     if not inp.name or not inp.name.strip():
         errors.append(SkillValidationError("input.name", "name cannot be empty"))
 
-    valid_types: tuple[str, ...] = ("string", "file", "json", "boolean", "number")
-    if inp.type not in valid_types:
+    if inp.type not in VALID_INPUT_TYPES:
         errors.append(
-            SkillValidationError("input.type", f"type must be one of {valid_types}", inp.type)
+            SkillValidationError("input.type", f"type must be one of {VALID_INPUT_TYPES}", inp.type)
         )
 
     if errors:
