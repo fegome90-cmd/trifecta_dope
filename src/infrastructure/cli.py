@@ -2628,10 +2628,29 @@ def daemon_run() -> None:
     signal.signal(signal.SIGTERM, shutdown_signal)
     signal.signal(signal.SIGINT, shutdown_signal)
 
+    start_time = time.time()
+
     while running:
         try:
             try:
                 conn, _ = server.accept()
+                data = conn.recv(1024).decode().strip()
+
+                if data == "PING":
+                    conn.sendall(b"PONG\n")
+                elif data == "HEALTH":
+                    import json
+
+                    status = {
+                        "status": "ok",
+                        "pid": os.getpid(),
+                        "uptime": int(time.time() - start_time),
+                    }
+                    conn.sendall(json.dumps(status).encode() + b"\n")
+                elif data == "SHUTDOWN":
+                    conn.sendall(b"OK\n")
+                    running = False
+
                 conn.close()
             except socket.timeout:
                 continue
