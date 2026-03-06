@@ -97,6 +97,19 @@ def _classify_zero_hit_reason(
     return "unknown"
 
 
+def _build_disabled_lint_plan(normalized_query: str) -> LinterPlan:
+    """Build a disabled lint plan for when linting is off."""
+    return {
+        "original_query": normalized_query,
+        "query_class": "disabled",
+        "token_count": 0,
+        "anchors_detected": {"strong": [], "weak": [], "aliases_matched": []},
+        "expanded_query": normalized_query,
+        "changed": False,
+        "changes": {"added_strong": [], "added_weak": [], "reasons": []},
+    }
+
+
 class SearchUseCase:
     """Wrapper for ctx.search with telemetry."""
 
@@ -178,15 +191,7 @@ class SearchUseCase:
                     lint_plan["expanded_query"] if lint_plan["changed"] else normalized_query
                 )
         else:
-            lint_plan = {
-                "original_query": normalized_query,
-                "query_class": "disabled",
-                "token_count": 0,
-                "anchors_detected": {"strong": [], "weak": [], "aliases_matched": []},
-                "expanded_query": normalized_query,
-                "changed": False,
-                "changes": {"added_strong": [], "added_weak": [], "reasons": []},
-            }
+            lint_plan = _build_disabled_lint_plan(normalized_query)
             query_for_expander = normalized_query
 
         # CRITICAL: Tokenize AFTER linter decides final query
@@ -414,15 +419,7 @@ class SearchUseCase:
                     lint_plan["expanded_query"] if lint_plan["changed"] else normalized_query
                 )
         else:
-            lint_plan = {
-                "original_query": normalized_query,
-                "query_class": "disabled",
-                "token_count": 0,
-                "anchors_detected": {"strong": [], "weak": [], "aliases_matched": []},
-                "expanded_query": normalized_query,
-                "changed": False,
-                "changes": {"added_strong": [], "added_weak": [], "reasons": []},
-            }
+            lint_plan = _build_disabled_lint_plan(normalized_query)
             query_for_expander = normalized_query
 
         # Tokenize AFTER linter

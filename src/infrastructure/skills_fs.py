@@ -38,6 +38,9 @@ def parse_frontmatter(content: str) -> tuple[dict[str, Any], str]:
     Returns:
         (frontmatter_dict, body_content)
         If no frontmatter, returns ({}, content)
+
+    Note: YAML errors are silently caught and return empty frontmatter.
+    This matches the codebase pattern of graceful degradation.
     """
     lines = content.strip().split("\n")
 
@@ -168,6 +171,8 @@ def discover_skills_from_paths(paths: list[Path]) -> list[DiscoveredSkill]:
                 meta = dict_to_skill_meta(frontmatter, str(path))
                 skills.append(DiscoveredSkill(path=path, meta=meta, content=content))
             except Exception:
+                # Silently skip files that can't be read (permission, encoding, etc.)
+                # Matches codebase pattern - see cli.py:200, cli.py:209 for similar patterns
                 continue
         elif path.is_dir():
             skills.extend(discover_skills(path))
