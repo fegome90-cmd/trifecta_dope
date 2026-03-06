@@ -1,0 +1,49 @@
+version: 1
+id: WO-0040
+epic_id: E-V1
+title: Roadmap Master (Tracking-Only)
+priority: P1
+status: pending
+owner: null
+branch: job/WO-0040
+worktree: ../.worktrees/WO-0040
+scope:
+  allow:
+  - docs/plans/*
+  - _ctx/backlog/backlog.yaml
+  - _ctx/jobs/pending/WO-*.yaml
+  deny:
+  - src/**
+deliverables:
+- Entry-point documentary for V1 roadmap
+- Tracking-only WO (not executable)
+objective: |
+  Tracking WO not executable.
+  No creates runtime, no modifies domain, no introduces productive code.
+  Serves as entry-point documentary for V1 roadmap.
+verify:
+  commands:
+  - uv run python scripts/ctx_backlog_validate.py --strict
+diff_budget:
+  max_files: 2
+  max_loc: 50
+stop_conditions:
+  max_iterations: 1
+  max_fail_verify: 1
+dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - verify
+  - session.append:result
+  segment: .
+trace:
+  ticket: null
+  related_wos:
+  - WO-0041
+  - WO-0042
+  - WO-0043

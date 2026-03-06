@@ -75,6 +75,12 @@ uv sync --all-groups
 # Run CLI
 uv run trifecta --help
 
+# Global skill lookup (MANDATORY when user asks for a skill)
+skill-hub "security"
+skill-hub "python testing"
+skill-hub "docker"
+skill-hub "tmux"
+
 # Tests
 uv run pytest                    # All tests
 uv run pytest -m "not slow"      # Skip slow tests
@@ -317,6 +323,23 @@ sqlite3 .trifecta/cache/ast_cache_*.db "SELECT count(*) FROM cache;"
 - `TypeError: Cannot read properties of undefined (reading 'split')`
   - Usually caused by running query/editor context against the wrong connection type.
   - Fix by selecting the active SQLite connection for the AST `.db` file.
+
+---
+
+## Global Skills Lookup
+
+```bash
+# Using executable (recommended - works from any directory)
+skill-hub "refactor"
+skill-hub "seguridad"
+
+# Or using trifecta CLI directly
+TRIFECTA_LINT=1 uv run trifecta ctx search --segment ~/.trifecta/segments/skills-hub --query "refactor"
+```
+
+**Sources**: 4 (pi-agent, agents, claude, codex) - 152 skills indexed
+
+**Fallback**: If no results, search directly in skill directories
 
 ---
 

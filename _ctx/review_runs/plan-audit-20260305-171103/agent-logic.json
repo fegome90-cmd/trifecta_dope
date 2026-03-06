@@ -1,0 +1,22 @@
+{
+  "agent": "logic",
+  "generated_at": "2026-03-05T17:11:03.649681",
+  "status": "failed",
+  "duration_ms": 0,
+  "error": "Plan not found: .pi/plan/trifecta-global-architecture.md",
+  "findings": [
+    {
+      "severity": "Media",
+      "title": "Agent logic failed",
+      "evidence": {
+        "file": ".pi/plan/trifecta-global-architecture.md",
+        "line": 0,
+        "snippet": "Plan not found: .pi/plan/trifecta-global-architecture.md"
+      },
+      "risk": "analysis incomplete",
+      "recommendation": "Check agent implementation and plan format",
+      "agent": "logic",
+      "confidence": 1.0
+    }
+  ]
+}

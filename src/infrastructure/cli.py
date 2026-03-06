@@ -93,6 +93,10 @@ app.add_typer(telemetry_app, name="telemetry")
 app.add_typer(obsidian_app, name="obsidian")
 app.add_typer(linear_app, name="linear")
 
+# Skills commands
+skill_app = typer.Typer(help="Skill metadata and linting commands", cls=TrifectaGroup)
+app.add_typer(skill_app, name="skill")
+
 # Legacy Burn-Down
 legacy_app = typer.Typer(help="Legacy Burn-Down commands", cls=TrifectaGroup)
 app.add_typer(legacy_app, name="legacy")
@@ -600,6 +604,12 @@ def search(
     no_lint: bool = typer.Option(
         False, "--no-lint", help="Disable query linting (anchor guidance expansion)"
     ),
+    explain: bool = typer.Option(
+        False, "--explain", help="Return structured JSON explanation of search ranking"
+    ),
+    explain_format: str = typer.Option(
+        "json", "--explain-format", help="Explanation output format: json or text"
+    ),
 ) -> None:
     """Search for relevant chunks in the Context Pack.
 
@@ -616,20 +626,59 @@ def search(
       Default: DISABLED (conservative rollout)
 
     To ENABLE linting: omit --no-lint flag or set TRIFECTA_LINT=1
+
+    Debugging:
+      --explain              Return structured JSON with ranking explanation
+      --explain-format       Output format for explanation: json (default) or text
     """
     telemetry = _get_telemetry(segment, telemetry_level, require_ctx=False)
     start_time = time.time()
     _, file_system, _ = _get_dependencies(segment, telemetry)
+
+    # Validate explain_format
+    valid_formats = ("text", "json")
+    if explain_format not in valid_formats:
+        typer.echo(
+            f"Error: Invalid explain-format '{explain_format}'. Must be one of: {', '.join(valid_formats)}",
+            err=True,
+        )
+        raise typer.Exit(1)
 
     use_case = SearchUseCase(file_system, telemetry)
 
     try:
         # Determine if linting should be enabled (conservative default)
         enable_lint = _get_lint_enabled(no_lint)
-        output = use_case.execute(
-            Path(segment).resolve(), query, limit=limit, enable_lint=enable_lint
-        )
-        typer.echo(output)
+
+        if explain:
+            # Return structured explanation
+            explanation = use_case.execute_with_explanation(
+                Path(segment).resolve(), query, limit=limit, enable_lint=enable_lint
+            )
+            if explain_format == "json":
+                typer.echo(json.dumps(explanation, indent=2))
+            else:
+                # Text format
+                typer.echo(f"\n🔍 Search Explanation for: '{query}'\n")
+                typer.echo(f"  Normalized: {explanation['normalized_query']}")
+                typer.echo(f"  Linter class: {explanation['linter']['class']}")
+                if explanation["linter"]["expanded"]:
+                    typer.echo(
+                        f"  Linter added: {explanation['linter']['added_strong'] + explanation['linter']['added_weak']}"
+                    )
+                typer.echo(f"  Alias expanded: {explanation['expansions']['alias_expanded']}")
+                typer.echo(f"\n  Hits ({explanation['total_hits']}):\n")
+                for hit in explanation["hits"]:
+                    typer.echo(f"    [{hit['score']:.2f}] {hit['ref']}")
+                    typer.echo(f"           Terms: {hit['signals']['matched_terms']}")
+                    typer.echo(f"           Tokens: ~{hit['tokens_est']}\n")
+        else:
+            # Normal output
+            output = use_case.execute(
+                Path(segment).resolve(), query, limit=limit, enable_lint=enable_lint
+            )
+            typer.echo(output)
+
         telemetry.observe("ctx.search", int((time.time() - start_time) * 1000))
     except Exception as e:
         telemetry.event(
@@ -1540,6 +1589,70 @@ def ctx_reset(
         raise e
     finally:
         telemetry.flush()
+
+
+# =============================================================================
+# Skill Commands
+# =============================================================================
+
+
+@skill_app.command("lint")
+def skill_lint(
+    paths: list[str] = typer.Argument(None, help="Paths to skills directories or SKILL.md files"),
+    strict: bool = typer.Option(
+        False, "--strict", help="Exit with error code if any skill is invalid"
+    ),
+    output_format: str = typer.Option("text", "--format", "-f", help="Output format: text or json"),
+) -> None:
+    """
+    Lint skill metadata in SKILL.md files.
+
+    Validates skill frontmatter YAML for required fields and correct types.
+
+    Examples:
+        trifecta skill lint skills/
+        trifecta skill lint --strict --format json
+        trifecta skill lint ./skills/documentation/SKILL.md
+    """
+    from pathlib import Path
+    from src.application.skill_lint_use_case import lint_skills
+
+    # Validate output format
+    valid_formats = ("text", "json")
+    if output_format not in valid_formats:
+        typer.echo(
+            f"Error: Invalid format '{output_format}'. Must be one of: {', '.join(valid_formats)}",
+            err=True,
+        )
+        raise typer.Exit(1)
+
+    # Default to skills/ if no paths provided
+    if not paths:
+        paths = ["skills"]
+
+    path_objs = [Path(p) for p in paths]
+    report = lint_skills(path_objs)
+
+    if output_format == "json":
+        typer.echo(json.dumps(report.to_dict(), indent=2))
+    else:
+        # Text format
+        typer.echo(f"\n📋 Skill Lint Report: {report.total} skills found\n")
+
+        for skill in report.skills:
+            if skill.valid:
+                typer.echo(f"  ✅ {skill.name}")
+                typer.echo(f"     Path: {skill.path}")
+            else:
+                typer.echo(f"  ❌ {skill.name}")
+                typer.echo(f"     Path: {skill.path}")
+                for err in skill.errors:
+                    typer.echo(f"     Error: {err}")
+
+        typer.echo(f"\n  Summary: {report.valid_count} valid, {report.invalid_count} invalid\n")
+
+    if strict and report.invalid_count > 0:
+        raise typer.Exit(1)
 
 
 # =============================================================================

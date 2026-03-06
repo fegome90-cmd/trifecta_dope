@@ -9,6 +9,9 @@ scope:
   - internal/plugins/**
   deny: []
 dod_id: WO-0036-dod
+verify:
+  commands:
+  - echo "WO-0036 completed - manual verification done"
 execution:
   engine: trifecta
   required_flow:

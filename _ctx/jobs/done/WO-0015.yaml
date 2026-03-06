@@ -3,10 +3,10 @@ id: WO-0015
 epic_id: E-SCALE
 title: Repository Topology Scanner
 priority: P1
-status: failed
-owner: felipe_gonzalez
-branch: feat/wo-WO-0015
-worktree: ../.worktrees/WO-0015
+status: done
+owner: claude-agent
+branch: fegome90-cmd/wo-0015-work
+worktree: carthage
 scope:
   allow:
   - src/application/topology_scanner.py
@@ -31,8 +31,8 @@ execution:
 dependencies:
 - WO-0014
 started_at: '2026-02-18T15:09:14.081495+00:00'
-verified_at_sha: null
-closed_at: null
+verified_at_sha: 7cb0eb5fe94c1d5213e8da47a3bc7d7039187f9a
+closed_at: '2026-02-23T17:05:45.918009+00:00'
 governance:
   must:
   - Use TDD
@@ -59,3 +59,4 @@ diff_budget:
 stop_conditions:
   max_iterations: 6
   max_fail_verify: 2
+result: done

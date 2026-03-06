@@ -1,0 +1,4 @@
+# Agent Silent_Failure
+- [Media] Necesidad de observabilidad y semántica HTTP (/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md:6)
+- [Media] Riesgo de degradación ambigua (/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md:65)
+- [Media] Riesgo de degradación ambigua (/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md:112)

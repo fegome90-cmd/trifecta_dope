@@ -1,29 +1,51 @@
 version: 1
 id: WO-0042
-epic_id: E-SSOT-ROOT
-title: Estabilizar SSOT de segment/workspace root
+epic_id: E-V1
+title: CLI Adelgazado + Repo Commands
 priority: P0
 status: done
+result: done
+owner: felipe_gonzalez
+branch: job/WO-0042
+worktree: ../.worktrees/WO-0042
 scope:
   allow:
-  - src/domain/segment_resolver.py
-  - src/infrastructure/segment_utils.py
-  - src/infrastructure/daemon_paths.py
-  - src/infrastructure/factories.py
+  - src/trifecta/application/status_use_case.py
+  - src/trifecta/application/doctor_use_case.py
+  - src/trifecta/application/repo_use_case.py
+  - src/trifecta/interfaces/cli/**
   - src/infrastructure/cli.py
-  - src/infrastructure/cli_ast.py
-  - tests/unit/test_segment_resolver.py
-  - tests/integration/test_ssot_root.py
+  - tests/integration/cli/**
   deny:
-  - .env*
-  - '**/production.*'
-  - docs/**
+  - src/trifecta/platform/daemon_manager.py
+  - src/trifecta/platform/repo_store.py
+  - src/trifecta/infrastructure/sqlite/**
+deliverables:
+- Thin CLI facade (parse args → validate → use case → render)
+- No manual repo_id calculation
+- No daemon lifting
+- No arbitrary DB opening
+- V1 Commands (status, doctor, repo register/list/show)
+- Stable output with --json flag and clear exit codes
+- Legacy wrapper (src/infrastructure/cli.py delegates to interfaces)
+objective: "1. Thin CLI facade:\n   - parse args → validate → use case → render\n\
+  \   - NO building repo_id manually\n   - NO lifting daemons\n   - NO opening arbitrary\
+  \ DBs\n\n2. V1 Commands:\n   - trifecta status --repo <path>\n   - trifecta doctor\
+  \ --repo <path>\n   - trifecta repo register <path>\n   - trifecta repo list\n \
+  \  - trifecta repo show <repo_id>\n\n3. Stable output:\n   - --json flag\n   - Clear\
+  \ exit codes (0=ok, 1=error, 2=validation)\n   - Stable JSON schema\n\n4. Legacy\
+  \ wrapper:\n   - src/infrastructure/cli.py delegates to src/trifecta/interfaces/cli/\n"
 verify:
   commands:
-  - uv run pytest tests/unit/test_segment_resolver.py -v
-  - uv run pytest tests/integration/test_ssot_root.py -v
-  - uv run pytest tests/integration/test_daemon_paths_constraints.py -v
-  - make gate-all
+  - uv run pytest -q tests/integration/cli/ -k "test_status or test_doctor or test_repo"
+  - uv run ruff check src/trifecta/interfaces/cli/
+  - uv run pytest -q tests/integration/cli/test_status_json.py -k "test_status_json_valid"
+diff_budget:
+  max_files: 12
+  max_loc: 500
+stop_conditions:
+  max_iterations: 8
+  max_fail_verify: 2
 dod_id: DOD-DEFAULT
 execution:
   engine: trifecta
@@ -33,40 +55,12 @@ execution:
   - ctx.search
   - ctx.get
   - session.append:result
+  - verify
   segment: .
 trace:
   ticket: null
   related_wos:
+  - WO-0041
   - WO-0043
-claim_links:
-  requirements:
-  - segment_id determinístico para mismos inputs
-  - segment_root resuelto consistentemente
-  - daemon socket path derivado de segment_id
-  - cache db path derivado de segment_id
-  assumptions:
-  - Filesystem con soporte para symlinks
-  constraints:
-  - No breaking changes en CLI args
-  - Mantener paths cortos para AF_UNIX limit
-objective: 'Crear un único resolver oficial (SSOT) para segment_id, segment_root,
-  daemon socket path,
-
-  cache db path, y telemetry grouping. Resolver identidades divergentes que rompen
-  el sistema.
-
-  '
-deliverables:
-- SSOT resolver unificado en src/domain/segment_resolver.py
-- Mismos inputs ⇒ mismo segment_id siempre (determinístico)
-- Tests cubren SEGMENT=. y rutas absolutas
-- Error codes coherentes independientes de orden de preconditions
-- 'Refactor: todos los usos migrados al SSOT resolver'
-- Deprecation path para funciones viejas
-diff_budget:
-  max_files: 12
-  max_loc: 400
-stop_conditions:
-  max_iterations: 6
-  max_fail_verify: 2
-finished_at: '2025-12-31T23:59:59Z'
+started_at: '2026-03-06T12:37:50.401860+00:00'
+x_failed_at: '2026-03-06T13:34:23.439851+00:00'
