@@ -100,12 +100,12 @@ Troubleshooting
 Exit Codes:
   0 = PASS (todo bien)
   1 = FAIL (bloqueante)
-  
+
 Output:
   [✓] PASS: Architecture section found
   [✗] FAIL: Path /Users/... uses absolute path (not relative)
   [⚠] WARN: Last updated 120 days ago (recommend refresh)
-  
+
 Summary: 5 PASS, 2 FAIL, 1 WARN
 ```
 
@@ -573,7 +573,7 @@ bash skills/documentation/resources/validate-references.sh || {
 - [ ] **1.6** Crear `guides/QUICKSTART.md` (100 lines)
 - [ ] **1.7** Crear `guides/ADVANCED.md` (150 lines)
 
-**Validation**: 
+**Validation**:
 ```bash
 find skills/documentation -type f | wc -l
 # Debe haber 15 archivos (8 existentes + 7 nuevos)

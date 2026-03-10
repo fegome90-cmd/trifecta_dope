@@ -25,7 +25,7 @@ This inconsistency causes:
 
 **Validation ambiguity**: The system allows legacy files to coexist with specific files, violating the "3+1 contract"
 
-**Command inconsistency**: 
+**Command inconsistency**:
 - `create` command writes: `agent_{segment_id}.md` (specific)
 - `reset` command writes: `agent.md` (legacy)
 - `file_system.py` reads: `agent.md` (legacy)

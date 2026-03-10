@@ -16,7 +16,7 @@ Catálogo de vectores de ataque lógico para desmantelar propuestas en brainstor
 ### Ejemplo
 **Usuario**: "Necesitamos microservicios para escalar. Pero queremos deploy simple sin DevOps complejo."
 
-**Attack**: 
+**Attack**:
 ```
 CONTRADICCIÓN DETECTADA:
 - Statement A: "Microservicios para escalar"
@@ -29,7 +29,7 @@ Si (A) entonces (NOT B). Los microservicios REQUIEREN:
 - Circuit breakers
 - Container orchestration
 
-Eso NO es "simple". ¿Cuál es tu prioridad real: escala o simplicidad? 
+Eso NO es "simple". ¿Cuál es tu prioridad real: escala o simplicidad?
 No puedes tener ambas sin costos de infraestructura.
 ```
 
@@ -368,7 +368,7 @@ DEUDA GENERADA:
 3. Migraciones manuales (sin ALTER TABLE)
 4. Testing difícil (datos inconsistentes)
 
-COSTO DE PAGO FUTURO: 
+COSTO DE PAGO FUTURO:
 - 2-3 meses de refactoring cuando necesites relaciones
 - 50+ bugs de producción por datos mal formados
 
@@ -404,7 +404,7 @@ TRADUCCIÓN REAL:
 PREGUNTA: ¿Por qué no simplemente guardar el estado actual + audit log?
 99% de apps NO necesitan Event Sourcing.
 
-¿Tu sistema realmente necesita reconstruir estado histórico? 
+¿Tu sistema realmente necesita reconstruir estado histórico?
 Si NO → Eliminaste 3 meses de complejidad.
 ```
 

@@ -69,15 +69,15 @@ OVERMIND_ERRORS=0
 OVERMIND_WARNINGS=0
 
 output_pass() { PASSES=$((PASSES + 1)); [[ "$JSON_MODE" == "true" ]] && echo "{\"status\": \"PASS\", \"check\": \"$1\", \"message\": \"$2\"}" || echo "[✓] PASS: $2"; }
-output_warn() { 
-    WARNINGS=$((WARNINGS + 1)); 
+output_warn() {
+    WARNINGS=$((WARNINGS + 1));
     [[ "$1" == "ownership" || "$1" == "adr" || "$1" == "coverage" ]] && OVERMIND_WARNINGS=$((OVERMIND_WARNINGS + 1)) || CORE_WARNINGS=$((CORE_WARNINGS + 1))
-    [[ "$JSON_MODE" == "true" ]] && echo "{\"status\": \"WARN\", \"check\": \"$1\", \"message\": \"$2\"}" || echo "[⚠] WARN: $2"; 
+    [[ "$JSON_MODE" == "true" ]] && echo "{\"status\": \"WARN\", \"check\": \"$1\", \"message\": \"$2\"}" || echo "[⚠] WARN: $2";
 }
-output_fail() { 
-    ERRORS=$((ERRORS + 1)); 
+output_fail() {
+    ERRORS=$((ERRORS + 1));
     [[ "$1" == "ownership" || "$1" == "adr" || "$1" == "coverage" ]] && OVERMIND_ERRORS=$((OVERMIND_ERRORS + 1)) || CORE_ERRORS=$((CORE_ERRORS + 1))
-    [[ "$JSON_MODE" == "true" ]] && echo "{\"status\": \"FAIL\", \"check\": \"$1\", \"message\": \"$2\"}" || echo "[✗] FAIL: $2"; 
+    [[ "$JSON_MODE" == "true" ]] && echo "{\"status\": \"FAIL\", \"check\": \"$1\", \"message\": \"$2\"}" || echo "[✗] FAIL: $2";
 }
 output_info() { INFOS=$((INFOS + 1));   [[ "$JSON_MODE" == "true" ]] && echo "{\"status\": \"INFO\", \"check\": \"$1\", \"message\": \"$2\"}" || echo "[ℹ] INFO: $2"; }
 output_skip() { SKIPS=$((SKIPS + 1));   [[ "$JSON_MODE" == "true" ]] && echo "{\"status\": \"SKIP\", \"check\": \"$1\", \"message\": \"$2\"}" || echo "[→] SKIP: $2"; }
@@ -178,29 +178,29 @@ check_sync() {
 
 check_ownership() {
     [[ "$OWNERSHIP_REQUIRED" != "1" ]] && output_skip "ownership" "Not activated (OWNERSHIP_REQUIRED=0)" && return
-    
+
     local codeowners_file="$REPO_ROOT/.github/CODEOWNERS"
     local uncovered=0
     local covered=0
     local uncovered_docs=()
     local docs=()
-    
+
     while IFS= read -r doc; do
         [[ -z "$doc" ]] && continue
         is_wo_path "$doc" && continue
         docs+=("$doc")
     done < <(find "$REPO_ROOT" -maxdepth 1 -name "*.md" -type f 2>/dev/null || true)
-    
+
     [[ ${#docs[@]} -eq 0 ]] && output_info "ownership" "No docs found" && return
-    
+
     local has_codeowners=false
     [[ -f "$codeowners_file" ]] && has_codeowners=true
-    
+
     for doc in "${docs[@]}"; do
         local doc_name
         doc_name=$(basename "$doc")
         local has_owner=false
-        
+
         if $has_codeowners; then
             local line
             while IFS= read -r line; do
@@ -212,13 +212,13 @@ check_ownership() {
                 fi
             done < "$codeowners_file"
         fi
-        
+
         if ! $has_owner; then
             local frontmatter_owner
             frontmatter_owner=$(sed -n '/^---/,/^---/{/^owner:/p}' "$doc" 2>/dev/null | head -1)
             [[ -n "$frontmatter_owner" ]] && has_owner=true
         fi
-        
+
         if $has_owner; then
             ((covered++))
         else
@@ -226,10 +226,10 @@ check_ownership() {
             uncovered_docs+=("$doc_name")
         fi
     done
-    
+
     local total=$((covered + uncovered))
     [[ $total -eq 0 ]] && output_info "ownership" "No docs to check" && return
-    
+
     if [[ $uncovered -gt 0 ]]; then
         local doc_list
         doc_list=$(printf '%s, ' "${uncovered_docs[@]}" | sed 's/, $//')
@@ -242,11 +242,11 @@ check_ownership() {
 check_adr() {
     local adr_dirs="docs/adr docs/decisions"
     local adr_dir=""
-    
+
     for d in $adr_dirs; do
         [[ -d "$REPO_ROOT/$d" ]] && adr_dir="$d" && break
     done
-    
+
     if [[ -z "$adr_dir" ]]; then
         if [[ "$ADR_REQUIRED" == "1" ]]; then
             output_fail "adr" "ADR_REQUIRED but no docs/adr/ or docs/decisions/ | Create: mkdir docs/adr && echo '# ADRs' > docs/adr/README.md"
@@ -255,29 +255,29 @@ check_adr() {
         fi
         return
     fi
-    
+
     local adr_count=0
     local has_index=false
-    
+
     [[ -f "$REPO_ROOT/$adr_dir/README.md" ]] && has_index=true
     [[ -f "$REPO_ROOT/$adr_dir/index.md" ]] && has_index=true
-    
+
     adr_count=$(find "$REPO_ROOT/$adr_dir" -maxdepth 1 -name "*.md" -type f 2>/dev/null | wc -l || echo 0)
     [[ $adr_count -eq 0 ]] && output_warn "adr" "No ADRs found in $adr_dir | Add ADRs or remove dir" && return
-    
+
     if [[ "$has_index" == "false" ]]; then
         output_warn "adr" "$adr_count ADRs but no index | Add README.md or index.md in $adr_dir"
         return
     fi
-    
+
     local latest_time=0
     [[ -d "$REPO_ROOT/.git" ]] && latest_time=$(git -C "$REPO_ROOT" log -1 --format=%ct -- "$adr_dir" 2>/dev/null || echo "0")
-    
+
     if [[ "$latest_time" == "0" || -z "$latest_time" ]]; then
         output_info "adr" "$adr_count ADRs found, cannot determine staleness (no git history)"
         return
     fi
-    
+
     local age_days=$(( ($(date +%s) - latest_time) / 86400 ))
     [[ $age_days -gt 180 ]] && output_warn "adr" "$adr_count ADRs, latest is $age_days days old (stale) | Review/update ADRs" || \
         output_pass "adr" "$adr_count ADRs, latest is $age_days days old"
@@ -285,12 +285,12 @@ check_adr() {
 
 check_coverage() {
     [[ "$COVERAGE_MODE" == "off" ]] && output_skip "coverage" "Disabled (COVERAGE_MODE=off)" && return
-    
+
     local src_count=0 doc_count=0
     local excluded_dirs="__pycache__ node_modules .git dist build .venv venv _build"
     local src_dirs_used=""
     local doc_dirs_used=""
-    
+
     IFS=',' read -ra SRC_DIRS_ARRAY <<< "$SRC_DIRS"
     for dir in "${SRC_DIRS_ARRAY[@]}"; do
         [[ -d "$REPO_ROOT/$dir" ]] || continue
@@ -300,11 +300,11 @@ check_coverage() {
         count=$(find "$REPO_ROOT/$dir" -type f ! -path "*/$excluded_dirs/*" ! -name "*.pyc" 2>/dev/null | wc -l || echo 0)
         src_count=$((src_count + count))
     done
-    
+
     [[ $src_count -eq 0 ]] && output_info "coverage" "No source files (SRC_DIRS=$SRC_DIRS) | Adjust SRC_DIRS config" && return
-    
+
     local meta_docs="LICENSE LICENSE.md CODE_OF_CONDUCT CONTRIBUTING CHANGELOG"
-    
+
     IFS=',' read -ra DOC_DIRS_ARRAY <<< "$DOC_DIRS"
     for dir in "${DOC_DIRS_ARRAY[@]}"; do
         [[ -d "$REPO_ROOT/$dir" ]] || continue
@@ -327,15 +327,15 @@ check_coverage() {
             [[ -n "$has_content" && "$has_content" -gt 0 ]] && doc_count=$((doc_count + 1))
         done < <(find "$REPO_ROOT/$dir" -type f -name "*.md" ! -path "*/$excluded_dirs/*" 2>/dev/null || true)
     done
-    
+
     [[ $doc_count -eq 0 ]] && output_info "coverage" "No valid docs (src=$src_count in $src_dirs_used) | Add docs with >100 chars + heading/link" && return
-    
+
     local ratio
     ratio=$(echo "scale=2; $doc_count / $src_count" | bc 2>/dev/null || echo "0")
     local ratio_int
     ratio_int=$(echo "$ratio * 100" | bc 2>/dev/null | cut -d. -f1 || echo 0)
     local debug_info="src_dirs=$src_dirs_used,doc_dirs=$doc_dirs_used,excluded=$EXCLUDED_DIRS"
-    
+
     [[ $ratio_int -lt 5 ]] && output_warn "coverage" "$doc_count docs / $src_count src = 0.${ratio_int} ratio (CRITICAL) | $debug_info" && return
     [[ $ratio_int -lt 10 ]] && output_info "coverage" "$doc_count docs / $src_count src = 0.${ratio_int} ratio (low) | $debug_info" && return
     output_pass "coverage" "$doc_count docs / $src_count src = 0.${ratio_int} ratio | $debug_info"
@@ -394,14 +394,14 @@ if [[ "$JSON_MODE" == "true" ]]; then
     echo "{\"schema_version\": \"1.0\", \"score_raw\": $SCORE_RAW, \"score_clamped\": $SCORE, \"verdict\": {\"block\": $verdict_block, \"reason_counts\": {\"fail\": $ERRORS, \"warn\": $WARNINGS}}, \"counts\": {\"pass\": $PASSES, \"warn\": $WARNINGS, \"fail\": $ERRORS, \"info\": $INFOS, \"skip\": $SKIPS}, \"breakdown\": {\"core_errors\": $CORE_ERRORS, \"core_warnings\": $CORE_WARNINGS, \"overmind_errors\": $OVERMIND_ERRORS, \"overmind_warnings\": $OVERMIND_WARNINGS}, \"checks\": []}"
 else
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    
+
     verdict="ALLOW"
     block_msg=""
     if [[ $ERRORS -gt 0 || ( "$STRICT_MODE" == "true" && $WARNINGS -gt 0 ) ]]; then
         verdict="BLOCK"
         block_msg="($ERRORS FAILs)"
     fi
-    
+
     echo "Gate Verdict: $verdict $block_msg"
     echo "  └─ Core: $CORE_ERRORS FAIL, $CORE_WARNINGS WARN | Overmind: $OVERMIND_ERRORS FAIL, $OVERMIND_WARNINGS WARN"
     echo ""

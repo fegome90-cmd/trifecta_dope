@@ -44,13 +44,13 @@ jobs:
         id: gate
         run: |
           echo "Running WO Weekly Gate at $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-          
+
           # Run the gate script with JSON output
           bash scripts/wo_weekly_gate.sh --json data 2>&1 | tee data/wo_weekly_gate_stdout.log
           exit_code=${PIPESTATUS[0]}
-          
+
           echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
-          
+
           # Create summary report JSON if it doesn't exist
           if [[ ! -f data/wo_weekly_gate_report.json ]]; then
             cat > data/wo_weekly_gate_report.json << EOF
@@ -62,7 +62,7 @@ jobs:
           }
           EOF
           fi
-          
+
           exit $exit_code
 
       - name: Upload gate artifacts

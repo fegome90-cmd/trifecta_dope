@@ -22,12 +22,12 @@ Use these to create or update documentation:
 - **[CLAUDE_md_template.md](CLAUDE_md_template.md)** - Template for CLAUDE.md (onboarding for Claude)
   - Copy → customize → validate
   - Instructions included in file
-  
+
 - **[agents_md_template.md](agents_md_template.md)** - Template for agents.md (onboarding for all agents)
   - Parallel to CLAUDE.md but for external/diverse agents
   - Emphasizes red flags and must-not rules
   - Keep in sync with CLAUDE.md
-  
+
 - **[skill_md_template.md](skill_md_template.md)** - Template for skill.md (project rules and patterns)
   - Concise format (100-200 lines max)
   - Use progressive disclosure (complex stuff → `resources/`)
@@ -40,7 +40,7 @@ Use these to validate your documentation:
   - Run: `bash skills/documentation/resources/verify_documentation.sh`
   - Checks: CRITICAL section, time estimates, paths, consistency, etc.
   - Exit code 0 = all checks passed
-  
+
 - **[checklist.md](checklist.md)** - Manual review checklist
   - 30+ items to check before committing
   - Organized by section (Layer 1, Typography, Files, Language, etc.)

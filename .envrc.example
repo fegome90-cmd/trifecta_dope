@@ -1,5 +1,5 @@
 # Trifecta Development Environment
-# 
+#
 # This file provides default environment variables for local development.
 # It is designed to work with direnv (https://direnv.net/), which automatically
 # loads/unloads environment variables when entering/leaving this directory.

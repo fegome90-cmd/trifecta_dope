@@ -19,19 +19,19 @@ Verification
 1. **make install** - Siempre comienza con `make install` para sincronizar dependencias
 
 2. **Search → Get (Con Instrucciones, NO Keywords)**
-   
+
    ❌ **MAL (keyword):**
    ```bash
    trifecta ctx search --segment . --query "telemetry" --limit 6
    ```
-   
+
    ✅ **BIEN (instrucción):**
    ```bash
    trifecta ctx search --segment . \
      --query "Encuentra documentación sobre cómo implementar el sistema de telemetría con event schema y ejemplos de uso" \
      --limit 6
    ```
-   
+
    Luego: `trifecta ctx get --segment . --ids "id1,id2" --mode excerpt --budget-token-est 900`
 
 3. **Log Evidence** - Registra en `session.md` vía `trifecta session append --segment . --summary "..."`

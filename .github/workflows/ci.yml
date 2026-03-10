@@ -87,7 +87,7 @@ jobs:
         run: |
           # This guard prevents new uses of deprecated segment ID functions
           # Allowed: segment_resolver.py (SSOT wrapper), naming.py (definition), tests/
-          
+
           # Check for forbidden imports/uses (excluding allowed files)
           if grep -r --include="*.py" \
             -e "from src.domain.naming import normalize_segment_id" \

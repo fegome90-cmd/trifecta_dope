@@ -413,7 +413,7 @@ Construir frontend web para consumir la API.
 "File-based routing, y... bueno, no mucho más."
 
 **Red Team contraataca**:
-"File-based routing = 1 feature. 
+"File-based routing = 1 feature.
 Vite te da:
 - HMR más rápido
 - Build time 10x menor

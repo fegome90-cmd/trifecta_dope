@@ -3,9 +3,9 @@
 ## TL;DR
 
 > **Objetivo**: Convertir Trifecta en plataforma local usable desde cualquier parte del Mac.
-> 
+>
 > **Entregables**: 1 Epic + 4 Work Orders
-> 
+>
 > **Principio clave**: WO-0041 define → WO-0042 expone → WO-0043 opera
 
 ---

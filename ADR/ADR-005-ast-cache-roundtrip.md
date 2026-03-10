@@ -11,22 +11,22 @@ graph TB
     subgraph "Infrastructure Layer"
         CLI[CLI: trifecta ast symbols]
     end
-    
+
     subgraph "Application Layer"
         Parser[SkeletonMapBuilder<br/>ast_parser.py]
         SymbolInfo[SymbolInfo<br/>dataclass]
     end
-    
+
     subgraph "Domain Layer"
         Cache[SQLiteCache<br/>ast_cache.py]
         DB[(SQLite DB)]
     end
-    
+
     CLI --> Parser
     Parser --> SymbolInfo
     Parser --> Cache
     Cache --> DB
-    
+
     style SymbolInfo fill:#f9f,stroke:#333
     style Cache fill:#bbf,stroke:#333
 ```
@@ -38,15 +38,15 @@ sequenceDiagram
     participant Parser as ast_parser.py
     participant Cache as SQLiteCache
     participant DB as SQLite
-    
+
     Note over Parser,DB: ❌ BEFORE FIX (Broken)
-    
+
     Parser->>Cache: set(key, list[SymbolInfo])
     Cache->>Cache: json.dumps(list[SymbolInfo])
     Cache--xDB: ❌ TypeError!
-    
+
     Note over Parser,DB: Cache Hit Scenario (if it worked)
-    
+
     DB-->>Cache: list[dict] (JSON)
     Cache->>Parser: list[dict]
     Parser->>Parser: access item.kind
@@ -74,9 +74,9 @@ sequenceDiagram
     participant Parser as ast_parser.py<br/>(Application)
     participant Cache as SQLiteCache<br/>(Domain)
     participant DB as SQLite
-    
+
     Note over Parser,DB: ✅ AFTER FIX (Option B)
-    
+
     rect rgb(200, 255, 200)
         Note over Parser,Cache: WRITE PATH (miss)
         Parser->>Cache: set(key, list[SymbolInfo])
@@ -84,7 +84,7 @@ sequenceDiagram
         Cache->>DB: INSERT list[dict] as JSON
         DB-->>Cache: OK
     end
-    
+
     rect rgb(200, 220, 255)
         Note over Parser,Cache: READ PATH (hit)
         Parser->>Cache: get(key)

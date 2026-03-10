@@ -40,8 +40,8 @@ Red Team: ¿Por qué es necesario? [Nivel 3]
 🔴 Why #4: ¿Cuánto bandwidth desperdicias actualmente? Dame números.
 👤 Usuario: "No lo he medido..."
 
-🔴 Why #5: Entonces no sabes si es un problema real. 
-¿Por qué solucionas algo que no mediste? 
+🔴 Why #5: Entonces no sabes si es un problema real.
+¿Por qué solucionas algo que no mediste?
 ¿O es porque GraphQL es cool?
 
 👤 Usuario: "...tienes razón. Déjame medir primero."
@@ -91,7 +91,7 @@ DEMUESTRA:
 
 [Usuario: "No hemos tenido abusos aún..."]
 
-VEREDICTO: RECHAZADO. 
+VEREDICTO: RECHAZADO.
 Implementa cuando tengas 1000+ requests abusivos/día.
 Hasta entonces, es optimización prematura de un problema inexistente.
 ```
@@ -137,7 +137,7 @@ ARGUMENTOS QUE NI MENCIONASTE:
 
 Esta es la MEJOR versión de tu idea. Y aún así:
 
-1. **Costo Inicial**: 
+1. **Costo Inicial**:
    - Curva de aprendizaje: 2-4 semanas por dev
    - Setup inicial: ~40 horas (tsconfig, types, migrations)
    - Build time aumenta 30-50%
@@ -152,7 +152,7 @@ Esta es la MEJOR versión de tu idea. Y aún así:
    - Mejor testing > TypeScript
    - PropTypes + ESLint para componentes React
 
-VEREDICTO: 
+VEREDICTO:
 Si tu equipo YA sabe TS → OK
 Si NO → El costo de aprendizaje no justifica los beneficios en un proyecto < 50k LOC
 
@@ -246,7 +246,7 @@ ESTADO: ❌ APP MUERTA, 50 usuarios activos
 
 ¿QUÉ SALIÓ MAL?
 
-1. **Scope Insostenible**: 
+1. **Scope Insostenible**:
    - Tardamos 8 meses en lanzar
    - Competidor lanzó 3 versiones mientras desarrollábamos
    - Budget agotado antes de llegar a market-fit
@@ -271,7 +271,7 @@ PREVENIBLE HOY:
 - Lanzar en 6 semanas
 - Iterar basado en feedback real
 
-VEREDICTO: Tu estrategia actual te lleva al fracaso. 
+VEREDICTO: Tu estrategia actual te lleva al fracaso.
 ¿Quieres 20 features mediocres o 3 excelentes?
 ```
 
@@ -306,7 +306,7 @@ No puedes tener ambas. Decide.
 
 ### Ejemplo
 
-**Usuario**: 
+**Usuario**:
 - "Queremos una arquitectura simple y fácil de mantener"
 - "Vamos a usar Kubernetes, microservicios, service mesh, y event sourcing"
 
@@ -494,7 +494,7 @@ Red Team: "So what? ¿Pagaría por esto?"
 🔴 So What? Entonces no necesitas real-time. ¿Qué tal refresh cada 5 minutos?
 👤 "Sí, eso funcionaría igual"
 
-RESULTADO: 
+RESULTADO:
 Eliminaste WebSockets (40 horas dev) por un setInterval (2 horas dev).
 AHORRO: 38 horas
 ```
@@ -538,7 +538,7 @@ Explícalo sin usar: "CQRS", "event sourcing", "eventual consistency", "pattern"
 
 [Usuario: "Bueno... es lo mismo pero con nombre fancy"]
 
-VEREDICTO: Eliminaste Event Sourcing. 
+VEREDICTO: Eliminaste Event Sourcing.
 Era complejidad cosmética sin beneficio real.
 AHORRO: 3 meses de desarrollo
 ```

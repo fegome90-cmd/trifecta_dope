@@ -84,14 +84,14 @@ If `stale_detected=true` or validation fails:
 
 ### Zero hits on ctx search
 **Cause**: Query too specific or not in index
-**Fix**: 
+**Fix**:
 - Use instruction-based queries, not keywords
 - Add relevant docs to _ctx/prime_*.md
 - Rebuild: trifecta ctx sync --segment .
 
 ### Validation fails
 **Cause**: Structure violated or files missing
-**Fix**: 
+**Fix**:
 - Do NOT proceed without fixing
 - Check: _ctx/ directory structure
 - Run: trifecta ctx validate --segment . --verbose

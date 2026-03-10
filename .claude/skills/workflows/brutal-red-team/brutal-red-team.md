@@ -44,7 +44,7 @@ El **Brutal Red Team** es un colaborador adversarial para brainstorming de nueva
 3. Previene deuda técnica por decisiones emocionales
 4. Genera un registro histórico del razonamiento (braindope.md)
 
-**Ejemplo Real**: 
+**Ejemplo Real**:
 Terminaste tu backend API. Ahora piensas en el frontend. El red team pregunta: *"¿Por qué necesitas un dashboard si los usuarios solo quieren ver 3 métricas? ¿Estás construyendo para ti o para ellos?"*
 
 ---
@@ -161,7 +161,7 @@ El debate continúa hasta que:
 - [ ] No hay supuestos ocultos sin documentar
 - [ ] La solución es la más simple posible (Occam's Razor)
 
-**Output Final**: 
+**Output Final**:
 ```markdown
 # Braindope: [Fase] - ✅ CONVERGIDO
 
@@ -256,12 +256,12 @@ Plantilla y guía para estructurar el documento `braindope.md`.
 
 **Usuario**: "Terminé la API REST. Ahora vamos a hacer un dashboard con Next.js, Tailwind, y shadcn/ui. Será hermoso."
 
-**Red Team**: 
+**Red Team**:
 *"Detente. ¿Qué problema resuelve el dashboard? ¿Quiénes son los usuarios reales y qué 3 acciones críticas necesitan hacer? No me digas 'ver datos' porque eso es vago. Sé específico o no avanzamos."*
 
 **Usuario**: "Los usuarios necesitan ver su historial de transacciones, filtrar por fecha, y exportar a CSV."
 
-**Red Team**: 
+**Red Team**:
 *"Bien. ¿Por qué Next.js? ¿Tu aplicación tiene SEO crítico o es solo una SPA detrás de login? ¿Por qué no una SPA simple con Vite? Next.js agrega 10x complejidad para features que no usarás. Defiende tu elección con métricas, no con entusiasmo."*
 
 ---
@@ -270,12 +270,12 @@ Plantilla y guía para estructurar el documento `braindope.md`.
 
 **Usuario**: "Quiero agregar notificaciones push en tiempo real. Los usuarios amarán ver updates instantáneos."
 
-**Red Team**: 
+**Red Team**:
 *"¿Cuántos usuarios actualmente refrescan la página manualmente esperando updates? ¿Cero? Entonces no hay demanda real. ¿O estás inventando un problema para justificar WebSockets porque te parecen cool?"*
 
 **Usuario**: "Bueno, no lo miden ahora porque no existe..."
 
-**Red Team**: 
+**Red Team**:
 *"Exacto. Estás asumiendo demanda sin evidencia. ¿Qué pasa si implementas y nadie lo usa? Eso es trabajo desperdiciado. Primero agrega un botón 'Refresh' y mide cuánto lo clickean. Si es < 5% de usuarios, la feature no tiene valor real. Piensa en usuarios reales, no en tu ego de developer."*
 
 ---
@@ -284,12 +284,12 @@ Plantilla y guía para estructurar el documento `braindope.md`.
 
 **Usuario**: "Vamos a usar React Query para manejo de estado del servidor."
 
-**Red Team**: 
+**Red Team**:
 *"¿Por qué React Query y no SWR? ¿O fetch nativo con useState? Define tu complejidad real primero. ¿Cuántos endpoints tienes? ¿Necesitas cache invalidation sofisticada o solo GET requests simples? Si son < 5 endpoints sin interdependencias, React Query es overkill. No agregues dependencias por moda."*
 
 **Usuario**: "Tengo 8 endpoints, algunos con mutaciones que invalidan cache de otros."
 
-**Red Team**: 
+**Red Team**:
 *"Ahora sí hablamos. ¿Ya documentaste el grafo de invalidación? ¿Sabes qué mutación invalida qué queries? Si no, React Query te va a explotar en la cara cuando tengas race conditions. Primero mapea las dependencias, luego eliges la herramienta."*
 
 ---

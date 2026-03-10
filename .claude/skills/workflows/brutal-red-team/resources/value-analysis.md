@@ -93,7 +93,7 @@ Framework para distinguir **Valor Intrínseco** (real) vs **Valor Artificial** (
 #### 1. **Friction Reduction** (Reducción de Fricción)
 ¿Hace algo más fácil/rápido/simple?
 
-**Pregunta de Test**: 
+**Pregunta de Test**:
 *"¿Cuántos pasos/clicks elimina del flujo actual?"*
 
 **Ejemplos**:
@@ -428,7 +428,7 @@ VALUE SCORE: 2 × 0 × 0.5 = 0 ❌ ELIMINAR
 ### 1. Feature Creep por Competencia
 **Síntoma**: "Competidor X tiene esto, nosotros también debemos"
 
-**Antídoto**: 
+**Antídoto**:
 ```markdown
 PREGUNTA: ¿Los USUARIOS de competidor X lo usan?
 SI NO SABES → No copies
@@ -514,7 +514,7 @@ E. Severidad: → 3/10 (frustración, no blocker real)
 VALUE SCORE: 3 × 0 × 0.5 = 0
 
 VEREDICTO: ❌ VALOR ARTIFICIAL
-Alternativa: Remueve el límite para todos. 
+Alternativa: Remueve el límite para todos.
 Si necesitas monetizar, agrega features reales (automations, integrations).
 ```
 

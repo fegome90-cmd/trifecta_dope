@@ -328,11 +328,11 @@ ConflictRules:
   - rule: "hard timeline + hard capacity + large scope"
     result: CONFLICT
     resolution: "Reduce scope or extend timeline or add capacity"
-  
+
   - rule: "compliance requires audit logs + tool forbids logging"
     result: CONFLICT
     resolution: "Change tool or get compliance exception"
-  
+
   - rule: "single-writer constraint + multi-agent parallel execution"
     result: CONFLICT
     resolution: "Serialize WOs or partition scope by directory"
@@ -380,7 +380,7 @@ StrategyEvaluation:
         integration_effort: 4       # Clean interfaces
       weighted_score: 4.67
       rationale: "Best fit: passes all hard constraints, fastest time-to-value, built for auditability. Slight complexity in schema evolution, but x_* extensions mitigate."
-  
+
   recommendation: STRAT-001
   decision_rationale: "Substrate-First selected because it delivers value quickly while maintaining auditability and adaptability. Risk is low due to incremental approach."
 ```
@@ -400,9 +400,9 @@ WorkOrder:
   title: "Implement schemas + validator"
   priority: P0  # P0=critical, P1=high, P2=normal
   status: pending  # pending|running|done|failed
-  
+
   objective: "Create JSON schemas for RequirementSet, Constraint, PlanNode, Epic, WO, DoD and implement fail-closed validator"
-  
+
   scope:
     allow:
       - "docs/plans/**"
@@ -412,7 +412,7 @@ WorkOrder:
       - ".env*"
       - "**/production.*"
       - "**/*secret*"
-  
+
   verify:
     commands:
       - "python scripts/ctx_backlog_validate.py --strict"
@@ -422,30 +422,30 @@ WorkOrder:
       - "All schemas pass JSON Schema validation"
       - "Validator catches invalid plans (negative tests pass)"
       - "Traceability chain Epic→WO→DoD is complete"
-  
+
   dod_id: DOD-DEFAULT
-  
+
   diff_budget:
     max_files: 20
     max_loc: 600
     rationale: "Schema files + validator logic should be under 600 LOC total"
-  
+
   stop_conditions:
     max_iterations: 6
     max_verify_failures: 3
     timeout_hours: 8
-  
+
   trace:
     plan_node_id: PN-ARCH-0003
     requirement_ids: ["C-001", "C-002"]
-  
+
   dependencies:
     - wo_id: null  # No dependencies, can start immediately
-  
+
   risks:
     - "Schema too strict blocks valid use cases"
     - "Validator performance issues on large plans"
-  
+
   notes: "Use JSON Schema Draft 2020-12. Reference existing HemDov conventions in _ctx/"
 ```
 
@@ -491,7 +491,7 @@ DefinitionOfDone:
   id: DOD-DEFAULT
   version: 1
   description: "Default DoD for all WOs unless overridden"
-  
+
   required_artifacts:
     - path: "tests.log"
       description: "Test execution output"
@@ -508,26 +508,26 @@ DefinitionOfDone:
     - path: "verdict.json"
       description: "Machine-readable pass/fail verdict"
       validator: "valid JSON with required fields"
-  
+
   required_checks:
     - name: "verify"
       description: "Run WO verification commands"
       commands:
         - "scripts/verify.sh"
       must_pass: true
-    
+
     - name: "security"
       description: "Security scan"
       commands:
         - "scripts/security-scan.sh"
       must_pass: true
-    
+
     - name: "traceability"
       description: "Verify Epic→WO→DoD→Evidence chain"
       commands:
         - "python scripts/check_traceability.py --wo-id {wo_id}"
       must_pass: true
-  
+
   gates:
     - name: "schema_valid"
       condition: "All YAML/JSON files pass schema validation"
@@ -545,14 +545,14 @@ You can define specialized DoDs for different work types:
 DoDs:
   - id: DOD-DEFAULT
     applies_to: ["general"]
-  
+
   - id: DOD-SECURITY
     applies_to: ["auth", "crypto", "api"]
     extends: DOD-DEFAULT
     additional_checks:
       - name: "penetration_test"
         commands: ["scripts/pentest.sh"]
-  
+
   - id: DOD-PERFORMANCE
     applies_to: ["database", "api", "computation"]
     extends: DOD-DEFAULT
@@ -560,7 +560,7 @@ DoDs:
       - name: "benchmark"
         commands: ["pytest tests/benchmarks/ --benchmark-only"]
         acceptance: "No regression > 10%"
-  
+
   - id: DOD-COMPLIANCE
     applies_to: ["gdpr", "hipaa", "audit"]
     extends: DOD-DEFAULT
@@ -582,28 +582,28 @@ PlanValidation:
   schema_validation:
     - check: "All YAML/JSON passes JSON Schema validation"
     - check: "All required fields present (id, objective, acceptance, etc.)"
-  
+
   traceability_validation:
     - check: "Epic→WO chain intact (all WOs reference valid epic_id)"
     - check: "WO→DoD chain intact (all WOs reference valid dod_id)"
     - check: "DoD→Evidence chain (evidence bundles reference valid wo_id/dod_id)"
     - check: "Plan Node→WO chain (all WOs reference valid plan_node_id)"
-  
+
   scope_validation:
     - check: "All WOs have allow/deny lists"
     - check: "No overlapping allow lists across parallel WOs"
     - check: "Deny lists respected (no allowed file matches deny pattern)"
-  
+
   verification_validation:
     - check: "All WOs have verify.commands list"
     - check: "All commands are executable (no placeholders like 'TODO')"
     - check: "All DoDs referenced by WOs exist"
-  
+
   constraint_validation:
     - check: "No hard constraint violations"
     - check: "Soft constraints documented if violated"
     - check: "Conflict resolution documented for all detected conflicts"
-  
+
   dependency_validation:
     - check: "No circular dependencies in plan tree"
     - check: "All dependencies reference valid node IDs"
@@ -616,18 +616,18 @@ ValidationReport:
   timestamp: "2026-01-05T18:30:00-03:00"
   plan_id: "PLAN-2026-0001"
   result: FAIL  # PASS|FAIL
-  
+
   failures:
     - gate: "scope_validation"
       issue: "WO-0042 missing deny list"
       severity: critical
       fix: "Add deny: ['**/*.env', 'secrets/**']"
-    
+
     - gate: "traceability_validation"
       issue: "WO-0037 references non-existent epic_id E-9999"
       severity: critical
       fix: "Correct epic_id to E-0003"
-  
+
   warnings:
     - gate: "constraint_validation"
       issue: "Soft constraint CN-007 (budget) exceeded by 15%"
@@ -650,23 +650,23 @@ ReplanTriggers:
   - trigger: "verify_failure_repeated"
     condition: "WO fails verify > max_verify_failures"
     action: "Create REPLAN object, halt WO execution"
-  
+
   - trigger: "scope_violation"
     condition: "Changes detected outside allow list"
     action: "Rollback changes, create REPLAN for scope expansion"
-  
+
   - trigger: "new_dependency_discovered"
     condition: "WO cannot proceed due to missing prerequisite"
     action: "Create REPLAN to add dependency WO"
-  
+
   - trigger: "assumption_invalidated"
     condition: "Assumption confidence drops below 0.3 or proven false"
     action: "Create REPLAN for affected subtree"
-  
+
   - trigger: "constraint_change"
     condition: "Hard constraint added/removed/changed"
     action: "Re-evaluate all strategies, create REPLAN if needed"
-  
+
   - trigger: "gatekeeper_no_go"
     condition: "Human reviewer rejects WO handoff with structural reason"
     action: "Create REPLAN with reviewer feedback"
@@ -683,7 +683,7 @@ Replan:
     assumption_id: "A-002"
     assumption_text: "CI pipeline supports parallel test execution"
     invalidation_reason: "CI infrastructure limits to single-threaded only"
-  
+
   impact_assessment:
     severity: high
     affected_nodes:
@@ -693,30 +693,30 @@ Replan:
     affected_timeline:
       original_completion: "Week 4"
       new_estimate: "Week 6"
-  
+
   options:
     - option: "Reduce scope: Remove parallel testing requirement"
       pros: ["Fast, minimal changes"]
       cons: ["Slower test suite"]
       impact: "Timeline unchanged, test runtime +40%"
-    
+
     - option: "Change strategy: Switch to GitHub Actions with matrix builds"
       pros: ["Parallel execution achieved"]
       cons: ["Requires infrastructure change, cost increase"]
       impact: "Timeline +1 week for CI migration, $50/month additional cost"
-    
+
     - option: "Add dependency: Create WO for CI infrastructure upgrade"
       pros: ["Proper fix, benefits future projects"]
       cons: ["Timeline extended"]
       impact: "Timeline +2 weeks for infrastructure WO"
-  
+
   recommendation: "option-2"
   rationale: "GitHub Actions migration is one-time effort that benefits all projects. Cost is acceptable. Timeline impact acceptable."
-  
+
   requires_approval: true
   approved_by: null
   approved_at: null
-  
+
   replanned_nodes:
     - old_node_id: "WO-0012"
       new_node_id: "WO-0012-R1"
@@ -760,7 +760,7 @@ Every completed WO must generate an **immutable evidence bundle**.
   "timestamp": "2026-01-05T18:30:00-03:00",
   "duration_minutes": 45,
   "executor": "claude-code-agent-v2",
-  
+
   "commands_executed": [
     {
       "command": "python scripts/ctx_backlog_validate.py --strict",
@@ -774,7 +774,7 @@ Every completed WO must generate an **immutable evidence bundle**.
       "stdout_path": "_ctx/handoff/WO-0001/pytest_stdout.log"
     }
   ],
-  
+
   "artifacts": [
     {
       "path": "_ctx/handoff/WO-0001/tests.log",
@@ -792,7 +792,7 @@ Every completed WO must generate an **immutable evidence bundle**.
       "size_bytes": 3210
     }
   ],
-  
+
   "dod_checks": [
     {
       "check_name": "schema_valid",
@@ -805,7 +805,7 @@ Every completed WO must generate an **immutable evidence bundle**.
       "details": "23/23 tests passed"
     }
   ],
-  
+
   "diff_stats": {
     "files_changed": 8,
     "lines_added": 342,
@@ -814,7 +814,7 @@ Every completed WO must generate an **immutable evidence bundle**.
     "budget_max_files": 20,
     "budget_max_loc": 600
   },
-  
+
   "traceability": {
     "requirement_ids": ["C-001", "C-002"],
     "assumption_ids": ["A-001"],
@@ -886,9 +886,9 @@ manifest:
   created_at: "2026-01-05T18:00:00-03:00"
   created_by: "enterprise-planning-architect-v2"
   status: active  # active|archived|superseded
-  
+
   summary: "Enterprise planning system implementation: substrate-first strategy"
-  
+
   milestones:
     - id: M1
       name: "Core substrate operational"
@@ -898,16 +898,16 @@ manifest:
       name: "First WO executed end-to-end"
       target_date: "2026-02-02"
       completion_criteria: ["WO-0001 PASS", "Evidence bundle generated"]
-  
+
   critical_path:
     - "WO-0001"  # Schemas + validator
     - "WO-0005"  # WO execution runtime
     - "WO-0012"  # Evidence collection
-  
+
   active_constraints:
     hard: ["CN-001", "CN-003"]
     soft: ["CN-007"]
-  
+
   decision_log: "decisions/"
 ```
 
@@ -1023,20 +1023,20 @@ PlanChangeRequest:
   timestamp: "2026-01-05T19:15:00-03:00"
   requested_by: "codegen-agent-alpha"
   wo_id: "WO-0012"
-  
+
   reason: "New constraint discovered: CI tests flake intermittently due to race condition"
-  
+
   proposed_changes:
     - change: "Add stop_conditions.max_fail_verify = 3 for WO-0012"
       rationale: "Allow up to 3 verify retries to handle flaky tests"
     - change: "Add new WO: WO-0030 'Fix flaky test race condition'"
       rationale: "Address root cause in parallel"
-  
+
   impact:
     timeline: "+1 day"
     scope: "No scope change"
     resources: "No additional resources"
-  
+
   requires_approval: true
   approved_by: null
 ```
@@ -1232,35 +1232,35 @@ DeviationRules:
     action: "halt_wo_execution"
     replan_required: true
     severity: high
-  
+
   # Rule 2: Scope violations
   - name: "scope_violation_detected"
     condition: "files_changed not in wo.scope.allow"
     action: "rollback_changes"
     replan_required: true
     severity: critical
-  
+
   # Rule 3: Diff budget exceeded
   - name: "diff_budget_exceeded"
     condition: "diff.files > wo.diff_budget.max_files OR diff.loc > wo.diff_budget.max_loc"
     action: "warn_and_require_approval"
     replan_required: false
     severity: medium
-  
+
   # Rule 4: Iteration limit reached
   - name: "max_iterations_reached"
     condition: "wo.iterations >= wo.stop_conditions.max_iterations"
     action: "halt_wo_execution"
     replan_required: true
     severity: high
-  
+
   # Rule 5: Assumption invalidated
   - name: "assumption_confidence_dropped"
     condition: "assumption.confidence < 0.3 OR assumption.proven_false == true"
     action: "flag_affected_wos"
     replan_required: true
     severity: high
-  
+
   # Rule 6: Timeline slip detection
   - name: "milestone_at_risk"
     condition: "milestone.completion_date < NOW AND milestone.progress < 0.8"
@@ -1285,7 +1285,7 @@ FeedbackPatterns:
       - "Create linter rule to catch automatically"
       - "Update DoD to require explicit check"
     example: "If 'missing tests' causes 3+ NO-GOs, add to DoD: required_checks: ['test_coverage_80_percent']"
-  
+
   # Pattern 2: Schema violations
   - pattern: "schema_validation_failure"
     frequency: "> 2 times for same field"
@@ -1293,7 +1293,7 @@ FeedbackPatterns:
       - "Strengthen schema with stricter validation"
       - "Add examples to schema documentation"
       - "Create pre-commit hook to validate locally"
-  
+
   # Pattern 3: Scope creep
   - pattern: "scope_violation"
     frequency: "> 2 times"
@@ -1464,7 +1464,7 @@ bash -c "python scripts/plan_metrics.py --format json > _ctx/metrics.json"
 
 **Input:**
 ```
-User: "I want to build a SaaS platform for team collaboration with real-time chat, 
+User: "I want to build a SaaS platform for team collaboration with real-time chat,
 file sharing, and project management features."
 ```
 

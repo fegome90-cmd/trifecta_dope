@@ -106,7 +106,7 @@ check_markdown_links() {
             echo "$link"
         fi
     done | wc -l)
-    
+
     if (( broken_links > 0 )); then
         echo "⚠️  WARNING: $file may have broken links (found: $broken_links). Verify manually."
         ((WARNINGS++))
@@ -118,7 +118,7 @@ check_critical_section_first() {
     local file="$1"
     local critical_line=$(grep -n "## ⚠️ CRITICAL" "$REPO_ROOT/$file" | cut -d: -f1 | head -1)
     local quick_start_line=$(grep -n "^## Quick Start" "$REPO_ROOT/$file" | cut -d: -f1 | head -1)
-    
+
     if [[ ! -z "$critical_line" ]] && [[ ! -z "$quick_start_line" ]]; then
         if (( critical_line > quick_start_line )); then
             echo "❌ ERROR: $file has CRITICAL section after Quick Start (should be FIRST)"
@@ -132,20 +132,20 @@ check_critical_section_first() {
 check_synchronization() {
     local file1="CLAUDE.md"
     local file2="agents.md"
-    
+
     if [[ ! -f "$REPO_ROOT/$file1" ]] || [[ ! -f "$REPO_ROOT/$file2" ]]; then
         return 0  # Skip if one doesn't exist
     fi
-    
+
     # Check if both have same mandatory files
     local files1=$(grep -oP '(?<=\*\*\[)[^]]+' "$REPO_ROOT/$file1" | sort)
     local files2=$(grep -oP '(?<=\*\*\[)[^]]+' "$REPO_ROOT/$file2" | sort)
-    
+
     if [[ "$files1" != "$files2" ]]; then
         echo "⚠️  WARNING: CLAUDE.md and agents.md have different mandatory files list. Keep them in sync!"
         ((WARNINGS++))
     fi
-    
+
     return 0
 }
 
