@@ -185,8 +185,8 @@ def generate_report(results_off: list[dict], results_on: list[dict], report_path
 
     report = f"""# Field Exercises v1 - Evaluation Results
 
-**Date**: 2026-01-06  
-**Dataset**: 20 real-world queries  
+**Date**: 2026-01-06
+**Dataset**: 20 real-world queries
 **Modes**: OFF (--no-lint) vs ON (TRIFECTA_LINT=1)
 
 ---
@@ -205,8 +205,8 @@ def generate_report(results_off: list[dict], results_on: list[dict], report_path
 
 ## Gate Status
 
-**Zero-hit rate ON**: {metrics_on["zero_hit_rate"]:.1f}%  
-**Threshold**: < 30%  
+**Zero-hit rate ON**: {metrics_on["zero_hit_rate"]:.1f}%
+**Threshold**: < 30%
 **Status**: {gate_status}
 
 ---

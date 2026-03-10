@@ -7,7 +7,7 @@ GitHub Issue: Skills and custom directories missing from context pack
 """
 
 import pytest
-from pathlib import Path
+
 from src.application.use_cases import BuildContextPackUseCase
 from src.infrastructure.file_system import FileSystemAdapter
 
@@ -56,9 +56,12 @@ def test_indexes_skills_directory(temp_segment):
     use_case = BuildContextPackUseCase(FileSystemAdapter())
     result = use_case.execute(temp_segment)
 
-    assert result.is_ok(), f"Build failed: {result.unwrap_error()}"
+    if not result.is_ok():
+        pytest.fail(f"Build failed: {result}")
 
     pack = result.unwrap()
+    assert pack is not None
+
     skill_chunks = [c for c in pack.chunks if "skills/" in c.source_path]
 
     assert len(skill_chunks) > 0, "No skills/ files indexed"
@@ -70,9 +73,12 @@ def test_indexes_apps_directory(temp_segment):
     use_case = BuildContextPackUseCase(FileSystemAdapter())
     result = use_case.execute(temp_segment)
 
-    assert result.is_ok(), f"Build failed: {result.unwrap_error()}"
+    if not result.is_ok():
+        pytest.fail(f"Build failed: {result}")
 
     pack = result.unwrap()
+    assert pack is not None
+
     app_chunks = [c for c in pack.chunks if "apps/" in c.source_path]
 
     assert len(app_chunks) > 0, "No apps/ files indexed"
@@ -84,9 +90,12 @@ def test_indexes_config_directory(temp_segment):
     use_case = BuildContextPackUseCase(FileSystemAdapter())
     result = use_case.execute(temp_segment)
 
-    assert result.is_ok(), f"Build failed: {result.unwrap_error()}"
+    if not result.is_ok():
+        pytest.fail(f"Build failed: {result}")
 
     pack = result.unwrap()
+    assert pack is not None
+
     config_chunks = [c for c in pack.chunks if "config/" in c.source_path]
 
     assert len(config_chunks) > 0, "No config/ files indexed"
@@ -98,9 +107,12 @@ def test_indexes_tests_directory(temp_segment):
     use_case = BuildContextPackUseCase(FileSystemAdapter())
     result = use_case.execute(temp_segment)
 
-    assert result.is_ok(), f"Build failed: {result.unwrap_error()}"
+    if not result.is_ok():
+        pytest.fail(f"Build failed: {result}")
 
     pack = result.unwrap()
+    assert pack is not None
+
     test_chunks = [c for c in pack.chunks if "tests/" in c.source_path]
 
     assert len(test_chunks) > 0, "No tests/ files indexed"
@@ -112,9 +124,11 @@ def test_indexes_entry_points(temp_segment):
     use_case = BuildContextPackUseCase(FileSystemAdapter())
     result = use_case.execute(temp_segment)
 
-    assert result.is_ok(), f"Build failed: {result.unwrap_error()}"
+    if not result.is_ok():
+        pytest.fail(f"Build failed: {result}")
 
     pack = result.unwrap()
+    assert pack is not None
 
     # Check that main.py in apps/ is indexed
     assert any("main.py" in c.source_path for c in pack.chunks)
@@ -125,9 +139,11 @@ def test_chunk_count_increased(temp_segment):
     use_case = BuildContextPackUseCase(FileSystemAdapter())
     result = use_case.execute(temp_segment)
 
-    assert result.is_ok(), f"Build failed: {result.unwrap_error()}"
+    if not result.is_ok():
+        pytest.fail(f"Build failed: {result}")
 
     pack = result.unwrap()
+    assert pack is not None
 
     # Should have at least:
     # - 1 skill.md

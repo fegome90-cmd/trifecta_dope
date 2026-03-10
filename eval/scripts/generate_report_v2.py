@@ -80,18 +80,18 @@ Includes pure Spanish queries to verify multilingual support.
 ## Gate Results
 
 ### Gate 1: Vague Anchor Usage ≥ 30%
-**Status**: {"✅ PASS" if gates["vague_anchor_usage_30pct"]["pass"] else "❌ FAIL"}  
-**Value**: {gates["vague_anchor_usage_30pct"]["value"]}%  
+**Status**: {"✅ PASS" if gates["vague_anchor_usage_30pct"]["pass"] else "❌ FAIL"}
+**Value**: {gates["vague_anchor_usage_30pct"]["value"]}%
 **Threshold**: ≥ 30%
 
 ### Gate 2: Vague Zero-Hit Rate ≤ 20%
-**Status**: {"✅ PASS" if gates["vague_zero_hit_20pct"]["pass"] else "❌ FAIL"}  
-**Value**: {gates["vague_zero_hit_20pct"]["value"]}%  
+**Status**: {"✅ PASS" if gates["vague_zero_hit_20pct"]["pass"] else "❌ FAIL"}
+**Value**: {gates["vague_zero_hit_20pct"]["value"]}%
 **Threshold**: ≤ 20%
 
 ### Gate 3: Expanded Queries Have Positive Delta
-**Status**: {"✅ PASS" if gates["expanded_positive_delta"]["pass"] else "❌ FAIL"}  
-**Median Δ**: +{gates["expanded_positive_delta"]["value"]}  
+**Status**: {"✅ PASS" if gates["expanded_positive_delta"]["pass"] else "❌ FAIL"}
+**Median Δ**: +{gates["expanded_positive_delta"]["value"]}
 **Threshold**: > 0
 
 ---

@@ -27,8 +27,8 @@ echo "Config: OPS=$OPS, WORKERS=$WORKERS, SEGMENT=$TARGET_SEGMENT" >> "$RUN_LOG"
 # Based on T1 evidence: .trifecta/cache/ast_cache_*.db
 echo "[Setup] Cleaning cache..." >> "$RUN_LOG"
 # Note: In a real soak we might want to keep it, but for T2 gate we clean.
-# We'll use the CLI to clear cache to be safe/portable if possible, 
-# or just rm the file if we know the path. 
+# We'll use the CLI to clear cache to be safe/portable if possible,
+# or just rm the file if we know the path.
 # Better: use TRIFECTA_AST_PERSIST=1 and rm the specific db file for the segment.
 # Assuming cwd is the segment root.
 rm -f .trifecta/cache/ast_cache_*.db >> "$RUN_LOG" 2>&1
@@ -38,18 +38,18 @@ run_worker() {
     local worker_id=$1
     local count=$2
     local log_file="$LOG_DIR/${RUN_ID}_worker_${worker_id}.log"
-    
+
     echo "Worker $worker_id starting $count ops..." > "$log_file"
-    
+
     for ((i=1; i<=count; i++)); do
         # Use valid CLI command to extract symbols (reads/writes cache)
         # Using persist flag explicitly to ensure it hits the DB logic
         # We assume the env var is set globally, but adding flag is safer if supported.
         # Checking skill.md: trifecta ast symbols "sym..." --persist-cache
-        
+
         uv run trifecta ast symbols "$TARGET_URI" --segment "$TARGET_SEGMENT" --telemetry full --persist-cache >> "$log_file" 2>&1
         local rc=$?
-        
+
         if [ $rc -ne 0 ]; then
             echo "Error in op $i (RC=$rc)" >> "$log_file"
             # Fail closed? Or count errors? For soak, we log errors.
