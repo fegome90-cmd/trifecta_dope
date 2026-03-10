@@ -113,13 +113,13 @@ if [[ -n "$ALLOW_DIRTY" ]]; then
     echo "ERROR: OVERRIDE_UNTIL must be YYYY-MM-DD (got $OVERRIDE_UNTIL)" >&2
     exit 2
   fi
-  
+
   # Validate that OVERRIDE_UNTIL is a real calendar date
   if ! OVERRIDE_UNTIL_EPOCH=$(date -d "$OVERRIDE_UNTIL" +%s 2>/dev/null); then
     echo "ERROR: OVERRIDE_UNTIL is not a valid calendar date (got $OVERRIDE_UNTIL)" >&2
     exit 2
   fi
-  
+
   # Validate expiry using epoch comparison
   TODAY=$(date +"%Y-%m-%d")
   TODAY_EPOCH=$(date -d "$TODAY" +%s)
@@ -337,7 +337,7 @@ cleanup() {
   if [[ -z "${LOG_DIR:-}" && -n "${ROOT:-}" && -n "${WO_ID:-}" ]]; then
     LOG_DIR="$ROOT/_ctx/logs/$WO_ID"
   fi
-  
+
   if [[ -n "${LOG_DIR:-}" && ! -f "$LOG_DIR/verdict.json" ]]; then
     # Only try to write if we have the minimum context
     END="$(utc_now)"

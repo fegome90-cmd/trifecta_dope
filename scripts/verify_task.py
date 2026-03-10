@@ -43,7 +43,7 @@ def verify_command(output: str, cmd: str, expected: Any, comparison: str = "equa
             timeout=30,
         )
         actual = result.stdout.strip()
-        
+
         if comparison == "equals":
             passed = str(actual) == str(expected)
             return passed, f"Command: expected '{expected}', got '{actual}'"
@@ -67,17 +67,17 @@ def verify_json_parse(output: str) -> tuple[bool, str]:
 
 def verify_task(task: dict, output: str) -> dict:
     """Verify task output against verifiers.
-    
+
     Returns:
         dict with: passed, score, details
     """
     verifiers = task.get("verifiers", [])
     results = []
     all_passed = True
-    
+
     for v in verifiers:
         v_type = v.get("type")
-        
+
         if v_type == "count_min":
             passed, detail = verify_count_min(
                 output,
@@ -87,7 +87,7 @@ def verify_task(task: dict, output: str) -> dict:
             results.append({"type": v_type, "passed": passed, "detail": detail})
             if not passed:
                 all_passed = False
-                
+
         elif v_type == "regex_match":
             passed, detail = verify_regex_match(
                 output,
@@ -96,7 +96,7 @@ def verify_task(task: dict, output: str) -> dict:
             results.append({"type": v_type, "passed": passed, "detail": detail})
             if not passed:
                 all_passed = False
-                
+
         elif v_type == "command":
             passed, detail = verify_command(
                 output,
@@ -107,13 +107,13 @@ def verify_task(task: dict, output: str) -> dict:
             results.append({"type": v_type, "passed": passed, "detail": detail})
             if not passed:
                 all_passed = False
-                
+
         elif v_type == "json_parse":
             passed, detail = verify_json_parse(output)
             results.append({"type": v_type, "passed": passed, "detail": detail})
             if not passed:
                 all_passed = False
-    
+
     return {
         "passed": all_passed,
         "score": sum(1 for r in results if r["passed"]) / max(len(results), 1),
@@ -125,27 +125,27 @@ def main():
     if len(sys.argv) < 3:
         print("Usage: verify_task.py <task.json> <output.txt>")
         sys.exit(1)
-    
+
     task_path = Path(sys.argv[1])
     output_path = Path(sys.argv[2])
-    
+
     if not task_path.exists():
         print(f"Error: Task file not found: {task_path}")
         sys.exit(1)
-    
+
     if not output_path.exists():
         print(f"Error: Output file not found: {output_path}")
         sys.exit(1)
-    
+
     with open(task_path) as f:
         task = json.load(f)
-    
+
     output = output_path.read_text()
-    
+
     result = verify_task(task, output)
-    
+
     print(json.dumps(result, indent=2))
-    
+
     sys.exit(0 if result["passed"] else 1)
 
 
