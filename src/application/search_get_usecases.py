@@ -1,6 +1,7 @@
 """Use case wrappers for Search and Get with telemetry."""
 
 import hashlib
+import logging
 import os
 import subprocess
 from dataclasses import dataclass
@@ -12,6 +13,8 @@ from src.application.zero_hit_tracker import create_zero_hit_tracker
 from src.application.spanish_aliases import detect_spanish, expand_with_spanish_aliases
 from src.infrastructure.file_system import FileSystemAdapter
 from src.domain.query_linter import LinterPlan
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -173,7 +176,7 @@ class SearchUseCase:
         Returns:
             SearchPipelineResult with all pipeline data
         """
-        from src.infrastructure.alias_loader import AliasLoader
+        from src.infrastructure.aliases_fs import AliasMerger
         from src.application.query_normalizer import QueryNormalizer
         from src.application.query_expander import QueryExpander
         from src.infrastructure.segment_utils import resolve_segment_root
@@ -198,9 +201,14 @@ class SearchUseCase:
                 matched_terms={},
             )
 
-        # Load aliases
-        alias_loader = AliasLoader(target_path)
-        aliases = alias_loader.load()
+        # Load aliases (manual + generated merged)
+        # target_path IS the segment root - AliasMerger expects segment_path param
+        try:
+            merger = AliasMerger(segment_path=target_path)
+            aliases = merger.merge()
+        except Exception as e:
+            logger.debug(f"Failed to load aliases: {e}")
+            aliases = {}  # Fail-safe: continue with empty aliases
 
         # Normalize query
         normalized_query = QueryNormalizer.normalize(query)

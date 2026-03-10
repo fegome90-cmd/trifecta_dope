@@ -1,15 +1,24 @@
 """Alias loader for query expansion.
 
 Loads and validates aliases.yaml files from segment directories.
+
+Note: For merged aliases (manual + generated), use AliasMerger from
+src.infrastructure.aliases_fs which combines both sources.
 """
 
 from pathlib import Path
 from typing import Dict, List
+
 import yaml  # type: ignore[import-untyped]
 
 
 class AliasLoader:
-    """Load and validate alias files for query expansion."""
+    """Load and validate alias files for query expansion.
+
+    Note: This loads ONLY manual aliases from _ctx/aliases.yaml.
+    For merged aliases (manual + generated), use AliasMerger from
+    src.infrastructure.aliases_fs.
+    """
 
     MAX_KEYS = 200
     MAX_SYNONYMS_PER_KEY = 20

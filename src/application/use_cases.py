@@ -420,6 +420,7 @@ class BuildContextPackUseCase:
         }
 
         # Scan for markdown and code files
+        # P0 FIX: Expand patterns to include custom high-value directories
         for pattern in [
             "docs/**/*.md",
             "src/**/*.py",
@@ -427,6 +428,22 @@ class BuildContextPackUseCase:
             "src/**/*.js",
             "README*.md",
             "*.md",
+            # Custom high-value directories (WO-0009, examen_grado case)
+            "skills/**/*.md",  # Skills system
+            "apps/**/*.py",  # Application code
+            "apps/**/*.ts",  # TypeScript apps
+            "apps/**/*.js",  # JavaScript apps
+            "apps/**/*.vue",  # Vue components
+            "apps/**/*.md",  # App documentation
+            "config/**/*.yaml",  # Configuration files
+            "config/**/*.yml",  # YAML config
+            "config/**/*.json",  # JSON config
+            "config/**/*.toml",  # TOML config
+            "tests/**/*.py",  # Test files
+            "tests/**/*.ts",  # TypeScript tests
+            "tests/**/*.js",  # JavaScript tests
+            "main.py",  # Entry points
+            "app.py",  # Alternative entry point
         ]:
             for file_path in target_path.glob(pattern):
                 # Skip if in excluded dir
@@ -471,15 +488,17 @@ class BuildContextPackUseCase:
 
             sha256 = hashlib.sha256(content.encode()).hexdigest()
             mtime = file_path.stat().st_mtime
+
+            # Extract relative path from source_key (format: "repo:relative/path")
+            source_rel_path = doc_type.split(":", 1)[1] if ":" in doc_type else file_path.name
+
             source_files.append(
                 SourceFile(
-                    path=str(file_path.relative_to(target_path)),
+                    path=source_rel_path,
                     sha256=sha256,
                     mtime=mtime,
                     chars=len(content),
                 )
-                if target_path in file_path.parents or target_path == file_path
-                else SourceFile(path=file_path.name, sha256=sha256, mtime=mtime, chars=len(content))
             )
 
             # Stable ID: doc:sha1(doc + "\n" + title_path_norm + "\n" + text_sha256)[:10]
@@ -495,7 +514,7 @@ class BuildContextPackUseCase:
                 text=content,
                 char_count=len(content),
                 token_est=token_est,
-                source_path=str(file_path.name),  # Minimal for MVP
+                source_path=source_rel_path,
                 chunking_method="whole_file",
             )
             chunks.append(chunk)

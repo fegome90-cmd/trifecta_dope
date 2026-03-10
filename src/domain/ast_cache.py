@@ -379,7 +379,7 @@ class SQLiteCache:
             while entries >= self.max_entries or current_bytes + new_bytes > self.max_bytes:
                 # Delete oldest entries
                 cursor = conn.execute("""
-                    DELETE FROM cache 
+                    DELETE FROM cache
                     WHERE key IN (
                         SELECT key FROM cache ORDER BY last_access ASC LIMIT 100
                     )

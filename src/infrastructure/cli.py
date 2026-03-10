@@ -1661,6 +1661,75 @@ def skill_lint(
         raise typer.Exit(1)
 
 
+@skill_app.command("extract-keywords")
+def extract_keywords(
+    segment: str = typer.Option(
+        ...,
+        "--segment",
+        "-s",
+        help="Target segment path",
+    ),
+    output: Optional[str] = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="Custom output path (default: <segment>/_ctx/aliases.generated.yaml)",
+    ),
+    min_frequency: int = typer.Option(
+        2,
+        "--min-frequency",
+        "-f",
+        help="Minimum frequency for a keyword to be included",
+    ),
+    max_skills_per_alias: int = typer.Option(
+        8,
+        "--max-skills-per-alias",
+        "-m",
+        help="Maximum skills per alias (cap)",
+    ),
+    stdout: bool = typer.Option(
+        False,
+        "--stdout",
+        help="Print YAML to stdout without writing file",
+    ),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        help="Execute without persisting changes",
+    ),
+    check: bool = typer.Option(
+        False,
+        "--check",
+        help="Fail if output would differ from existing file",
+    ),
+) -> None:
+    """Extract keywords from skill metadata and generate aliases.
+
+    This command:
+    1. Discovers skills from skills_manifest.json
+    2. Extracts keywords from skill names and descriptions
+    3. Applies frequency filtering and caps
+    4. Generates aliases.generated.yaml (compatible with AliasLoader)
+
+    Examples:
+        trifecta skill extract-keywords --segment ~/.trifecta/segments/skills-hub
+        trifecta skill extract-keywords --segment . --stdout
+        trifecta skill extract-keywords --segment . --dry-run
+        trifecta skill extract-keywords --segment . --check
+    """
+    from src.infrastructure.cli_skills import run_extract_keywords
+
+    run_extract_keywords(
+        segment=segment,
+        output=output,
+        min_frequency=min_frequency,
+        max_skills_per_alias=max_skills_per_alias,
+        stdout=stdout,
+        dry_run=dry_run,
+        check=check,
+    )
+
+
 # =============================================================================
 # Generator Commands
 # =============================================================================
