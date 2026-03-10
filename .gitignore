@@ -59,3 +59,15 @@ _ctx/linear_sync/mcp_debug.log
 data/
 bundle
 manifest
+
+# Generated files (runtime artifacts)
+_ctx/checkpoints/
+_ctx/review_runs/
+_ctx/jobs/
+experiments/
+eval/results/
+
+# Development tools
+.sidecar/
+.todos/
+.pi/
