@@ -183,11 +183,11 @@ TypeError: Object of type SymbolInfo is not JSON serializable
    # En SymbolInfo
    def to_dict(self) -> dict:
        return {"kind": self.kind, "name": self.name, "line": self.line}
-   
+
    @classmethod
    def from_dict(cls, data: dict):
        return cls(**data)
-   
+
    # En SQLiteCache
    value_json = json.dumps([s.to_dict() for s in symbols])
    symbols = [SymbolInfo.from_dict(d) for d in json.loads(value_json)]
@@ -250,7 +250,7 @@ total = hits + misses  # ❌ hits=None, misses=None
 
 2. **Fix en SQL** (COALESCE):
    ```sql
-   SELECT 
+   SELECT
      COUNT(*) as entries,
      COALESCE(SUM(CASE WHEN hit=1 THEN 1 ELSE 0 END), 0) as hits,
      COALESCE(SUM(CASE WHEN hit=0 THEN 1 ELSE 0 END), 0) as misses,

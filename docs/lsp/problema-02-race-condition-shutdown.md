@@ -26,7 +26,7 @@ Thread A (Read Loop):         Thread B (stop()):
   _read_rpc()                   process.stdin.close()  ← Cerró stdin
   ...processing...              process.stdout.close() ← Cerró stdout
   _send_rpc()                   return                 ← Terminó
-  → write to stdin              
+  → write to stdin  
   → ValueError: closed file     ← CRASH
 ```
 
@@ -134,7 +134,7 @@ stop()
 
 **Probabilidad**: Baja (solo si thread bloqueado >1s)
 
-**Impacto**: 
+**Impacto**:
 - Medio en producción (leak acumulado)
 - Alto en tests con muchos starts/stops
 
@@ -150,15 +150,15 @@ def test_lsp_client_stop_closes_process():
     # Mock LSP client con proceso real
     client = LSPClient(Path("/tmp"))
     client.start()
-    
+
     assert client.process is not None
     assert client.process.poll() is None  # Running
-    
+
     client.stop()
-    
+
     # Process should be terminated
     assert client.process.poll() is not None  # Exited
-    
+
     # NOTE: No verifica que streams estén cerrados
 ```
 
@@ -168,13 +168,13 @@ def test_lsp_client_stop_closes_streams():
     """Test that stop() closes all streams."""
     client = LSPClient(Path("/tmp"))
     client.start()
-    
+
     stdin = client.process.stdin
     stdout = client.process.stdout
     stderr = client.process.stderr
-    
+
     client.stop()
-    
+
     # Verify streams closed
     assert stdin.closed  # ← Podría fallar si thread leak
     assert stdout.closed
@@ -211,7 +211,7 @@ for i, timeout in enumerate(TIMEOUTS):
         self._thread.join(timeout=timeout)
         if not self._thread.is_alive():
             break  # Success
-        
+
         # Still alive after timeout: try more aggressive termination
         if i < len(TIMEOUTS) - 1:
             # Try killing process again
@@ -279,15 +279,15 @@ class LSPClient:
     def start(self):
         # ...
         self.process = subprocess.Popen(...)
-        
+
         # Wrap streams en context managers
         self._stdin_ctx = closing(self.process.stdin)
         self._stdout_ctx = closing(self.process.stdout)
         self._stderr_ctx = closing(self.process.stderr)
-    
+
     def stop(self):
         # ... existing stop logic ...
-        
+
         # Close via context managers (garantiza cleanup)
         with suppress(Exception):
             self._stdin_ctx.close()
@@ -332,19 +332,19 @@ def test_slow_shutdown_in_ci(monkeypatch):
     """Simulate slow CI environment with delayed thread join."""
     client = LSPClient(Path("/tmp"))
     client.start()
-    
+
     # Mock thread.join to simulate slow CI
     original_join = client._thread.join
     def slow_join(timeout):
         time.sleep(0.5)  # Añadir delay
         original_join(timeout)
-    
+
     monkeypatch.setattr(client._thread, "join", slow_join)
-    
+
     t0 = time.time()
     client.stop()
     t1 = time.time()
-    
+
     # Should take longer but not leak
     assert t1 - t0 < 2.0  # Reasonable timeout
     assert not client._thread.is_alive()  # Thread exited
@@ -370,7 +370,7 @@ def _read_rpc(self) -> Optional[Dict[str, Any]]:
             if not line:
                 return None
             # ... parse headers ...
-        
+
         # Read Content
         content = b""
         while len(content) < length:
@@ -378,7 +378,7 @@ def _read_rpc(self) -> Optional[Dict[str, Any]]:
             if not chunk:
                 break
             content += chunk
-        
+
         return json.loads(content.decode("utf-8"))
     except Exception:
         return None
@@ -392,14 +392,14 @@ def test_thread_unblocks_on_process_terminate():
     """Verify that thread exits when process is terminated."""
     client = LSPClient(Path("/tmp"))
     client.start()
-    
+
     # Wait for thread to be in read loop
     time.sleep(0.5)
-    
+
     # Terminate process (simula LSP server hung)
     client.process.terminate()
     client.process.wait()
-    
+
     # Thread should exit soon (EOF on stdout)
     time.sleep(0.5)
     assert not client._thread.is_alive()
@@ -451,15 +451,15 @@ def stop(self) -> None:
         # 4. Join thread with ESCALATING timeouts
         TIMEOUTS = [0.5, 1.0, 2.0]  # Total: 3.5s max
         thread_exited = False
-        
+
         for attempt, timeout in enumerate(TIMEOUTS):
             if self._thread and self._thread.is_alive():
                 self._thread.join(timeout=timeout)
-                
+
                 if not self._thread.is_alive():
                     thread_exited = True
                     break
-                
+
                 # Still alive: try more aggressive termination
                 if attempt < len(TIMEOUTS) - 1:
                     if self.process:
@@ -469,7 +469,7 @@ def stop(self) -> None:
                             self.process.wait(timeout=0.1)
                         except Exception:
                             pass
-                    
+
                     if self.telemetry:
                         self.telemetry.event(
                             "lsp.shutdown_retry",
@@ -533,7 +533,7 @@ def _read_rpc(self, timeout: float = 5.0) -> Optional[Dict[str, Any]]:
     """Read JSON-RPC message with timeout."""
     if not self.process or not self.process.stdout:
         return None
-    
+
     try:
         # Check if data available with timeout
         if hasattr(select, 'poll'):
@@ -548,24 +548,24 @@ def _read_rpc(self, timeout: float = 5.0) -> Optional[Dict[str, Any]]:
             ready, _, _ = select.select([self.process.stdout], [], [], timeout)
             if not ready:
                 return None  # Timeout
-        
+
         # Data available: read headers
         length = None
         while True:
             line = self.process.stdout.readline()
             if not line:
                 return None
-            
+
             line = line.strip()
             if not line:
                 break
-            
+
             if line.startswith(b"Content-Length: "):
                 length = int(line.split(b": ")[1])
-        
+
         if length is None:
             return None
-        
+
         # Read content
         content = b""
         while len(content) < length:
@@ -573,14 +573,14 @@ def _read_rpc(self, timeout: float = 5.0) -> Optional[Dict[str, Any]]:
             if not chunk:
                 break
             content += chunk
-        
+
         # Parse JSON
         try:
             msg = json.loads(content.decode("utf-8"))
             return msg if isinstance(msg, dict) else None
         except json.JSONDecodeError:
             return None
-            
+
     except Exception:
         return None
 ```
@@ -601,28 +601,28 @@ def test_stop_with_escalating_timeouts(monkeypatch):
     """Verify stop() tries multiple timeouts before giving up."""
     client = LSPClient(Path("/tmp"))
     client.start()
-    
+
     # Track telemetry events
     events = []
     def mock_event(cmd, args, result, timing, **kwargs):
         events.append({"cmd": cmd, "result": result})
-    
+
     if client.telemetry:
         monkeypatch.setattr(client.telemetry, "event", mock_event)
-    
+
     # Mock thread.join to always timeout (simulate hung thread)
     def fake_join(timeout):
         time.sleep(timeout)  # Simulate waiting but never exits
-    
+
     monkeypatch.setattr(client._thread, "join", fake_join)
     monkeypatch.setattr(client._thread, "is_alive", lambda: True)  # Always alive
-    
+
     client.stop()
-    
+
     # Should have retried multiple times
     retry_events = [e for e in events if e["cmd"] == "lsp.shutdown_retry"]
     assert len(retry_events) == 2  # 2 retries (3 attempts total)
-    
+
     # Should have logged thread leak
     leak_events = [e for e in events if e["cmd"] == "lsp.shutdown" and e["result"].get("status") == "thread_leak"]
     assert len(leak_events) == 1
@@ -635,14 +635,14 @@ def test_stop_closes_streams_when_thread_exits():
     """Verify streams are closed when thread exits cleanly."""
     client = LSPClient(Path("/tmp"))
     client.start()
-    
+
     time.sleep(0.5)  # Let thread start
-    
+
     client.stop()
-    
+
     # Thread should have exited
     assert not client._thread.is_alive()
-    
+
     # Streams should be closed
     assert client.process.stdin.closed
     assert client.process.stdout.closed
@@ -656,13 +656,13 @@ def test_read_rpc_timeout():
     """Verify _read_rpc() times out if no data."""
     client = LSPClient(Path("/tmp"))
     client.start()
-    
+
     # Don't send any data to LSP server
     # _read_rpc should timeout
     t0 = time.time()
     result = client._read_rpc(timeout=1.0)
     t1 = time.time()
-    
+
     assert result is None  # Timeout
     assert 0.9 < (t1 - t0) < 1.2  # Approximately 1s
 ```

@@ -12,17 +12,17 @@ graph LR
         B[_evict_if_needed<br/>Empty DB Guard]
         C[DB Path<br/>Encoding]
     end
-    
+
     subgraph "Future Improvements"
         A1[P2: Type Safety<br/>Explicit validation]
         B1[P3: Dedicated Test<br/>None handling]
         C1[P3: Path Hashing<br/>Portability]
     end
-    
+
     A -.-> A1
     B -.-> B1
     C -.-> C1
-    
+
     style A1 fill:#ffa,stroke:#333
     style B1 fill:#aaf,stroke:#333
     style C1 fill:#aaf,stroke:#333

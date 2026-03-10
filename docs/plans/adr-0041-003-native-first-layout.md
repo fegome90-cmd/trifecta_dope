@@ -33,7 +33,7 @@ def get_platform_data_dir() -> Path:
     """Get platform-appropriate data directory."""
     if trifecta_home := os.environ.get("TRIFECTA_HOME"):
         return Path(trifecta_home)
-    
+
     if sys.platform == "darwin":
         return Path.home() / "Library" / "Application Support" / "trifecta"
     elif sys.platform == "win32":

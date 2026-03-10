@@ -99,7 +99,7 @@ drwxr-xr-x 1024 search_dataset_v1/
                 end = line.find("]")
                 if start != -1 and end != -1:
                     ids.append(line[start + 1 : end])
-    
+
 >       assert len(ids) > 0, f"No IDs found for query '{query}'"
 E       AssertionError: No IDs found for query 'ContextService'
 E       assert 0 > 0

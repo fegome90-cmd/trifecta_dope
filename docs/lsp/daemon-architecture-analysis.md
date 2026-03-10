@@ -55,7 +55,7 @@ while self.running:
     # Check TTL cada 1s
     if time.time() - self.last_activity > self.ttl:
         break  # Shutdown por timeout
-    
+
     conn, _ = server.accept()
     self._handle_client(conn)
 ```
@@ -206,7 +206,7 @@ rg "LSPManager" src/ tests/ --type py
 # 4. Join background thread BEFORE closing streams
 if self._thread and self._thread.is_alive():
     self._thread.join(timeout=1.0)
-    
+
     # CRITICAL: If thread still alive after join, DO NOT close streams
     # This avoids write-to-closed-file race in edge cases (blocked I/O)
     # Better to leak streams in rare shutdown failure than reintroduce bug
@@ -224,7 +224,7 @@ if self._thread and self._thread.is_alive():
 - Timeout de 1s insuficiente en CI/sistemas lentos
 - Leak acumulado si muchos stop/start
 
-**Impacto**: 
+**Impacto**:
 - 🟢 Previene crashes
 - 🟡 Leak de file descriptors en edge cases
 - 🟡 Timeout podría ser configurable
@@ -284,7 +284,7 @@ except Exception:
 file=str(file_path.relative_to(root))  # ⚠️ Podría fallar si file_path fuera de root
 ```
 
-**Riesgo**: 
+**Riesgo**:
 - Muy bajo (paths generalmente dentro de workspace)
 - `relative_to()` lanza `ValueError` si no es relativo
 - Crash en telemetry no es crítico pero molesto
@@ -390,19 +390,19 @@ class LSPDaemonServer:
         # ... existing code ...
         self.start_time = time.time()
         self.request_count = 0
-    
+
     def _handle_client(self, conn: socket.socket):
         self.last_activity = time.time()
         self.request_count += 1  # ← Track requests
         # ... rest of existing code ...
-    
+
     def _process_request(self, req: Dict) -> Dict:
         method = req.get("method")
-        
+
         if method == "stats":
             uptime = time.time() - self.start_time
             ttl_remaining = self.ttl - (time.time() - self.last_activity)
-            
+
             return {
                 "status": "ok",
                 "data": {
@@ -414,7 +414,7 @@ class LSPDaemonServer:
                     "segment_root": str(self.root),
                 }
             }
-        
+
         # ... existing methods (status, did_open, request) ...
 ```
 
@@ -428,19 +428,19 @@ def daemon_stats(
     """Get daemon statistics."""
     root = Path(segment).resolve()
     client = LSPDaemonClient(root)
-    
+
     if not client._try_connect():
         typer.echo("Daemon not running")
         raise typer.Exit(1)
-    
+
     resp = client.send({"method": "stats"})
-    
+
     if resp.get("status") != "ok":
         typer.echo(f"Error: {resp.get('message')}")
         raise typer.Exit(1)
-    
+
     data = resp["data"]
-    
+
     # Pretty print
     print(f"""
 Daemon Statistics
@@ -486,7 +486,7 @@ trifecta daemon-stats --segment .
 ```python
 def _process_request(self, req: Dict) -> Dict:
     method = req.get("method")
-    
+
     if method == "ping":
         self.last_activity = time.time()  # ← Renovar TTL
         ttl_remaining = self.ttl - (time.time() - self.last_activity)
@@ -508,7 +508,7 @@ def daemon_ping(
     """Ping daemon to renew TTL."""
     root = Path(segment).resolve()
     client = LSPDaemonClient(root)
-    
+
     def do_ping():
         resp = client.send({"method": "ping"})
         if resp.get("status") == "ok":
@@ -516,7 +516,7 @@ def daemon_ping(
             print(f"✓ Daemon pinged. TTL: {ttl:.1f}s")
         else:
             print(f"✗ Ping failed: {resp.get('message')}")
-    
+
     if loop:
         import time
         print(f"Keep-alive loop: pinging every {loop}s (Ctrl+C to stop)")
@@ -563,12 +563,12 @@ def stop(self) -> None:
     with self._stop_lock:
         if not self.stopping.is_set():
             self.stopping.set()
-        
+
         with self.lock:
             if self.state == LSPState.CLOSED:
                 return
             self.state = LSPState.CLOSED
-        
+
         # Terminate process
         if self.process:
             try:
@@ -579,11 +579,11 @@ def stop(self) -> None:
                 self.process.wait(timeout=0.2)
             except Exception:
                 pass
-        
+
         # Escalating timeouts for thread join
         TIMEOUTS = [0.5, 1.0, 2.0]  # Total: 3.5s
         thread_exited = False
-        
+
         for i, timeout in enumerate(TIMEOUTS):
             if self._thread and self._thread.is_alive():
                 self._thread.join(timeout=timeout)
@@ -599,7 +599,7 @@ def stop(self) -> None:
                                 self.process.kill()
                             except Exception:
                                 pass
-        
+
         # Only close streams if thread exited cleanly
         if thread_exited or not (self._thread and self._thread.is_alive()):
             self._close_streams()
@@ -663,7 +663,7 @@ class LSPResponseCache:
         self._ttl = ttl_sec
         self._hits = 0
         self._misses = 0
-    
+
     def _make_key(self, method: str, params: Dict) -> str:
         """Create cache key from method + params."""
         uri = params.get("textDocument", {}).get("uri", "")
@@ -671,42 +671,42 @@ class LSPResponseCache:
         line = pos.get("line", -1)
         char = pos.get("character", -1)
         return f"{method}:{uri}:{line}:{char}"
-    
+
     def get(self, method: str, params: Dict) -> Optional[Dict]:
         """Get cached result if exists and not expired."""
         key = self._make_key(method, params)
-        
+
         if key in self._cache:
             entry = self._cache[key]
-            
+
             # Check TTL
             if time.time() - entry.timestamp > self._ttl:
                 del self._cache[key]
                 self._misses += 1
                 return None
-            
+
             # LRU: move to end
             self._cache.move_to_end(key)
             entry.hits += 1
             self._hits += 1
             return entry.result
-        
+
         self._misses += 1
         return None
-    
+
     def set(self, method: str, params: Dict, result: Dict) -> None:
         """Store result in cache."""
         key = self._make_key(method, params)
-        
+
         # Evict oldest if at capacity
         if len(self._cache) >= self._max_size:
             self._cache.popitem(last=False)
-        
+
         self._cache[key] = CacheEntry(
             result=result,
             timestamp=time.time()
         )
-    
+
     def stats(self) -> Dict:
         """Get cache statistics."""
         return {
@@ -725,29 +725,29 @@ class LSPDaemonServer:
     def __init__(self, segment_root: Path, ttl_sec: int = DEFAULT_TTL):
         # ... existing code ...
         self.response_cache = LSPResponseCache(max_size=100, ttl_sec=60.0)
-    
+
     def _process_request(self, req: Dict) -> Dict:
         method = req.get("method")
-        
+
         if method == "request":
             lsp_method = params.get("method")
             lsp_params = params.get("params")
-            
+
             # Check cache for cacheable methods
             if lsp_method in ["textDocument/definition", "textDocument/hover"]:
                 cached = self.response_cache.get(lsp_method, lsp_params)
                 if cached:
                     return {"status": "ok", "data": cached, "cached": True}
-            
+
             # Normal request
             result = self.lsp_client.request(lsp_method, lsp_params)
-            
+
             # Cache result
             if result and lsp_method in ["textDocument/definition", "textDocument/hover"]:
                 self.response_cache.set(lsp_method, lsp_params, result)
-            
+
             return {"status": "ok", "data": result, "cached": False}
-        
+
         if method == "stats":
             # Include cache stats
             cache_stats = self.response_cache.stats()
@@ -853,10 +853,10 @@ class LSPDaemonServer:
 def test_daemon_stats_includes_uptime():
     client = LSPDaemonClient(root)
     client.connect_or_spawn()
-    
+
     time.sleep(1)
     resp = client.send({"method": "stats"})
-    
+
     assert resp["status"] == "ok"
     assert resp["data"]["uptime_sec"] >= 1.0
     assert "ttl_remaining_sec" in resp["data"]
@@ -864,11 +864,11 @@ def test_daemon_stats_includes_uptime():
 def test_daemon_stats_tracks_requests():
     client = LSPDaemonClient(root)
     client.connect_or_spawn()
-    
+
     # Make 3 requests
     for _ in range(3):
         client.send({"method": "status"})
-    
+
     resp = client.send({"method": "stats"})
     assert resp["data"]["requests_handled"] >= 3
 
@@ -876,19 +876,19 @@ def test_daemon_stats_tracks_requests():
 def test_ping_renews_ttl():
     client = LSPDaemonClient(root)
     client.connect_or_spawn()
-    
+
     # Get initial TTL
     stats1 = client.send({"method": "stats"})
     ttl1 = stats1["data"]["ttl_remaining_sec"]
-    
+
     time.sleep(2)
-    
+
     # Ping to renew
     client.send({"method": "ping"})
-    
+
     stats2 = client.send({"method": "stats"})
     ttl2 = stats2["data"]["ttl_remaining_sec"]
-    
+
     # TTL should be renewed (close to original)
     assert ttl2 > ttl1
 
@@ -898,17 +898,17 @@ def test_cache_hit_for_repeated_request():
     method = "textDocument/definition"
     params = {"textDocument": {"uri": "file.py"}, "position": {"line": 10, "character": 5}}
     result = {"range": {...}}
-    
+
     # First: miss
     assert cache.get(method, params) is None
-    
+
     # Set
     cache.set(method, params, result)
-    
+
     # Second: hit
     cached = cache.get(method, params)
     assert cached == result
-    
+
     # Stats
     stats = cache.stats()
     assert stats["hits"] == 1

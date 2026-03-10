@@ -45,7 +45,7 @@ class LSPClient:
         self._thread: Optional[threading.Thread] = None
         self._capabilities: Dict[str, Any] = {}
         self._warmup_file: Optional[Path] = None
-        
+
         # Request handling
         self._next_id = 1000
         self._pending_requests: Dict[int, Any] = {}
@@ -317,7 +317,7 @@ class LSPClient:
     def __init__(self, root_path: Path, telemetry: Any = None):
         # ... existing code ...
         self._diagnostics_received: set[str] = set()  # ← Agregar
-    
+
     def start(self, warm_up_file: Optional[Path] = None) -> None:
         """Start LSP server and optionally warm up with file."""
         with self.lock:
@@ -346,7 +346,7 @@ class LSPClient:
                 # Start handshake + Read Loop
                 self._thread = threading.Thread(target=self._run_loop, daemon=True)
                 self._thread.start()
-                
+
                 # ← Warm up with file if provided
                 if warm_up_file and warm_up_file.exists():
                     content = warm_up_file.read_text(errors="replace")
@@ -354,7 +354,7 @@ class LSPClient:
 
             except Exception as e:
                 self._transition(LSPState.FAILED)
-    
+
     def mark_diagnostics_received(self, uri: str) -> None:
         """Mark that diagnostics were received for URI."""
         with self.lock:
@@ -462,10 +462,10 @@ __all__ = ["LSPManager", "LSPState"]
 class LSPManager(_LSPClient):
     """
     DEPRECATED: Use LSPClient from lsp_client.py instead.
-    
+
     This class will be removed in v2.0.
     """
-    
+
     def __init__(self, workspace_root, enabled: bool = False):
         warnings.warn(
             "LSPManager is deprecated and will be removed in v2.0. "
@@ -476,7 +476,7 @@ class LSPManager(_LSPClient):
         super().__init__(workspace_root, telemetry=None)
         if enabled:
             self.start()
-    
+
     def spawn_async(self, best_file_uri: Optional[str] = None) -> None:
         """DEPRECATED: Use start(warm_up_file=...) instead."""
         warnings.warn(
@@ -520,16 +520,16 @@ def test_pr2_context_searcher_uses_lsp_client(tmp_path):
     """Verify PR2ContextSearcher works with LSPClient."""
     (tmp_path / "src").mkdir()
     (tmp_path / "src" / "main.py").write_text("def foo(): pass")
-    
+
     searcher = PR2ContextSearcher(
         root=tmp_path,
         lsp_enabled=True,
         # ... other params ...
     )
-    
+
     # Should have LSPClient instance
     assert isinstance(searcher.lsp_client, LSPClient)
-    
+
     # Should start LSP
     assert searcher.lsp_client.state in [LSPState.WARMING, LSPState.READY]
 ```
@@ -550,10 +550,10 @@ def test_lsp_client_has_warm_up_feature():
     """LSPClient should support warm_up_file parameter."""
     tmp_file = Path("/tmp/test.py")
     tmp_file.write_text("def test(): pass")
-    
+
     client = LSPClient(Path("/tmp"))
     client.start(warm_up_file=tmp_file)
-    
+
     # Should have called did_open
     assert client._warmup_file == tmp_file
 ```

@@ -156,10 +156,10 @@ tools/
    ```bash
    # Move demo workspace
    mv demo_workspace tests/fixtures/demo_workspace
-   
+
    # Move scoop manifest
    mv scoop packaging/scoop
-   
+
    # Move debugging tools
    mv tools scripts/debug
    ```

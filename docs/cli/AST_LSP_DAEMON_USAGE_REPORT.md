@@ -216,13 +216,13 @@ Extraje símbolos de los 3 módulos LSP:
 ```
 
 **Funcionalidad** (leído con `read_file`):
-- **LSPDaemonServer**: 
+- **LSPDaemonServer**:
   - UNIX socket server (AF_UNIX)
   - TTL: 180 segundos (configurable)
   - Single instance via `fcntl.lockf()`
   - IPC protocol: JSON line-based
   - Methods: `status`, `did_open`, `request`
-  
+
 - **LSPDaemonClient**:
   - Socket client
   - `connect_or_spawn()`: Auto-spawn si no existe
@@ -357,22 +357,22 @@ self.pid_path = get_daemon_pid_path(segment_id)
 def start(self):
     # 1. Acquire lock
     fcntl.lockf(self._lock_fp, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    
+
     # 2. Write PID
     self.pid_path.write_text(str(os.getpid()))
-    
+
     # 3. Setup socket
     server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     server.bind(str(self.socket_path))
-    
+
     # 4. Start LSP client
     self.lsp_client.start()
-    
+
     # 5. Event loop with TTL check
     while self.running:
         if time.time() - self.last_activity > self.ttl:
             break  # Auto-shutdown
-        
+
         conn, _ = server.accept()
         self._handle_client(conn)
 ```
@@ -555,7 +555,7 @@ Con AST + CLI search + Manual reading:
   Performance metrics:     ✅ 100% (latencias medidas)
   Dependency mapping:      ✅ 90% (inferido manualmente)
   Type information:        ⚠️ 70% (sin LSP, leído de código)
-  
+
   TOTAL SCORE: 8.5/10
 ```
 
@@ -566,7 +566,7 @@ Con AST + CLI search + Manual reading:
   Performance metrics:     ✅ 100% (igual)
   Dependency mapping:      ✅ 100% (+10% call hierarchy)
   Type information:        ✅ 100% (+30% hover auto)
-  
+
   TOTAL SCORE: 9.5/10
 ```
 
@@ -674,12 +674,12 @@ CLI Command
 while self.running:
     current_time = time.time()
     idle_time = current_time - self.last_activity
-    
+
     if idle_time > self.ttl:  # 180 seconds
         # Auto-shutdown
         self.telemetry.event("lsp.daemon_status", {}, {"status": "shutdown_ttl"}, 1)
         break
-    
+
     # Accept new connections
     try:
         conn, _ = server.accept()
@@ -765,14 +765,14 @@ def hover(
     """Return hover information (type hints + docstring)."""
     # 1. Parse URI
     query = SymbolQuery.parse(uri)
-    
+
     # 2. Try LSP first (if daemon available)
     daemon_client = LSPDaemonClient(Path(segment))
     if daemon_client.connect_or_spawn():
         result = daemon_client.request("textDocument/hover", {...})
         if result:
             return result
-    
+
     # 3. Fallback to AST + docstring parsing
     ast_result = parse_docstring_from_ast(...)
     return ast_result
@@ -883,7 +883,7 @@ Análisis producido:
   ├─ CLI_DEPENDENCY_FLOWCHART.md (~5000 palabras)
   ├─ CLI_ANALYSIS_LESSONS_LEARNED.md (~4000 palabras)
   └─ AST_LSP_DAEMON_USAGE_REPORT.md (este documento)
-  
+
 Total: 4 documentos, ~20,000 palabras, 25 funciones analizadas
 
 Métricas de calidad:
@@ -892,7 +892,7 @@ Métricas de calidad:
   ✅ Dependency mapping: 90%
   ⚠️ Type information: 70% (sin LSP)
   ⚠️ Docstrings: 80% (manual)
-  
+
 TOTAL: 8.5/10
 ```
 

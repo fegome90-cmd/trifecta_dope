@@ -46,7 +46,7 @@ def resolve_segment_ref(
 ) -> SegmentRef:
     """
     Resolve segment identity from any input path.
-    
+
     This is the SINGLE SOURCE OF TRUTH for segment identity.
     All modules MUST use this function instead of computing IDs directly.
     """

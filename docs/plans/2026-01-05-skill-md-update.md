@@ -4,13 +4,13 @@
 
 **Goal:** Actualizar skill.md para reflejar el estado actual del CLI Trifecta v2.0, protocolos de sesión reales y comandos disponibles, basado en --help, git history y session_trifecta_dope.md.
 
-**Architecture:** 
+**Architecture:**
 1. Reemplazar sección "Core Rules" con protocolos actuales del CLI (session, ctx search, ctx get, ctx sync)
 2. Actualizar "When to Use" con casos de uso reales del repo actual (LSP, AST symbols M1, telemetry, obsidian)
 3. Reemplazar ejemplos de comandos antiguos con nuevos comandos CLI documentados
 4. Mantener compacto (<100 líneas) pero exhaustivo
 
-**Tech Stack:** 
+**Tech Stack:**
 - Trifecta CLI v2.0 (typer-based)
 - Commands disponibles (según `--help`):
   - **ctx**: search, get, sync, plan, eval-plan, stats, validate, build, reset - **STABLE**
@@ -21,7 +21,7 @@
   - **create**: scaffold new segment - **STABLE**
   - **load**: macro command - **STABLE**
   - **legacy**: burn-down commands - **DEPRECATED**
-  
+
 - Features activas (verificadas en session.md hasta 2026-01-04):
   - ✅ **M1 AST Symbols** (SkeletonMapBuilder con stdlib ast) - PRODUCTION READY
   - ✅ **LSP daemon** (UNIX socket, 180s TTL) - Relaxed READY contract
@@ -31,7 +31,7 @@
   - ✅ **Deprecation Tracking** (TRIFECTA_DEPRECATED) - STABLE
   - ✅ **Pre-commit Gates** (zero side-effects) - STABLE
   - ⚠️ **Obsidian integration** - EXPERIMENTAL (inmaduro, no aprobado)
-  
+
 - Documentation format: YAML frontmatter + Markdown sections
 
 ---
@@ -90,19 +90,19 @@ With NEW:
 1. **make install** - Siempre comienza con `make install` para sincronizar dependencias
 
 2. **Search → Get (Con Instrucciones, NO Keywords)**
-   
+
    ❌ **MAL (keyword):**
    ```bash
    trifecta ctx search --segment . --query "telemetry" --limit 6
    ```
-   
+
    ✅ **BIEN (instrucción):**
    ```bash
    trifecta ctx search --segment . \
      --query "Encuentra documentación sobre cómo implementar el sistema de telemetría con event schema y ejemplos de uso" \
      --limit 6
    ```
-   
+
    Luego: `trifecta ctx get --segment . --ids "id1,id2" --mode excerpt --budget-token-est 900`
 
 3. **Log Evidence** - Registra en `session.md` vía `trifecta session append --segment . --summary "..."`

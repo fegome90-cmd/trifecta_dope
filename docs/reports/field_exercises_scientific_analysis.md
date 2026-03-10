@@ -36,25 +36,25 @@ graph TD
     A[Dataset: 33 Hard Queries] --> B[Vague: 10]
     A --> C[Spanish: 13]
     A --> D[Nav 2-Hop: 10]
-    
+
     B & C & D --> E[Execution Harness]
-    
+
     E --> F{Mode?}
     F -->|OFF| G[Raw Query]
     F -->|ON| H[Linted Query]
-    
+
     G & H --> I[Live Index]
     I --> J[Telemetry Capture]
-    
+
     J --> K[Enrichment & Metrics]
     K --> L{Audit Gates}
-    
+
     L -->|Check 1| M[Evidence Header]
     L -->|Check 2| N[Hard Invariants]
     L -->|Check 3| O[Report Integrity]
-    
+
     M & N & O --> P[✅ AUDIT PASS]
-    
+
     style P fill:#28a745,color:#fff
 ```
 
@@ -85,7 +85,7 @@ Code search systems must bridge the semantic gap between user intent and code re
 
 - **Type**: Paired A/B evaluation (within-subjects design)
 - **Sample Size**: N = 20 queries
-- **Conditions**: 
+- **Conditions**:
   - Control (OFF): `--no-lint` flag
   - Treatment (ON): `TRIFECTA_LINT=1` environment variable
 
@@ -182,7 +182,7 @@ Code search systems must bridge the semantic gap between user intent and code re
 - Avg hits when NOT expanded: 5.26
 - **Delta**: -2.46 hits
 
-**Statistical Interpretation**: 
+**Statistical Interpretation**:
 The negative delta (-2.46 hits) does **not** indicate linter degradation. Instead, it reflects **confounding by indication**: anchor expansion activates for inherently difficult queries (vague, exploratory) that naturally yield fewer results. This is evidence of correct linter behavior—expansion targets queries that need help.
 
 **Comparison to Baseline (FE v1)**:
@@ -212,21 +212,21 @@ graph LR
         A2[Avg: 9.30]
         A3[Total: 186]
     end
-    
+
     subgraph "ON (Treatment)"
         B1[Zero-hit: 0%]
         B2[Avg: 9.40]
         B3[Total: 188]
         B4[Anchors: 10%]
     end
-    
+
     A1 -.Δ = 0%.-> B1
     A2 -.Δ = +0.10.-> B2
     A3 -.Δ = +2.-> B3
-    
+
     B1 --> C{Gate: < 30%?}
     C -->|YES| D[✅ PASS]
-    
+
     style A1 fill:#fff3cd
     style A2 fill:#fff3cd
     style A3 fill:#fff3cd
@@ -252,7 +252,7 @@ graph LR
 
 **Marginal Precision Gain**: +1.1% improvement in average hits (+2 total) suggests linter adds minimally relevant results. Effect size (Cohen's d = 0.125) is negligible.
 
-**Anchor Utilization - Revised Findings**: 
+**Anchor Utilization - Revised Findings**:
 - **Initial estimate (stdout)**: 10% expansion (2/20 queries)
 - **Telemetry ground truth**: 23.7% expansion (70/295 queries in production)
 - **Revision**: Telemetry reveals 2.4× higher actual usage than stdout detection suggested
@@ -290,7 +290,7 @@ System exceeds quality requirements by substantial margin, indicating:
 
 ### 4.4 Threats to Validity
 
-**Internal**: 
+**Internal**:
 - No randomization (all queries run sequentially)
 - Temporal confounding possible (index state changes between runs)
 
@@ -310,7 +310,7 @@ System exceeds quality requirements by substantial margin, indicating:
 
 1. **Zero-hit rate**: Linter shows no improvement (both groups = 0%)
 2. **Average hits**: Linter provides marginal gain (+1.1%, negligible effect)
-3. **Anchor expansion (revised)**: 
+3. **Anchor expansion (revised)**:
    - Stdout detection: 10% (undercounted)
    - Telemetry ground truth: 23.7% in production
    - Linter is actively used, not underutilized

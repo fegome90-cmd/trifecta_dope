@@ -55,7 +55,7 @@ Este plan aborda los **3 problemas críticos** identificados en el análisis pro
 - [`pr2_context_searcher.py:184`](src/application/pr2_context_searcher.py:184): `self.ast_tel.track_parse(..., cache_hit=False)` SIEMPRE pasa `False`
 - [`SkeletonMapBuilder.build()`](src/application/ast_parser.py:28): NO retorna información sobre si fue cache hit o miss
 
-**Impacto**: 
+**Impacto**:
 - La telemetría SIEMPRE reporta `cache_hit=False`
 - Los contadores `ast_cache_hit_count` y `ast_cache_miss_count` son incorrectos
 - La tasa de cache hits reportada (42.5%) es **falsa**
@@ -87,7 +87,7 @@ Este plan aborda los **3 problemas críticos** identificados en el análisis pro
 1. **Agregar cache global al módulo**:
    ```python
    # src/application/ast_parser.py
-   
+
    # Cache global compartido entre todas las instancias
    _global_cache: dict[str, List[SymbolInfo]] = {}
    _global_cache_lock = threading.Lock()
@@ -97,11 +97,11 @@ Este plan aborda los **3 problemas críticos** identificados en el análisis pro
    ```python
    class SkeletonMapBuilder:
        """Build skeleton maps from AST parsing."""
-       
+
        def __init__(self, use_global_cache: bool = True):
            """
            Initialize SkeletonMapBuilder.
-           
+
            Args:
                use_global_cache: If True, use global shared cache. If False, use local cache.
            """
@@ -227,7 +227,7 @@ Este plan aborda los **3 problemas críticos** identificados en el análisis pro
 def build(self, file_path: Path, content: Optional[str] = None) -> tuple[List[SymbolInfo], bool]:
     """
     Build skeleton from file content using stdlib ast.parse.
-    
+
     Returns:
         (symbols, cache_hit) where cache_hit is True if from cache
     """
@@ -433,7 +433,7 @@ def _load_persistent_cache() -> dict[str, List[SymbolInfo]]:
     """Load cache from disk if available."""
     if not CACHE_FILE.exists():
         return {}
-    
+
     try:
         with open(CACHE_FILE, "rb") as f:
             data = pickle.load(f)
@@ -468,11 +468,11 @@ _global_cache = _load_persistent_cache()
 ```python
 class SkeletonMapBuilder:
     """Build skeleton maps from AST parsing."""
-    
+
     def __init__(self, use_global_cache: bool = True, auto_save: bool = False):
         """
         Initialize SkeletonMapBuilder.
-        
+
         Args:
             use_global_cache: If True, use global shared cache. If False, use local cache.
             auto_save: If True, automatically save cache to disk after each build.
@@ -492,7 +492,7 @@ class SkeletonMapBuilder:
 def build(self, file_path: Path, content: Optional[str] = None) -> tuple[List[SymbolInfo], bool]:
     """
     Build skeleton from file content using stdlib ast.parse.
-    
+
     Returns:
         (symbols, cache_hit) where cache_hit is True if from cache
     """
@@ -555,11 +555,11 @@ def build(self, file_path: Path, content: Optional[str] = None) -> tuple[List[Sy
     # Cache and return (thread-safe)
     with self._cache_lock:
         self._cache[content_hash] = symbols
-    
+
     # Guardar cache automáticamente si está habilitado
     if self.auto_save:
         _save_persistent_cache(self._cache)
-    
+
     return symbols, False  # ← Cache miss
 ```
 
@@ -659,16 +659,16 @@ def clear_cache(
 ):
     """Clear AST cache."""
     from src.application.ast_parser import SkeletonMapBuilder
-    
+
     SkeletonMapBuilder.clear_global_cache()
-    
+
     if persist:
         # Eliminar archivo de cache persistente
         try:
             CACHE_FILE.unlink(missing_ok=True)
         except Exception:
             pass
-    
+
     _json_output({
         "status": "ok",
         "message": "Cache cleared",
@@ -757,11 +757,11 @@ def clear_cache(
        builder = SkeletonMapBuilder()
        file_path = Path("test.py")
        content = "def test(): pass"
-       
+
        # Primer parseo (cache miss)
        symbols1, cache_hit1 = builder.build(file_path, content)
        assert cache_hit1 is False
-       
+
        # Segundo parseo (cache hit)
        symbols2, cache_hit2 = builder.build(file_path, content)
        assert cache_hit2 is True
@@ -775,11 +775,11 @@ def clear_cache(
        builder2 = SkeletonMapBuilder(use_global_cache=True)
        file_path = Path("test.py")
        content = "def test(): pass"
-       
+
        # Primer parseo con builder1 (cache miss)
        symbols1, cache_hit1 = builder1.build(file_path, content)
        assert cache_hit1 is False
-       
+
        # Segundo parseo con builder2 (cache hit)
        symbols2, cache_hit2 = builder2.build(file_path, content)
        assert cache_hit2 is True
@@ -791,12 +791,12 @@ def clear_cache(
    def test_cache_persistence():
        file_path = Path("test.py")
        content = "def test(): pass"
-       
+
        # Primera ejecución
        builder1 = SkeletonMapBuilder(use_global_cache=True, auto_save=True)
        symbols1, cache_hit1 = builder1.build(file_path, content)
        assert cache_hit1 is False
-       
+
        # Simular nueva ejecución (nuevo builder)
        builder2 = SkeletonMapBuilder(use_global_cache=True, auto_save=True)
        symbols2, cache_hit2 = builder2.build(file_path, content)

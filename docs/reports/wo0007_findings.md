@@ -102,10 +102,10 @@ uv run pytest -xvs tests/integration/test_repro_clean_sync_then_search.py
 ```
 1. trifecta create --segment <path>
    → Creates _ctx/prime_*.md, agent_*.md, session_*.md
-   
+
 2. trifecta ctx sync --segment <path>
    → Generates _ctx/context_pack.json from docs
-   
+
 3. trifecta ctx search --segment <path> --query "<term>"
    → Reads pack, returns results
 ```

@@ -94,8 +94,8 @@ DEFAULT_TTL = 180  # seconds
 **Configuración via Env**:
 ```python
 parser.add_argument(
-    "--ttl", 
-    type=int, 
+    "--ttl",
+    type=int,
     default=int(os.environ.get("LSP_DAEMON_TTL_SEC", DEFAULT_TTL))
 )
 ```
@@ -203,7 +203,7 @@ elif request_count > 100:
 # En daemon:
 def _process_request(self, req: Dict) -> Dict:
     method = req.get("method")
-    
+
     if method == "ping":
         self.last_activity = time.time()  # ← Renovar TTL
         return {
@@ -217,23 +217,23 @@ def _process_request(self, req: Dict) -> Dict:
 def test_ping_renews_ttl():
     daemon = LSPDaemonServer(root, ttl_sec=10)
     daemon.start()
-    
+
     time.sleep(5)
-    
+
     # Get TTL before ping
     stats1 = daemon.send({"method": "stats"})
     ttl1 = stats1["data"]["ttl_remaining"]
-    
+
     # Wait more
     time.sleep(3)
-    
+
     # Ping to renew
     daemon.send({"method": "ping"})
-    
+
     # Get TTL after ping
     stats2 = daemon.send({"method": "stats"})
     ttl2 = stats2["data"]["ttl_remaining"]
-    
+
     # TTL should be renewed (close to original)
     assert ttl2 > ttl1  # Success!
 ```
@@ -263,7 +263,7 @@ def _process_request(self, req: Dict) -> Dict:
         """Renew TTL and return remaining time."""
         self.last_activity = time.time()
         ttl_remaining = self.ttl - (time.time() - self.last_activity)
-        
+
         if self.telemetry:
             self.telemetry.event(
                 "lsp.ping",
@@ -271,7 +271,7 @@ def _process_request(self, req: Dict) -> Dict:
                 {"ttl_remaining": round(ttl_remaining, 2)},
                 1
             )
-        
+
         return {
             "status": "ok",
             "ttl_remaining": round(ttl_remaining, 2),
@@ -311,11 +311,11 @@ def daemon_ping(
     """Ping daemon to renew TTL."""
     root = Path(segment).resolve()
     client = LSPDaemonClient(root)
-    
+
     if not client._try_connect():
         typer.echo("❌ Daemon not running", err=True)
         raise typer.Exit(1)
-    
+
     def do_ping():
         resp = client.send({"method": "ping"})
         if resp.get("status") == "ok":
@@ -324,7 +324,7 @@ def daemon_ping(
             typer.echo(f"✓ Daemon pinged. TTL: {ttl:.1f}s (renewed at {renewed:.0f})")
         else:
             typer.echo(f"✗ Ping failed: {resp.get('message')}", err=True)
-    
+
     if loop > 0:
         typer.echo(f"Keep-alive loop: pinging every {loop}s (Ctrl+C to stop)")
         try:
@@ -344,11 +344,11 @@ def daemon_status(
     """Get daemon status."""
     root = Path(segment).resolve()
     client = LSPDaemonClient(root)
-    
+
     if not client._try_connect():
         typer.echo("❌ Daemon not running")
         raise typer.Exit(1)
-    
+
     resp = client.send({"method": "status"})
     if resp.get("status") == "ok":
         data = resp["data"]
@@ -466,32 +466,32 @@ trifecta daemon shutdown --segment .
 def test_ping_renews_ttl(clean_daemon_env):
     """Verify ping renews daemon TTL."""
     root = clean_daemon_env
-    
+
     # Start daemon with short TTL
     cmd = [sys.executable, "-m", "src.infrastructure.lsp_daemon", "start", "--root", str(root), "--ttl", "10"]
     subprocess.Popen(cmd, start_new_session=True)
-    
+
     # Wait for startup
     seg_id = compute_segment_id(root)
     pid_file = get_daemon_pid_path(seg_id)
     assert wait_for_file(pid_file, timeout=5.0)
-    
+
     # Wait 5s (half TTL)
     time.sleep(5)
-    
+
     # Ping to renew
     client = LSPDaemonClient(root)
     resp1 = client.send({"method": "ping"})
     assert resp1["status"] == "ok"
     ttl1 = resp1["ttl_remaining"]
     assert ttl1 > 8  # Should be close to 10s (renewed)
-    
+
     # Wait 3s more (would be 8s without ping)
     time.sleep(3)
-    
+
     # Check daemon still alive
     assert pid_file.exists()
-    
+
     # Get TTL again
     resp2 = client.send({"method": "ping"})
     ttl2 = resp2["ttl_remaining"]
@@ -504,21 +504,21 @@ def test_ping_renews_ttl(clean_daemon_env):
 def test_daemon_with_infinite_ttl(clean_daemon_env):
     """Verify daemon with TTL=0 never shuts down."""
     root = clean_daemon_env
-    
+
     # Start daemon with TTL=0
     cmd = [sys.executable, "-m", "src.infrastructure.lsp_daemon", "start", "--root", str(root), "--ttl", "0"]
     subprocess.Popen(cmd, start_new_session=True)
-    
+
     seg_id = compute_segment_id(root)
     pid_file = get_daemon_pid_path(seg_id)
     assert wait_for_file(pid_file, timeout=5.0)
-    
+
     # Wait 5 seconds (would shutdown with TTL < 5)
     time.sleep(5)
-    
+
     # Daemon should still be alive
     assert pid_file.exists()
-    
+
     client = LSPDaemonClient(root)
     resp = client.send({"method": "status"})
     assert resp["status"] == "ok"
@@ -530,22 +530,22 @@ def test_daemon_with_infinite_ttl(clean_daemon_env):
 def test_daemon_ping_cli(clean_daemon_env):
     """Verify daemon ping CLI command works."""
     root = clean_daemon_env
-    
+
     # Start daemon
     LSPDaemonClient(root).connect_or_spawn()
-    
+
     # Wait for startup
     seg_id = compute_segment_id(root)
     pid_file = get_daemon_pid_path(seg_id)
     assert wait_for_file(pid_file, timeout=5.0)
-    
+
     # Run ping CLI
     result = subprocess.run(
         [sys.executable, "-m", "src.infrastructure.cli", "daemon", "ping", "--segment", str(root)],
         capture_output=True,
         text=True,
     )
-    
+
     assert result.returncode == 0
     assert "✓ Daemon pinged" in result.stdout
     assert "TTL:" in result.stdout

@@ -82,7 +82,7 @@ notes: |
   **Fixture contents**:
   - AGENTS.md (minimal stub: "# AGENTS")
   - _ctx/prime_minimal.md (synthetic: "# Prime context")
-  - _ctx/agent_minimal.md (synthetic: "# Agent memory")  
+  - _ctx/agent_minimal.md (synthetic: "# Agent memory")
   - _ctx/session_minimal.md (synthetic: "# Session log")
   - _ctx/context_pack.json (pre-generated via ctx sync)
 

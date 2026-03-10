@@ -60,7 +60,7 @@ def _extract_skeleton(self, file_path: Path) -> None:
     try:
         content = file_path.read_text()
         symbols = self.ast_builder.build(file_path, content)  # ← Puede ser cache hit o miss
-        
+
         # Emit telemetry
         self.ast_tel.track_parse(file_path, content, symbols, cache_hit=False)  # ← SIEMPRE False!
 ```

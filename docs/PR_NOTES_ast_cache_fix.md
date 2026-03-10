@@ -18,7 +18,7 @@ graph LR
     C --> D{No<br/>AttributeError?}
     D -->|Yes| E[✅ PASS]
     D -->|No| F[❌ FAIL]
-    
+
     style E fill:#9f9,stroke:#333
     style F fill:#f99,stroke:#333
 ```

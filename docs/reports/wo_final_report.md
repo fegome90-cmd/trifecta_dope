@@ -231,7 +231,7 @@ ab67c70 fix(schema): sync stop_reason enum (domain/docs/impl)
 - First zero-hit intervention implemented and tested
 - Baseline established for future improvements
 
-**Impact**: 
+**Impact**:
 - Zero drift tolerance with automated detection
 - 35% estimated reduction in zero-hit searches
 - Full observability for data-driven improvements

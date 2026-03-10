@@ -56,7 +56,7 @@ class SQLiteCache:
         self.lock_path = db_path.with_suffix('.lock')
         self.lock_timeout = lock_timeout
         # ...
-        
+
     def _with_lock(self, operation: str, func):
         """Execute function with file lock acquired."""
         try:
@@ -68,7 +68,7 @@ class SQLiteCache:
                 f"Could not acquire lock for {operation} after {self.lock_timeout}s. "
                 f"Another process may be using the cache."
             )
-    
+
     def get(self, key: str) -> Optional[Any]:
         """Get with lock."""
         def _get():
@@ -91,13 +91,13 @@ class SQLiteCache:
 ```python
 class SQLiteCache:
     def __init__(
-        self, 
-        db_path: Path, 
+        self,
+        db_path: Path,
         telemetry: Optional["Telemetry"] = None,  # NEW
         ...
     ):
         self.telemetry = telemetry
-        
+
     def _with_lock(self, operation: str, func):
         try:
             with FileLock(...):
@@ -120,7 +120,7 @@ def get_ast_cache(..., telemetry: ...):
         cache = SQLiteCache(db_path=db_path, telemetry=telemetry, ...)
     else:
         cache = InMemoryLRUCache(...)
-    
+
     # Wrap with telemetry (but SQLiteCache already has it for lock events)
     if telemetry is not None:
         return TelemetryAstCache(cache, telemetry, segment_id)
@@ -149,18 +149,18 @@ def worker(db_path, worker_id, iterations):
 def test_concurrent_writes_no_corruption(tmp_path):
     """Verify concurrent writes don't corrupt SQLite DB."""
     db_path = tmp_path / "test.db"
-    
+
     # Spawn 2 workers
     workers = [
         multiprocessing.Process(target=worker, args=(db_path, 0, 10)),
         multiprocessing.Process(target=worker, args=(db_path, 1, 10)),
     ]
-    
+
     for w in workers:
         w.start()
     for w in workers:
         w.join()
-    
+
     # Verify DB is not corrupted
     cache = SQLiteCache(db_path)
     stats = cache.stats()
@@ -172,12 +172,12 @@ def test_concurrent_writes_no_corruption(tmp_path):
 def test_lock_timeout_raises_error(tmp_path):
     """Verify lock timeout raises clear error."""
     db_path = tmp_path / "test.db"
-    
+
     # Hold lock manually
     lock_path = db_path.with_suffix('.lock')
     lock = FileLock(str(lock_path), timeout=0.1)
     lock.acquire()
-    
+
     try:
         # Try to use cache (should timeout)
         cache = SQLiteCache(db_path, lock_timeout=0.5)

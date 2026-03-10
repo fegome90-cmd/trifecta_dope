@@ -157,7 +157,7 @@ def _make_cache_key(self, file_rel: str, content: str) -> str:
 - [`pr2_context_searcher.py:184`](src/application/pr2_context_searcher.py:184): `self.ast_tel.track_parse(..., cache_hit=False)` SIEMPRE pasa `False`
 - [`SkeletonMapBuilder.build()`](src/application/ast_parser.py:28): NO retorna información sobre si fue cache hit o miss
 
-**Impacto**: 
+**Impacto**:
 - La telemetría SIEMPRE reporta `cache_hit=False`
 - Los contadores `ast_cache_hit_count` y `ast_cache_miss_count` son incorrectos
 - La tasa de cache hits reportada (42.5%) es **falsa**
@@ -186,7 +186,7 @@ def _make_cache_key(self, file_rel: str, content: str) -> str:
 
 **Descripción**: El cache crece sin límite cuando se escanean repos completos, lo cual es una bomba de RAM en CI o daemons.
 
-**Impacto**: 
+**Impacto**:
 - Uso de memoria ilimitado
 - Posibles OOM (Out of Memory) en escenarios de producción
 - Degradación de rendimiento con el tiempo

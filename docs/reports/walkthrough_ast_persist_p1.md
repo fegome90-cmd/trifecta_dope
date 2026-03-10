@@ -18,7 +18,7 @@
   cd /tmp/tf_p1_verify_{timestamp} && uv sync --frozen && uv pip install pytest
   uv run pytest -q tests/integration/test_ast_cache_persist_cross_run_cli.py
   ```
-- **Logs**: 
+- **Logs**:
   - `_ctx/logs/p1_verify_ast_cache_cross_run.log`
   - `/tmp/tf_p1_verify_pytest_v2.log`
 
@@ -28,7 +28,7 @@
 
 ### Gate 1: Main Repository Test
 
-**Command**: 
+**Command**:
 ```bash
 uv run pytest -q tests/integration/test_ast_cache_persist_cross_run_cli.py
 ```
@@ -123,7 +123,7 @@ assert status2 == "hit"  # ✅ Cache reused
 safe_id = segment_id.replace("/", "_").replace("\\", "_").replace(":", "_")
 if safe_id == ".":
     safe_id = str(Path.cwd()).replace("/", "_").replace("\\", "_").replace(":", "_")
-    
+
 db_path = cache_dir / f"ast_cache_{safe_id}.db"
 ```
 

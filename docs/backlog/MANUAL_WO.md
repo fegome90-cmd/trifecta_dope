@@ -129,7 +129,7 @@ Ubicados en `_ctx/handoff/WO-XXXX/`:
 ## 4.1. Flujo Real de Cierre (Finish) — Secuencia Obligatoria
 
 ```
-[Worktree] 
+[Worktree]
    ↓
 ctx_wo_finish.py
    ↓

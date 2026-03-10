@@ -50,14 +50,14 @@ Long-lived daemon (TTL=180s) → UNIX socket IPC → Zero cold start for subsequ
 1. [lsp_daemon.py](../../src/infrastructure/lsp_daemon.py) (283 líneas)
    - `LSPDaemonServer` (línea 24): Servidor con socket UNIX + locking
    - `LSPDaemonClient` (línea 186): Cliente con spawn on-demand
-   
+
 2. [lsp_client.py](../../src/infrastructure/lsp_client.py) (372 líneas)
    - `LSPClient` (línea 19): Cliente LSP con state machine
    - `LSPState` enum: COLD, WARMING, READY, FAILED, CLOSED
-   
+
 3. [lsp_manager.py](../../src/application/lsp_manager.py) (249 líneas)
    - `LSPManager` (línea 53): Pyright headless manager
-   
+
 4. [cli_ast.py](../../src/infrastructure/cli_ast.py) (117 líneas)
    - `symbols` command: M1 PRODUCTION (AST extraction)
    - `hover` command: WIP stub (línea ~60)
@@ -144,17 +144,17 @@ Long-lived daemon (TTL=180s) → UNIX socket IPC → Zero cold start for subsequ
 
 [2] CLI (cli_ast.py) llama:
     LSPDaemonClient(root).connect_or_spawn()
-    
+
 [3] Client intenta conectar:
     → socket.connect(f"/tmp/lsp-{segment_id}.sock")
-    
+
 [4a] Si socket existe:
      → Connected! Skip spawn
-     
+
 [4b] Si no existe:
      → subprocess.Popen([sys.executable, "-m", "src.infrastructure.lsp_daemon", "start", "--root", root])
      → Wait for socket (polling en test, no en producción)
-     
+
 [5] Client envía request:
     {
       "method": "request",
@@ -163,15 +163,15 @@ Long-lived daemon (TTL=180s) → UNIX socket IPC → Zero cold start for subsequ
         "params": {"textDocument": {"uri": "file:///main.py"}, "position": {"line": 9, "character": 4}}
       }
     }
-    
+
 [6] Daemon procesa:
     → _process_request() → lsp_client.request("textDocument/hover", params)
     → LSPClient envia JSON-RPC a pyright-langserver
     → Pyright responde con {"contents": {...}}
-    
+
 [7] Daemon responde al cliente:
     {"status": "ok", "data": {"contents": {"kind": "markdown", "value": "..."}}}
-    
+
 [8] CLI formatea y muestra:
     Type: Optional[str]
     From: my_module.py:15
@@ -238,18 +238,18 @@ FAILED (spawn error) / CLOSED (cleanup)
 def _run_loop(self):
     # 1. Send initialize
     self._send_rpc({"id": 1, "method": "initialize", "params": {...}})
-    
+
     # 2. Read responses until 'result' found
     while not self.stopping.is_set():
         msg = self._read_rpc()
         if msg is None:
             break  # EOF
-        
+
         if "result" in msg:
             self._transition(LSPState.READY)  # ← CRITICAL: Immediate READY
             self._send_rpc({"method": "initialized", "params": {}})
             break
-    
+
     # 3. Continue reading (diagnostics, etc.)
     while not self.stopping.is_set():
         msg = self._read_rpc()
@@ -275,7 +275,7 @@ assert client.state == LSPState.READY, (
 def connect_or_spawn(self) -> bool:
     if self._try_connect():  # 1. Try existing socket
         return True
-    
+
     return self._spawn_daemon()  # 2. Spawn if not found
 ```
 
@@ -364,19 +364,19 @@ def stop(self) -> None:
     """
     with self._stop_lock:
         self.stopping.set()  # 1. Signal
-        
+
         # 2. Terminate
         if self.process:
             self.process.terminate()
             self.process.wait(timeout=0.5)
-        
+
         # 3. Join thread
         if self._thread and self._thread.is_alive():
             self._thread.join(timeout=1.0)
-            
+
             if self._thread.is_alive():
                 return  # ← CRITICAL: Don't close streams if thread stuck
-        
+
         # 4. Close streams (only if thread exited)
         if self.process:
             self.process.stdin.close()
@@ -390,7 +390,7 @@ def test_strict_stop_order():
     client.start()
     # ... wait for READY
     client.stop()
-    
+
     # No exceptions raised = contract satisfied
     assert client.state == LSPState.CLOSED
 ```
@@ -416,15 +416,15 @@ def symbols(
     try:
         from src.application.symbol_query import SymbolQuery
         from src.domain.skeleton import SkeletonMapBuilder
-        
+
         # 1. Parse AST with tree-sitter
         builder = SkeletonMapBuilder()
         skeleton = builder.build_file_skeleton(Path(file))
-        
+
         # 2. Extract symbols
         query = SymbolQuery(skeleton)
         symbols = query.find_all_symbols()
-        
+
         # 3. Output JSON
         output = {
             "file": file,
@@ -439,7 +439,7 @@ def symbols(
             ],
         }
         print(json.dumps(output, indent=2))
-        
+
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
         raise typer.Exit(1)
@@ -465,7 +465,7 @@ def hover(
     #   2. client.connect_or_spawn()
     #   3. resp = client.request("textDocument/hover", params)
     #   4. Format and print hover contents
-    
+
     typer.echo("❌ hover command is WIP (stub)")
     raise typer.Exit(1)
 ```
@@ -539,11 +539,11 @@ except BlockingIOError:
 def test_daemon_singleton_lock(clean_daemon_env):
     client1 = LSPDaemonClient(root)
     client1.connect_or_spawn()
-    
+
     # Try to spawn second daemon → Should fail (lock held)
     cmd = [sys.executable, "-m", "src.infrastructure.lsp_daemon", "start", "--root", str(root)]
     result = subprocess.run(cmd, capture_output=True, timeout=2)
-    
+
     # Expecting error message about lock
     assert "lock held" in result.stderr.decode("utf-8").lower()
 ```
@@ -565,7 +565,7 @@ while not self.stopping.is_set():
     msg = self._read_rpc()
     if msg is None:
         break
-    
+
     if "result" in msg:  # ← initialize response
         self._transition(LSPState.READY)  # ← Immediate!
         self._send_rpc({"method": "initialized", "params": {}})
@@ -617,7 +617,7 @@ if self.telemetry:
     }
     if result and "contents" in result:
         x_fields["target_file"] = "resolved_content"
-    
+
     self.telemetry.event(
         "lsp.request",
         {"method": lsp_method},
@@ -728,15 +728,15 @@ Tests usan `wait_for_file()` polling, pero producción no.
 def connect_or_spawn(self, retries: int = 5, delay: float = 0.1) -> bool:
     if self._try_connect():
         return True
-    
+
     self._spawn_daemon()
-    
+
     # Retry with exponential backoff
     for i in range(retries):
         time.sleep(delay * (2 ** i))
         if self._try_connect():
             return True
-    
+
     return False
 ```
 
@@ -810,7 +810,7 @@ def get_symbols(self, path: Path) -> List[Symbol]:
         cached_mtime, skeleton = self._symbol_cache[path]
         if cached_mtime == stat.st_mtime:
             return skeleton.symbols  # ← Cache hit!
-    
+
     # Cache miss: rebuild
     builder = SkeletonMapBuilder()
     skeleton = builder.build_file_skeleton(path)
@@ -837,10 +837,10 @@ Combinar LSP hover (type info) con AST structure (clase parent, docstring local)
 def enrich_hover(lsp_response: Dict, ast_skeleton: Skeleton) -> Dict:
     # 1. Parse LSP hover
     type_info = lsp_response["contents"]["value"]
-    
+
     # 2. Find symbol in AST
     symbol = skeleton.find_symbol_at_line(line)
-    
+
     # 3. Enrich
     enriched = {
         "type": type_info,
@@ -937,7 +937,7 @@ La infraestructura LSP/daemon de Trifecta está **bien diseñada, robustamente t
 1. **Implementar `ast hover`** (G1) → 2-3 horas
    - Código: 20-30 líneas en cli_ast.py
    - Test: Reutilizar test_lsp_daemon.py fixtures
-   
+
 2. **Agregar `ast status` health check** (G4) → 1 hora
    - Mostrar daemon PID, LSP state, TTL remaining
 

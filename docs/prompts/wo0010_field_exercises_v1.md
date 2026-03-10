@@ -22,7 +22,7 @@ queries:
     query: "How does the LSP daemon handle concurrent requests?"
     expected_min_hits: 2  # Minimum hits to consider non-zero
     rationale: "Tests technical documentation discovery"
-  
+
   # ... (add 19 more varied queries)
 ```
 

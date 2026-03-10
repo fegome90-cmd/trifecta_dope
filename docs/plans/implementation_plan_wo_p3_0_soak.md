@@ -19,7 +19,7 @@ Validate: hit/miss progression available, lock_wait presence, and DB integrity.
 
 ### TASK 2: Harness Mínimo (`eval/scripts/run_ast_cache_soak.sh`)
 - **Goal**: Parametric bash script (OPS, WORKERS).
-- **Logic**: 
+- **Logic**:
   - Clean `_ctx/telemetry/events.jsonl` (or isolate run).
   - Clean DB (deterministic path).
   - Run `trifecta ast symbols` in parallel.
@@ -28,7 +28,7 @@ Validate: hit/miss progression available, lock_wait presence, and DB integrity.
 
 ### TASK 3: Metrics Extractor (`eval/scripts/extract_ast_soak_metrics.py`)
 - **Goal**: Parse JSONL telemetry and output `_ctx/metrics/ast_soak_run.json`.
-- **Metrics**: 
+- **Metrics**:
   - Counts: hit/miss/write, lock_wait, lock_timeout.
   - Latency: p50, p95 (informational only).
 - **Gate**: Valid JSON output from real log.

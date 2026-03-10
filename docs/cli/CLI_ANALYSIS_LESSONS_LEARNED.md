@@ -156,7 +156,7 @@ elif isinstance(e, FileNotFoundError) and "prime" in str(e):
     maybe_emit_deprecated("fallback_prime_missing_string_match")
 ```
 
-**Lección**: 
+**Lección**:
 - Prefer type-based routing (maintainable)
 - Deprecate string-based patterns (brittle)
 - Emit actionable error cards (better UX)

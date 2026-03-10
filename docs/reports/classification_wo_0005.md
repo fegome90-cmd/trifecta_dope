@@ -62,7 +62,7 @@ AssertionError: No IDs found for query 'ContextService'
 
 **File**: `tests/acceptance/test_pd_evidence_stop_e2e.py`  
 **Lines modified**: 240, 259  
-**Change**: 
+**Change**:
 ```diff
 - ids = _search_for_ids(real_segment, "ContextService", limit=3)
 + ids = _search_for_ids(real_segment, "context", limit=3)

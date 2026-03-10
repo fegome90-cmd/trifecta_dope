@@ -49,7 +49,7 @@ grep -n "ContextService" tests/acceptance/test_pd_evidence_stop_e2e.py
 def test_e2e_evidence_stop_real_cli(real_segment: Path):
     """E2E test with real CLI and telemetry validation."""
     ids = _search_for_ids(real_segment, "context", limit=3)  # <-- Uses "context"
-    
+
     assert len(ids) >= 2, "Need at least 2 IDs for test"
 ```
 

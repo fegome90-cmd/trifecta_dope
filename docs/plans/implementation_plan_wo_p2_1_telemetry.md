@@ -28,12 +28,12 @@ class TelemetryAstCache:
         self._tel = telemetry
         self._segment_id = segment_id
         self._backend = inner.__class__.__name__  # "SQLiteCache" or "InMemoryLRUCache"
-    
+
     def get(self, key: str) -> Optional[Any]:
         t0 = time.perf_counter_ns()
         value = self._inner.get(key)
         timing_ms = (time.perf_counter_ns() - t0) // 1_000_000
-        
+
         status = "hit" if value is not None else "miss"
         self._tel.event(
             cmd=f"ast.cache.{status}",
@@ -96,14 +96,14 @@ def get_ast_cache(
     max_bytes: int = 100 * 1024 * 1024,
 ) -> AstCache:
     # ... existing logic ...
-    
+
     cache = SQLiteCache(...) if should_persist else InMemoryLRUCache(...)
-    
+
     # Wrap if telemetry available
     if telemetry:
         from src.infrastructure.telemetry_cache import TelemetryAstCache
         return TelemetryAstCache(cache, telemetry, segment_id)
-    
+
     return cache
 ```
 
@@ -118,7 +118,7 @@ def get_ast_cache(
 def symbols(...):
     telemetry = _get_telemetry(telemetry_level)
     cache = get_ast_cache(
-        persist=persist_cache, 
+        persist=persist_cache,
         segment_id=str(root),
         telemetry=telemetry  # NEW
     )
@@ -148,21 +148,21 @@ class PR2ContextSearcher:
 def test_ast_cache_telemetry_events(fresh_cli_workspace):
     """Verify cache operations emit telemetry events."""
     cwd = fresh_cli_workspace
-    
+
     # Run 1: Cold (expect miss)
     res1 = run_ast_symbols(cwd, "sym://python/mod/target", telemetry="lite")
-    
+
     # Check events.jsonl
     events_file = cwd / "_ctx/telemetry/events.jsonl"
     assert events_file.exists()
-    
+
     events = [json.loads(line) for line in events_file.read_text().splitlines()]
     miss_events = [e for e in events if e.get("cmd") == "ast.cache.miss"]
     assert len(miss_events) > 0
-    
+
     # Run 2: Warm (expect hit)
     res2 = run_ast_symbols(cwd, "sym://python/mod/target", telemetry="lite")
-    
+
     events = [json.loads(line) for line in events_file.read_text().splitlines()]
     hit_events = [e for e in events if e.get("cmd") == "ast.cache.hit"]
     assert len(hit_events) > 0
@@ -173,7 +173,7 @@ def test_ast_cache_telemetry_events(fresh_cli_workspace):
 def test_ast_cache_event_schema(fresh_cli_workspace):
     """Verify telemetry events have correct schema."""
     # ... run command ...
-    
+
     hit_event = hit_events[0]
     assert "args" in hit_event
     assert "cache_key" in hit_event["args"]

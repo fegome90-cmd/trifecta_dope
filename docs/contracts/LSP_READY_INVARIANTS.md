@@ -49,7 +49,7 @@ INVARIANT_HEALTH_CHECK = "health_check_responds"
 ```python
 def _run_loop(self) -> None:
     # ... handshake ...
-    
+
     if not self._check_invariants():
         self._log_event(
             "lsp.state_change",
@@ -61,7 +61,7 @@ def _run_loop(self) -> None:
         )
         self._transition(LSPState.FAILED)
         return
-    
+
     self._transition(LSPState.READY)
 ```
 
@@ -72,7 +72,7 @@ def health_check(self, timeout_ms: int = 500) -> bool:
     """Verify LSP can respond within timeout."""
     if self.state != LSPState.READY:
         return False
-    
+
     result = self.request("$/health", {}, timeout=timeout_ms / 1000.0)
     return result is not None
 ```

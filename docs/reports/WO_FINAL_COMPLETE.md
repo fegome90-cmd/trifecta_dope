@@ -40,14 +40,14 @@ ab67c70 fix(schema): sync stop_reason enum (domain/docs/impl)
 ### A1-A2: stop_reason Enum Sync
 **Issue**: Documented 5 values, implementation had 4 ("error" not implemented)
 
-**Fix**: 
+**Fix**:
 - Removed "error" from schema documentation
 - Added `test_stop_reason_enum_parity` fail-closed test
 
 **Prevention**: Test fails if enum drifts again
 
 ### A3-A4: Context Pack Schema Alignment  
-**Issues**: 
+**Issues**:
 - 'chunking' field documented but not implemented
 - 'mtime_epoch' documented, actual field is 'mtime'
 
@@ -79,7 +79,7 @@ reason_code: empty|vague|no_alias|strict_filter|unknown  # Zero-hit classificati
 - `ctx_search_zero_hit_reason_{reason}_count`
 - `ctx_search_rejected_invalid_query_count` (B2)
 
-**Files**: 
+**Files**:
 - `src/application/search_get_usecases.py` - Instrumentation
 - `src/application/zero_hit_reports.py` - Report generation
 - `tests/unit/test_b0_telemetry_instrumentation.py` - 15 tests
@@ -140,7 +140,7 @@ multilingual:
 # Translate tokens before anchor detection
 for token in tokens:
     translated = multilingual_cfg.get(token, token)
-    
+
 # Translate full query for substring matching
 for spanish, english in multilingual_cfg.items():
     if spanish in query_lower:

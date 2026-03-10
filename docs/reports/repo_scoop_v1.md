@@ -112,7 +112,7 @@ ls -la _ctx/telemetry/events.jsonl
 **Evidence**:
 - **Core**: `src/domain/query_linter.py` (176 LOC), `src/domain/anchor_extractor.py` (93 LOC)
 - **Config**: `configs/anchors.yaml` (847 bytes), `configs/aliases.yaml` (1,296 bytes)
-- **Tests**: 
+- **Tests**:
   - `tests/unit/test_query_linter.py` — 6/6 passed
   - `tests/unit/test_anchor_extractor.py` — 4/4 passed
   - `tests/unit/test_search_usecase_linter.py` — exists
@@ -175,8 +175,8 @@ with sqlite3.connect(self.db_path) as conn:
 
 **Spawn Flow**:
 ```
-LSPManager.spawn_async() 
-  → LSPClient.start() 
+LSPManager.spawn_async()
+  → LSPClient.start()
   → subprocess: pyright-langserver / pylsp
   → Telemetry: lsp.spawn event
 ```
