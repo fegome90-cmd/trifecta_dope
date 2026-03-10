@@ -71,3 +71,6 @@ eval/results/
 .sidecar/
 .todos/
 .pi/
+
+# Runtime config (local)
+_ctx/trifecta_config.json
