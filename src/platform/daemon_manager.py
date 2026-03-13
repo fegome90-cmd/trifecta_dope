@@ -22,12 +22,17 @@ ALLOWED_BASES = [
 ]
 
 
-def _is_path_safe(path: Path) -> bool:
+def is_runtime_dir_allowed(path: Path, allowed_bases: Optional[list[Path]] = None) -> bool:
     try:
         resolved = path.resolve()
-        return any(str(resolved).startswith(str(base)) for base in ALLOWED_BASES)
+        bases = ALLOWED_BASES if allowed_bases is None else allowed_bases
+        return any(resolved.is_relative_to(base.resolve()) for base in bases)
     except Exception:
         return False
+
+
+def _is_path_safe(path: Path) -> bool:
+    return is_runtime_dir_allowed(path, ALLOWED_BASES)
 
 
 class DaemonManager:

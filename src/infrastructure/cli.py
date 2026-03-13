@@ -40,20 +40,18 @@ from src.application.use_cases import (
 )
 from src.application.status_use_case import StatusUseCase
 from src.application.doctor_use_case import DoctorUseCase
-from src.application.repo_use_case import RepoUseCase
+from src.application.repo_use_case import RepoEntry, RepoUseCase
+from src.application.index_use_case import IndexUseCase
+from src.application.query_use_case import QueryUseCase
+from src.application.daemon_use_case import DaemonUseCase
 from src.domain.models import TrifectaConfig
+from src.platform.daemon_manager import ALLOWED_BASES, is_runtime_dir_allowed
 
 from src.infrastructure.file_system import FileSystemAdapter
 from src.infrastructure.telemetry import Telemetry
 from src.infrastructure.templates import TemplateRenderer
 from src.application.obsidian_sync_use_case import create_sync_use_case
 from src.application.linear_sync_use_case import LinearSyncUseCase
-from src.application.status_use_case import StatusUseCase
-from src.application.doctor_use_case import DoctorUseCase
-from src.application.repo_use_case import RepoUseCase
-from src.application.index_use_case import IndexUseCase
-from src.application.query_use_case import QueryUseCase
-from src.application.daemon_use_case import DaemonUseCase
 from src.infrastructure.obsidian_config import ObsidianConfigManager
 
 
@@ -162,6 +160,12 @@ def _get_lint_enabled(no_lint_flag: bool) -> bool:
     if env_val in ("1", "true", "yes"):
         return True
     return False  # Conservative default: OFF until explicitly enabled
+
+
+def _is_runtime_dir_allowed(runtime_dir: Path, allowed_bases: list[Path]) -> bool:
+    """Validate runtime dir against resolved allowlisted bases."""
+    return is_runtime_dir_allowed(runtime_dir, allowed_bases)
+
 
 
 def _classify_north_star_precondition(errors: list[str]) -> str:
@@ -347,15 +351,23 @@ def doctor_cmd(
 # =============================================================================
 
 
-@repo_app.command("register")
-def repo_register(
-    path: str = typer.Argument(..., help="Repository path to register"),
-    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
-) -> None:
-    """Register a repository."""
-    use_case = RepoUseCase()
-    entry = use_case.register(path)
+def _register_repo_entry(path: str) -> RepoEntry:
+    return RepoUseCase().register(path)
 
+
+def _list_repo_entries() -> list[RepoEntry]:
+    return RepoUseCase().list_repos()
+
+
+def _get_repo_entry_or_exit(repo_id: str) -> RepoEntry:
+    entry = RepoUseCase().show(repo_id)
+    if entry is None:
+        typer.echo(f"Repository not found: {repo_id}", err=True)
+        raise typer.Exit(code=1)
+    return entry
+
+
+def _render_repo_register_output(entry: RepoEntry, json_output: bool) -> None:
     if json_output:
         output = {
             "repo_id": entry.repo_id,
@@ -370,12 +382,7 @@ def repo_register(
         typer.echo(f"  Path: {entry.path}")
 
 
-@repo_app.command("list")
-def repo_list(json_output: bool = typer.Option(False, "--json", help="Output as JSON")) -> None:
-    """List registered repositories."""
-    use_case = RepoUseCase()
-    repos = use_case.list_repos()
-
+def _render_repo_list_output(repos: list[RepoEntry], json_output: bool) -> None:
     if json_output:
         output = {"repos": [{"repo_id": r.repo_id, "path": r.path, "slug": r.slug} for r in repos]}
         typer.echo(json.dumps(output, indent=2))
@@ -388,19 +395,7 @@ def repo_list(json_output: bool = typer.Option(False, "--json", help="Output as 
                 typer.echo(f"  - {repo.slug}: {repo.repo_id}")
 
 
-@repo_app.command("show")
-def repo_show(
-    repo_id: str = typer.Argument(..., help="Repository ID to show"),
-    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
-) -> None:
-    """Show details of a registered repository."""
-    use_case = RepoUseCase()
-    entry = use_case.show(repo_id)
-
-    if entry is None:
-        typer.echo(f"Repository not found: {repo_id}", err=True)
-        raise typer.Exit(code=1)
-
+def _render_repo_show_output(entry: RepoEntry, json_output: bool) -> None:
     if json_output:
         output = {
             "repo_id": entry.repo_id,
@@ -414,6 +409,30 @@ def repo_show(
         typer.echo(f"  ID: {entry.repo_id}")
         typer.echo(f"  Path: {entry.path}")
         typer.echo(f"  Fingerprint: {entry.fingerprint}")
+
+
+@repo_app.command("register")
+def repo_register(
+    path: str = typer.Argument(..., help="Repository path to register"),
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+) -> None:
+    """Register a repository."""
+    _render_repo_register_output(_register_repo_entry(path), json_output)
+
+
+@repo_app.command("list")
+def repo_list(json_output: bool = typer.Option(False, "--json", help="Output as JSON")) -> None:
+    """List registered repositories."""
+    _render_repo_list_output(_list_repo_entries(), json_output)
+
+
+@repo_app.command("show")
+def repo_show(
+    repo_id: str = typer.Argument(..., help="Repository ID to show"),
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+) -> None:
+    """Show details of a registered repository."""
+    _render_repo_show_output(_get_repo_entry_or_exit(repo_id), json_output)
 
 
 # =============================================================================
@@ -2397,96 +2416,16 @@ def main() -> None:
 # =============================================================================
 
 
-@app.command("status")
-def status_cmd(
-    repo: str = typer.Option(..., "--repo", "-r", help="Repository path"),
-    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
-) -> None:
-    """Show status of a repository."""
-    use_case = StatusUseCase()
-    status = use_case.execute(repo)
-
+def _render_repo_register_alias_output(entry: RepoEntry, json_output: bool) -> None:
     if json_output:
-        output = {
-            "repo_id": status.segment_ref.id,
-            "path": str(status.segment_ref.root_abs),
-            "slug": status.segment_ref.slug,
-            "has_ctx_dir": status.has_ctx_dir,
-            "has_context_pack": status.has_context_pack,
-            "has_telemetry": status.has_telemetry,
-            "has_skill_md": status.has_skill_md,
-            "has_prime": status.has_prime,
-            "has_agent": status.has_agent,
-            "has_session": status.has_session,
-        }
+        output = {"repo_id": entry.repo_id, "path": entry.path}
         typer.echo(json.dumps(output, indent=2))
     else:
-        typer.echo(f"Status for {status.segment_ref.slug}")
-        typer.echo(f"  Path: {status.segment_ref.root_abs}")
-        typer.echo(f"  ID: {status.segment_ref.id}")
-        typer.echo(f"  _ctx/: {'✓' if status.has_ctx_dir else '✗'}")
-        typer.echo(f"  context_pack.json: {'✓' if status.has_context_pack else '✗'}")
-        typer.echo(f"  telemetry: {'✓' if status.has_telemetry else '✗'}")
-        typer.echo(f"  skill.md: {'✓' if status.has_skill_md else '✗'}")
-        typer.echo(f"  prime_*.md: {'✓' if status.has_prime else '✗'}")
-        typer.echo(f"  agent*.md: {'✓' if status.has_agent else '✗'}")
-        typer.echo(f"  session_*.md: {'✓' if status.has_session else '✗'}")
+        typer.echo(f"Registered: {entry.repo_id}")
 
 
-@app.command("doctor")
-def doctor_cmd(
-    repo: str = typer.Option(..., "--repo", "-r", help="Repository path"),
-    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
-) -> None:
-    """Diagnose issues in a repository."""
-    use_case = DoctorUseCase()
-    diagnosis = use_case.execute(repo)
 
-    if json_output:
-        output = {
-            "score": diagnosis.health_score,
-            "healthy": diagnosis.health_score >= 70,
-            "issues": diagnosis.issues,
-        }
-        typer.echo(json.dumps(output, indent=2))
-    else:
-        typer.echo(f"Doctor diagnosis for {diagnosis.segment_ref.slug}")
-        typer.echo(f"  Health score: {diagnosis.health_score}/100")
-        typer.echo(f"  Healthy: {'✓' if diagnosis.health_score >= 70 else '✗'}")
-        if diagnosis.issues:
-            typer.echo("  Issues:")
-            for issue in diagnosis.issues:
-                typer.echo(f"    - {issue}")
-
-
-@app.command("repo")
-def repo_cmd() -> None:
-    """Repository management commands."""
-    typer.echo("Use: repo register, repo list, repo show")
-
-
-@app.command("repo-register")
-def repo_register(
-    repo: str = typer.Argument(..., help="Repository path to register"),
-    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
-) -> None:
-    """Register a repository."""
-    use_case = RepoUseCase()
-    result = use_case.register(repo)
-
-    if json_output:
-        output = {"repo_id": result.repo_id, "path": result.path}
-        typer.echo(json.dumps(output, indent=2))
-    else:
-        typer.echo(f"Registered: {result.repo_id}")
-
-
-@app.command("repo-list")
-def repo_list(json_output: bool = typer.Option(False, "--json", help="Output as JSON")) -> None:
-    """List registered repositories."""
-    use_case = RepoUseCase()
-    repos = use_case.list_repos()
-
+def _render_repo_list_alias_output(repos: list[RepoEntry], json_output: bool) -> None:
     if json_output:
         output = [{"repo_id": r.repo_id, "path": r.path} for r in repos]
         typer.echo(json.dumps(output, indent=2))
@@ -2494,30 +2433,43 @@ def repo_list(json_output: bool = typer.Option(False, "--json", help="Output as 
         if not repos:
             typer.echo("No registered repositories")
         else:
-            for r in repos:
-                typer.echo(f"{r.repo_id}: {r.path}")
+            for repo in repos:
+                typer.echo(f"{repo.repo_id}: {repo.path}")
+
+
+
+def _render_repo_show_alias_output(entry: RepoEntry, json_output: bool) -> None:
+    if json_output:
+        output = {"repo_id": entry.repo_id, "path": entry.path, "slug": entry.slug}
+        typer.echo(json.dumps(output, indent=2))
+    else:
+        typer.echo(f"Repository: {entry.repo_id}")
+        typer.echo(f"  Path: {entry.path}")
+        typer.echo(f"  Slug: {entry.slug}")
+
+
+@app.command("repo-register")
+def repo_register_alias(
+    repo: str = typer.Argument(..., help="Repository path to register"),
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+) -> None:
+    """Register a repository."""
+    _render_repo_register_alias_output(_register_repo_entry(repo), json_output)
+
+
+@app.command("repo-list")
+def repo_list_alias(json_output: bool = typer.Option(False, "--json", help="Output as JSON")) -> None:
+    """List registered repositories."""
+    _render_repo_list_alias_output(_list_repo_entries(), json_output)
 
 
 @app.command("repo-show")
-def repo_show(
+def repo_show_alias(
     repo_id: str = typer.Argument(..., help="Repository ID"),
     json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
 ) -> None:
     """Show repository details."""
-    use_case = RepoUseCase()
-    repo = use_case.show(repo_id)
-
-    if repo is None:
-        typer.echo(f"Repository not found: {repo_id}", err=True)
-        raise typer.Exit(1)
-
-    if json_output:
-        output = {"repo_id": repo.repo_id, "path": repo.path, "slug": repo.slug}
-        typer.echo(json.dumps(output, indent=2))
-    else:
-        typer.echo(f"Repository: {repo.repo_id}")
-        typer.echo(f"  Path: {repo.path}")
-        typer.echo(f"  Slug: {repo.slug}")
+    _render_repo_show_alias_output(_get_repo_entry_or_exit(repo_id), json_output)
 
 
 @app.command("index")
@@ -2567,6 +2519,25 @@ def query_cmd(
             typer.echo(f"    {r.get('snippet')}")
 
 
+
+def _cleanup_daemon_runtime_artifacts(socket_path: Path, pid_path: Path) -> None:
+    for path in (socket_path, pid_path):
+        try:
+            path.unlink()
+        except FileNotFoundError:
+            pass
+
+
+
+def _close_daemon_server(server: object | None) -> None:
+    if server is None:
+        return
+    close_method = getattr(server, "close", None)
+    if callable(close_method):
+        close_method()
+
+
+
 daemon_app = typer.Typer(help="Daemon management commands")
 app.add_typer(daemon_app, name="daemon")
 
@@ -2604,7 +2575,7 @@ def daemon_stop(
         Path.home() / ".local" / "share" / "trifecta" / "repos" / ref.fingerprint / "runtime"
     )
     use_case = DaemonUseCase(runtime_dir)
-    result = use_case.stop()
+    use_case.stop()
 
     typer.echo("Daemon stopped")
 
@@ -2659,6 +2630,7 @@ def daemon_run() -> None:
     import os
     import signal
     import socket
+    import stat
     import sys
     import time
 
@@ -2667,10 +2639,8 @@ def daemon_run() -> None:
         typer.echo("Error: TRIFECTA_RUNTIME_DIR not set", err=True)
         raise typer.Exit(1)
 
-    from src.platform.daemon_manager import ALLOWED_BASES
-
     runtime_dir = Path(runtime_dir_env).resolve()
-    if not any(str(runtime_dir).startswith(str(base)) for base in ALLOWED_BASES):
+    if not _is_runtime_dir_allowed(runtime_dir, ALLOWED_BASES):
         typer.echo("Error: Invalid runtime directory", err=True)
         raise typer.Exit(1)
 
@@ -2678,25 +2648,27 @@ def daemon_run() -> None:
     pid_path = runtime_dir / "daemon" / "pid"
 
     socket_path.parent.mkdir(parents=True, exist_ok=True)
-    pid_path.write_text(str(os.getpid()))
-
-    if socket_path.exists():
-        socket_path.unlink()
-
     server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    server.bind(str(socket_path))
 
-    import stat
-
-    os.chmod(socket_path, stat.S_IRUSR | stat.S_IWUSR)
-
-    server.listen(1)
-    server.settimeout(1.0)
+    try:
+        if socket_path.exists():
+            socket_path.unlink()
+        server.bind(str(socket_path))
+        os.chmod(socket_path, stat.S_IRUSR | stat.S_IWUSR)
+        server.listen(1)
+        server.settimeout(1.0)
+        pid_path.write_text(str(os.getpid()))
+    except Exception as exc:
+        _close_daemon_server(server)
+        _cleanup_daemon_runtime_artifacts(socket_path, pid_path)
+        typer.echo(f"Error: Failed to initialize daemon socket: {exc}", err=True)
+        raise typer.Exit(1)
 
     running = True
 
-    def shutdown_signal(signum, frame):
+    def shutdown_signal(signum: int, frame: object | None) -> None:
         nonlocal running
+        del signum, frame
         running = False
 
     signal.signal(signal.SIGTERM, shutdown_signal)
@@ -2704,19 +2676,19 @@ def daemon_run() -> None:
 
     start_time = time.time()
 
-    while running:
-        try:
+    try:
+        while running:
             try:
                 conn, _ = server.accept()
 
                 conn.settimeout(5.0)
                 try:
-                    data = conn.recv(256)
-                    if not data:
+                    raw_data = conn.recv(256)
+                    if not raw_data:
                         conn.close()
                         continue
 
-                    data = data.decode("utf-8", errors="replace").strip()
+                    data = raw_data.decode("utf-8", errors="replace").strip()
 
                     if len(data) > 128:
                         conn.sendall(b"ERROR: Command too long\n")
@@ -2726,16 +2698,14 @@ def daemon_run() -> None:
                     conn.sendall(b"ERROR: Timeout\n")
                     conn.close()
                     continue
-                except Exception as e:
-                    conn.sendall(f"ERROR: {str(e)}\n".encode())
+                except Exception as exc:
+                    conn.sendall(f"ERROR: {str(exc)}\n".encode())
                     conn.close()
                     continue
 
                 if data == "PING":
                     conn.sendall(b"PONG\n")
                 elif data == "HEALTH":
-                    import json
-
                     status = {
                         "status": "ok",
                         "pid": os.getpid(),
@@ -2747,22 +2717,19 @@ def daemon_run() -> None:
                 elif data == "SHUTDOWN":
                     conn.sendall(b"OK\n")
                     running = False
+                else:
+                    conn.sendall(b"ERROR: Unknown command\n")
 
                 conn.close()
             except socket.timeout:
                 continue
-        except Exception as e:
-            sys.stderr.write(f"Daemon error: {e}\n")
-            break
-
-    server.close()
-    if socket_path.exists():
-        socket_path.unlink()
-    if pid_path.exists():
-        pid_path.unlink()
+            except Exception as exc:
+                sys.stderr.write(f"Daemon error: {exc}\n")
+                break
+    finally:
+        _close_daemon_server(server)
+        _cleanup_daemon_runtime_artifacts(socket_path, pid_path)
 
 
 if __name__ == "__main__":
     main()
-# Audit Trigger
-# Audit Trigger Code
