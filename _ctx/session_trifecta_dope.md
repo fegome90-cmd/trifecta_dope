@@ -1507,3 +1507,8 @@ Created WO-0055 (P1) to fix hook bypass system issues discovered during WO-0050 
 - **Commands**: read, write, edit
 - **Pack SHA**: (unchanged)
 
+## 2026-03-13 17:49 UTC
+- **Summary**: Implemented Graph MVP: new graph CLI namespace, SQLite store keyed by SegmentRef V1 id, AST top-level indexing for src/**/*.py, conservative direct-call edges, search/status/callers/callees, focused tests and manual CLI verification
+- **Files**: src/domain/graph_models.py, src/infrastructure/graph_store.py, src/application/graph_indexer.py, src/application/graph_service.py, src/infrastructure/cli_graph.py, src/infrastructure/cli.py, tests/integration/test_graph_store_schema.py, tests/unit/test_graph_indexer.py, tests/unit/test_graph_service.py, tests/integration/cli/test_graph_cli.py, docs/plans/2026-03-13-graph-mvp-implementation-plan.md
+- **Commands**: make install, uv run pytest, uv run ruff check, uv run trifecta graph
+- **Pack SHA**: `fac5ddcf14590d10`

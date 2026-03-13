@@ -14,6 +14,7 @@ from click.exceptions import UsageError
 
 # AST/LSP Integration (Phase 2a/2b)
 from src.infrastructure.cli_ast import ast_app
+from src.infrastructure.cli_graph import graph_app
 
 # Path Guardrails
 from src.infrastructure.path_utils import (
@@ -81,6 +82,7 @@ app = typer.Typer(
 )
 
 app.add_typer(ast_app, name="ast")
+app.add_typer(graph_app, name="graph")
 
 ctx_app = typer.Typer(
     help="Manage Trifecta Context Packs (ctx.search, ctx.get).",
