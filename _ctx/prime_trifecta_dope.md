@@ -1,7 +1,7 @@
 ---
 segment: trifecta_dope
 profile: load_only
-last_updated: 2026-02-16
+last_updated: 2026-03-13
 ---
 
 # Prime Trifecta_Dope - Lista de Lectura
@@ -100,6 +100,7 @@ last_updated: 2026-02-16
 2. `trifecta_dope/docs/CONTRACTS.md`
 3. `trifecta_dope/CLAUDE.md`
 4. `trifecta_dope/docs/backlog/README.md`
+5. `trifecta_dope/docs/SKILL_HUB_MANUAL.md`
 
 ## [MAP] Architecture Diagram
 
@@ -201,8 +202,8 @@ flowchart TD
 
 ## [NOTE] Notas
 
-- **Fecha ultima actualizacion**: 2026-02-16
+- **Fecha ultima actualizacion**: 2026-03-13
 - **Mantenedor**: Trifecta Core Team
 - **Ver tambien**: [skill.md](../skill.md) | [agent.md](./agent.md) | [session.md](./session_trifecta_dope.md)
 - **Schema Version**: v2.0 (Post-AST-Cache-Persist)
-- **Total Paths**: 30 HIGH + 15 MED + 4 LOW
+- **Total Paths**: 30 HIGH + 15 MED + 5 LOW

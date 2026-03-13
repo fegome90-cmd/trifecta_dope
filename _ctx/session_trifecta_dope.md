@@ -1501,3 +1501,9 @@ Created WO-0055 (P1) to fix hook bypass system issues discovered during WO-0050 
 - **Commands**: pytest tests/integration/test_schema_version.py, pytest tests/integration/test_sqlite_contention.py, pytest tests/integration/runtime/
 - **Pack SHA**: `03f7e3678657c9a7`
 
+## 2026-03-13 22:20 UTC
+- **Summary**: Created repo-ready Skill Hub mission manual and added it to prime as a low-priority reference document.
+- **Files**: docs/SKILL_HUB_MANUAL.md, _ctx/prime_trifecta_dope.md, _ctx/session_trifecta_dope.md
+- **Commands**: read, write, edit
+- **Pack SHA**: (unchanged)
+
