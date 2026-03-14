@@ -1,0 +1,111 @@
+version: 1
+id: WO-0067
+epic_id: E-0020
+title: '[WO-FINISH-RUNTIME-ROOT-P0] Resolve finish runtime-root semantics for remediation
+  worktrees'
+priority: P0
+status: done
+owner: felipe_gonzalez
+branch: feat/wo-WO-0067
+worktree: ../.worktrees/WO-0067
+scope:
+  allow:
+  - scripts/ctx_wo_finish.py
+  - scripts/helpers.py
+  - scripts/paths.py
+  - scripts/wo_verify.sh
+  - tests/unit/test_wo_*
+  - tests/integration/test_wo_*
+  - tests/fixtures/**
+  deny:
+  - _ctx/jobs/pending/*.yaml
+  - _ctx/jobs/done/*.yaml
+  - _ctx/jobs/failed/*.yaml
+  - src/application/wo_authority.py
+  - docs/guides/**
+verify:
+  commands:
+  - uv run pytest -q tests/unit/test_wo_* tests/integration/test_wo_* -k "finish or
+    runtime_root or worktree"
+  - uv run python scripts/ctx_backlog_validate.py --strict
+dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - verify
+  - session.append:result
+  segment: .
+dependencies:
+- WO-0061
+trace:
+  ticket: null
+  related_wos:
+  - WO-0061
+objective: Correct finish runtime resolution so ctx_wo_finish.py operates on the live
+  running WO in the supported remediation topology, both from the remediation tree
+  and from the WO child worktree.
+deliverables:
+- Minimal runtime-root/running-WO resolution fix for finish closure in remediation
+  worktrees
+- Tests covering supported topologies and error separation for missing-running vs
+  dirty-state failures
+- Verification evidence showing the official ctx_wo_finish.py flow from both supported
+  cwd topologies
+acceptance_criteria:
+- ctx_wo_finish.py resolves the live running WO correctly when invoked from the remediation
+  tree and from the WO child worktree.
+- The command fails with the correct error when the WO is not actually running, when
+  the applicable tree is dirty, and when the WO belongs to an unsupported topology.
+- The fix does not add side effects to src/application/wo_authority.py and does not
+  move shared-authority responsibilities out of their current role.
+- Automated tests cover runtime-root/running-path resolution, separation between missing-running
+  and dirty-state gates, and one successful closure path in a supported remediation
+  topology.
+- Verification evidence records the exact commands, cwd, expected running-WO path,
+  and final closure outcome.
+out_of_scope:
+- Changes to pending semantics or draft/take-ready rules
+- Rewrites of shared authority behavior
+- Corpus migration or historical cleanup
+- Broad worktree refactors or new infrastructure
+- Cosmetic doc-only edits unrelated to the finish flow
+artifacts:
+- scripts/ctx_wo_finish.py
+- scripts/helpers.py
+- scripts/paths.py
+- scripts/wo_verify.sh
+- tests/unit/test_wo_*
+- tests/integration/test_wo_*
+- tests/fixtures/**
+risks:
+- A false fix makes finish pass only from one cwd while still failing from the other
+  supported topology
+- Dirty-state checks get blurred with missing-running detection, hiding the actual
+  operator action required
+- Scope creeps into authority or pending semantics instead of staying on finish topology
+definition_of_done:
+- The official ctx_wo_finish.py closure flow is demonstrated from the remediation
+  tree and from the WO child worktree against the live running WO path.
+- Missing-running, dirty-state, and unsupported-topology failures are distinguishable
+  and covered by automated tests.
+- Verification evidence captures command, cwd, expected running path, and final result
+  for the supported closure flow.
+- Verify commands pass.
+rollback_note: Revert finish-topology changes only; do not widen scope into authority,
+  pending semantics, or worktree redesign.
+x_alias: WO-FINISH-RUNTIME-ROOT-P0
+x_wave: 1
+x_gate: Required before treating remediation worktree finish as operationally reliable
+started_at: '2026-03-13T11:41:31.413952+00:00'
+x_failed_at: '2026-03-13T00:44:02.062015+00:00'
+x_requeued_from: failed
+x_requeued_at: '2026-03-13T11:41:12.255906+00:00'
+x_requeue_reason: local verify-path patch applied for execution-root/runtime-root
+  split
+verified_at_sha: b0504c51120ee783318b3cc4aa3f0a314da8bc09
+closed_at: '2026-03-13T16:54:26.455206+00:00'
+result: done
