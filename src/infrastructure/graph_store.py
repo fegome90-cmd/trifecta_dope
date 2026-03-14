@@ -5,7 +5,25 @@ from pathlib import Path
 from src.domain.graph_models import GraphEdge, GraphNode, GraphStatus
 
 
-class GraphTargetResolutionError(ValueError):
+class GraphCommandError(ValueError):
+    code = "GRAPH_COMMAND_ERROR"
+    kind = "graph_command_error"
+
+    def __init__(self, segment_id: str, message: str, symbol: str | None = None) -> None:
+        self.segment_id = segment_id
+        self.symbol = symbol
+        self.message = message
+        super().__init__(message)
+
+    def to_error_payload(self) -> dict[str, object]:
+        return {
+            "code": self.code,
+            "kind": self.kind,
+            "message": self.message,
+        }
+
+
+class GraphTargetResolutionError(GraphCommandError):
     code = "GRAPH_TARGET_RESOLUTION_ERROR"
     kind = "graph_target_resolution_error"
 
@@ -16,11 +34,8 @@ class GraphTargetResolutionError(ValueError):
         message: str,
         candidates: list[GraphNode] | None = None,
     ) -> None:
-        self.segment_id = segment_id
-        self.symbol = symbol
-        self.message = message
         self.candidates = [candidate.to_dict() for candidate in (candidates or [])]
-        super().__init__(message)
+        super().__init__(segment_id=segment_id, symbol=symbol, message=message)
 
     def to_error_payload(self) -> dict[str, object]:
         return {
@@ -57,13 +72,91 @@ class GraphTargetNotFoundError(GraphTargetResolutionError):
         )
 
 
+class GraphStoreAccessError(GraphCommandError):
+    code = "GRAPH_DB_UNAVAILABLE"
+    kind = "graph_db_unavailable"
+
+    def __init__(
+        self,
+        segment_id: str,
+        message: str,
+        details: dict[str, object] | None = None,
+    ) -> None:
+        self.details = details or {}
+        super().__init__(segment_id=segment_id, message=message)
+
+    def to_error_payload(self) -> dict[str, object]:
+        payload: dict[str, object] = {
+            "code": self.code,
+            "kind": self.kind,
+            "message": self.message,
+        }
+        if self.details:
+            payload["details"] = self.details
+        return payload
+
+
+class GraphStoreSchemaMismatchError(GraphStoreAccessError):
+    code = "GRAPH_DB_SCHEMA_MISMATCH"
+    kind = "graph_db_schema_mismatch"
+
+    def __init__(self, segment_id: str, expected_version: int, actual_version: int | str) -> None:
+        super().__init__(
+            segment_id=segment_id,
+            message=(
+                f"Graph DB schema version mismatch: expected {expected_version}, "
+                f"got {actual_version}."
+            ),
+            details={
+                "expected_version": expected_version,
+                "actual_version": actual_version,
+            },
+        )
+
+
+class GraphStoreIncompleteError(GraphStoreAccessError):
+    code = "GRAPH_DB_INCOMPLETE"
+    kind = "graph_db_incomplete"
+
+    def __init__(self, segment_id: str, missing_tables: list[str]) -> None:
+        sorted_missing = sorted(missing_tables)
+        super().__init__(
+            segment_id=segment_id,
+            message=(
+                "Graph DB is missing required tables: "
+                + ", ".join(sorted_missing)
+                + "."
+            ),
+            details={"missing_tables": sorted_missing},
+        )
+
+
+class GraphStoreUnavailableError(GraphStoreAccessError):
+    code = "GRAPH_DB_UNAVAILABLE"
+    kind = "graph_db_unavailable"
+
+    def __init__(self, segment_id: str, cause: str) -> None:
+        super().__init__(
+            segment_id=segment_id,
+            message=f"Graph DB could not be opened or queried: {cause}",
+        )
+
+
 class GraphStore:
     SCHEMA_VERSION = 1
+    REQUIRED_TABLES = ("graph_index", "nodes", "edges")
 
-    def __init__(self, db_path: Path) -> None:
+    def __init__(
+        self,
+        db_path: Path,
+        initialize: bool = True,
+        segment_id: str = "graph_index",
+    ) -> None:
         self._db_path = db_path
-        self._validate_or_init_schema()
-        self._init_db()
+        self._segment_id = segment_id
+        if initialize:
+            self._validate_or_init_writable_schema(segment_id=self._segment_id)
+            self._init_db()
 
     @property
     def db_path(self) -> Path:
@@ -72,6 +165,14 @@ class GraphStore:
     @staticmethod
     def db_path_for_segment(segment_root: Path, segment_id: str) -> Path:
         return segment_root / ".trifecta" / "cache" / f"graph_{segment_id}.db"
+
+    @classmethod
+    def open_readonly(cls, db_path: Path, segment_id: str) -> "GraphStore":
+        store = cls.__new__(cls)
+        store._db_path = db_path
+        store._segment_id = segment_id
+        store._validate_existing_schema(segment_id)
+        return store
 
     @classmethod
     def probe_status(cls, db_path: Path, segment_id: str) -> GraphStatus:
@@ -84,80 +185,120 @@ class GraphStore:
                 edge_count=0,
                 last_indexed_at=None,
             )
-        return cls(db_path).get_status(segment_id)
+        return cls.open_readonly(db_path, segment_id).get_status(segment_id)
 
-    def _validate_or_init_schema(self) -> None:
+    def _validate_or_init_writable_schema(self, segment_id: str) -> None:
         self._db_path.parent.mkdir(parents=True, exist_ok=True)
 
         if not self._db_path.exists():
-            conn = sqlite3.connect(self._db_path)
-            conn.execute("CREATE TABLE schema_version (version INTEGER PRIMARY KEY)")
-            conn.execute("INSERT INTO schema_version VALUES (?)", (self.SCHEMA_VERSION,))
-            conn.commit()
-            conn.close()
+            try:
+                conn = sqlite3.connect(self._db_path)
+                conn.execute("CREATE TABLE schema_version (version INTEGER PRIMARY KEY)")
+                conn.execute("INSERT INTO schema_version VALUES (?)", (self.SCHEMA_VERSION,))
+                conn.commit()
+                conn.close()
+            except sqlite3.Error as exc:
+                raise GraphStoreUnavailableError(segment_id, str(exc)) from exc
             return
 
-        conn = sqlite3.connect(self._db_path)
-        cur = conn.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='schema_version'"
-        )
-        if cur.fetchone() is None:
+        self._validate_schema_version(segment_id)
+
+    def _validate_existing_schema(self, segment_id: str) -> None:
+        conn = self._connect(segment_id)
+        try:
+            tables = self._list_tables(conn, segment_id)
+            self._validate_schema_version_from_tables(conn, segment_id, tables)
+
+            missing_tables = [table for table in self.REQUIRED_TABLES if table not in tables]
+            if missing_tables:
+                raise GraphStoreIncompleteError(segment_id, missing_tables)
+        finally:
             conn.close()
-            raise RuntimeError(f"schema version mismatch: expected {self.SCHEMA_VERSION}, got none")
+
+    def _validate_schema_version(self, segment_id: str) -> None:
+        conn = self._connect(segment_id)
+        try:
+            tables = self._list_tables(conn, segment_id)
+            self._validate_schema_version_from_tables(conn, segment_id, tables)
+        finally:
+            conn.close()
+
+    def _validate_schema_version_from_tables(
+        self,
+        conn: sqlite3.Connection,
+        segment_id: str,
+        tables: set[str],
+    ) -> None:
+        if "schema_version" not in tables:
+            raise GraphStoreIncompleteError(segment_id, ["schema_version"])
 
         row = conn.execute("SELECT version FROM schema_version").fetchone()
-        conn.close()
-        if row is None or row[0] != self.SCHEMA_VERSION:
-            actual_version = row[0] if row else "none"
-            raise RuntimeError(
-                f"schema version mismatch: expected {self.SCHEMA_VERSION}, got {actual_version}"
-            )
+        actual_version: int | str = row[0] if row is not None else "none"
+        if actual_version != self.SCHEMA_VERSION:
+            raise GraphStoreSchemaMismatchError(segment_id, self.SCHEMA_VERSION, actual_version)
+
+    def _connect(self, segment_id: str) -> sqlite3.Connection:
+        try:
+            return sqlite3.connect(self._db_path)
+        except sqlite3.Error as exc:
+            raise GraphStoreUnavailableError(segment_id, str(exc)) from exc
+
+    def _list_tables(self, conn: sqlite3.Connection, segment_id: str) -> set[str]:
+        try:
+            rows = conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
+        except sqlite3.Error as exc:
+            raise GraphStoreUnavailableError(segment_id, str(exc)) from exc
+        return {str(row[0]) for row in rows}
 
     def _init_db(self) -> None:
-        conn = sqlite3.connect(self._db_path)
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS graph_index ("
-            "segment_id TEXT PRIMARY KEY, "
-            "indexed_at TEXT NOT NULL"
-            ")"
-        )
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS nodes ("
-            "id TEXT PRIMARY KEY, "
-            "segment_id TEXT NOT NULL, "
-            "file_rel TEXT NOT NULL, "
-            "symbol_name TEXT NOT NULL, "
-            "qualified_name TEXT NOT NULL, "
-            "kind TEXT NOT NULL, "
-            "line INTEGER NOT NULL, "
-            "metadata_json TEXT"
-            ")"
-        )
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS edges ("
-            "id TEXT PRIMARY KEY, "
-            "segment_id TEXT NOT NULL, "
-            "from_node_id TEXT NOT NULL, "
-            "to_node_id TEXT NOT NULL, "
-            "edge_kind TEXT NOT NULL, "
-            "source TEXT NOT NULL, "
-            "confidence REAL"
-            ")"
-        )
-        conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_nodes_segment_search "
-            "ON nodes(segment_id, symbol_name, qualified_name, file_rel)"
-        )
-        conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_edges_segment_from "
-            "ON edges(segment_id, from_node_id)"
-        )
-        conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_edges_segment_to "
-            "ON edges(segment_id, to_node_id)"
-        )
-        conn.commit()
-        conn.close()
+        conn = self._connect(self._segment_id)
+        try:
+            conn.execute(
+                "CREATE TABLE IF NOT EXISTS graph_index ("
+                "segment_id TEXT PRIMARY KEY, "
+                "indexed_at TEXT NOT NULL"
+                ")"
+            )
+            conn.execute(
+                "CREATE TABLE IF NOT EXISTS nodes ("
+                "id TEXT PRIMARY KEY, "
+                "segment_id TEXT NOT NULL, "
+                "file_rel TEXT NOT NULL, "
+                "symbol_name TEXT NOT NULL, "
+                "qualified_name TEXT NOT NULL, "
+                "kind TEXT NOT NULL, "
+                "line INTEGER NOT NULL, "
+                "metadata_json TEXT"
+                ")"
+            )
+            conn.execute(
+                "CREATE TABLE IF NOT EXISTS edges ("
+                "id TEXT PRIMARY KEY, "
+                "segment_id TEXT NOT NULL, "
+                "from_node_id TEXT NOT NULL, "
+                "to_node_id TEXT NOT NULL, "
+                "edge_kind TEXT NOT NULL, "
+                "source TEXT NOT NULL, "
+                "confidence REAL"
+                ")"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_nodes_segment_search "
+                "ON nodes(segment_id, symbol_name, qualified_name, file_rel)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_edges_segment_from "
+                "ON edges(segment_id, from_node_id)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_edges_segment_to "
+                "ON edges(segment_id, to_node_id)"
+            )
+            conn.commit()
+        except sqlite3.Error as exc:
+            raise GraphStoreUnavailableError(self._segment_id, str(exc)) from exc
+        finally:
+            conn.close()
 
     def replace_segment(
         self,
@@ -167,50 +308,54 @@ class GraphStore:
         indexed_at: str | None = None,
     ) -> None:
         timestamp = indexed_at or datetime.now(timezone.utc).isoformat()
-        conn = sqlite3.connect(self._db_path)
-        conn.execute("DELETE FROM edges WHERE segment_id = ?", (segment_id,))
-        conn.execute("DELETE FROM nodes WHERE segment_id = ?", (segment_id,))
-        conn.execute(
-            "INSERT OR REPLACE INTO graph_index(segment_id, indexed_at) VALUES (?, ?)",
-            (segment_id, timestamp),
-        )
-        conn.executemany(
-            "INSERT OR REPLACE INTO nodes("
-            "id, segment_id, file_rel, symbol_name, qualified_name, kind, line, metadata_json"
-            ") VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            [
-                (
-                    node.id,
-                    node.segment_id,
-                    node.file_rel,
-                    node.symbol_name,
-                    node.qualified_name,
-                    node.kind,
-                    node.line,
-                    node.metadata_json,
-                )
-                for node in nodes
-            ],
-        )
-        conn.executemany(
-            "INSERT OR REPLACE INTO edges("
-            "id, segment_id, from_node_id, to_node_id, edge_kind, source, confidence"
-            ") VALUES (?, ?, ?, ?, ?, ?, ?)",
-            [
-                (
-                    edge.id,
-                    edge.segment_id,
-                    edge.from_node_id,
-                    edge.to_node_id,
-                    edge.edge_kind,
-                    edge.source,
-                    edge.confidence,
-                )
-                for edge in edges
-            ],
-        )
-        conn.commit()
-        conn.close()
+        conn = self._connect(segment_id)
+        try:
+            conn.execute("DELETE FROM edges WHERE segment_id = ?", (segment_id,))
+            conn.execute("DELETE FROM nodes WHERE segment_id = ?", (segment_id,))
+            conn.execute(
+                "INSERT OR REPLACE INTO graph_index(segment_id, indexed_at) VALUES (?, ?)",
+                (segment_id, timestamp),
+            )
+            conn.executemany(
+                "INSERT OR REPLACE INTO nodes("
+                "id, segment_id, file_rel, symbol_name, qualified_name, kind, line, metadata_json"
+                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                [
+                    (
+                        node.id,
+                        node.segment_id,
+                        node.file_rel,
+                        node.symbol_name,
+                        node.qualified_name,
+                        node.kind,
+                        node.line,
+                        node.metadata_json,
+                    )
+                    for node in nodes
+                ],
+            )
+            conn.executemany(
+                "INSERT OR REPLACE INTO edges("
+                "id, segment_id, from_node_id, to_node_id, edge_kind, source, confidence"
+                ") VALUES (?, ?, ?, ?, ?, ?, ?)",
+                [
+                    (
+                        edge.id,
+                        edge.segment_id,
+                        edge.from_node_id,
+                        edge.to_node_id,
+                        edge.edge_kind,
+                        edge.source,
+                        edge.confidence,
+                    )
+                    for edge in edges
+                ],
+            )
+            conn.commit()
+        except sqlite3.Error as exc:
+            raise GraphStoreUnavailableError(segment_id, str(exc)) from exc
+        finally:
+            conn.close()
 
     def get_status(self, segment_id: str) -> GraphStatus:
         conn = sqlite3.connect(self._db_path)

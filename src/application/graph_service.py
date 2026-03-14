@@ -4,6 +4,7 @@ from src.domain.segment_resolver import SegmentRef, resolve_segment_ref
 from src.infrastructure.graph_store import (
     AmbiguousGraphTargetError,
     GraphStore,
+    GraphStoreAccessError,
     GraphTargetNotFoundError,
 )
 
@@ -59,7 +60,11 @@ class GraphService:
         }
 
     def _related(self, segment: Path | str, symbol: str, reverse: bool) -> dict[str, object]:
-        resolved = self._resolve_existing(segment)
+        try:
+            resolved = self._resolve_existing(segment)
+        except GraphStoreAccessError as exc:
+            exc.symbol = symbol
+            raise
         if resolved is None:
             segment_ref = resolve_segment_ref(segment)
             return {
@@ -97,4 +102,4 @@ class GraphService:
             return segment_ref, self._store
         if not db_path.exists():
             return None
-        return segment_ref, GraphStore(db_path)
+        return segment_ref, GraphStore.open_readonly(db_path, segment_ref.id)

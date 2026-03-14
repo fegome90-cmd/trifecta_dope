@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from src.domain.graph_models import GraphEdge, GraphNode
-from src.infrastructure.graph_store import GraphStore
+from src.infrastructure.graph_store import GraphStore, GraphStoreSchemaMismatchError
 
 
 def _sample_node(segment_id: str = "seg_1234") -> GraphNode:
@@ -59,8 +59,33 @@ def test_graph_store_fails_closed_on_wrong_schema_version(tmp_path: Path) -> Non
     conn.commit()
     conn.close()
 
-    with pytest.raises(RuntimeError, match="schema version mismatch: expected 1, got 2"):
+    with pytest.raises(
+        GraphStoreSchemaMismatchError,
+        match="Graph DB schema version mismatch: expected 1, got 2.",
+    ):
         GraphStore(db_path)
+
+
+def test_graph_store_writable_path_repairs_partial_db_with_valid_schema_version(
+    tmp_path: Path,
+) -> None:
+    db_path = tmp_path / "graph.db"
+    conn = sqlite3.connect(db_path)
+    conn.execute("CREATE TABLE schema_version (version INTEGER PRIMARY KEY)")
+    conn.execute("INSERT INTO schema_version VALUES (?)", (GraphStore.SCHEMA_VERSION,))
+    conn.commit()
+    conn.close()
+
+    GraphStore(db_path)
+
+    conn = sqlite3.connect(db_path)
+    tables = {
+        row[0]
+        for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
+    }
+    conn.close()
+
+    assert {"schema_version", "graph_index", "nodes", "edges"}.issubset(tables)
 
 
 def test_graph_store_roundtrips_nodes_and_edges(tmp_path: Path) -> None:

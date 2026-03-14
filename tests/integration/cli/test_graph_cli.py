@@ -1,4 +1,6 @@
+import hashlib
 import json
+import sqlite3
 from pathlib import Path
 
 import pytest
@@ -16,6 +18,17 @@ def _graph_cache_paths(segment: Path) -> tuple[Path, Path]:
     segment_ref = resolve_segment_ref(segment)
     db_path = GraphStore.db_path_for_segment(segment_ref.root_abs, segment_ref.id)
     return db_path, db_path.parent
+
+
+def _write_schema_only_db(segment: Path, version: int = GraphStore.SCHEMA_VERSION) -> tuple[str, Path]:
+    db_path, cache_dir = _graph_cache_paths(segment)
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(db_path)
+    conn.execute("CREATE TABLE schema_version (version INTEGER PRIMARY KEY)")
+    conn.execute("INSERT INTO schema_version VALUES (?)", (version,))
+    conn.commit()
+    conn.close()
+    return hashlib.sha256(db_path.read_bytes()).hexdigest(), db_path
 
 
 def test_graph_cli_help_and_index_status_search_flow(tmp_path: Path) -> None:
@@ -245,6 +258,102 @@ def test_graph_cli_related_commands_return_distinct_json_for_missing_symbol(
         "message": "Symbol 'missing' was not found in the graph index.",
         "candidates": [],
     }
+
+
+@pytest.mark.parametrize(
+    ("command", "args", "expected_code"),
+    [
+        ("status", [], "GRAPH_DB_INCOMPLETE"),
+        ("search", ["--query", "root"], "GRAPH_DB_INCOMPLETE"),
+    ],
+)
+def test_graph_cli_read_paths_do_not_mutate_partial_db(
+    tmp_path: Path, command: str, args: list[str], expected_code: str
+) -> None:
+    segment = tmp_path / "segment"
+    (segment / "src").mkdir(parents=True)
+    before_hash, db_path = _write_schema_only_db(segment)
+
+    result = runner.invoke(app, ["graph", command, "--segment", str(segment), *args, "--json"])
+    payload = json.loads(result.output)
+    after_hash = hashlib.sha256(db_path.read_bytes()).hexdigest()
+
+    assert result.exit_code == 1, result.output
+    assert after_hash == before_hash
+    assert payload == {
+        "status": "error",
+        "segment_id": resolve_segment_ref(segment).id,
+        "error": {
+            "code": expected_code,
+            "kind": "graph_db_incomplete",
+            "message": "Graph DB is missing required tables: edges, graph_index, nodes.",
+            "details": {"missing_tables": ["edges", "graph_index", "nodes"]},
+        },
+    }
+
+
+@pytest.mark.parametrize(
+    ("command", "args", "expected_symbol"),
+    [
+        ("status", [], None),
+        ("search", ["--query", "root"], None),
+        ("callers", ["--symbol", "root"], "root"),
+        ("callees", ["--symbol", "root"], "root"),
+        ("index", [], None),
+    ],
+)
+def test_graph_cli_returns_stable_json_for_schema_mismatch(
+    tmp_path: Path, command: str, args: list[str], expected_symbol: str | None
+) -> None:
+    segment = tmp_path / "segment"
+    (segment / "src").mkdir(parents=True)
+    _write_schema_only_db(segment, version=999)
+
+    result = runner.invoke(app, ["graph", command, "--segment", str(segment), *args, "--json"])
+    payload = json.loads(result.output)
+
+    assert result.exit_code == 1, result.output
+    assert payload["status"] == "error"
+    assert payload["segment_id"] == resolve_segment_ref(segment).id
+    if expected_symbol is None:
+        assert "symbol" not in payload
+    else:
+        assert payload["symbol"] == expected_symbol
+    assert payload["error"] == {
+        "code": "GRAPH_DB_SCHEMA_MISMATCH",
+        "kind": "graph_db_schema_mismatch",
+        "message": "Graph DB schema version mismatch: expected 1, got 999.",
+        "details": {"expected_version": 1, "actual_version": 999},
+    }
+
+
+def test_graph_cli_index_repairs_partial_db_with_valid_schema_version(tmp_path: Path) -> None:
+    segment = tmp_path / "segment"
+    source_dir = segment / "src" / "pkg"
+    source_dir.mkdir(parents=True)
+    (source_dir / "sample.py").write_text(
+        "def leaf():\n"
+        "    return 1\n\n"
+        "def root():\n"
+        "    return leaf()\n"
+    )
+    _, db_path = _write_schema_only_db(segment)
+
+    result = runner.invoke(app, ["graph", "index", "--segment", str(segment), "--json"])
+    payload = json.loads(result.output)
+
+    assert result.exit_code == 0, result.output
+    assert payload["status"] == "ok"
+    assert payload["node_count"] == 2
+    assert payload["edge_count"] == 1
+
+    conn = sqlite3.connect(db_path)
+    tables = {
+        row[0]
+        for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
+    }
+    conn.close()
+    assert {"schema_version", "graph_index", "nodes", "edges"}.issubset(tables)
 
 
 def test_graph_cli_keeps_top_level_edge_while_ignoring_nested_calls(tmp_path: Path) -> None:

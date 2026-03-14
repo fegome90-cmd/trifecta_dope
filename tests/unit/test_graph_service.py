@@ -1,9 +1,17 @@
+import hashlib
+import sqlite3
 from pathlib import Path
+
+import pytest
 
 from src.application.graph_indexer import GraphIndexer
 from src.application.graph_service import GraphService
 from src.domain.segment_resolver import resolve_segment_ref
-from src.infrastructure.graph_store import AmbiguousGraphTargetError, GraphStore
+from src.infrastructure.graph_store import (
+    AmbiguousGraphTargetError,
+    GraphStore,
+    GraphStoreIncompleteError,
+)
 
 
 def test_graph_service_search_and_status_are_machine_readable(tmp_path: Path) -> None:
@@ -99,3 +107,30 @@ def test_graph_service_callers_fail_closed_on_ambiguous_symbol(tmp_path: Path) -
         ]
     else:
         raise AssertionError("Expected AmbiguousGraphTargetError for duplicate symbol")
+
+
+@pytest.mark.parametrize("method_name,args", [("status", tuple()), ("search", ("root",))])
+def test_graph_service_read_paths_do_not_mutate_partial_db(
+    tmp_path: Path, method_name: str, args: tuple[object, ...]
+) -> None:
+    segment = tmp_path / "segment"
+    (segment / "src").mkdir(parents=True)
+    segment_ref = resolve_segment_ref(segment)
+    db_path = GraphStore.db_path_for_segment(segment_ref.root_abs, segment_ref.id)
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+
+    conn = sqlite3.connect(db_path)
+    conn.execute("CREATE TABLE schema_version (version INTEGER PRIMARY KEY)")
+    conn.execute("INSERT INTO schema_version VALUES (?)", (GraphStore.SCHEMA_VERSION,))
+    conn.commit()
+    conn.close()
+
+    before_hash = hashlib.sha256(db_path.read_bytes()).hexdigest()
+    service = GraphService()
+    method = getattr(service, method_name)
+
+    with pytest.raises(GraphStoreIncompleteError, match="missing required tables"):
+        method(segment, *args)
+
+    after_hash = hashlib.sha256(db_path.read_bytes()).hexdigest()
+    assert after_hash == before_hash

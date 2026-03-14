@@ -51,7 +51,8 @@ class GraphIndexer:
         segment_ref = resolve_segment_ref(segment)
         segment_root = segment_ref.root_abs
         store = self._store or GraphStore(
-            GraphStore.db_path_for_segment(segment_root, segment_ref.id)
+            GraphStore.db_path_for_segment(segment_root, segment_ref.id),
+            segment_id=segment_ref.id,
         )
         builder = SkeletonMapBuilder(segment_id=str(segment_root))
         indexed_at = datetime.now(timezone.utc).isoformat()
