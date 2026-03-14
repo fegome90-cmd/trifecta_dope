@@ -6,7 +6,7 @@ import typer
 
 from src.application.graph_indexer import GraphIndexer
 from src.application.graph_service import GraphService
-from src.infrastructure.graph_store import AmbiguousGraphTargetError
+from src.infrastructure.graph_store import GraphTargetResolutionError
 
 
 graph_app = typer.Typer(help="Code Graph Commands")
@@ -35,13 +35,13 @@ def _emit(data: dict[str, object], json_output: bool) -> None:
         typer.echo(f"- {node['symbol_name']} [{node['kind']}] {node['file_rel']}:{node['line']}")
 
 
-def _handle_ambiguous_symbol(exc: AmbiguousGraphTargetError, json_output: bool) -> None:
-    """Handle ambiguous symbol errors with structured JSON output."""
+def _handle_target_resolution_error(exc: GraphTargetResolutionError, json_output: bool) -> None:
+    """Handle graph target resolution errors with structured JSON output."""
     payload: dict[str, Any] = {
         "status": "error",
-        "error": "ambiguous_symbol",
+        "segment_id": exc.segment_id,
         "symbol": exc.symbol,
-        "candidates": exc.candidates,
+        "error": exc.to_error_payload(),
     }
     _emit(payload, json_output)
     raise typer.Exit(code=1)
@@ -82,8 +82,8 @@ def callers(
 ) -> None:
     try:
         _emit(GraphService().callers(Path(segment), symbol), json_output)
-    except AmbiguousGraphTargetError as exc:
-        _handle_ambiguous_symbol(exc, json_output)
+    except GraphTargetResolutionError as exc:
+        _handle_target_resolution_error(exc, json_output)
 
 
 @graph_app.command("callees")
@@ -94,5 +94,5 @@ def callees(
 ) -> None:
     try:
         _emit(GraphService().callees(Path(segment), symbol), json_output)
-    except AmbiguousGraphTargetError as exc:
-        _handle_ambiguous_symbol(exc, json_output)
+    except GraphTargetResolutionError as exc:
+        _handle_target_resolution_error(exc, json_output)

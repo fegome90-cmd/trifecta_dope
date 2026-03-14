@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+import pytest
 from typer.testing import CliRunner
 
 from src.domain.segment_resolver import resolve_segment_ref
@@ -9,6 +10,12 @@ from src.infrastructure.cli import app
 
 
 runner = CliRunner()
+
+
+def _graph_cache_paths(segment: Path) -> tuple[Path, Path]:
+    segment_ref = resolve_segment_ref(segment)
+    db_path = GraphStore.db_path_for_segment(segment_ref.root_abs, segment_ref.id)
+    return db_path, db_path.parent
 
 
 def test_graph_cli_help_and_index_status_search_flow(tmp_path: Path) -> None:
@@ -83,14 +90,43 @@ def test_graph_cli_status_does_not_create_db_for_pristine_segment(tmp_path: Path
 
     status_result = runner.invoke(app, ["graph", "status", "--segment", str(segment), "--json"])
     status_output = json.loads(status_result.output)
-    segment_ref = resolve_segment_ref(segment)
-    db_path = GraphStore.db_path_for_segment(segment_ref.root_abs, segment_ref.id)
+    db_path, cache_dir = _graph_cache_paths(segment)
 
     assert status_result.exit_code == 0, status_result.output
     assert status_output["status"] == "ok"
     assert status_output["exists"] is False
     assert status_output["last_indexed_at"] is None
     assert not db_path.exists()
+    assert not cache_dir.exists()
+
+
+@pytest.mark.parametrize(
+    ("command", "args", "expected_key", "expected_value"),
+    [
+        ("search", ["--query", "root"], "nodes", []),
+        ("callers", ["--symbol", "root"], "nodes", []),
+        ("callees", ["--symbol", "root"], "nodes", []),
+    ],
+)
+def test_graph_cli_read_paths_do_not_create_db_for_pristine_segment(
+    tmp_path: Path,
+    command: str,
+    args: list[str],
+    expected_key: str,
+    expected_value: list[object],
+) -> None:
+    segment = tmp_path / "segment"
+    (segment / "src").mkdir(parents=True)
+
+    result = runner.invoke(app, ["graph", command, "--segment", str(segment), *args, "--json"])
+    payload = json.loads(result.output)
+    db_path, cache_dir = _graph_cache_paths(segment)
+
+    assert result.exit_code == 0, result.output
+    assert payload["status"] == "ok"
+    assert payload[expected_key] == expected_value
+    assert not db_path.exists()
+    assert not cache_dir.exists()
 
 
 def test_graph_cli_callees_ignore_nested_function_calls(tmp_path: Path) -> None:
@@ -118,7 +154,10 @@ def test_graph_cli_callees_ignore_nested_function_calls(tmp_path: Path) -> None:
     assert json.loads(callees_result.output)["nodes"] == []
 
 
-def test_graph_cli_callers_fail_closed_on_ambiguous_symbol(tmp_path: Path) -> None:
+@pytest.mark.parametrize("command", ["callers", "callees"])
+def test_graph_cli_related_commands_return_stable_json_for_ambiguous_symbol(
+    tmp_path: Path, command: str
+) -> None:
     segment = tmp_path / "segment"
     source_dir = segment / "src" / "pkg"
     source_dir.mkdir(parents=True)
@@ -136,18 +175,103 @@ def test_graph_cli_callers_fail_closed_on_ambiguous_symbol(tmp_path: Path) -> No
     )
 
     index_result = runner.invoke(app, ["graph", "index", "--segment", str(segment), "--json"])
-    callers_result = runner.invoke(
+    result = runner.invoke(
         app,
-        ["graph", "callers", "--segment", str(segment), "--symbol", "helper", "--json"],
+        ["graph", command, "--segment", str(segment), "--symbol", "helper", "--json"],
     )
 
     assert index_result.exit_code == 0, index_result.output
-    assert callers_result.exit_code != 0
-    payload = json.loads(callers_result.output)
+    assert result.exit_code != 0
+    payload = json.loads(result.output)
     assert payload["status"] == "error"
-    assert payload["error"] == "ambiguous_symbol"
     assert payload["symbol"] == "helper"
-    assert [candidate["file_rel"] for candidate in payload["candidates"]] == [
-        "src/pkg/first.py",
-        "src/pkg/second.py",
-    ]
+    assert payload["error"] == {
+        "code": "GRAPH_TARGET_AMBIGUOUS",
+        "kind": "ambiguous_symbol",
+        "message": "Symbol 'helper' matched multiple graph nodes.",
+        "candidates": [
+            {
+                "id": payload["error"]["candidates"][0]["id"],
+                "segment_id": payload["error"]["candidates"][0]["segment_id"],
+                "file_rel": "src/pkg/first.py",
+                "symbol_name": "helper",
+                "qualified_name": "helper",
+                "kind": "function",
+                "line": 1,
+                "metadata_json": None,
+            },
+            {
+                "id": payload["error"]["candidates"][1]["id"],
+                "segment_id": payload["error"]["candidates"][1]["segment_id"],
+                "file_rel": "src/pkg/second.py",
+                "symbol_name": "helper",
+                "qualified_name": "helper",
+                "kind": "function",
+                "line": 1,
+                "metadata_json": None,
+            },
+        ],
+    }
+
+
+@pytest.mark.parametrize("command", ["callers", "callees"])
+def test_graph_cli_related_commands_return_distinct_json_for_missing_symbol(
+    tmp_path: Path, command: str
+) -> None:
+    segment = tmp_path / "segment"
+    source_dir = segment / "src" / "pkg"
+    source_dir.mkdir(parents=True)
+    (source_dir / "sample.py").write_text(
+        "def helper():\n"
+        "    return 1\n\n"
+        "def root():\n"
+        "    return helper()\n"
+    )
+
+    index_result = runner.invoke(app, ["graph", "index", "--segment", str(segment), "--json"])
+    result = runner.invoke(
+        app,
+        ["graph", command, "--segment", str(segment), "--symbol", "missing", "--json"],
+    )
+
+    assert index_result.exit_code == 0, index_result.output
+    assert result.exit_code != 0
+    payload = json.loads(result.output)
+    assert payload["status"] == "error"
+    assert payload["symbol"] == "missing"
+    assert payload["error"] == {
+        "code": "GRAPH_TARGET_NOT_FOUND",
+        "kind": "symbol_not_found",
+        "message": "Symbol 'missing' was not found in the graph index.",
+        "candidates": [],
+    }
+
+
+def test_graph_cli_keeps_top_level_edge_while_ignoring_nested_calls(tmp_path: Path) -> None:
+    segment = tmp_path / "segment"
+    source_dir = segment / "src" / "pkg"
+    source_dir.mkdir(parents=True)
+    (source_dir / "sample.py").write_text(
+        "def leaf():\n"
+        "    return 1\n\n"
+        "def root():\n"
+        "    leaf()\n"
+        "    def inner():\n"
+        "        return leaf()\n"
+        "    return inner\n"
+    )
+
+    index_result = runner.invoke(app, ["graph", "index", "--segment", str(segment), "--json"])
+    callers_result = runner.invoke(
+        app,
+        ["graph", "callers", "--segment", str(segment), "--symbol", "leaf", "--json"],
+    )
+    callees_result = runner.invoke(
+        app,
+        ["graph", "callees", "--segment", str(segment), "--symbol", "root", "--json"],
+    )
+
+    assert index_result.exit_code == 0, index_result.output
+    assert json.loads(index_result.output)["edge_count"] == 1
+    assert [node["symbol_name"] for node in json.loads(callers_result.output)["nodes"]] == ["root"]
+    assert [node["symbol_name"] for node in json.loads(callees_result.output)["nodes"]] == ["leaf"]

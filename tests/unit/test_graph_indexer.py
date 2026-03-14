@@ -58,3 +58,29 @@ def test_graph_indexer_does_not_attribute_nested_calls_to_top_level_symbol(
     assert summary.edge_count == 0
     assert callees == []
     assert callers == []
+
+
+def test_graph_indexer_preserves_top_level_edges_when_nested_calls_exist(tmp_path: Path) -> None:
+    segment = tmp_path / "segment"
+    source_dir = segment / "src" / "pkg"
+    source_dir.mkdir(parents=True)
+    (source_dir / "sample.py").write_text(
+        "def leaf():\n"
+        "    return 1\n\n"
+        "def root():\n"
+        "    leaf()\n"
+        "    def inner():\n"
+        "        return leaf()\n"
+        "    return inner\n"
+    )
+
+    store = GraphStore(segment / ".trifecta" / "cache" / "graph_test.db")
+    indexer = GraphIndexer(store=store)
+
+    summary = indexer.index_segment(segment)
+    callees = store.get_callees(summary.segment_id, "root")
+    callers = store.get_callers(summary.segment_id, "leaf")
+
+    assert summary.edge_count == 1
+    assert [node.symbol_name for node in callees] == ["leaf"]
+    assert [node.symbol_name for node in callers] == ["root"]

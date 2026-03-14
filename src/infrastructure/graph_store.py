@@ -5,11 +5,56 @@ from pathlib import Path
 from src.domain.graph_models import GraphEdge, GraphNode, GraphStatus
 
 
-class AmbiguousGraphTargetError(ValueError):
-    def __init__(self, symbol: str, candidates: list[GraphNode]) -> None:
+class GraphTargetResolutionError(ValueError):
+    code = "GRAPH_TARGET_RESOLUTION_ERROR"
+    kind = "graph_target_resolution_error"
+
+    def __init__(
+        self,
+        segment_id: str,
+        symbol: str,
+        message: str,
+        candidates: list[GraphNode] | None = None,
+    ) -> None:
+        self.segment_id = segment_id
         self.symbol = symbol
-        self.candidates = [candidate.to_dict() for candidate in candidates]
-        super().__init__(f"ambiguous graph symbol: {symbol}")
+        self.message = message
+        self.candidates = [candidate.to_dict() for candidate in (candidates or [])]
+        super().__init__(message)
+
+    def to_error_payload(self) -> dict[str, object]:
+        return {
+            "code": self.code,
+            "kind": self.kind,
+            "message": self.message,
+            "candidates": self.candidates,
+        }
+
+
+class AmbiguousGraphTargetError(GraphTargetResolutionError):
+    code = "GRAPH_TARGET_AMBIGUOUS"
+    kind = "ambiguous_symbol"
+
+    def __init__(self, segment_id: str, symbol: str, candidates: list[GraphNode]) -> None:
+        super().__init__(
+            segment_id=segment_id,
+            symbol=symbol,
+            message=f"Symbol '{symbol}' matched multiple graph nodes.",
+            candidates=candidates,
+        )
+
+
+class GraphTargetNotFoundError(GraphTargetResolutionError):
+    code = "GRAPH_TARGET_NOT_FOUND"
+    kind = "symbol_not_found"
+
+    def __init__(self, segment_id: str, symbol: str) -> None:
+        super().__init__(
+            segment_id=segment_id,
+            symbol=symbol,
+            message=f"Symbol '{symbol}' was not found in the graph index.",
+            candidates=[],
+        )
 
 
 class GraphStore:
@@ -26,9 +71,7 @@ class GraphStore:
 
     @staticmethod
     def db_path_for_segment(segment_root: Path, segment_id: str) -> Path:
-        cache_dir = segment_root / ".trifecta" / "cache"
-        cache_dir.mkdir(parents=True, exist_ok=True)
-        return cache_dir / f"graph_{segment_id}.db"
+        return segment_root / ".trifecta" / "cache" / f"graph_{segment_id}.db"
 
     @classmethod
     def probe_status(cls, db_path: Path, segment_id: str) -> GraphStatus:
@@ -210,19 +253,42 @@ class GraphStore:
         return [self._row_to_node(row) for row in rows]
 
     def get_callers(self, segment_id: str, symbol: str) -> list[GraphNode]:
-        return self._get_related_nodes(segment_id, symbol, reverse=True)
+        target_node = self._resolve_target_node(segment_id, symbol)
+        return self.get_callers_for_node(segment_id, target_node.id)
 
     def get_callees(self, segment_id: str, symbol: str) -> list[GraphNode]:
-        return self._get_related_nodes(segment_id, symbol, reverse=False)
+        target_node = self._resolve_target_node(segment_id, symbol)
+        return self.get_callees_for_node(segment_id, target_node.id)
 
-    def _get_related_nodes(self, segment_id: str, symbol: str, reverse: bool) -> list[GraphNode]:
-        target_candidates = self._find_target_candidates(segment_id, symbol)
+    def get_callers_for_node(self, segment_id: str, node_id: str) -> list[GraphNode]:
+        return self._get_related_nodes_for_node(segment_id, node_id, reverse=True)
+
+    def get_callees_for_node(self, segment_id: str, node_id: str) -> list[GraphNode]:
+        return self._get_related_nodes_for_node(segment_id, node_id, reverse=False)
+
+    def find_target_candidates(self, segment_id: str, symbol: str) -> list[GraphNode]:
+        conn = sqlite3.connect(self._db_path)
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute(
+            "SELECT * FROM nodes "
+            "WHERE segment_id = ? AND (symbol_name = ? OR qualified_name = ?) "
+            "ORDER BY file_rel, line",
+            (segment_id, symbol, symbol),
+        ).fetchall()
+        conn.close()
+        return [self._row_to_node(row) for row in rows]
+
+    def _resolve_target_node(self, segment_id: str, symbol: str) -> GraphNode:
+        target_candidates = self.find_target_candidates(segment_id, symbol)
         if not target_candidates:
-            return []
+            raise GraphTargetNotFoundError(segment_id, symbol)
         if len(target_candidates) > 1:
-            raise AmbiguousGraphTargetError(symbol, target_candidates)
+            raise AmbiguousGraphTargetError(segment_id, symbol, target_candidates)
+        return target_candidates[0]
 
-        target_node = target_candidates[0]
+    def _get_related_nodes_for_node(
+        self, segment_id: str, node_id: str, reverse: bool
+    ) -> list[GraphNode]:
         conn = sqlite3.connect(self._db_path)
         conn.row_factory = sqlite3.Row
         rows = conn.execute(
@@ -233,19 +299,7 @@ class GraphStore:
             + ("e.to_node_id = target.id " if reverse else "e.from_node_id = target.id ")
             + "WHERE target.segment_id = ? AND target.id = ? "
             "ORDER BY n.file_rel, n.line",
-            (segment_id, target_node.id),
-        ).fetchall()
-        conn.close()
-        return [self._row_to_node(row) for row in rows]
-
-    def _find_target_candidates(self, segment_id: str, symbol: str) -> list[GraphNode]:
-        conn = sqlite3.connect(self._db_path)
-        conn.row_factory = sqlite3.Row
-        rows = conn.execute(
-            "SELECT * FROM nodes "
-            "WHERE segment_id = ? AND (symbol_name = ? OR qualified_name = ?) "
-            "ORDER BY file_rel, line",
-            (segment_id, symbol, symbol),
+            (segment_id, node_id),
         ).fetchall()
         conn.close()
         return [self._row_to_node(row) for row in rows]

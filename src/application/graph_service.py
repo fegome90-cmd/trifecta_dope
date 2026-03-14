@@ -1,7 +1,11 @@
 from pathlib import Path
 
 from src.domain.segment_resolver import SegmentRef, resolve_segment_ref
-from src.infrastructure.graph_store import GraphStore
+from src.infrastructure.graph_store import (
+    AmbiguousGraphTargetError,
+    GraphStore,
+    GraphTargetNotFoundError,
+)
 
 
 class GraphService:
@@ -18,6 +22,7 @@ class GraphService:
         return {"status": "ok", **status.to_dict()}
 
     def search(self, segment: Path | str, query: str, limit: int = 20) -> dict[str, object]:
+        # Search stays fuzzy on purpose; exact symbol resolution is only for callers/callees.
         resolved = self._resolve_existing(segment)
         if resolved is None:
             segment_ref = resolve_segment_ref(segment)
@@ -64,10 +69,11 @@ class GraphService:
                 "nodes": [],
             }
         segment_ref, store = resolved
+        target_node = self._resolve_related_target(store, segment_ref.id, symbol)
         nodes = (
-            store.get_callers(segment_ref.id, symbol)
+            store.get_callers_for_node(segment_ref.id, target_node.id)
             if reverse
-            else store.get_callees(segment_ref.id, symbol)
+            else store.get_callees_for_node(segment_ref.id, target_node.id)
         )
         return {
             "status": "ok",
@@ -75,6 +81,14 @@ class GraphService:
             "symbol": symbol,
             "nodes": [node.to_dict() for node in nodes],
         }
+
+    def _resolve_related_target(self, store: GraphStore, segment_id: str, symbol: str):
+        matches = store.find_target_candidates(segment_id, symbol)
+        if not matches:
+            raise GraphTargetNotFoundError(segment_id, symbol)
+        if len(matches) > 1:
+            raise AmbiguousGraphTargetError(segment_id, symbol, matches)
+        return matches[0]
 
     def _resolve_existing(self, segment: Path | str) -> tuple[SegmentRef, GraphStore] | None:
         segment_ref = resolve_segment_ref(segment)
