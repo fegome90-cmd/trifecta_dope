@@ -17,7 +17,7 @@ def _emit(data: dict[str, object], json_output: bool) -> None:
         typer.echo(json.dumps(data, indent=2))
         return
 
-    if data.get("status") != "ok":
+    if data.get("ok") is False:
         error = data.get("error")
         if isinstance(error, dict):
             typer.echo(f"{error.get('code')}: {error.get('message')}", err=True)
@@ -41,14 +41,14 @@ def _emit(data: dict[str, object], json_output: bool) -> None:
 
 def _handle_graph_error(exc: GraphCommandError, json_output: bool) -> None:
     payload: dict[str, Any] = {
-        "status": "error",
+        "ok": False,
         "segment_id": exc.segment_id,
         "error": exc.to_error_payload(),
     }
     if exc.symbol is not None:
         payload["symbol"] = exc.symbol
     _emit(payload, json_output)
-    raise typer.Exit(code=1)
+    raise typer.Exit(code=exc.exit_code)
 
 
 @graph_app.command("index")

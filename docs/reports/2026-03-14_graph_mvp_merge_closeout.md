@@ -21,9 +21,9 @@ The implementation is bound to SegmentRef V1 and uses local graph storage under 
 The MVP now has explicit and tested visible contracts for:
 
 - CLI exit codes: `0` for success, `1` for predictable Graph failures
-- stable JSON error envelope
+- stable JSON error envelope with `ok=false`, stable `error.code/message/retryable/details`, and command-specific extra data under `details`
 - exact target resolution in `callers` and `callees`
-- recoverable partial DB versus invalid/non-recoverable DB
+- recoverable partial DB versus invalid/non-recoverable DB, defined by the real minimum tables each read command needs
 - SegmentRef V1 as the SSOT binding used by both service and indexer
 - AST-only, top-level-only graph extraction behavior
 

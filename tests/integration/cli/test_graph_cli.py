@@ -48,6 +48,102 @@ def _make_db_path_unavailable(segment: Path) -> Path:
     return db_path
 
 
+def _write_search_ready_db(segment: Path) -> Path:
+    db_path, cache_dir = _graph_cache_paths(segment)
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    segment_id = resolve_segment_ref(segment).id
+    conn = sqlite3.connect(db_path)
+    conn.execute("CREATE TABLE schema_version (version INTEGER PRIMARY KEY)")
+    conn.execute("INSERT INTO schema_version VALUES (?)", (GraphStore.SCHEMA_VERSION,))
+    conn.execute(
+        "CREATE TABLE nodes ("
+        "id TEXT PRIMARY KEY, "
+        "segment_id TEXT NOT NULL, "
+        "file_rel TEXT NOT NULL, "
+        "symbol_name TEXT NOT NULL, "
+        "qualified_name TEXT NOT NULL, "
+        "kind TEXT NOT NULL, "
+        "line INTEGER NOT NULL, "
+        "metadata_json TEXT"
+        ")"
+    )
+    conn.execute(
+        "INSERT INTO nodes(id, segment_id, file_rel, symbol_name, qualified_name, kind, line, metadata_json) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        (
+            f"{segment_id}:src/pkg/sample.py:root",
+            segment_id,
+            "src/pkg/sample.py",
+            "root",
+            "root",
+            "function",
+            1,
+            None,
+        ),
+    )
+    conn.commit()
+    conn.close()
+    return db_path
+
+
+def _write_relations_ready_db(segment: Path) -> Path:
+    db_path, cache_dir = _graph_cache_paths(segment)
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    segment_id = resolve_segment_ref(segment).id
+    conn = sqlite3.connect(db_path)
+    conn.execute("CREATE TABLE schema_version (version INTEGER PRIMARY KEY)")
+    conn.execute("INSERT INTO schema_version VALUES (?)", (GraphStore.SCHEMA_VERSION,))
+    conn.execute(
+        "CREATE TABLE nodes ("
+        "id TEXT PRIMARY KEY, "
+        "segment_id TEXT NOT NULL, "
+        "file_rel TEXT NOT NULL, "
+        "symbol_name TEXT NOT NULL, "
+        "qualified_name TEXT NOT NULL, "
+        "kind TEXT NOT NULL, "
+        "line INTEGER NOT NULL, "
+        "metadata_json TEXT"
+        ")"
+    )
+    conn.execute(
+        "CREATE TABLE edges ("
+        "id TEXT PRIMARY KEY, "
+        "segment_id TEXT NOT NULL, "
+        "from_node_id TEXT NOT NULL, "
+        "to_node_id TEXT NOT NULL, "
+        "edge_kind TEXT NOT NULL, "
+        "source TEXT NOT NULL, "
+        "confidence REAL"
+        ")"
+    )
+    root_id = f"{segment_id}:src/pkg/sample.py:root"
+    leaf_id = f"{segment_id}:src/pkg/sample.py:leaf"
+    conn.executemany(
+        "INSERT INTO nodes(id, segment_id, file_rel, symbol_name, qualified_name, kind, line, metadata_json) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        [
+            (root_id, segment_id, "src/pkg/sample.py", "root", "root", "function", 4, None),
+            (leaf_id, segment_id, "src/pkg/sample.py", "leaf", "leaf", "function", 1, None),
+        ],
+    )
+    conn.execute(
+        "INSERT INTO edges(id, segment_id, from_node_id, to_node_id, edge_kind, source, confidence) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (
+            f"{segment_id}:{root_id}->{leaf_id}:calls",
+            segment_id,
+            root_id,
+            leaf_id,
+            "calls",
+            "ast",
+            1.0,
+        ),
+    )
+    conn.commit()
+    conn.close()
+    return db_path
+
+
 def test_graph_cli_help_and_index_status_search_flow(tmp_path: Path) -> None:
     segment = tmp_path / "segment"
     source_dir = segment / "src" / "pkg"
@@ -213,35 +309,36 @@ def test_graph_cli_related_commands_return_stable_json_for_ambiguous_symbol(
     assert index_result.exit_code == 0, index_result.output
     assert result.exit_code != 0
     payload = json.loads(result.output)
-    assert payload["status"] == "error"
+    assert payload["ok"] is False
     assert payload["symbol"] == "helper"
     assert payload["error"] == {
         "code": "GRAPH_TARGET_AMBIGUOUS",
-        "kind": "ambiguous_symbol",
         "message": "Symbol 'helper' matched multiple graph nodes.",
-        "details": {},
-        "candidates": [
-            {
-                "id": payload["error"]["candidates"][0]["id"],
-                "segment_id": payload["error"]["candidates"][0]["segment_id"],
-                "file_rel": "src/pkg/first.py",
-                "symbol_name": "helper",
-                "qualified_name": "helper",
-                "kind": "function",
-                "line": 1,
-                "metadata_json": None,
-            },
-            {
-                "id": payload["error"]["candidates"][1]["id"],
-                "segment_id": payload["error"]["candidates"][1]["segment_id"],
-                "file_rel": "src/pkg/second.py",
-                "symbol_name": "helper",
-                "qualified_name": "helper",
-                "kind": "function",
-                "line": 1,
-                "metadata_json": None,
-            },
-        ],
+        "retryable": False,
+        "details": {
+            "candidates": [
+                {
+                    "id": payload["error"]["details"]["candidates"][0]["id"],
+                    "segment_id": payload["error"]["details"]["candidates"][0]["segment_id"],
+                    "file_rel": "src/pkg/first.py",
+                    "symbol_name": "helper",
+                    "qualified_name": "helper",
+                    "kind": "function",
+                    "line": 1,
+                    "metadata_json": None,
+                },
+                {
+                    "id": payload["error"]["details"]["candidates"][1]["id"],
+                    "segment_id": payload["error"]["details"]["candidates"][1]["segment_id"],
+                    "file_rel": "src/pkg/second.py",
+                    "symbol_name": "helper",
+                    "qualified_name": "helper",
+                    "kind": "function",
+                    "line": 1,
+                    "metadata_json": None,
+                },
+            ]
+        },
     }
 
 
@@ -268,28 +365,31 @@ def test_graph_cli_related_commands_return_distinct_json_for_missing_symbol(
     assert index_result.exit_code == 0, index_result.output
     assert result.exit_code != 0
     payload = json.loads(result.output)
-    assert payload["status"] == "error"
+    assert payload["ok"] is False
     assert payload["symbol"] == "missing"
     assert payload["error"] == {
         "code": "GRAPH_TARGET_NOT_FOUND",
-        "kind": "symbol_not_found",
         "message": "Symbol 'missing' was not found in the graph index.",
+        "retryable": False,
         "details": {},
-        "candidates": [],
     }
 
 
 @pytest.mark.parametrize(
-    ("command", "args", "expected_code"),
+    ("command", "args", "expected_code", "missing_tables"),
     [
-        ("status", [], "GRAPH_DB_INCOMPLETE"),
-        ("search", ["--query", "root"], "GRAPH_DB_INCOMPLETE"),
-        ("callers", ["--symbol", "root"], "GRAPH_DB_INCOMPLETE"),
-        ("callees", ["--symbol", "root"], "GRAPH_DB_INCOMPLETE"),
+        ("status", [], "GRAPH_DB_INCOMPLETE", ["edges", "graph_index", "nodes"]),
+        ("search", ["--query", "root"], "GRAPH_DB_INCOMPLETE", ["nodes"]),
+        ("callers", ["--symbol", "root"], "GRAPH_DB_INCOMPLETE", ["edges", "nodes"]),
+        ("callees", ["--symbol", "root"], "GRAPH_DB_INCOMPLETE", ["edges", "nodes"]),
     ],
 )
 def test_graph_cli_read_paths_do_not_mutate_partial_db(
-    tmp_path: Path, command: str, args: list[str], expected_code: str
+    tmp_path: Path,
+    command: str,
+    args: list[str],
+    expected_code: str,
+    missing_tables: list[str],
 ) -> None:
     segment = tmp_path / "segment"
     (segment / "src").mkdir(parents=True)
@@ -302,13 +402,13 @@ def test_graph_cli_read_paths_do_not_mutate_partial_db(
     assert result.exit_code == 1, result.output
     assert after_hash == before_hash
     expected_payload: dict[str, object] = {
-        "status": "error",
+        "ok": False,
         "segment_id": resolve_segment_ref(segment).id,
         "error": {
             "code": expected_code,
-            "kind": "graph_db_incomplete",
-            "message": "Graph DB is missing required tables: edges, graph_index, nodes.",
-            "details": {"missing_tables": ["edges", "graph_index", "nodes"]},
+            "message": "Graph DB is missing required tables: " + ", ".join(missing_tables) + ".",
+            "retryable": False,
+            "details": {"missing_tables": missing_tables},
         },
     }
     if command in {"callers", "callees"}:
@@ -337,7 +437,7 @@ def test_graph_cli_returns_stable_json_for_schema_mismatch(
     payload = json.loads(result.output)
 
     assert result.exit_code == 1, result.output
-    assert payload["status"] == "error"
+    assert payload["ok"] is False
     assert payload["segment_id"] == resolve_segment_ref(segment).id
     if expected_symbol is None:
         assert "symbol" not in payload
@@ -345,8 +445,8 @@ def test_graph_cli_returns_stable_json_for_schema_mismatch(
         assert payload["symbol"] == expected_symbol
     assert payload["error"] == {
         "code": "GRAPH_DB_SCHEMA_MISMATCH",
-        "kind": "graph_db_schema_mismatch",
         "message": "Graph DB schema version mismatch: expected 1, got 999.",
+        "retryable": False,
         "details": {"expected_version": 1, "actual_version": 999},
     }
 
@@ -372,14 +472,14 @@ def test_graph_cli_returns_stable_json_for_unavailable_db(
     payload = json.loads(result.output)
 
     assert result.exit_code == 1, result.output
-    assert payload["status"] == "error"
+    assert payload["ok"] is False
     assert payload["segment_id"] == resolve_segment_ref(segment).id
     if expected_symbol is None:
         assert "symbol" not in payload
     else:
         assert payload["symbol"] == expected_symbol
     assert payload["error"]["code"] == "GRAPH_DB_UNAVAILABLE"
-    assert payload["error"]["kind"] == "graph_db_unavailable"
+    assert payload["error"]["retryable"] is True
     assert payload["error"]["details"] == {}
 
 
@@ -395,15 +495,54 @@ def test_graph_cli_index_fails_closed_for_existing_db_without_schema_version(tmp
 
     assert result.exit_code == 1, result.output
     assert payload == {
-        "status": "error",
+        "ok": False,
         "segment_id": resolve_segment_ref(segment).id,
         "error": {
             "code": "GRAPH_DB_INCOMPLETE",
-            "kind": "graph_db_incomplete",
             "message": "Graph DB is missing required tables: schema_version.",
+            "retryable": False,
             "details": {"missing_tables": ["schema_version"]},
         },
     }
+
+
+def test_graph_cli_search_accepts_nodes_only_partial_db(tmp_path: Path) -> None:
+    segment = tmp_path / "segment"
+    (segment / "src").mkdir(parents=True)
+    _write_search_ready_db(segment)
+
+    result = runner.invoke(
+        app,
+        ["graph", "search", "--segment", str(segment), "--query", "root", "--json"],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert [node["symbol_name"] for node in payload["nodes"]] == ["root"]
+
+
+@pytest.mark.parametrize(
+    ("command", "args", "expected_symbols"),
+    [
+        ("callers", ["--symbol", "leaf"], ["root"]),
+        ("callees", ["--symbol", "root"], ["leaf"]),
+    ],
+)
+def test_graph_cli_related_commands_accept_nodes_and_edges_without_graph_index(
+    tmp_path: Path,
+    command: str,
+    args: list[str],
+    expected_symbols: list[str],
+) -> None:
+    segment = tmp_path / "segment"
+    (segment / "src").mkdir(parents=True)
+    _write_relations_ready_db(segment)
+
+    result = runner.invoke(app, ["graph", command, "--segment", str(segment), *args, "--json"])
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert [node["symbol_name"] for node in payload["nodes"]] == expected_symbols
 
 
 @pytest.mark.parametrize(

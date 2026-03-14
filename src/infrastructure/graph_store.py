@@ -6,10 +6,10 @@ from src.domain.graph_models import GraphEdge, GraphNode, GraphStatus
 
 
 class GraphCommandError(ValueError):
-    # Stable Graph CLI envelope: code/kind/message/details are always present.
-    # Specialized families may add fields such as candidates.
+    # Stable Graph CLI envelope: code/message/retryable/details are always present.
     code = "GRAPH_COMMAND_ERROR"
-    kind = "graph_command_error"
+    retryable = False
+    exit_code = 1
 
     def __init__(
         self,
@@ -27,15 +27,14 @@ class GraphCommandError(ValueError):
     def to_error_payload(self) -> dict[str, object]:
         return {
             "code": self.code,
-            "kind": self.kind,
             "message": self.message,
+            "retryable": self.retryable,
             "details": self.details,
         }
 
 
 class GraphTargetResolutionError(GraphCommandError):
     code = "GRAPH_TARGET_RESOLUTION_ERROR"
-    kind = "graph_target_resolution_error"
 
     def __init__(
         self,
@@ -45,21 +44,14 @@ class GraphTargetResolutionError(GraphCommandError):
         candidates: list[GraphNode] | None = None,
     ) -> None:
         self.candidates = [candidate.to_dict() for candidate in (candidates or [])]
-        super().__init__(segment_id=segment_id, symbol=symbol, message=message, details={})
-
-    def to_error_payload(self) -> dict[str, object]:
-        return {
-            "code": self.code,
-            "kind": self.kind,
-            "message": self.message,
-            "details": self.details,
-            "candidates": self.candidates,
-        }
+        details = {}
+        if self.candidates:
+            details["candidates"] = self.candidates
+        super().__init__(segment_id=segment_id, symbol=symbol, message=message, details=details)
 
 
 class AmbiguousGraphTargetError(GraphTargetResolutionError):
     code = "GRAPH_TARGET_AMBIGUOUS"
-    kind = "ambiguous_symbol"
 
     def __init__(self, segment_id: str, symbol: str, candidates: list[GraphNode]) -> None:
         super().__init__(
@@ -72,7 +64,6 @@ class AmbiguousGraphTargetError(GraphTargetResolutionError):
 
 class GraphTargetNotFoundError(GraphTargetResolutionError):
     code = "GRAPH_TARGET_NOT_FOUND"
-    kind = "symbol_not_found"
 
     def __init__(self, segment_id: str, symbol: str) -> None:
         super().__init__(
@@ -85,7 +76,6 @@ class GraphTargetNotFoundError(GraphTargetResolutionError):
 
 class GraphStoreAccessError(GraphCommandError):
     code = "GRAPH_DB_UNAVAILABLE"
-    kind = "graph_db_unavailable"
 
     def __init__(
         self,
@@ -98,7 +88,6 @@ class GraphStoreAccessError(GraphCommandError):
 
 class GraphStoreSchemaMismatchError(GraphStoreAccessError):
     code = "GRAPH_DB_SCHEMA_MISMATCH"
-    kind = "graph_db_schema_mismatch"
 
     def __init__(self, segment_id: str, expected_version: int, actual_version: int | str) -> None:
         super().__init__(
@@ -116,7 +105,6 @@ class GraphStoreSchemaMismatchError(GraphStoreAccessError):
 
 class GraphStoreIncompleteError(GraphStoreAccessError):
     code = "GRAPH_DB_INCOMPLETE"
-    kind = "graph_db_incomplete"
 
     def __init__(self, segment_id: str, missing_tables: list[str]) -> None:
         sorted_missing = sorted(missing_tables)
@@ -133,7 +121,7 @@ class GraphStoreIncompleteError(GraphStoreAccessError):
 
 class GraphStoreUnavailableError(GraphStoreAccessError):
     code = "GRAPH_DB_UNAVAILABLE"
-    kind = "graph_db_unavailable"
+    retryable = True
 
     def __init__(self, segment_id: str, cause: str) -> None:
         super().__init__(
@@ -144,7 +132,9 @@ class GraphStoreUnavailableError(GraphStoreAccessError):
 
 class GraphStore:
     SCHEMA_VERSION = 1
-    REQUIRED_TABLES = ("graph_index", "nodes", "edges")
+    STATUS_REQUIRED_TABLES = ("graph_index", "nodes", "edges")
+    SEARCH_REQUIRED_TABLES = ("nodes",)
+    RELATION_REQUIRED_TABLES = ("nodes", "edges")
 
     def __init__(
         self,
@@ -167,11 +157,17 @@ class GraphStore:
         return segment_root / ".trifecta" / "cache" / f"graph_{segment_id}.db"
 
     @classmethod
-    def open_readonly(cls, db_path: Path, segment_id: str) -> "GraphStore":
+    def open_readonly(
+        cls,
+        db_path: Path,
+        segment_id: str,
+        *,
+        required_tables: tuple[str, ...],
+    ) -> "GraphStore":
         store = cls.__new__(cls)
         store._db_path = db_path
         store._segment_id = segment_id
-        store._validate_existing_schema(segment_id)
+        store._validate_existing_schema(segment_id, required_tables=required_tables)
         return store
 
     @classmethod
@@ -185,7 +181,11 @@ class GraphStore:
                 edge_count=0,
                 last_indexed_at=None,
             )
-        return cls.open_readonly(db_path, segment_id).get_status(segment_id)
+        return cls.open_readonly(
+            db_path,
+            segment_id,
+            required_tables=cls.STATUS_REQUIRED_TABLES,
+        ).get_status(segment_id)
 
     def _validate_or_init_writable_schema(self, segment_id: str) -> None:
         self._db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -205,13 +205,18 @@ class GraphStore:
         # advertises the current graph schema_version is recoverable in place.
         self._validate_schema_version(segment_id)
 
-    def _validate_existing_schema(self, segment_id: str) -> None:
+    def _validate_existing_schema(
+        self,
+        segment_id: str,
+        *,
+        required_tables: tuple[str, ...],
+    ) -> None:
         conn = self._connect(segment_id)
         try:
             tables = self._list_tables(conn, segment_id)
             self._validate_schema_version_from_tables(conn, segment_id, tables)
 
-            missing_tables = [table for table in self.REQUIRED_TABLES if table not in tables]
+            missing_tables = [table for table in required_tables if table not in tables]
             if missing_tables:
                 raise GraphStoreIncompleteError(segment_id, missing_tables)
         finally:
@@ -360,20 +365,24 @@ class GraphStore:
             conn.close()
 
     def get_status(self, segment_id: str) -> GraphStatus:
-        conn = sqlite3.connect(self._db_path)
-        node_count = conn.execute(
-            "SELECT COUNT(*) FROM nodes WHERE segment_id = ?",
-            (segment_id,),
-        ).fetchone()[0]
-        edge_count = conn.execute(
-            "SELECT COUNT(*) FROM edges WHERE segment_id = ?",
-            (segment_id,),
-        ).fetchone()[0]
-        indexed_row = conn.execute(
-            "SELECT indexed_at FROM graph_index WHERE segment_id = ?",
-            (segment_id,),
-        ).fetchone()
-        conn.close()
+        conn = self._connect(segment_id)
+        try:
+            node_count = conn.execute(
+                "SELECT COUNT(*) FROM nodes WHERE segment_id = ?",
+                (segment_id,),
+            ).fetchone()[0]
+            edge_count = conn.execute(
+                "SELECT COUNT(*) FROM edges WHERE segment_id = ?",
+                (segment_id,),
+            ).fetchone()[0]
+            indexed_row = conn.execute(
+                "SELECT indexed_at FROM graph_index WHERE segment_id = ?",
+                (segment_id,),
+            ).fetchone()
+        except sqlite3.Error as exc:
+            raise GraphStoreUnavailableError(segment_id, str(exc)) from exc
+        finally:
+            conn.close()
         return GraphStatus(
             exists=self._db_path.exists(),
             segment_id=segment_id,
@@ -385,18 +394,22 @@ class GraphStore:
 
     def search_nodes(self, segment_id: str, query: str, limit: int = 20) -> list[GraphNode]:
         pattern = f"%{query.lower()}%"
-        conn = sqlite3.connect(self._db_path)
+        conn = self._connect(segment_id)
         conn.row_factory = sqlite3.Row
-        rows = conn.execute(
-            "SELECT * FROM nodes "
-            "WHERE segment_id = ? AND ("
-            "lower(symbol_name) LIKE ? OR lower(qualified_name) LIKE ? OR lower(file_rel) LIKE ?"
-            ") "
-            "ORDER BY CASE WHEN lower(symbol_name) = ? THEN 0 ELSE 1 END, file_rel, line "
-            "LIMIT ?",
-            (segment_id, pattern, pattern, pattern, query.lower(), limit),
-        ).fetchall()
-        conn.close()
+        try:
+            rows = conn.execute(
+                "SELECT * FROM nodes "
+                "WHERE segment_id = ? AND ("
+                "lower(symbol_name) LIKE ? OR lower(qualified_name) LIKE ? OR lower(file_rel) LIKE ?"
+                ") "
+                "ORDER BY CASE WHEN lower(symbol_name) = ? THEN 0 ELSE 1 END, file_rel, line "
+                "LIMIT ?",
+                (segment_id, pattern, pattern, pattern, query.lower(), limit),
+            ).fetchall()
+        except sqlite3.Error as exc:
+            raise GraphStoreUnavailableError(segment_id, str(exc)) from exc
+        finally:
+            conn.close()
         return [self._row_to_node(row) for row in rows]
 
     def get_callers(self, segment_id: str, symbol: str) -> list[GraphNode]:
@@ -414,15 +427,19 @@ class GraphStore:
         return self._get_related_nodes_for_node(segment_id, node_id, reverse=False)
 
     def find_target_candidates(self, segment_id: str, symbol: str) -> list[GraphNode]:
-        conn = sqlite3.connect(self._db_path)
+        conn = self._connect(segment_id)
         conn.row_factory = sqlite3.Row
-        rows = conn.execute(
-            "SELECT * FROM nodes "
-            "WHERE segment_id = ? AND (symbol_name = ? OR qualified_name = ?) "
-            "ORDER BY file_rel, line",
-            (segment_id, symbol, symbol),
-        ).fetchall()
-        conn.close()
+        try:
+            rows = conn.execute(
+                "SELECT * FROM nodes "
+                "WHERE segment_id = ? AND (symbol_name = ? OR qualified_name = ?) "
+                "ORDER BY file_rel, line",
+                (segment_id, symbol, symbol),
+            ).fetchall()
+        except sqlite3.Error as exc:
+            raise GraphStoreUnavailableError(segment_id, str(exc)) from exc
+        finally:
+            conn.close()
         return [self._row_to_node(row) for row in rows]
 
     def _resolve_target_node(self, segment_id: str, symbol: str) -> GraphNode:
@@ -436,19 +453,23 @@ class GraphStore:
     def _get_related_nodes_for_node(
         self, segment_id: str, node_id: str, reverse: bool
     ) -> list[GraphNode]:
-        conn = sqlite3.connect(self._db_path)
+        conn = self._connect(segment_id)
         conn.row_factory = sqlite3.Row
-        rows = conn.execute(
-            "SELECT n.* FROM nodes n "
-            "JOIN edges e ON "
-            + ("e.from_node_id = n.id " if reverse else "e.to_node_id = n.id ")
-            + "JOIN nodes target ON "
-            + ("e.to_node_id = target.id " if reverse else "e.from_node_id = target.id ")
-            + "WHERE target.segment_id = ? AND target.id = ? "
-            "ORDER BY n.file_rel, n.line",
-            (segment_id, node_id),
-        ).fetchall()
-        conn.close()
+        try:
+            rows = conn.execute(
+                "SELECT n.* FROM nodes n "
+                "JOIN edges e ON "
+                + ("e.from_node_id = n.id " if reverse else "e.to_node_id = n.id ")
+                + "JOIN nodes target ON "
+                + ("e.to_node_id = target.id " if reverse else "e.from_node_id = target.id ")
+                + "WHERE target.segment_id = ? AND target.id = ? "
+                "ORDER BY n.file_rel, n.line",
+                (segment_id, node_id),
+            ).fetchall()
+        except sqlite3.Error as exc:
+            raise GraphStoreUnavailableError(segment_id, str(exc)) from exc
+        finally:
+            conn.close()
         return [self._row_to_node(row) for row in rows]
 
     @staticmethod

@@ -24,7 +24,7 @@ class GraphService:
 
     def search(self, segment: Path | str, query: str, limit: int = 20) -> dict[str, object]:
         # Search stays fuzzy on purpose; exact symbol resolution is only for callers/callees.
-        resolved = self._resolve_existing(segment)
+        resolved = self._resolve_existing(segment, required_tables=GraphStore.SEARCH_REQUIRED_TABLES)
         if resolved is None:
             segment_ref = resolve_segment_ref(segment)
             return {"status": "ok", "segment_id": segment_ref.id, "query": query, "nodes": []}
@@ -44,7 +44,7 @@ class GraphService:
         return self._related(segment, symbol, reverse=False)
 
     def related_terms(self, segment: Path | str, query: str) -> dict[str, object]:
-        resolved = self._resolve_existing(segment)
+        resolved = self._resolve_existing(segment, required_tables=GraphStore.SEARCH_REQUIRED_TABLES)
         if resolved is None:
             segment_ref = resolve_segment_ref(segment)
             return {"status": "ok", "segment_id": segment_ref.id, "terms": []}
@@ -61,7 +61,7 @@ class GraphService:
 
     def _related(self, segment: Path | str, symbol: str, reverse: bool) -> dict[str, object]:
         try:
-            resolved = self._resolve_existing(segment)
+            resolved = self._resolve_existing(segment, required_tables=GraphStore.RELATION_REQUIRED_TABLES)
         except GraphStoreAccessError as exc:
             exc.symbol = symbol
             raise
@@ -95,11 +95,20 @@ class GraphService:
             raise AmbiguousGraphTargetError(segment_id, symbol, matches)
         return matches[0]
 
-    def _resolve_existing(self, segment: Path | str) -> tuple[SegmentRef, GraphStore] | None:
+    def _resolve_existing(
+        self,
+        segment: Path | str,
+        *,
+        required_tables: tuple[str, ...],
+    ) -> tuple[SegmentRef, GraphStore] | None:
         segment_ref = resolve_segment_ref(segment)
         db_path = GraphStore.db_path_for_segment(segment_ref.root_abs, segment_ref.id)
         if self._store is not None:
             return segment_ref, self._store
         if not db_path.exists():
             return None
-        return segment_ref, GraphStore.open_readonly(db_path, segment_ref.id)
+        return segment_ref, GraphStore.open_readonly(
+            db_path,
+            segment_ref.id,
+            required_tables=required_tables,
+        )

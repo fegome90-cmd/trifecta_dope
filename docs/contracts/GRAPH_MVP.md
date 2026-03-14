@@ -59,7 +59,15 @@ An existing DB is recoverable only when:
 - it contains `schema_version`
 - `schema_version == 1`
 
-If `graph_index`, `nodes`, or `edges` are missing, `graph index` may repair the DB in place.
+For `graph index`, that is enough to repair the DB in place.
+
+For read-only commands, "recoverable" is command-specific and means the DB has the
+minimum tables required to answer without inventing data:
+
+- `graph status`: `graph_index`, `nodes`, `edges`
+- `graph search`: `nodes`
+- `graph callers`: `nodes`, `edges`
+- `graph callees`: `nodes`, `edges`
 
 ### Invalid or non-recoverable DB
 
@@ -68,6 +76,7 @@ A DB is invalid or non-recoverable when:
 - `schema_version` is missing
 - `schema_version` does not match the expected version
 - the DB path cannot be opened or queried
+- a read-only command lacks the minimum required tables for that command
 
 In those cases Graph fails closed. It does not repair on read paths, and `graph index` does not silently recover a DB that does not already advertise the current graph schema.
 
@@ -84,25 +93,24 @@ All predictable Graph CLI failures use this envelope:
 
 ```json
 {
-  "status": "error",
+  "ok": false,
   "segment_id": "...",
   "symbol": "...",
   "error": {
     "code": "...",
-    "kind": "...",
     "message": "...",
-    "details": {},
-    "candidates": []
+    "retryable": false,
+    "details": {}
   }
 }
 ```
 
 Rules:
 
-- `status`, `segment_id`, and `error` are always present
+- `ok`, `segment_id`, and `error` are always present
 - `symbol` appears for symbol-scoped commands when relevant
-- `error.code`, `error.kind`, `error.message`, and `error.details` are the common base
-- `error.candidates` is specialized for symbol-resolution errors
+- `error.code`, `error.message`, `error.retryable`, and `error.details` are the stable base
+- specialized machine-readable data such as ambiguous candidates lives under `error.details`
 
 ## Frozen Error Codes
 
