@@ -1,0 +1,87 @@
+version: 1
+id: WO-0063
+epic_id: E-0020
+title: '[WO-INTAKE-CUTOVER-P0] Intake cutover and manifest-based grandfathering'
+priority: P0
+status: pending
+owner: null
+branch: null
+worktree: null
+scope:
+  allow:
+  - scripts/ctx_wo_bootstrap.py
+  - scripts/ctx_wo_lint.py
+  - scripts/ctx_wo_preflight.py
+  - scripts/ctx_wo_take.py
+  - scripts/ctx_wo_finish.py
+  - docs/backlog/WORKFLOW.md
+  - docs/backlog/OPERATIONS.md
+  - _ctx/jobs/grandfathered_pending_ids.yaml
+  - tests/unit/test_wo_*
+  - tests/integration/test_wo_*
+  deny:
+  - _ctx/jobs/pending/WO-0061.yaml
+  - _ctx/jobs/pending/WO-0062.yaml
+  - _ctx/jobs/done/*.yaml
+  - _ctx/jobs/failed/*.yaml
+verify:
+  commands:
+  - uv run pytest -q tests/unit/test_wo_* tests/integration/test_wo_* -k "cutover or grandfather or pending
+    or take or preflight or lint"
+  - uv run python scripts/ctx_backlog_validate.py --strict
+dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - verify
+  - session.append:result
+  segment: .
+dependencies:
+- WO-0061
+- WO-0062
+trace:
+  ticket: null
+  related_wos:
+  - WO-0061
+  - WO-0062
+  - WO-0064
+  - WO-0065
+objective: Cut over intake so pending means take-ready, new hybrids are rejected, and only explicit manifest-listed
+  active hybrids may use temporary compatibility.
+deliverables:
+- Intake cutover in bootstrap/lint/preflight/take
+- Explicit grandfathering manifest under _ctx/jobs/
+- Rewrite-trigger enforcement for active hybrids
+acceptance_criteria:
+- scripts/ctx_wo_bootstrap.py does not create a new hybrid pending WO.
+- scripts/ctx_wo_lint.py and scripts/ctx_wo_preflight.py reject non-manifest hybrids in pending/.
+- scripts/ctx_wo_take.py allows temporary compatibility only for manifest-listed IDs under the shared
+  compatibility rules.
+- Structural rewrites force normalization before re-entry or take.
+out_of_scope:
+- Normalizing the 7 tracked hybrids
+- Final docs and .claude alignment
+artifacts:
+- scripts/ctx_wo_bootstrap.py
+- scripts/ctx_wo_lint.py
+- scripts/ctx_wo_preflight.py
+- scripts/ctx_wo_take.py
+- _ctx/jobs/grandfathered_pending_ids.yaml
+risks:
+- Legitimate active work is blocked by a bad manifest or compatibility rule
+- Alternate intake paths still admit hybrids
+definition_of_done:
+- _ctx/jobs/grandfathered_pending_ids.yaml exists with cutover_commit, generated_at, and ids.
+- The manifest ids set matches exactly this frozen list: WO-0016, WO-0017, WO-0018C, WO-0020-formatter,
+    WO-0021-verdict-generator, WO-0037, WO-0039.
+- New hybrid intake is closed.
+- Manifest compatibility is enforced and tested.
+rollback_note: Revert the cutover commit only if needed; keep new-hybrid admission closed and re-enable
+  take compatibility only for manifest-listed IDs.
+x_alias: WO-INTAKE-CUTOVER-P0
+x_wave: 2
+x_gate: Blocks normalization and docs alignment

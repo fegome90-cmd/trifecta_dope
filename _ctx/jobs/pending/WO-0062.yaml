@@ -1,0 +1,77 @@
+version: 1
+id: WO-0062
+epic_id: E-0020
+title: '[WO-CONTRACT-TESTS-P0] P0 cross-layer contract tests and fixtures'
+priority: P0
+status: pending
+owner: null
+branch: null
+worktree: null
+scope:
+  allow:
+  - tests/unit/test_wo_*
+  - tests/integration/test_wo_*
+  - tests/fixtures/**
+  - docs/backlog/schema/work_order.schema.json
+  - scripts/ctx_wo_take.py
+  - scripts/ctx_wo_finish.py
+  - scripts/ctx_wo_lint.py
+  - scripts/ctx_wo_preflight.py
+  deny:
+  - _ctx/jobs/pending/*.yaml
+  - docs/guides/**
+verify:
+  commands:
+  - uv run pytest -q tests/unit/test_wo_* tests/integration/test_wo_*
+  - uv run python scripts/ctx_backlog_validate.py --strict
+dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - verify
+  - session.append:result
+  segment: .
+dependencies:
+- WO-0061
+trace:
+  ticket: null
+  related_wos:
+  - WO-0061
+  - WO-0063
+objective: Freeze the P0 invariant matrix so authority, schema, lint, take, finish, and status surfaces
+  cannot drift during cutover.
+deliverables:
+- Canonical, hybrid, legacy, incompatible, and grandfathered fixtures
+- P0 contract tests for states, required_flow, IDs, pending semantics, grandfathering, and local incompatibles
+acceptance_criteria:
+- P0 tests cover at least these invariants: status classification, filename-id coherence, required_flow,
+    pending take-ready fields, manifest-only grandfathering, rewrite-trigger normalization, and local
+    runtime-incompatible handling.
+- Tests fail on schema/lint/runtime drift for critical contract fields.
+- Grandfathering applies only to explicit manifest IDs.
+out_of_scope:
+- Intake cutover activation
+- Full docs policy checks
+artifacts:
+- tests/unit/test_wo_*
+- tests/integration/test_wo_*
+- tests/fixtures/**
+- docs/backlog/schema/work_order.schema.json
+risks:
+- Tests encode the old contract by accident
+- Fixtures miss rewrite-trigger scenarios
+definition_of_done:
+- P0 contract suite is green.
+- Every critical invariant has automated coverage.
+- At minimum there is one automated assertion each for schema-vs-runtime pending semantics, schema-vs-lint
+  pending semantics, explicit manifest-only grandfathering, and local runtime-incompatible artifact detection.
+- Verify commands pass.
+rollback_note: If tests expose contradictions, tighten authority or fixtures before cutover; do not weaken
+  the invariant set.
+x_alias: WO-CONTRACT-TESTS-P0
+x_wave: 1
+x_gate: Must be green before cutover

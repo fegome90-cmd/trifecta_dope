@@ -1,0 +1,78 @@
+version: 1
+id: WO-0066
+epic_id: E-0020
+title: '[WO-DOCS-CLAUDE-ALIGN-P1] Align docs and .claude to the hardened contract'
+priority: P1
+status: pending
+owner: null
+branch: null
+worktree: null
+scope:
+  allow:
+  - docs/backlog/*.md
+  - docs/guides/*.md
+  - .claude/**
+  - AGENTS.md
+  - skill.md
+  - tests/unit/test_wo_*
+  - tests/integration/test_wo_*
+  deny:
+  - _ctx/jobs/pending/*.yaml
+  - _ctx/jobs/done/*.yaml
+  - _ctx/jobs/failed/*.yaml
+verify:
+  commands:
+  - uv run python scripts/ctx_backlog_validate.py --strict
+  - uv run pytest -q tests/unit/test_wo_* tests/integration/test_wo_* -k "policy or docs or pending"
+dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - verify
+  - session.append:result
+  segment: .
+dependencies:
+- WO-0063
+- WO-0065
+trace:
+  ticket: null
+  related_wos:
+  - WO-0063
+  - WO-0065
+objective: Align docs and .claude with the post-cutover contract so humans and agents stop learning the
+  hybrid or draft-in-pending model.
+deliverables:
+- Updated docs and .claude guidance for pending semantics, required_flow, grandfathering, and draft handling
+- Minimum policy checks for critical contract snippets
+acceptance_criteria:
+- No critical doc or .claude instruction teaches hybrids as valid new intake.
+- pending semantics and required_flow match runtime behavior.
+- Draft-in-pending guidance is absent from official instructions.
+- The following critical paths are aligned: docs/backlog/WORKFLOW.md, docs/backlog/OPERATIONS.md, docs/backlog/README.md,
+    docs/backlog/TROUBLESHOOTING.md, docs/backlog/MANUAL_WO.md, docs/guides/work_orders_usage.md, _ctx/jobs/AGENTS.md,
+    AGENTS.md, skill.md, .claude/commands/wo-start.md, .claude/skills/wo/create/SKILL.md, .claude/skills/wo/take/SKILL.md,
+    and .claude/skills/wo/status/SKILL.md.
+out_of_scope:
+- New wrappers or UX flows
+- Historical research cleanup unrelated to the active contract
+artifacts:
+- docs/backlog/*.md
+- docs/guides/*.md
+- .claude/**
+- AGENTS.md
+- skill.md
+risks:
+- Docs drift again if checks are too weak
+- Teaching material is edited before runtime stabilizes
+definition_of_done:
+- Critical docs and .claude guidance align with the cutover contract.
+- Minimum policy checks exist for the most drift-prone snippets in the critical paths listed above.
+- Verify commands pass.
+rollback_note: Revert wording if needed, but never restore hybrids or drafts in pending as supported paths.
+x_alias: WO-DOCS-CLAUDE-ALIGN-P1
+x_wave: 4
+x_gate: Closes remediation teaching drift
