@@ -5,7 +5,11 @@ from pathlib import Path
 import pytest
 
 from src.domain.graph_models import GraphEdge, GraphNode
-from src.infrastructure.graph_store import GraphStore, GraphStoreSchemaMismatchError
+from src.infrastructure.graph_store import (
+    GraphStore,
+    GraphStoreIncompleteError,
+    GraphStoreSchemaMismatchError,
+)
 
 
 def _sample_node(segment_id: str = "seg_1234") -> GraphNode:
@@ -86,6 +90,22 @@ def test_graph_store_writable_path_repairs_partial_db_with_valid_schema_version(
     conn.close()
 
     assert {"schema_version", "graph_index", "nodes", "edges"}.issubset(tables)
+
+
+def test_graph_store_writable_path_does_not_repair_existing_db_without_schema_version(
+    tmp_path: Path,
+) -> None:
+    db_path = tmp_path / "graph.db"
+    conn = sqlite3.connect(db_path)
+    conn.execute("CREATE TABLE unrelated (id INTEGER PRIMARY KEY)")
+    conn.commit()
+    conn.close()
+
+    with pytest.raises(
+        GraphStoreIncompleteError,
+        match="Graph DB is missing required tables: schema_version.",
+    ):
+        GraphStore(db_path)
 
 
 def test_graph_store_roundtrips_nodes_and_edges(tmp_path: Path) -> None:

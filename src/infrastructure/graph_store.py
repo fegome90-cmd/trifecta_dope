@@ -6,13 +6,22 @@ from src.domain.graph_models import GraphEdge, GraphNode, GraphStatus
 
 
 class GraphCommandError(ValueError):
+    # Stable Graph CLI envelope: code/kind/message/details are always present.
+    # Specialized families may add fields such as candidates.
     code = "GRAPH_COMMAND_ERROR"
     kind = "graph_command_error"
 
-    def __init__(self, segment_id: str, message: str, symbol: str | None = None) -> None:
+    def __init__(
+        self,
+        segment_id: str,
+        message: str,
+        symbol: str | None = None,
+        details: dict[str, object] | None = None,
+    ) -> None:
         self.segment_id = segment_id
         self.symbol = symbol
         self.message = message
+        self.details = details or {}
         super().__init__(message)
 
     def to_error_payload(self) -> dict[str, object]:
@@ -20,6 +29,7 @@ class GraphCommandError(ValueError):
             "code": self.code,
             "kind": self.kind,
             "message": self.message,
+            "details": self.details,
         }
 
 
@@ -35,13 +45,14 @@ class GraphTargetResolutionError(GraphCommandError):
         candidates: list[GraphNode] | None = None,
     ) -> None:
         self.candidates = [candidate.to_dict() for candidate in (candidates or [])]
-        super().__init__(segment_id=segment_id, symbol=symbol, message=message)
+        super().__init__(segment_id=segment_id, symbol=symbol, message=message, details={})
 
     def to_error_payload(self) -> dict[str, object]:
         return {
             "code": self.code,
             "kind": self.kind,
             "message": self.message,
+            "details": self.details,
             "candidates": self.candidates,
         }
 
@@ -82,18 +93,7 @@ class GraphStoreAccessError(GraphCommandError):
         message: str,
         details: dict[str, object] | None = None,
     ) -> None:
-        self.details = details or {}
-        super().__init__(segment_id=segment_id, message=message)
-
-    def to_error_payload(self) -> dict[str, object]:
-        payload: dict[str, object] = {
-            "code": self.code,
-            "kind": self.kind,
-            "message": self.message,
-        }
-        if self.details:
-            payload["details"] = self.details
-        return payload
+        super().__init__(segment_id=segment_id, message=message, details=details)
 
 
 class GraphStoreSchemaMismatchError(GraphStoreAccessError):
@@ -201,6 +201,8 @@ class GraphStore:
                 raise GraphStoreUnavailableError(segment_id, str(exc)) from exc
             return
 
+        # Writable repair is intentionally conservative: only a DB that already
+        # advertises the current graph schema_version is recoverable in place.
         self._validate_schema_version(segment_id)
 
     def _validate_existing_schema(self, segment_id: str) -> None:

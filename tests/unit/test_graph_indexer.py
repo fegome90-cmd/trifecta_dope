@@ -1,6 +1,10 @@
 from pathlib import Path
 
+import pytest
+
+import src.application.graph_indexer as graph_indexer_module
 from src.application.graph_indexer import GraphIndexer
+from src.domain.segment_resolver import SegmentRef
 from src.infrastructure.graph_store import GraphStore
 
 
@@ -84,3 +88,29 @@ def test_graph_indexer_preserves_top_level_edges_when_nested_calls_exist(tmp_pat
     assert summary.edge_count == 1
     assert [node.symbol_name for node in callees] == ["leaf"]
     assert [node.symbol_name for node in callers] == ["root"]
+
+
+def test_graph_indexer_uses_segment_ref_v1_as_ssot(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    segment = tmp_path / "segment"
+    source_dir = segment / "src" / "pkg"
+    source_dir.mkdir(parents=True)
+    (source_dir / "sample.py").write_text("def root():\n    return 1\n")
+    fake_ref = SegmentRef(
+        root_abs=segment.resolve(),
+        slug="segment",
+        fingerprint="cafebabe",
+        id="segment_cafebabe",
+    )
+
+    def fake_resolve(segment_input: Path | str) -> SegmentRef:
+        assert segment_input == segment
+        return fake_ref
+
+    monkeypatch.setattr(graph_indexer_module, "resolve_segment_ref", fake_resolve)
+
+    summary = GraphIndexer().index_segment(segment)
+
+    assert summary.segment_id == fake_ref.id
+    assert Path(summary.db_path) == GraphStore.db_path_for_segment(fake_ref.root_abs, fake_ref.id)

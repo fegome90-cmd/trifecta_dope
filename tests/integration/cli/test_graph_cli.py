@@ -31,6 +31,23 @@ def _write_schema_only_db(segment: Path, version: int = GraphStore.SCHEMA_VERSIO
     return hashlib.sha256(db_path.read_bytes()).hexdigest(), db_path
 
 
+def _write_sqlite_db_without_schema_version(segment: Path) -> Path:
+    db_path, cache_dir = _graph_cache_paths(segment)
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(db_path)
+    conn.execute("CREATE TABLE unrelated (id INTEGER PRIMARY KEY)")
+    conn.commit()
+    conn.close()
+    return db_path
+
+
+def _make_db_path_unavailable(segment: Path) -> Path:
+    db_path, cache_dir = _graph_cache_paths(segment)
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    db_path.mkdir()
+    return db_path
+
+
 def test_graph_cli_help_and_index_status_search_flow(tmp_path: Path) -> None:
     segment = tmp_path / "segment"
     source_dir = segment / "src" / "pkg"
@@ -202,6 +219,7 @@ def test_graph_cli_related_commands_return_stable_json_for_ambiguous_symbol(
         "code": "GRAPH_TARGET_AMBIGUOUS",
         "kind": "ambiguous_symbol",
         "message": "Symbol 'helper' matched multiple graph nodes.",
+        "details": {},
         "candidates": [
             {
                 "id": payload["error"]["candidates"][0]["id"],
@@ -256,6 +274,7 @@ def test_graph_cli_related_commands_return_distinct_json_for_missing_symbol(
         "code": "GRAPH_TARGET_NOT_FOUND",
         "kind": "symbol_not_found",
         "message": "Symbol 'missing' was not found in the graph index.",
+        "details": {},
         "candidates": [],
     }
 
@@ -265,6 +284,8 @@ def test_graph_cli_related_commands_return_distinct_json_for_missing_symbol(
     [
         ("status", [], "GRAPH_DB_INCOMPLETE"),
         ("search", ["--query", "root"], "GRAPH_DB_INCOMPLETE"),
+        ("callers", ["--symbol", "root"], "GRAPH_DB_INCOMPLETE"),
+        ("callees", ["--symbol", "root"], "GRAPH_DB_INCOMPLETE"),
     ],
 )
 def test_graph_cli_read_paths_do_not_mutate_partial_db(
@@ -280,7 +301,7 @@ def test_graph_cli_read_paths_do_not_mutate_partial_db(
 
     assert result.exit_code == 1, result.output
     assert after_hash == before_hash
-    assert payload == {
+    expected_payload: dict[str, object] = {
         "status": "error",
         "segment_id": resolve_segment_ref(segment).id,
         "error": {
@@ -290,6 +311,9 @@ def test_graph_cli_read_paths_do_not_mutate_partial_db(
             "details": {"missing_tables": ["edges", "graph_index", "nodes"]},
         },
     }
+    if command in {"callers", "callees"}:
+        expected_payload["symbol"] = "root"
+    assert payload == expected_payload
 
 
 @pytest.mark.parametrize(
@@ -325,6 +349,163 @@ def test_graph_cli_returns_stable_json_for_schema_mismatch(
         "message": "Graph DB schema version mismatch: expected 1, got 999.",
         "details": {"expected_version": 1, "actual_version": 999},
     }
+
+
+@pytest.mark.parametrize(
+    ("command", "args", "expected_symbol"),
+    [
+        ("status", [], None),
+        ("search", ["--query", "root"], None),
+        ("callers", ["--symbol", "root"], "root"),
+        ("callees", ["--symbol", "root"], "root"),
+        ("index", [], None),
+    ],
+)
+def test_graph_cli_returns_stable_json_for_unavailable_db(
+    tmp_path: Path, command: str, args: list[str], expected_symbol: str | None
+) -> None:
+    segment = tmp_path / "segment"
+    (segment / "src").mkdir(parents=True)
+    _make_db_path_unavailable(segment)
+
+    result = runner.invoke(app, ["graph", command, "--segment", str(segment), *args, "--json"])
+    payload = json.loads(result.output)
+
+    assert result.exit_code == 1, result.output
+    assert payload["status"] == "error"
+    assert payload["segment_id"] == resolve_segment_ref(segment).id
+    if expected_symbol is None:
+        assert "symbol" not in payload
+    else:
+        assert payload["symbol"] == expected_symbol
+    assert payload["error"]["code"] == "GRAPH_DB_UNAVAILABLE"
+    assert payload["error"]["kind"] == "graph_db_unavailable"
+    assert payload["error"]["details"] == {}
+
+
+def test_graph_cli_index_fails_closed_for_existing_db_without_schema_version(tmp_path: Path) -> None:
+    segment = tmp_path / "segment"
+    source_dir = segment / "src" / "pkg"
+    source_dir.mkdir(parents=True)
+    (source_dir / "sample.py").write_text("def root():\n    return 1\n")
+    _write_sqlite_db_without_schema_version(segment)
+
+    result = runner.invoke(app, ["graph", "index", "--segment", str(segment), "--json"])
+    payload = json.loads(result.output)
+
+    assert result.exit_code == 1, result.output
+    assert payload == {
+        "status": "error",
+        "segment_id": resolve_segment_ref(segment).id,
+        "error": {
+            "code": "GRAPH_DB_INCOMPLETE",
+            "kind": "graph_db_incomplete",
+            "message": "Graph DB is missing required tables: schema_version.",
+            "details": {"missing_tables": ["schema_version"]},
+        },
+    }
+
+
+@pytest.mark.parametrize(
+    ("command", "args", "expected_exit"),
+    [
+        ("index", [], 0),
+        ("status", [], 0),
+        ("search", ["--query", "root"], 0),
+        ("callers", ["--symbol", "leaf"], 0),
+        ("callees", ["--symbol", "root"], 0),
+    ],
+)
+def test_graph_cli_success_exit_code_matrix(
+    tmp_path: Path, command: str, args: list[str], expected_exit: int
+) -> None:
+    segment = tmp_path / "segment"
+    source_dir = segment / "src" / "pkg"
+    source_dir.mkdir(parents=True)
+    (source_dir / "sample.py").write_text(
+        "def leaf():\n"
+        "    return 1\n\n"
+        "def root():\n"
+        "    return leaf()\n"
+    )
+
+    if command != "index":
+        runner.invoke(app, ["graph", "index", "--segment", str(segment), "--json"])
+
+    result = runner.invoke(app, ["graph", command, "--segment", str(segment), *args, "--json"])
+
+    assert result.exit_code == expected_exit, result.output
+
+
+@pytest.mark.parametrize(
+    ("command", "args", "setup_kind", "expected_code"),
+    [
+        ("callers", ["--symbol", "missing"], "missing", "GRAPH_TARGET_NOT_FOUND"),
+        ("callees", ["--symbol", "missing"], "missing", "GRAPH_TARGET_NOT_FOUND"),
+        ("callers", ["--symbol", "helper"], "ambiguous", "GRAPH_TARGET_AMBIGUOUS"),
+        ("callees", ["--symbol", "helper"], "ambiguous", "GRAPH_TARGET_AMBIGUOUS"),
+        ("status", [], "unavailable", "GRAPH_DB_UNAVAILABLE"),
+        ("search", ["--query", "root"], "unavailable", "GRAPH_DB_UNAVAILABLE"),
+        ("callers", ["--symbol", "root"], "unavailable", "GRAPH_DB_UNAVAILABLE"),
+        ("callees", ["--symbol", "root"], "unavailable", "GRAPH_DB_UNAVAILABLE"),
+        ("index", [], "unavailable", "GRAPH_DB_UNAVAILABLE"),
+        ("status", [], "incomplete", "GRAPH_DB_INCOMPLETE"),
+        ("search", ["--query", "root"], "incomplete", "GRAPH_DB_INCOMPLETE"),
+        ("callers", ["--symbol", "root"], "incomplete", "GRAPH_DB_INCOMPLETE"),
+        ("callees", ["--symbol", "root"], "incomplete", "GRAPH_DB_INCOMPLETE"),
+        ("index", [], "invalid_missing_schema", "GRAPH_DB_INCOMPLETE"),
+        ("status", [], "schema_mismatch", "GRAPH_DB_SCHEMA_MISMATCH"),
+        ("search", ["--query", "root"], "schema_mismatch", "GRAPH_DB_SCHEMA_MISMATCH"),
+        ("callers", ["--symbol", "root"], "schema_mismatch", "GRAPH_DB_SCHEMA_MISMATCH"),
+        ("callees", ["--symbol", "root"], "schema_mismatch", "GRAPH_DB_SCHEMA_MISMATCH"),
+        ("index", [], "schema_mismatch", "GRAPH_DB_SCHEMA_MISMATCH"),
+    ],
+)
+def test_graph_cli_failure_exit_code_matrix(
+    tmp_path: Path, command: str, args: list[str], setup_kind: str, expected_code: str
+) -> None:
+    segment = tmp_path / "segment"
+    source_dir = segment / "src" / "pkg"
+    source_dir.mkdir(parents=True)
+    (source_dir / "sample.py").write_text(
+        "def helper():\n"
+        "    return 1\n\n"
+        "def root():\n"
+        "    return helper()\n"
+    )
+
+    if setup_kind == "missing":
+        runner.invoke(app, ["graph", "index", "--segment", str(segment), "--json"])
+    elif setup_kind == "ambiguous":
+        (source_dir / "first.py").write_text(
+            "def helper():\n"
+            "    return 1\n\n"
+            "def root_one():\n"
+            "    return helper()\n"
+        )
+        (source_dir / "second.py").write_text(
+            "def helper():\n"
+            "    return 2\n\n"
+            "def root_two():\n"
+            "    return helper()\n"
+        )
+        runner.invoke(app, ["graph", "index", "--segment", str(segment), "--json"])
+    elif setup_kind == "unavailable":
+        _make_db_path_unavailable(segment)
+    elif setup_kind == "incomplete":
+        _write_schema_only_db(segment)
+    elif setup_kind == "invalid_missing_schema":
+        _write_sqlite_db_without_schema_version(segment)
+    elif setup_kind == "schema_mismatch":
+        _write_schema_only_db(segment, version=999)
+    else:
+        raise AssertionError(f"Unknown setup_kind: {setup_kind}")
+
+    result = runner.invoke(app, ["graph", command, "--segment", str(segment), *args, "--json"])
+    payload = json.loads(result.output)
+
+    assert result.exit_code == 1, result.output
+    assert payload["error"]["code"] == expected_code
 
 
 def test_graph_cli_index_repairs_partial_db_with_valid_schema_version(tmp_path: Path) -> None:

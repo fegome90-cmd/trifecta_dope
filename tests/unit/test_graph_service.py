@@ -4,9 +4,11 @@ from pathlib import Path
 
 import pytest
 
+import src.application.graph_service as graph_service_module
 from src.application.graph_indexer import GraphIndexer
 from src.application.graph_service import GraphService
-from src.domain.segment_resolver import resolve_segment_ref
+from src.domain.graph_models import GraphStatus
+from src.domain.segment_resolver import SegmentRef, resolve_segment_ref
 from src.infrastructure.graph_store import (
     AmbiguousGraphTargetError,
     GraphStore,
@@ -109,7 +111,10 @@ def test_graph_service_callers_fail_closed_on_ambiguous_symbol(tmp_path: Path) -
         raise AssertionError("Expected AmbiguousGraphTargetError for duplicate symbol")
 
 
-@pytest.mark.parametrize("method_name,args", [("status", tuple()), ("search", ("root",))])
+@pytest.mark.parametrize(
+    "method_name,args",
+    [("status", tuple()), ("search", ("root",)), ("callers", ("root",)), ("callees", ("root",))],
+)
 def test_graph_service_read_paths_do_not_mutate_partial_db(
     tmp_path: Path, method_name: str, args: tuple[object, ...]
 ) -> None:
@@ -134,3 +139,43 @@ def test_graph_service_read_paths_do_not_mutate_partial_db(
 
     after_hash = hashlib.sha256(db_path.read_bytes()).hexdigest()
     assert after_hash == before_hash
+
+
+def test_graph_service_status_uses_segment_ref_v1_as_ssot(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    segment = tmp_path / "segment"
+    segment.mkdir()
+    fake_ref = SegmentRef(
+        root_abs=segment.resolve(),
+        slug="segment",
+        fingerprint="deadbeef",
+        id="segment_deadbeef",
+    )
+    seen: dict[str, object] = {}
+
+    def fake_resolve(segment_input: Path | str) -> SegmentRef:
+        seen["segment_input"] = segment_input
+        return fake_ref
+
+    def fake_probe_status(db_path: Path, segment_id: str) -> GraphStatus:
+        seen["db_path"] = db_path
+        seen["segment_id"] = segment_id
+        return GraphStatus(
+            exists=False,
+            segment_id=segment_id,
+            db_path=str(db_path),
+            node_count=0,
+            edge_count=0,
+            last_indexed_at=None,
+        )
+
+    monkeypatch.setattr(graph_service_module, "resolve_segment_ref", fake_resolve)
+    monkeypatch.setattr(graph_service_module.GraphStore, "probe_status", fake_probe_status)
+
+    payload = GraphService().status(segment)
+
+    assert seen["segment_input"] == segment
+    assert seen["segment_id"] == fake_ref.id
+    assert seen["db_path"] == GraphStore.db_path_for_segment(fake_ref.root_abs, fake_ref.id)
+    assert payload["segment_id"] == fake_ref.id
