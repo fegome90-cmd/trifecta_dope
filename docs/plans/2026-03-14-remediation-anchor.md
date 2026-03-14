@@ -11,6 +11,8 @@ Purpose: preserve the remediation thread across branch switches, worktree change
 - Original long-lived remediation branch: `codex/wo-remediation-plan`
 - Original long-lived remediation HEAD: `f49ef95`
 - Preserved non-mergeable local artifacts: `stash@{0}` named `remediation-nonmerge-artifacts`
+- Current PR for the clean merge candidate: `#71` `chore(remediation): recover merge-ready E-0020 state`
+- Current PR URL: `https://github.com/fegome90-cmd/trifecta_dope/pull/71`
 
 ## What Was Recovered
 
@@ -65,6 +67,17 @@ These artifacts were intentionally separated because they were not part of the s
   - `docs/reviewctl-agent-guide.md`
   - `docs/reviewctl-quick-reference.md`
   - `apps/pae-wizard/outputs/reviewctl`
+
+## Branch Review Status
+
+- A fresh `branch-review` preparation pass was attempted after opening PR `#71`.
+- The process stopped in preflight, before `plan` or `run`, because the required execution surface is still incomplete in this repo root.
+- Latest confirmed blockers from the fresh preflight:
+  - `REVIEW_API_TOKEN_MISSING`
+  - `PACKAGE_JSON_MISSING`
+  - `docs/reviewctl-agent-guide.md` missing
+  - `docs/reviewctl-quick-reference.md` missing
+- No `reviewctl` run id was produced from this pass, so there is no new `_ctx/review_runs/<run-id>/final.json` artifact yet.
 
 ## Guardrails
 
