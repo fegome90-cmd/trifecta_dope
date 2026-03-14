@@ -5,6 +5,13 @@ from pathlib import Path
 from src.domain.graph_models import GraphEdge, GraphNode, GraphStatus
 
 
+class AmbiguousGraphTargetError(ValueError):
+    def __init__(self, symbol: str, candidates: list[GraphNode]) -> None:
+        self.symbol = symbol
+        self.candidates = [candidate.to_dict() for candidate in candidates]
+        super().__init__(f"ambiguous graph symbol: {symbol}")
+
+
 class GraphStore:
     SCHEMA_VERSION = 1
 
@@ -22,6 +29,19 @@ class GraphStore:
         cache_dir = segment_root / ".trifecta" / "cache"
         cache_dir.mkdir(parents=True, exist_ok=True)
         return cache_dir / f"graph_{segment_id}.db"
+
+    @classmethod
+    def probe_status(cls, db_path: Path, segment_id: str) -> GraphStatus:
+        if not db_path.exists():
+            return GraphStatus(
+                exists=False,
+                segment_id=segment_id,
+                db_path=str(db_path),
+                node_count=0,
+                edge_count=0,
+                last_indexed_at=None,
+            )
+        return cls(db_path).get_status(segment_id)
 
     def _validate_or_init_schema(self) -> None:
         self._db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -196,6 +216,13 @@ class GraphStore:
         return self._get_related_nodes(segment_id, symbol, reverse=False)
 
     def _get_related_nodes(self, segment_id: str, symbol: str, reverse: bool) -> list[GraphNode]:
+        target_candidates = self._find_target_candidates(segment_id, symbol)
+        if not target_candidates:
+            return []
+        if len(target_candidates) > 1:
+            raise AmbiguousGraphTargetError(symbol, target_candidates)
+
+        target_node = target_candidates[0]
         conn = sqlite3.connect(self._db_path)
         conn.row_factory = sqlite3.Row
         rows = conn.execute(
@@ -204,8 +231,20 @@ class GraphStore:
             + ("e.from_node_id = n.id " if reverse else "e.to_node_id = n.id ")
             + "JOIN nodes target ON "
             + ("e.to_node_id = target.id " if reverse else "e.from_node_id = target.id ")
-            + "WHERE target.segment_id = ? AND (target.symbol_name = ? OR target.qualified_name = ?) "
+            + "WHERE target.segment_id = ? AND target.id = ? "
             "ORDER BY n.file_rel, n.line",
+            (segment_id, target_node.id),
+        ).fetchall()
+        conn.close()
+        return [self._row_to_node(row) for row in rows]
+
+    def _find_target_candidates(self, segment_id: str, symbol: str) -> list[GraphNode]:
+        conn = sqlite3.connect(self._db_path)
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute(
+            "SELECT * FROM nodes "
+            "WHERE segment_id = ? AND (symbol_name = ? OR qualified_name = ?) "
+            "ORDER BY file_rel, line",
             (segment_id, symbol, symbol),
         ).fetchall()
         conn.close()

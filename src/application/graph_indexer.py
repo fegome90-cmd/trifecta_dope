@@ -21,6 +21,28 @@ class _FileGraphData:
     edges: list[GraphEdge]
 
 
+class _DirectCallCollector(ast_module.NodeVisitor):
+    def __init__(self) -> None:
+        self.call_names: list[str] = []
+
+    def visit_Call(self, node: ast_module.Call) -> None:
+        if isinstance(node.func, ast_module.Name):
+            self.call_names.append(node.func.id)
+        self.generic_visit(node)
+
+    def visit_FunctionDef(self, node: ast_module.FunctionDef) -> None:
+        return None
+
+    def visit_AsyncFunctionDef(self, node: ast_module.AsyncFunctionDef) -> None:
+        return None
+
+    def visit_ClassDef(self, node: ast_module.ClassDef) -> None:
+        return None
+
+    def visit_Lambda(self, node: ast_module.Lambda) -> None:
+        return None
+
+
 class GraphIndexer:
     def __init__(self, store: GraphStore | None = None) -> None:
         self._store = store
@@ -76,14 +98,13 @@ class GraphIndexer:
             for symbol in parse_result.symbols
         ]
 
-        edges = self._extract_edges(segment_id, file_path, file_rel, nodes)
+        edges = self._extract_edges(segment_id, file_path, nodes)
         return _FileGraphData(nodes=nodes, edges=edges)
 
     def _extract_edges(
         self,
         segment_id: str,
         file_path: Path,
-        file_rel: str,
         nodes: list[GraphNode],
     ) -> list[GraphEdge]:
         content = file_path.read_text(errors="replace")
@@ -101,12 +122,11 @@ class GraphIndexer:
             caller_id = node_ids.get(node.name)
             if caller_id is None:
                 continue
-            for call in ast_module.walk(node):
-                if not isinstance(call, ast_module.Call):
-                    continue
-                if not isinstance(call.func, ast_module.Name):
-                    continue
-                callee_id = node_ids.get(call.func.id)
+            collector = _DirectCallCollector()
+            for statement in node.body:
+                collector.visit(statement)
+            for callee_name in collector.call_names:
+                callee_id = node_ids.get(callee_name)
                 if callee_id is None or callee_id == caller_id:
                     continue
                 edge_id = make_edge_id(segment_id, caller_id, callee_id, "calls")

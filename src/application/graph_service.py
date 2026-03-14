@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from src.domain.segment_resolver import resolve_segment_ref
+from src.domain.segment_resolver import SegmentRef, resolve_segment_ref
 from src.infrastructure.graph_store import GraphStore
 
 
@@ -9,12 +9,20 @@ class GraphService:
         self._store = store
 
     def status(self, segment: Path | str) -> dict[str, object]:
-        segment_ref, store = self._resolve(segment)
-        status = store.get_status(segment_ref.id)
+        segment_ref = resolve_segment_ref(segment)
+        if self._store is not None:
+            status = self._store.get_status(segment_ref.id)
+        else:
+            db_path = GraphStore.db_path_for_segment(segment_ref.root_abs, segment_ref.id)
+            status = GraphStore.probe_status(db_path, segment_ref.id)
         return {"status": "ok", **status.to_dict()}
 
     def search(self, segment: Path | str, query: str, limit: int = 20) -> dict[str, object]:
-        segment_ref, store = self._resolve(segment)
+        resolved = self._resolve_existing(segment)
+        if resolved is None:
+            segment_ref = resolve_segment_ref(segment)
+            return {"status": "ok", "segment_id": segment_ref.id, "query": query, "nodes": []}
+        segment_ref, store = resolved
         nodes = store.search_nodes(segment_ref.id, query, limit=limit)
         return {
             "status": "ok",
@@ -30,7 +38,11 @@ class GraphService:
         return self._related(segment, symbol, reverse=False)
 
     def related_terms(self, segment: Path | str, query: str) -> dict[str, object]:
-        segment_ref, store = self._resolve(segment)
+        resolved = self._resolve_existing(segment)
+        if resolved is None:
+            segment_ref = resolve_segment_ref(segment)
+            return {"status": "ok", "segment_id": segment_ref.id, "terms": []}
+        segment_ref, store = resolved
         nodes = store.search_nodes(segment_ref.id, query, limit=1)
         if not nodes:
             return {"status": "ok", "segment_id": segment_ref.id, "terms": []}
@@ -42,7 +54,16 @@ class GraphService:
         }
 
     def _related(self, segment: Path | str, symbol: str, reverse: bool) -> dict[str, object]:
-        segment_ref, store = self._resolve(segment)
+        resolved = self._resolve_existing(segment)
+        if resolved is None:
+            segment_ref = resolve_segment_ref(segment)
+            return {
+                "status": "ok",
+                "segment_id": segment_ref.id,
+                "symbol": symbol,
+                "nodes": [],
+            }
+        segment_ref, store = resolved
         nodes = (
             store.get_callers(segment_ref.id, symbol)
             if reverse
@@ -55,9 +76,11 @@ class GraphService:
             "nodes": [node.to_dict() for node in nodes],
         }
 
-    def _resolve(self, segment: Path | str) -> tuple[object, GraphStore]:
+    def _resolve_existing(self, segment: Path | str) -> tuple[SegmentRef, GraphStore] | None:
         segment_ref = resolve_segment_ref(segment)
-        store = self._store or GraphStore(
-            GraphStore.db_path_for_segment(segment_ref.root_abs, segment_ref.id)
-        )
-        return segment_ref, store
+        db_path = GraphStore.db_path_for_segment(segment_ref.root_abs, segment_ref.id)
+        if self._store is not None:
+            return segment_ref, self._store
+        if not db_path.exists():
+            return None
+        return segment_ref, GraphStore(db_path)

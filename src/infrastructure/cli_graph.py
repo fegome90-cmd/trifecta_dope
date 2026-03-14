@@ -1,10 +1,12 @@
 import json
 from pathlib import Path
+from typing import Any
 
 import typer
 
 from src.application.graph_indexer import GraphIndexer
 from src.application.graph_service import GraphService
+from src.infrastructure.graph_store import AmbiguousGraphTargetError
 
 
 graph_app = typer.Typer(help="Code Graph Commands")
@@ -26,9 +28,23 @@ def _emit(data: dict[str, object], json_output: bool) -> None:
         return
 
     nodes = data.get("nodes", [])
+    if not isinstance(nodes, list):
+        nodes = []
     typer.echo(f"{len(nodes)} result(s)")
     for node in nodes:
         typer.echo(f"- {node['symbol_name']} [{node['kind']}] {node['file_rel']}:{node['line']}")
+
+
+def _handle_ambiguous_symbol(exc: AmbiguousGraphTargetError, json_output: bool) -> None:
+    """Handle ambiguous symbol errors with structured JSON output."""
+    payload: dict[str, Any] = {
+        "status": "error",
+        "error": "ambiguous_symbol",
+        "symbol": exc.symbol,
+        "candidates": exc.candidates,
+    }
+    _emit(payload, json_output)
+    raise typer.Exit(code=1)
 
 
 @graph_app.command("index")
@@ -64,7 +80,10 @@ def callers(
     segment: str = typer.Option(".", "--segment", "-s"),
     json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
 ) -> None:
-    _emit(GraphService().callers(Path(segment), symbol), json_output)
+    try:
+        _emit(GraphService().callers(Path(segment), symbol), json_output)
+    except AmbiguousGraphTargetError as exc:
+        _handle_ambiguous_symbol(exc, json_output)
 
 
 @graph_app.command("callees")
@@ -73,4 +92,7 @@ def callees(
     segment: str = typer.Option(".", "--segment", "-s"),
     json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
 ) -> None:
-    _emit(GraphService().callees(Path(segment), symbol), json_output)
+    try:
+        _emit(GraphService().callees(Path(segment), symbol), json_output)
+    except AmbiguousGraphTargetError as exc:
+        _handle_ambiguous_symbol(exc, json_output)

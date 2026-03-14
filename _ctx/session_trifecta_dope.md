@@ -1512,3 +1512,9 @@ Created WO-0055 (P1) to fix hook bypass system issues discovered during WO-0050 
 - **Files**: src/domain/graph_models.py, src/infrastructure/graph_store.py, src/application/graph_indexer.py, src/application/graph_service.py, src/infrastructure/cli_graph.py, src/infrastructure/cli.py, tests/integration/test_graph_store_schema.py, tests/unit/test_graph_indexer.py, tests/unit/test_graph_service.py, tests/integration/cli/test_graph_cli.py, docs/plans/2026-03-13-graph-mvp-implementation-plan.md
 - **Commands**: make install, uv run pytest, uv run ruff check, uv run trifecta graph
 - **Pack SHA**: `fac5ddcf14590d10`
+
+## 2026-03-14 00:12 UTC
+- **Summary**: Fixed first Graph MVP review batch: status no longer creates DBs on pristine segments, nested calls no longer leak into top-level edges, and callers/callees now fail closed on ambiguous symbols with structured CLI errors.
+- **Files**: src/application/graph_indexer.py, src/application/graph_service.py, src/infrastructure/graph_store.py, src/infrastructure/cli_graph.py, tests/unit/test_graph_indexer.py, tests/unit/test_graph_service.py, tests/integration/cli/test_graph_cli.py, docs/plans/2026-03-13-graph-mvp-review-fixes-plan.md, _ctx/session_trifecta_dope.md
+- **Commands**: uv run pytest, uv run ruff check, uv run mypy
+- **Pack SHA**: (unchanged)
