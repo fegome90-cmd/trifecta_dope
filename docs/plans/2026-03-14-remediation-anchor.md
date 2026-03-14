@@ -73,11 +73,12 @@ These artifacts were intentionally separated because they were not part of the s
 - A fresh `branch-review` preparation pass was attempted after opening PR `#71`.
 - The process stopped in preflight, before `plan` or `run`, because the required execution surface is still incomplete in this repo root.
 - Latest confirmed blockers from the fresh preflight:
-  - `REVIEW_API_TOKEN_MISSING`
   - `PACKAGE_JSON_MISSING`
   - `docs/reviewctl-agent-guide.md` missing
   - `docs/reviewctl-quick-reference.md` missing
 - No `reviewctl` run id was produced from this pass, so there is no new `_ctx/review_runs/<run-id>/final.json` artifact yet.
+- A later preflight retry confirmed auth is no longer the blocker: `REVIEW_API_TOKEN_OK` in-shell.
+- The remaining blockers are structural repo prerequisites, so `reviewctl` still must not run yet.
 
 ## Guardrails
 
