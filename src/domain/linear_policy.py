@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -20,20 +21,20 @@ _REQUIRED_KEYS = {
 }
 
 
-def _must_have_keys(data: dict) -> None:
+def _must_have_keys(data: dict[str, Any]) -> None:
     for key in sorted(_REQUIRED_KEYS):
         if key not in data:
             raise LinearPolicyError(f"missing required key: {key}")
 
 
-def _validate_mode_and_direction(data: dict) -> None:
+def _validate_mode_and_direction(data: dict[str, Any]) -> None:
     if data.get("mode") != "viewer":
         raise LinearPolicyError("mode must be 'viewer'")
     if data.get("direction") != "outbound":
         raise LinearPolicyError("direction must be 'outbound'")
 
 
-def _validate_teams(data: dict) -> tuple[str, str]:
+def _validate_teams(data: dict[str, Any]) -> tuple[str, str]:
     team_key = str(data.get("team_key") or "").strip()
     team_id = str(data.get("team_id") or "").strip()
     if not team_key and not team_id:
@@ -41,7 +42,7 @@ def _validate_teams(data: dict) -> tuple[str, str]:
     return team_key, team_id
 
 
-def _validate_allowlists(data: dict) -> tuple[tuple[str, ...], tuple[str, ...]]:
+def _validate_allowlists(data: dict[str, Any]) -> tuple[tuple[str, ...], tuple[str, ...]]:
     outbound_allow = data.get("outbound_allow")
     inbound_allow = data.get("inbound_allow")
     if not isinstance(outbound_allow, list) or not all(isinstance(x, str) for x in outbound_allow):
@@ -53,7 +54,7 @@ def _validate_allowlists(data: dict) -> tuple[tuple[str, ...], tuple[str, ...]]:
     return tuple(outbound_allow), tuple(inbound_allow)
 
 
-def _validate_drift_severity(data: dict) -> dict[str, tuple[str, ...]]:
+def _validate_drift_severity(data: dict[str, Any]) -> dict[str, tuple[str, ...]]:
     value = data.get("drift_severity")
     if not isinstance(value, dict):
         raise LinearPolicyError("drift_severity must be a mapping")
@@ -67,7 +68,7 @@ def _validate_drift_severity(data: dict) -> dict[str, tuple[str, ...]]:
     return resolved
 
 
-def _validate_status_map(data: dict) -> dict[str, str | None]:
+def _validate_status_map(data: dict[str, Any]) -> dict[str, str | None]:
     value = data.get("status_map")
     if not isinstance(value, dict):
         raise LinearPolicyError("status_map must be a mapping")
