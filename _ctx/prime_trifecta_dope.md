@@ -202,7 +202,7 @@ flowchart TD
 
 ## [NOTE] Notas
 
-- **Fecha ultima actualizacion**: 2026-03-13
+- **Fecha última actualización**: 2026-03-13
 - **Mantenedor**: Trifecta Core Team
 - **Ver tambien**: [skill.md](../skill.md) | [agent.md](./agent.md) | [session.md](./session_trifecta_dope.md)
 - **Schema Version**: v2.0 (Post-AST-Cache-Persist)
