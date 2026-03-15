@@ -317,6 +317,7 @@ def doctor_cmd(
 
     if json_output:
         output = {
+            # Keep `score` for CLI compatibility; `health_score` is the canonical field.
             "score": diagnosis.health_score,
             "healthy": diagnosis.health_score >= HEALTHY_THRESHOLD,
             "repo_id": diagnosis.segment_ref.id,

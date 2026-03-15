@@ -400,12 +400,15 @@ class LinearSyncUseCase:
 
     def reconcile(self, dry_run: bool = True) -> LinearActionResult:
         try:
-            status_map = self._status_map()
+            status_map_cache = self._load_status_map_cache()
+            if not status_map_cache:
+                raise LinearMCPError("status_map cache missing or invalid; run linear bootstrap")
+
+            status_map = status_map_cache["status_map"]
             findings: list[dict[str, Any]] = []
             max_sev = "INFO"
 
             state = load_or_rebuild_state(self.root)
-            status_map_cache = self._load_status_map_cache()
             for wo, wo_path in self._load_work_orders():
                 wo_id = str(wo.get("id") or "")
                 entry = state.get(wo_id)
