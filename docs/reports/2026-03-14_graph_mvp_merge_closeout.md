@@ -27,7 +27,7 @@ The MVP now has explicit and tested visible contracts for:
 - SegmentRef V1 as the SSOT binding used by both service and indexer
 - AST-only, top-level-only graph extraction behavior
 
-See [GRAPH_MVP.md](/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/codex-graph-mvp/docs/contracts/GRAPH_MVP.md).
+See [GRAPH_MVP.md](docs/contracts/GRAPH_MVP.md).
 
 ## Explicit MVP Limits
 
