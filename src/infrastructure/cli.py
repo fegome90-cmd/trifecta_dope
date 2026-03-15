@@ -2524,7 +2524,7 @@ def _cleanup_daemon_runtime_artifacts(socket_path: Path, pid_path: Path) -> None
     for path in (socket_path, pid_path):
         try:
             path.unlink()
-        except FileNotFoundError:
+        except (FileNotFoundError, IsADirectoryError, PermissionError):
             pass
 
 
