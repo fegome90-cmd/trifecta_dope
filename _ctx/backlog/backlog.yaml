@@ -182,3 +182,52 @@ epics:
   - WO-0042
   - WO-0043
   generated_at: '2026-03-06T00:00:00Z'
+- id: E-0020
+  title: WO Contract Remediation Cutover
+  description: 'Establish one shared WO authority, cut pending over to take-ready semantics,
+
+    block new hybrids via manifest-based grandfathering, normalize the active
+    pending set, and align docs/.claude to the hardened contract.
+
+    '
+  status: pending
+  priority: P0
+  wo_queue:
+  - WO-0061
+  - WO-0062
+  - WO-0063
+  - WO-0064
+  - WO-0065
+  - WO-0066
+  - WO-0067
+  generated_at: '2026-03-09T00:00:00Z'
+  x_objective: Establish one shared WO authority, lock pending/ to take-ready semantics,
+    cut over hybrid admission safely, and normalize the active pending set without
+    reopening forensic design.
+  x_scope:
+  - Shared authority for parse/classify/validate/normalize/compatibility
+  - P0 contract tests across schema, lint, preflight, take, finish, and status
+  - Intake cutover with explicit grandfathering manifest
+  - Active pending normalization for tracked hybrids only
+  - Final docs and .claude alignment to the hardened runtime contract
+  x_non_goals:
+  - Reopening forensics or redesigning the base memo
+  - Full historical corpus cleanup for done/failed
+  - Introducing a third WO system or draft state inside pending/
+  - Mass rewriting YAML outside the active pending set
+  x_success_criteria:
+  - One shared authority decides classification and stage validation.
+  - P0 tests keep schema, lint, and runtime aligned on the critical contract.
+  - No new hybrids enter pending/ after cutover.
+  - The tracked active hybrid pending set is normalized.
+  - Docs and .claude stop teaching the old hybrid flow.
+  x_risks:
+  - Cutover blocks legitimate work if compatibility is too narrow.
+  - Grandfathering becomes a permanent escape hatch.
+  - Narrative extraction loses context during normalization.
+  - Tooling still biased to WO-XXXX IDs introduces avoidable ambiguity.
+  x_rollout_strategy:
+  - Wave 1: authority plus contract tests
+  - Wave 2: intake cutover plus visibility
+  - Wave 3: active pending normalization
+  - Wave 4: docs and .claude alignment

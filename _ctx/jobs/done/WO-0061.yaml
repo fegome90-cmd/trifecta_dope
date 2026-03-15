@@ -1,0 +1,98 @@
+version: 1
+id: WO-0061
+epic_id: E-0020
+title: '[WO-AUTHORITY-P0] Shared WO authority core and classifier'
+priority: P0
+status: done
+branch: feat/wo-WO-0061
+worktree: ../.worktrees/WO-0061
+scope:
+  allow:
+  - src/domain/wo_entities.py
+  - src/domain/wo_transactions.py
+  - src/application/**
+  - scripts/ctx_wo_take.py
+  - scripts/ctx_wo_finish.py
+  - scripts/ctx_wo_lint.py
+  - scripts/ctx_wo_preflight.py
+  - tests/unit/test_wo_*
+  - tests/integration/test_wo_*
+  deny:
+  - _ctx/jobs/pending/*.yaml
+  - _ctx/jobs/done/*.yaml
+  - _ctx/jobs/failed/*.yaml
+  - docs/guides/**
+verify:
+  commands:
+  - uv run pytest -q tests/unit/test_wo_* tests/integration/test_wo_* -k "authority
+    or classify or pending or take or finish"
+  - uv run python scripts/ctx_backlog_validate.py --strict
+dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - verify
+  - session.append:result
+  segment: .
+dependencies: []
+trace:
+  ticket: null
+  related_wos:
+  - WO-0062
+  - WO-0063
+objective: Create the small shared WO authority for parse/classify/validate/normalize/compatibility
+  without moving git, worktree, lock, or verify side effects into the core.
+deliverables:
+- Shared authority API for parse, classify, stage validation, normalize trigger checks,
+  and compatibility inspection
+- Stable findings and error surface reused by adapters
+- First adapter wiring in lint/preflight/take/finish paths
+acceptance_criteria:
+- One shared API owns parse/classify/stage validation decisions.
+- Classification categories are stable and adapter-visible.
+- Git, lock, worktree, and verify side effects remain outside the authority.
+- First-wave adapter wiring lands in exactly these entry points: scripts/ctx_wo_lint.py,
+    scripts/ctx_wo_preflight.py, scripts/ctx_wo_take.py, and scripts/ctx_wo_finish.py.
+out_of_scope:
+- Cutover activation
+- Pending hybrid normalization
+- Docs and .claude alignment
+artifacts:
+- src/domain/wo_entities.py
+- src/application/**
+- scripts/ctx_wo_take.py
+- scripts/ctx_wo_finish.py
+- scripts/ctx_wo_lint.py
+- scripts/ctx_wo_preflight.py
+risks:
+- Authority grows side effects or duplicates adapter logic
+- Adapter wiring remains partial and leaves drift
+definition_of_done:
+- Shared authority exists as one importable surface for parse/classify/validate/compatibility
+  decisions.
+- scripts/ctx_wo_lint.py, scripts/ctx_wo_preflight.py, scripts/ctx_wo_take.py, and
+  scripts/ctx_wo_finish.py consume that surface for first-wave decisions instead of
+  re-implementing local classification rules.
+- Stable findings are emitted through the shared authority without script-specific
+  reinterpretation of category names.
+- Verify commands pass.
+x_split_rule: Keep WO-0061 unified unless first-wave wiring expands beyond the four
+  entry points above or the authority core stops fitting as one reviewable change.
+rollback_note: Revert authority wiring only; do not reopen hybrid admission.
+x_alias: WO-AUTHORITY-P0
+x_wave: 1
+x_gate: Blocks all later waves
+x_failed_at: '2026-03-12T17:38:26.705974+00:00'
+x_requeued_from: failed
+x_requeued_at: '2026-03-12T17:41:14.706785+00:00'
+x_requeue_reason: retry official cycle after fixing WO-scoped verify gate in execution
+  root
+owner: felipe_gonzalez
+started_at: '2026-03-12T17:41:29.075585+00:00'
+verified_at_sha: 93c5b7a25c380f9fd28ef781a8989a0a67f9591e
+closed_at: '2026-03-13T00:34:19.982621+00:00'
+result: done

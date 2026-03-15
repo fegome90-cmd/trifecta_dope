@@ -1,0 +1,78 @@
+version: 1
+id: WO-0064
+epic_id: E-0020
+title: '[WO-STATUS-VISIBILITY-P0] Honest status and parse visibility'
+priority: P0
+status: pending
+owner: null
+branch: null
+worktree: null
+scope:
+  allow:
+  - scripts/wo_audit.py
+  - scripts/ctx_reconcile_state.py
+  - scripts/ctx_wo_take.py
+  - docs/guides/work_orders_usage.md
+  - docs/backlog/TROUBLESHOOTING.md
+  - tests/unit/test_wo_*
+  - tests/integration/test_wo_*
+  deny:
+  - _ctx/jobs/pending/*.yaml
+  - _ctx/jobs/done/*.yaml
+  - _ctx/jobs/failed/*.yaml
+verify:
+  commands:
+  - uv run pytest -q tests/unit/test_wo_* tests/integration/test_wo_* -k "status or audit or incompatible
+    or visibility"
+  - uv run python scripts/ctx_backlog_validate.py --strict
+dod_id: DOD-DEFAULT
+execution:
+  engine: trifecta
+  required_flow:
+  - session.append:intent
+  - ctx.sync
+  - ctx.search
+  - ctx.get
+  - verify
+  - session.append:result
+  segment: .
+dependencies:
+- WO-0063
+trace:
+  ticket: null
+  related_wos:
+  - WO-0063
+  - WO-0065
+objective: Expose canonical, grandfathered, and incompatible WO states honestly so the cutover can be
+  operated without false health.
+deliverables:
+- Status/list surfaces driven by shared classification
+- Fail-loud handling for local incompatible artifacts
+- Operator-visible messages aligned with the shared error surface
+acceptance_criteria:
+- python scripts/ctx_wo_take.py --list distinguishes canonical, grandfathered, and incompatible artifacts.
+- python scripts/ctx_wo_take.py --status distinguishes canonical, grandfathered, and incompatible artifacts.
+- python scripts/wo_audit.py --out ... reports incompatible artifacts without counting them as healthy
+  state.
+- Local incompatibles do not count as healthy state.
+- Operator messages are stable and actionable.
+out_of_scope:
+- Rich dashboards
+- Historical cleanup outside active flow
+artifacts:
+- scripts/wo_audit.py
+- scripts/ctx_reconcile_state.py
+- docs/guides/work_orders_usage.md
+- docs/backlog/TROUBLESHOOTING.md
+risks:
+- Cleaner wording hides operational detail
+- Legacy heuristics still leak into status counts
+definition_of_done:
+- Status surfaces no longer report false health for incompatible artifacts.
+- Classification output is visible in --list, --status, and audit output strongly enough to drive normalization
+  without manual YAML inspection.
+- Verify commands pass.
+rollback_note: Revert formatting changes if needed, but keep incompatibles visible and fail-closed.
+x_alias: WO-STATUS-VISIBILITY-P0
+x_wave: 2
+x_gate: Must be green before draining the manifest
