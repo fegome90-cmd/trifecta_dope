@@ -21,14 +21,14 @@ def test_export_wo_index_atomicity(tmp_path: Path, monkeypatch: pytest.MonkeyPat
     monkeypatch.setattr(export_wo_index, "get_git_head_sha", lambda _root: "deadbeef")
     monkeypatch.setattr(export_wo_index, "get_worktrees_from_git", lambda _root: {})
 
-    original_rename = Path.rename
+    original_replace = Path.replace
 
-    def crashing_rename(self: Path, target: Path | str) -> Path:
+    def crashing_replace(self: Path, target: Path | str) -> Path:
         if self == tmp_file and Path(target) == index_file:
             raise RuntimeError("CRASH ATOMIC REPLACE")
-        return original_rename(self, target)
+        return original_replace(self, target)
 
-    monkeypatch.setattr(Path, "rename", crashing_rename)
+    monkeypatch.setattr(Path, "replace", crashing_replace)
 
     with pytest.raises(RuntimeError, match="CRASH ATOMIC REPLACE"):
         export_wo_index.main()

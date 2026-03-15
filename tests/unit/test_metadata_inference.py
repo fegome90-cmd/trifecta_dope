@@ -174,9 +174,8 @@ def test_is_lock_process_alive_dead():
     """Test process alive check with dead PID."""
     import tempfile
 
-    # Use PID 99999 which is unlikely to exist
     lock_content = """Locked by ctx_wo_take.py at 2025-02-10T15:30:00
-PID: 99999
+PID: 12345
 User: testuser
 """
 
@@ -185,8 +184,8 @@ User: testuser
         lock_path = Path(f.name)
 
     try:
-        # Dead process should return False
-        assert not is_lock_process_alive(lock_path)
+        with patch("scripts.metadata_inference.os.kill", side_effect=ProcessLookupError):
+            assert not is_lock_process_alive(lock_path)
     finally:
         lock_path.unlink()
 

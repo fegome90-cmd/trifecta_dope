@@ -188,7 +188,7 @@ def main():
         with open(tmp_file, "w") as f:
             json.dump(index, f, indent=2, default=str)
 
-        tmp_file.rename(final_file)
+        tmp_file.replace(final_file)
     except Exception:
         if tmp_file.exists():
             tmp_file.unlink()

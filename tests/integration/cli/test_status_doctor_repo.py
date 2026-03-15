@@ -5,6 +5,7 @@ import tempfile
 
 from typer.testing import CliRunner
 
+from src.application.doctor_use_case import HEALTHY_THRESHOLD
 from src.infrastructure.cli import app
 
 runner = CliRunner()
@@ -46,7 +47,7 @@ def test_doctor_command_json():
     assert "issues" in data
     assert "warnings" in data
     assert data["score"] == data["health_score"]
-    assert data["healthy"] is (data["health_score"] >= 70)
+    assert data["healthy"] is (data["health_score"] >= HEALTHY_THRESHOLD)
 
 
 def test_repo_list_empty():

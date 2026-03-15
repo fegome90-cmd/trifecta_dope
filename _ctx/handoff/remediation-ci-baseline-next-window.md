@@ -26,10 +26,10 @@ HEAD: `297fe77c89b3b3c1192f8583c76093763e9f87c0`
 
 - Use $checkpoint-resume before doing any new work.
 - Use $checkpoint-resume before any repo exploration or implementation.
-- repo: /Users/felipe_gonzalez/Developer/agent_h/.worktrees/remediation-ci-baseline/trifecta_dope
-- checkpoint: /Users/felipe_gonzalez/Developer/agent_h/.worktrees/remediation-ci-baseline/trifecta_dope/_ctx/checkpoints/2026-03-15/checkpoint_112630_ci-baseline-branch-review-ready.md
-- supporting bundle: /Users/felipe_gonzalez/Developer/agent_h/.worktrees/remediation-ci-baseline/trifecta_dope/{'review_artifacts': ['apps/pae-wizard/outputs/reviewctl/ci-baseline-pr-mypy.md', 'apps/pae-wizard/outputs/reviewctl/ci-baseline-main-mypy.md']}
-- handoff: /Users/felipe_gonzalez/Developer/agent_h/.worktrees/remediation-ci-baseline/trifecta_dope/_ctx/handoff/remediation-ci-baseline-next-window.md
-- checklist: /Users/felipe_gonzalez/Developer/agent_h/.worktrees/remediation-ci-baseline/trifecta_dope/_ctx/handoff/remediation-ci-baseline-next-window-checklist.md
+- repo: $REPO_ROOT
+- checkpoint: $REPO_ROOT/_ctx/checkpoints/2026-03-15/checkpoint_112630_ci-baseline-branch-review-ready.md
+- supporting bundle: {'review_artifacts': ['apps/pae-wizard/outputs/reviewctl/ci-baseline-pr-mypy.md', 'apps/pae-wizard/outputs/reviewctl/ci-baseline-main-mypy.md']}
+- handoff: ./_ctx/handoff/remediation-ci-baseline-next-window.md
+- checklist: ./_ctx/handoff/remediation-ci-baseline-next-window-checklist.md
 Context loaded only. Waiting for your instruction.
 - Use $checkpoint-resume before any repo exploration or implementation. Read the refreshed checkpoint, handoff, and checklist. Then use the branch-review workflow on codex/wo-remediation-ci-baseline with docs/plans/2026-03-14-ci-baseline-remediation-branch-review-first.md as the authoritative plan, keep the three type-fix commits closed, refresh review artifacts, and continue from the branch-review phase.

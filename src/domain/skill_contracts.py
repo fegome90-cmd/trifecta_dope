@@ -122,7 +122,7 @@ def validate_skill_meta(meta: SkillMeta) -> Result[SkillMeta, list[SkillValidati
     for i, inp in enumerate(meta.inputs):
         inp_result = validate_skill_input(inp)
         if inp_result.is_err():
-            for inp_err in inp_result.unwrap_err() or []:
+            for inp_err in inp_result.unwrap_err():
                 # Prefix with input index
                 errors.append(
                     SkillValidationError(

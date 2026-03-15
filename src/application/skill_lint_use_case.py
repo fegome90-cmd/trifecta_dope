@@ -79,7 +79,7 @@ def lint_skills(
                 )
             )
         else:
-            errors = validation.unwrap_err() or []
+            errors = validation.unwrap_err()
             results.append(
                 SkillLintResult(
                     path=str(skill.path),

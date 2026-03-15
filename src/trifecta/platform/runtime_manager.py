@@ -60,7 +60,7 @@ class RuntimeManagerFactory:
         )
 
     @staticmethod
-    def create(manager_type: str = "daemon", **kwargs: Any) -> RuntimeManager:
+    def create(manager_type: str = "daemon", **kwargs: Any) -> NoReturn:
         """
         Create a runtime manager instance.
 
@@ -69,7 +69,7 @@ class RuntimeManagerFactory:
             **kwargs: Additional configuration
 
         Returns:
-            RuntimeManager implementation instance
+            Never returns. Always raises until implementations are added.
         """
         if manager_type == "daemon":
             RuntimeManagerFactory._missing_implementation("daemon")

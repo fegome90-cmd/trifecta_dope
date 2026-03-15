@@ -33,7 +33,7 @@ Keep the three type-fix commits isolated from documentary _ctx updates.
 Verify: ['uv run mypy src/ stays green on the current branch.', 'Documentary _ctx updates are committed separately from code commits.', 'The next validation step is branch-review/PR evidence refresh, not another mypy slice.']
 
 ### Constraints
-Fix first: ['Keep the resolved review findings and the _ctx/index/wo_worktrees.json discard decision closed.', 'Do not reopen the completed type-fix commits when committing documentary _ctx updates.', "If committing _ctx changes in this worktree, account for the known ctx sync hook failure instead of treating it as a content regression."]
+Fix first: ['Keep the resolved review findings and the `_ctx/index/wo_worktrees.json` discard decision closed.', 'Do not reopen the completed type-fix commits when committing documentary _ctx updates.', "If committing _ctx changes in this worktree, account for the known ctx sync hook failure instead of treating it as a content regression."]
 
 ---
 ## 🚀 Next Session Quickstart
@@ -43,6 +43,6 @@ Fix first: ['Keep the resolved review findings and the _ctx/index/wo_worktrees.j
 4. Continue with the docs-only closeout if still pending, otherwise move to branch-review
 
 ## Mini-Prompt for Next Agent
-```
+```text
 Use $checkpoint-resume before any repo exploration or implementation. Read the refreshed checkpoint, handoff, and checklist. Keep the three type-fix commits closed, commit the documentary _ctx updates separately if still pending, and continue with branch-review/PR validation now that uv run mypy src/ is green.
 ```

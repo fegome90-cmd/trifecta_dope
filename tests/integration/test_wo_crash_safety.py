@@ -50,11 +50,24 @@ execution:
     def crashing_create_worktree(*args, **kwargs):
         raise RuntimeError("Simulated system crash during worktree creation")
 
+    dep_validation_called = False
+    immediate_validation_called = False
+
+    def fake_validate_dependencies(work_order, root):
+        nonlocal dep_validation_called
+        dep_validation_called = True
+        return (True, None)
+
+    def fake_validate_wo_immediately(root, work_order, jobs_dir):
+        nonlocal immediate_validation_called
+        immediate_validation_called = True
+        return (True, [])
+
     monkeypatch.setattr(ctx_wo_take, "create_worktree", crashing_create_worktree)
-    monkeypatch.setattr(ctx_wo_take, "validate_dependencies_using_domain", lambda w, r: (True, None))
+    monkeypatch.setattr(ctx_wo_take, "validate_dependencies_using_domain", fake_validate_dependencies)
 
     # Mock validate_wo_immediately to pass validation (it calls external lint script)
-    monkeypatch.setattr(ctx_wo_take, "validate_wo_immediately", lambda r, w, j: (True, []))
+    monkeypatch.setattr(ctx_wo_take, "validate_wo_immediately", fake_validate_wo_immediately)
 
     # Mock load_schema to avoid needing actual schema file in temp path
     monkeypatch.setattr(ctx_wo_take, "load_schema", lambda r, n: {})
@@ -64,14 +77,12 @@ execution:
 
     # ensure it failed cleanly
     assert exit_code == 1
+    assert dep_validation_called is True
+    assert immediate_validation_called is True
 
     # verify the rollback log message
     log_text = caplog.text.lower()
-    assert (
-        getattr(log_text, "find", lambda x: -1)("rollback") != -1
-        or "rollback" in log_text
-        or "rolled back" in log_text
-    )
+    assert "rollback" in log_text or "rolled back" in log_text
 
     # Invariants checks:
     # 1. Lock must have been removed

@@ -68,3 +68,23 @@ def test_lock_ttl_env_invalid_fallback(tmp_path: Path, monkeypatch: pytest.Monke
 
     monkeypatch.setattr(Path, "stat", lambda self, **kwargs: MockStat())
     assert check_lock_age(lock_file) is True
+
+
+def test_lock_ttl_env_non_positive_fallback(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    lock_file = tmp_path / "WO-0004.lock"
+    lock_file.touch()
+
+    monkeypatch.setenv("WO_LOCK_TTL_SEC", "0")
+
+    import time
+
+    current_time = time.time()
+
+    class MockStat:
+        st_mtime = current_time - 3600
+
+    monkeypatch.setattr(Path, "stat", lambda self, **kwargs: MockStat())
+    assert check_lock_age(lock_file) is False
+
+    monkeypatch.setenv("WO_LOCK_TTL_SEC", "-10")
+    assert check_lock_age(lock_file) is False

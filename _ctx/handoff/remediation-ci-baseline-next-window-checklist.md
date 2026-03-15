@@ -16,7 +16,12 @@
 - Continue on the narrowest remaining path.
 
 ## Current Status Snapshot
-- {'branch': 'codex/wo-remediation-ci-baseline', 'head': '297fe77c89b3b3c1192f8583c76093763e9f87c0', 'workspace_bundle': {'repo': '/Users/felipe_gonzalez/Developer/agent_h/.worktrees/remediation-ci-baseline/trifecta_dope'}, 'worktree_clean': True, 'mypy_src_green': True, 'next_phase': 'branch-review'}
+- branch: codex/wo-remediation-ci-baseline
+- head: 297fe77c89b3b3c1192f8583c76093763e9f87c0
+- workspace_bundle: /Users/felipe_gonzalez/Developer/agent_h/.worktrees/remediation-ci-baseline/trifecta_dope
+- worktree_clean: true
+- mypy_src_green: true
+- next_phase: branch-review
 
 ## Stop Conditions
 - Stop if the next step reopens an out-of-scope front.

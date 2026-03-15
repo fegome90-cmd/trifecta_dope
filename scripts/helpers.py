@@ -446,7 +446,8 @@ def check_lock_age(lock_path: Path, max_age_seconds: int | None = None) -> bool:
         env_ttl = os.getenv("WO_LOCK_TTL_SEC")
         if env_ttl is not None:
             try:
-                max_age_seconds = int(env_ttl)
+                parsed_ttl = int(env_ttl)
+                max_age_seconds = parsed_ttl if parsed_ttl > 0 else 86400
             except ValueError:
                 max_age_seconds = 86400
         else:

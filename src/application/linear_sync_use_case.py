@@ -405,6 +405,7 @@ class LinearSyncUseCase:
             max_sev = "INFO"
 
             state = load_or_rebuild_state(self.root)
+            status_map_cache = self._load_status_map_cache()
             for wo, wo_path in self._load_work_orders():
                 wo_id = str(wo.get("id") or "")
                 entry = state.get(wo_id)
@@ -424,7 +425,6 @@ class LinearSyncUseCase:
                 current = current_resp.get("issue") or {}
                 if not isinstance(current, dict):
                     continue
-                status_map_cache = self._load_status_map_cache()
                 current_norm = self._normalize_issue_for_diff(
                     current,
                     comparable_payload,

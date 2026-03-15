@@ -39,7 +39,7 @@ from src.application.use_cases import (
     ValidateTrifectaUseCase,
 )
 from src.application.status_use_case import StatusUseCase
-from src.application.doctor_use_case import DoctorUseCase
+from src.application.doctor_use_case import DoctorUseCase, HEALTHY_THRESHOLD
 from src.application.repo_use_case import RepoUseCase
 from src.domain.models import TrifectaConfig
 
@@ -318,7 +318,7 @@ def doctor_cmd(
     if json_output:
         output = {
             "score": diagnosis.health_score,
-            "healthy": diagnosis.health_score >= 70,
+            "healthy": diagnosis.health_score >= HEALTHY_THRESHOLD,
             "repo_id": diagnosis.segment_ref.id,
             "path": str(diagnosis.segment_ref.root_abs),
             "health_score": diagnosis.health_score,
@@ -2543,8 +2543,10 @@ def daemon_stop(
         Path.home() / ".local" / "share" / "trifecta" / "repos" / ref.fingerprint / "runtime"
     )
     use_case = DaemonUseCase(runtime_dir)
-    use_case.stop()
-
+    result = use_case.stop()
+    if result.get("running"):
+        typer.echo("Failed to stop daemon", err=True)
+        raise typer.Exit(1)
     typer.echo("Daemon stopped")
 
 

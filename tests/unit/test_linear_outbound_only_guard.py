@@ -2,8 +2,9 @@ from pathlib import Path
 
 
 def test_linear_modules_do_not_reference_wo_mutation_scripts() -> None:
-    files = sorted(Path("src/application").glob("linear_*.py")) + [
-        Path("src/infrastructure/linear_mcp_client.py")
+    repo_root = Path(__file__).resolve().parents[2]
+    files = sorted((repo_root / "src/application").glob("linear_*.py")) + [
+        repo_root / "src/infrastructure/linear_mcp_client.py"
     ]
     joined = "\n".join(p.read_text(encoding="utf-8") for p in files if p.exists())
 
@@ -12,8 +13,9 @@ def test_linear_modules_do_not_reference_wo_mutation_scripts() -> None:
 
 
 def test_linear_modules_do_not_write_jobs_yaml_paths() -> None:
-    files = sorted(Path("src/application").glob("linear_*.py")) + [
-        Path("src/infrastructure/linear_mcp_client.py")
+    repo_root = Path(__file__).resolve().parents[2]
+    files = sorted((repo_root / "src/application").glob("linear_*.py")) + [
+        repo_root / "src/infrastructure/linear_mcp_client.py"
     ]
 
     for path in files:

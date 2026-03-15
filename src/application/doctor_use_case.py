@@ -6,6 +6,9 @@ from pathlib import Path
 from src.domain.segment_resolver import SegmentRef, resolve_segment_ref
 
 
+HEALTHY_THRESHOLD = 70
+
+
 @dataclass(frozen=True)
 class DoctorDiagnosis:
     """Diagnosis result for a segment."""
