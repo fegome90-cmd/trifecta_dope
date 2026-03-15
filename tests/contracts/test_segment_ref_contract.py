@@ -71,9 +71,12 @@ class TestSegmentRefContract:
         """Verify segment_id contains hash portion."""
         ref = resolve_segment_ref(Path.cwd(), hash_length=8)
         assert "_" in ref.segment_id
-        parts = ref.segment_id.split("_")
-        assert len(parts) == 2
-        assert len(parts[1]) == 8
+        # Use rsplit to handle slugs with underscores (e.g., "trifecta_dope_6f25e381")
+        parts = ref.segment_id.rsplit("_", 1)
+        assert len(parts) == 2, f"Expected 2 parts, got {len(parts)}: {parts}"
+        assert len(parts[1]) == 8, f"Hash should be 8 chars, got {len(parts[1])}"
+        # Verify fingerprint is valid hex
+        assert all(c in "0123456789abcdef" for c in parts[1]), f"Invalid hex: {parts[1]}"
 
 
 class TestRepoRefContract:
