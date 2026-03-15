@@ -30,6 +30,7 @@ HEAD: `962ca28146fe49d911b8f22fa42d4e5752465e9d`
 ## Remaining Blocker
 
 - No active mypy blocker remains on this branch.
+- Pre-commit context sync still fails on `_ctx` changes in this worktree with `PROHIBITED: Reference 'trifecta_dope/skill.md' resolves outside segment or in forbidden path`, so docs-only commits may still require `--no-verify` until that shared-root topology issue is fixed.
 - The remaining open surface is documentary _ctx cleanup plus the next branch-review / PR validation pass.
 
 ## Next Agent

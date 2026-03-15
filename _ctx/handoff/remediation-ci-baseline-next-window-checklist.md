@@ -11,6 +11,7 @@
 - Respect the active constraints.
 - Keep the three type-fix commits closed: e1e812d, c97306d, 962ca28.
 - Do not reopen `_ctx/index/wo_worktrees.json`.
+- Remember that committing `_ctx` changes in this worktree still triggers the known `ctx sync` hook failure.
 
 ## Recommended Order
 - Read the checkpoint and handoff only.
