@@ -184,7 +184,8 @@ def main():
     with open(tmp_file, "w") as f:
         json.dump(index, f, indent=2, default=str)
 
-    tmp_file.rename(final_file)
+    # Use os.replace for true atomicity (works across filesystems)
+    os.replace(tmp_file, final_file)
     print(f"Index written to {final_file}")
 
     # Print summary

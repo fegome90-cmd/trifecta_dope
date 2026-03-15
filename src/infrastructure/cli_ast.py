@@ -240,6 +240,16 @@ def hover(
         message="Hover not yet implemented. LSP detected but not connected.",
     )
 
+    # Fail-closed: --require-lsp with WIP response should error
+    if require_lsp:
+        response = LSPResponse.error_response(
+            error_code="LSP_NOT_IMPLEMENTED",
+            fallback_reason=FallbackReason.LSP_NOT_IMPLEMENTED,
+            message="LSP hover not yet implemented. --require-lsp specified.",
+        )
+        _json_output(response.to_dict())
+        raise typer.Exit(1)
+
     if telemetry:
         telemetry.event(
             "ast.hover.wip",

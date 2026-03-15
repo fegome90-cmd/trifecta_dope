@@ -23,8 +23,8 @@ def test_wo_take_concurrency_clean_failure(tmp_path: Path, monkeypatch: pytest.M
 
     monkeypatch.setattr("sys.argv", ["ctx_wo_take.py", wo_id, "--root", str(repo_ctx)])
 
-    # Patch linter so Process B passes preflight
-    monkeypatch.setattr("scripts.ctx_wo_take.lint_run", lambda r, strict, wo_id: [])
+    # Note: No lint mock needed - WO is not in pending, so take will fail with "not found"
+    # before reaching linting stage. This tests the lock contention scenario.
     # Process B runs:
     # It should try to acquire the lock, fail (since Process A's lock is valid),
     # and exit cleanly with 1.
