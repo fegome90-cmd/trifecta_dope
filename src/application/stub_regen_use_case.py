@@ -109,12 +109,12 @@ Planned features for v2 symbol navigation:
     MAX_REPO_MAP_LINES = 300
     MAX_SYMBOLS_STUB_LINES = 200
 
-    def __init__(self, telemetry=None) -> None:
+    def __init__(self, telemetry: Any = None) -> None:
         self.telemetry = telemetry
 
-    def _detect_modules(self, segment_path: Path) -> list[dict]:
+    def _detect_modules(self, segment_path: Path) -> list[dict[str, Any]]:
         """Detect module structure from src/ directory."""
-        modules: list[dict] = []
+        modules: list[dict[str, Any]] = []
         src_dir = segment_path / "src"
 
         if not src_dir.exists():
@@ -150,7 +150,7 @@ Planned features for v2 symbol navigation:
 
         return hasher.hexdigest()[:12]
 
-    def execute(self, target_path: Path) -> dict:
+    def execute(self, target_path: Path) -> dict[str, Any]:
         """Regenerate stub files.
 
         Returns:

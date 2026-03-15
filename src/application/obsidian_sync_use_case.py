@@ -16,7 +16,7 @@ import sys
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from src.domain.obsidian_models import (
     Finding,
@@ -131,7 +131,7 @@ class SyncToObsidianUseCase:
         notes_updated = 0
         notes_skipped = len(all_findings) - len(new_findings)
 
-        previews: list[dict] = []
+        previews: list[dict[str, Any]] = []
 
         if dry_run:
             # Generate previews

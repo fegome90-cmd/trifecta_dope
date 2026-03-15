@@ -492,7 +492,7 @@ class SearchUseCase:
 
     def execute_with_explanation(
         self, target_path: Path, query: str, limit: int = 5, enable_lint: bool = False
-    ) -> dict:
+    ) -> dict[str, Any]:
         """
         Execute search and return structured explanation.
 

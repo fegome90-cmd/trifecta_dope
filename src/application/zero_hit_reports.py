@@ -7,7 +7,7 @@ and build SHA to enable precise measurement of zero-hit reduction interventions.
 import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Any, Optional
 from collections import defaultdict
 
 
@@ -149,7 +149,7 @@ def generate_zero_hit_report(
     return report
 
 
-def get_zero_hit_metrics(segment_path: Path, days: int = 30) -> Dict:
+def get_zero_hit_metrics(segment_path: Path, days: int = 30) -> dict[str, Any]:
     """Get zero-hit metrics as dictionary for programmatic use.
 
     Args:

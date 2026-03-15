@@ -18,7 +18,7 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, Optional
+from typing import TYPE_CHECKING, Any, Literal, Optional
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -46,7 +46,7 @@ class HookifyViolation:
     status: Literal["open", "resolved", "ignored"] = "open"
     resolved_at: Optional[str] = None
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         return {
             "id": self.id,
@@ -59,7 +59,7 @@ class HookifyViolation:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "HookifyViolation":
+    def from_dict(cls, data: dict[str, Any]) -> "HookifyViolation":
         """Create from dictionary (JSON deserialization)."""
         if not isinstance(data, dict):
             raise TypeError(f"Expected dict, got {type(data).__name__}")

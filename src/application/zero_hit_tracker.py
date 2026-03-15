@@ -2,7 +2,7 @@ import hashlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 
 @dataclass
@@ -172,7 +172,7 @@ class ZeroHitTracker:
 
         return datetime.now(timezone.utc).isoformat()
 
-    def get_top_zero_hits(self, limit: int = 10) -> list[dict]:
+    def get_top_zero_hits(self, limit: int = 10) -> list[dict[str, Any]]:
         """Get top zero-hit queries by count.
 
         Args:

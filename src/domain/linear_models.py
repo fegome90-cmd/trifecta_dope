@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Literal
+from typing import Any, Literal
 
 
 REQUIRED_TRIFECTA_STATUSES = ("pending", "running", "partial", "done", "failed")
@@ -25,7 +25,7 @@ class LinearPolicy:
 @dataclass(frozen=True)
 class ProjectionResult:
     wo_id: str
-    payload: dict
+    payload: dict[str, Any]
     fingerprint: str
 
 

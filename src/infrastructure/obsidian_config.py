@@ -21,7 +21,7 @@ import os
 from pathlib import Path
 from typing import Optional
 
-import yaml  # type: ignore
+import yaml
 
 from src.domain.obsidian_models import ObsidianConfig
 

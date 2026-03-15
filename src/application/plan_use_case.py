@@ -112,7 +112,7 @@ class PlanUseCase:
         """Simple tokenization: lowercase, split on non-letters."""
         return set(re.findall(r"\w+", text.lower()))
 
-    def _load_aliases(self, ctx_dir: Path) -> dict:
+    def _load_aliases(self, ctx_dir: Path) -> dict[str, Any]:
         """Load aliases.yaml for L2/L3 matching."""
         aliases_path = ctx_dir / "aliases.yaml"
 
@@ -132,14 +132,14 @@ class PlanUseCase:
 
         return {}
 
-    def _parse_yaml(self, content: str) -> dict:
+    def _parse_yaml(self, content: str) -> dict[str, Any]:
         """Simple YAML parser for aliases.yaml structure."""
         # This is a minimal YAML parser for our specific structure
         # For production, use proper YAML library
-        import yaml  # type: ignore
+        import yaml
 
         try:
-            return yaml.safe_load(content)  # type: ignore
+            return yaml.safe_load(content)
         except ImportError:
             # Fallback: return empty dict if yaml not available
             return {}
@@ -168,8 +168,8 @@ class PlanUseCase:
         return feature_id
 
     def _match_l2_nl_triggers(
-        self, task: str, features: dict
-    ) -> tuple[str | None, str | None, str | None, int, str | None, dict]:
+        self, task: str, features: dict[str, Any]
+    ) -> tuple[str | None, str | None, str | None, int, str | None, dict[str, Any]]:
         """L2: Direct NL trigger match with scoring and guardrails (T9.3.5).
 
         Args:
@@ -441,7 +441,7 @@ class PlanUseCase:
             },
         )
 
-    def _match_l3_alias(self, task: str, features: dict) -> tuple[str | None, int, str | None]:
+    def _match_l3_alias(self, task: str, features: dict[str, Any]) -> tuple[str | None, int, str | None]:
         """L3: Alias match with structured triggers.
 
         Args:
@@ -500,7 +500,7 @@ class PlanUseCase:
 
         return best_match, best_score, best_trigger_phrase
 
-    def _parse_prime_entrypoints(self, prime_path: Path) -> list[dict]:
+    def _parse_prime_entrypoints(self, prime_path: Path) -> list[dict[str, Any]]:
         """Parse PRIME file to extract index.entrypoints."""
         content = prime_path.read_text()
 
@@ -517,7 +517,7 @@ class PlanUseCase:
 
         return entrypoints
 
-    def _get_bundle_for_feature(self, feature_id: str, features: dict) -> dict:
+    def _get_bundle_for_feature(self, feature_id: str, features: dict[str, Any]) -> dict[str, Any]:
         """Get bundle (chunks + paths + anchors) for a feature.
 
         Args:
@@ -538,8 +538,8 @@ class PlanUseCase:
         return {"chunks": chunks, "paths": paths, "anchors": anchors}
 
     def _verify_bundle_assertions(
-        self, feature_id: str, bundle: dict, target_path: Path
-    ) -> tuple[bool, dict]:
+        self, feature_id: str, bundle: dict[str, Any], target_path: Path
+    ) -> tuple[bool, dict[str, Any]]:
         """Verify bundle assertions (paths exist, anchors in files).
 
         Args:
@@ -592,7 +592,7 @@ class PlanUseCase:
             },
         )
 
-    def execute(self, target_path: Path, task: str) -> dict:
+    def execute(self, target_path: Path, task: str) -> dict[str, Any]:
         """Generate execution plan for a task.
 
         Args:

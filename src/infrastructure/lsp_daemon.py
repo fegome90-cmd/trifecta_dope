@@ -7,7 +7,7 @@ import signal
 import fcntl
 import subprocess
 from pathlib import Path
-from typing import Any, Optional, Dict
+from typing import Any, Optional
 from src.infrastructure.lsp_client import LSPClient
 from src.infrastructure.telemetry import Telemetry
 from src.domain.segment_resolver import resolve_segment_ref, get_segment_fingerprint
@@ -127,7 +127,7 @@ class LSPDaemonServer:
         finally:
             conn.close()
 
-    def _process_request(self, req: Dict) -> Dict:
+    def _process_request(self, req: dict[str, Any]) -> dict[str, Any]:
         method = req.get("method")
         params = req.get("params", {})
 
@@ -252,7 +252,7 @@ class LSPDaemonClient:
         except Exception:
             return False
 
-    def send(self, req: Dict) -> Dict:
+    def send(self, req: dict[str, Any]) -> dict[str, Any]:
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         try:
             s.connect(str(self.socket_path))
@@ -271,7 +271,7 @@ class LSPDaemonClient:
         resp = self.send({"method": "status"})
         return resp.get("data", {}).get("state") == "READY"  # type: ignore[no-any-return]
 
-    def request(self, method: str, params: Dict) -> Optional[Dict]:
+    def request(self, method: str, params: dict[str, Any]) -> Optional[dict[str, Any]]:
         resp = self.send({"method": "request", "params": {"method": method, "params": params}})
         if resp.get("status") == "ok":
             return resp.get("data")

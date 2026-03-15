@@ -14,7 +14,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, Optional
+from typing import TYPE_CHECKING, Any, Literal, Optional
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -200,7 +200,7 @@ class Finding:
     related: Optional[FindingRelated] = None
     fix_lean: Optional[str] = None
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         return {
             "id": self.id,
@@ -253,9 +253,9 @@ class ObsidianNote:
 
     def render(self) -> str:
         """Render the full note with frontmatter and content."""
-        import yaml  # type: ignore
+        import yaml
 
-        frontmatter_str = yaml.dump(self.frontmatter, sort_keys=False, default_flow_style=False)  # type: ignore
+        frontmatter_str = yaml.dump(self.frontmatter, sort_keys=False, default_flow_style=False)
 
         return f"---\n{frontmatter_str}---\n\n{self.content}"
 
@@ -285,7 +285,7 @@ class SyncResult:
     notes_skipped: int
     active_sources: list[str]
     duration_ms: int
-    previews: list[dict] = field(default_factory=list)
+    previews: list[dict[str, Any]] = field(default_factory=list)
 
     @property
     def total_notes(self) -> int:

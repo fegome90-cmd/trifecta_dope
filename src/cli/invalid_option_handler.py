@@ -14,7 +14,7 @@ import difflib
 import os
 import sys
 from dataclasses import dataclass
-from typing import Optional
+from typing import Any, Optional
 
 from src.cli.introspection import (
     CommandIntrospector,
@@ -377,7 +377,7 @@ def emit_help_used_telemetry(command_path: str, argv: list[str]) -> None:
     )
 
 
-def get_telemetry_kpis() -> dict:
+def get_telemetry_kpis() -> dict[str, Any]:
     """Get current KPI values from telemetry."""
     telemetry = _get_telemetry()
     if telemetry is None:

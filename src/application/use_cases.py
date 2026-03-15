@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-import yaml  # type: ignore[import-untyped]
+import yaml
 
 from src.application.context_service import ContextService
 from src.domain.constants import MAX_SKILL_LINES

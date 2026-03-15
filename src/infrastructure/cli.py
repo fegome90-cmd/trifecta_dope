@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Literal, Optional, Tuple
 
 import click
-import typer  # type: ignore
+import typer
 from click.exceptions import UsageError
 
 # AST/LSP Integration (Phase 2a/2b)

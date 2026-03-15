@@ -5,7 +5,7 @@ import hashlib
 import re
 import tempfile
 from pathlib import Path
-from typing import Dict
+from typing import Any
 
 from src.domain.segment_resolver import resolve_segment_ref, get_segment_fingerprint
 
@@ -48,7 +48,7 @@ def _sanitize_value(value: str) -> str:
     return value
 
 
-def _sanitize_event(event: dict) -> dict:
+def _sanitize_event(event: dict[str, Any]) -> dict[str, Any]:
     """Sanitize PII from event dict before persisting.
 
     Sanitizes common path keys: segment, cwd, path, root, repo_root, file, uri.
@@ -87,8 +87,8 @@ class Telemetry:
         self.segment_id = segment_ref.fingerprint
         self.segment_label = segment_ref.slug
         self.run_id = os.environ.get("TRIFECTA_RUN_ID", f"run_{int(time.time())}")
-        self.metrics: Dict[str, int] = {}
-        self.timings: Dict[str, list] = {}
+        self.metrics: dict[str, int] = {}
+        self.timings: dict[str, list[Any]] = {}
 
         # NO-OP mode: complete disable for pre-commit
         # Use TRIFECTA_NO_TELEMETRY instead of PRE_COMMIT to avoid conflicts
@@ -123,7 +123,7 @@ class Telemetry:
             self.timings[cmd] = []
         self.timings[cmd].append(timing_ms)
 
-    def event(self, cmd: str, args: Dict, result: Dict, timing_ms: int, **kwargs):
+    def event(self, cmd: str, args: dict[str, Any], result: dict[str, Any], timing_ms: int, **kwargs: Any) -> None:
         if self.level == "off":
             return
 

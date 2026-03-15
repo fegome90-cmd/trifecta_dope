@@ -1,7 +1,7 @@
 """Domain Models for Trifecta Context."""
 
 from datetime import datetime
-from typing import List
+from typing import Any, List
 from pydantic import BaseModel, Field
 
 
@@ -76,6 +76,6 @@ class GetResult(BaseModel):
     chunks_requested: int = Field(..., description="Number of chunk IDs requested")
     chunks_returned: int = Field(..., description="Number of chunks actually returned")
     chars_returned_total: int = Field(..., description="Total characters returned")
-    evidence_metadata: dict = Field(
+    evidence_metadata: dict[str, Any] = Field(
         default_factory=dict, description="Evidence signals: strong_hit, support"
     )
