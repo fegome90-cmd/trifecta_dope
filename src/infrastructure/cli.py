@@ -317,6 +317,8 @@ def doctor_cmd(
 
     if json_output:
         output = {
+            "score": diagnosis.health_score,
+            "healthy": diagnosis.health_score >= 70,
             "repo_id": diagnosis.segment_ref.id,
             "path": str(diagnosis.segment_ref.root_abs),
             "health_score": diagnosis.health_score,

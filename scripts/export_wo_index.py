@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Export WO worktree index for Sidecar integration."""
+
 import json
 import os
 import subprocess
@@ -17,8 +18,7 @@ def load_yaml(path: Path) -> dict:
 def get_repo_root() -> Path:
     """Get repository root path."""
     result = subprocess.run(
-        ["git", "rev-parse", "--show-toplevel"],
-        capture_output=True, text=True, check=True
+        ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True
     )
     return Path(result.stdout.strip())
 
@@ -26,8 +26,7 @@ def get_repo_root() -> Path:
 def get_git_head_sha(root: Path) -> str:
     """Get current git HEAD SHA."""
     result = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
-        cwd=root, capture_output=True, text=True, check=True
+        ["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, text=True, check=True
     )
     return result.stdout.strip()
 
@@ -41,7 +40,9 @@ def get_worktrees_from_git(root: Path) -> dict:
     try:
         output = subprocess.check_output(
             ["git", "worktree", "list", "--porcelain"],
-            cwd=root, text=True, stderr=subprocess.DEVNULL
+            cwd=root,
+            text=True,
+            stderr=subprocess.DEVNULL,
         )
     except (subprocess.CalledProcessError, FileNotFoundError):
         return worktrees
@@ -93,8 +94,10 @@ def build_wo_index(wo_file: Path, root: Path, worktrees: dict) -> dict:
     else:
         # Infer path from WO ID using scripts.paths
         import sys
+
         sys.path.insert(0, str(root / "scripts"))
         from paths import get_worktree_path
+
         inferred_abs = get_worktree_path(root, wo_id)
         worktree_path = os.path.relpath(inferred_abs, root)
 
@@ -115,7 +118,7 @@ def build_wo_index(wo_file: Path, root: Path, worktrees: dict) -> dict:
         "wo_yaml_path": wo_yaml_path,
         "created_at": wo.get("created_at", ""),
         "closed_at": wo.get("closed_at"),
-        "last_error": None
+        "last_error": None,
     }
 
 
@@ -174,17 +177,23 @@ def main():
         "repo_root": str(root),
         "git_head_sha_repo_root": get_git_head_sha(root),
         "work_orders": work_orders,
-        "errors": errors
+        "errors": errors,
     }
 
     # Atomic write
     tmp_file = index_dir / "wo_worktrees.json.tmp"
     final_file = index_dir / "wo_worktrees.json"
 
-    with open(tmp_file, "w") as f:
-        json.dump(index, f, indent=2, default=str)
+    try:
+        with open(tmp_file, "w") as f:
+            json.dump(index, f, indent=2, default=str)
 
-    tmp_file.rename(final_file)
+        tmp_file.rename(final_file)
+    except Exception:
+        if tmp_file.exists():
+            tmp_file.unlink()
+        raise
+
     print(f"Index written to {final_file}")
 
     # Print summary

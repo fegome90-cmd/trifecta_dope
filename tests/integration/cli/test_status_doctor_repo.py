@@ -40,9 +40,13 @@ def test_doctor_command_json():
     result = runner.invoke(app, ["doctor", "--repo", ".", "--json"])
     assert result.exit_code == 0
     data = json.loads(result.stdout)
+    assert "score" in data
+    assert "healthy" in data
     assert "health_score" in data
     assert "issues" in data
     assert "warnings" in data
+    assert data["score"] == data["health_score"]
+    assert data["healthy"] is (data["health_score"] >= 70)
 
 
 def test_repo_list_empty():

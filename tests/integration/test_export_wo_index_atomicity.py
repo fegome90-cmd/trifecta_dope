@@ -1,37 +1,37 @@
-import pytest
-import os
 import json
 from pathlib import Path
 
+import pytest
+
 
 def test_export_wo_index_atomicity(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    from scripts import export_wo_index
+
     repo_ctx = tmp_path
-    ctx_dir = repo_ctx / "_ctx"
-    ctx_dir.mkdir(parents=True, exist_ok=True)
+    index_dir = repo_ctx / "_ctx" / "index"
+    index_dir.mkdir(parents=True, exist_ok=True)
 
     # Generate some dummy index to exist initially
-    index_file = ctx_dir / "wo_worktrees.json"
+    index_file = index_dir / "wo_worktrees.json"
     initial_content = {"version": "0.1"}
     index_file.write_text(json.dumps(initial_content))
+    tmp_file = index_dir / "wo_worktrees.json.tmp"
 
-    # We will crash during replace
-    original_replace = os.replace
+    monkeypatch.setattr(export_wo_index, "get_repo_root", lambda: repo_ctx)
+    monkeypatch.setattr(export_wo_index, "get_git_head_sha", lambda _root: "deadbeef")
+    monkeypatch.setattr(export_wo_index, "get_worktrees_from_git", lambda _root: {})
 
-    def crashing_replace(src, dst):
-        if str(dst).endswith("wo_worktrees.json"):
+    original_rename = Path.rename
+
+    def crashing_rename(self: Path, target: Path | str) -> Path:
+        if self == tmp_file and Path(target) == index_file:
             raise RuntimeError("CRASH ATOMIC REPLACE")
-        return original_replace(src, dst)
+        return original_rename(self, target)
 
-    monkeypatch.setattr(os, "replace", crashing_replace)
-
-    # mock sys.argv
-    monkeypatch.setattr("sys.argv", ["export_wo_index.py", "--root", str(repo_ctx)])
-
-    # Attempt to run export, it will crash
-    from scripts.export_wo_index import main
+    monkeypatch.setattr(Path, "rename", crashing_rename)
 
     with pytest.raises(RuntimeError, match="CRASH ATOMIC REPLACE"):
-        main()
+        export_wo_index.main()
 
     # VERIFY ATOMICITY INVARIANTS
     # 1. The original index must remain untouched
@@ -39,6 +39,6 @@ def test_export_wo_index_atomicity(tmp_path: Path, monkeypatch: pytest.MonkeyPat
     assert current_content == initial_content, "Original index was corrupted or overwritten"
 
     # 2. The fixed temp artifact used by export_wo_index.py must not survive the crash.
-    tmp_files = list(ctx_dir.glob("wo_worktrees.json.tmp*"))
+    tmp_files = list(index_dir.glob("wo_worktrees.json.tmp*"))
     assert index_file.exists()
     assert not tmp_files

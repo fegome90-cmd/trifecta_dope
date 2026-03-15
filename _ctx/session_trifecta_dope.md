@@ -1501,3 +1501,15 @@ Created WO-0055 (P1) to fix hook bypass system issues discovered during WO-0050 
 - **Commands**: pytest tests/integration/test_schema_version.py, pytest tests/integration/test_sqlite_contention.py, pytest tests/integration/runtime/
 - **Pack SHA**: `03f7e3678657c9a7`
 
+## 2026-03-15 01:26 UTC
+- **Summary**: Resume remediation-ci-baseline WO to resolve remaining review findings and order next phases
+- **Files**: tests/integration/test_export_wo_index_atomicity.py, src/infrastructure/cli.py, docs/plans/2026-03-14-ci-baseline-remediation-branch-review-first.md
+- **Commands**: make install, git status, pytest, python -m src.infrastructure.cli doctor --json
+- **Pack SHA**: `fac5ddcf14590d10`
+
+## 2026-03-15 01:30 UTC
+- **Summary**: Resolved remaining review findings in CI-baseline WO: fixed export_wo_index atomicity regression coverage, cleaned temp-file failure path, and restored backward-compatible doctor --json keys
+- **Files**: scripts/export_wo_index.py, src/infrastructure/cli.py, tests/integration/test_export_wo_index_atomicity.py, tests/integration/cli/test_status_doctor_repo.py
+- **Commands**: pytest tests/integration/test_export_wo_index_atomicity.py, pytest tests/integration/cli/test_status_doctor_repo.py, python -m src.infrastructure.cli doctor --json, ruff check, ruff format
+- **Pack SHA**: `fac5ddcf14590d10`
+
