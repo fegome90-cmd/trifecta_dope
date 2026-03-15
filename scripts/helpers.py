@@ -24,12 +24,11 @@ from scripts.paths import (
     get_lock_path,
     get_wo_pending_path,
     get_wo_running_path,
-    get_worktree_path,
     get_branch_name as paths_get_branch_name,
 )
 
 # Import domain types for type safety
-from src.domain.wo_transactions import RollbackType, TransactionError
+from src.domain.wo_transactions import RollbackType
 
 # Configuration constants (deprecated - use scripts.paths instead)
 WORKTREE_BASE = ".worktrees"
@@ -428,19 +427,30 @@ def create_lock(lock_path: Path, wo_id: str) -> bool:
         return False
 
 
-def check_lock_age(lock_path: Path, max_age_seconds: int = 3600) -> bool:
+def check_lock_age(lock_path: Path, max_age_seconds: int | None = None) -> bool:
     """
     Check if a lock is stale (older than max_age_seconds).
 
     Args:
         lock_path: Path to lock file
-        max_age_seconds: Maximum age in seconds (default: 3600 = 1 hour)
+        max_age_seconds: Maximum age in seconds. When omitted, resolve from
+            WO_LOCK_TTL_SEC or fall back to 86400 seconds.
 
     Returns:
         True if lock is stale, False if active or doesn't exist
     """
     if not lock_path.exists():
         return False
+
+    if max_age_seconds is None:
+        env_ttl = os.getenv("WO_LOCK_TTL_SEC")
+        if env_ttl is not None:
+            try:
+                max_age_seconds = int(env_ttl)
+            except ValueError:
+                max_age_seconds = 86400
+        else:
+            max_age_seconds = 86400
 
     import time
     age = time.time() - lock_path.stat().st_mtime
