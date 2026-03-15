@@ -27,7 +27,7 @@ def _emit(data: dict[str, object], json_output: bool) -> None:
 
     if "node_count" in data and "edge_count" in data:
         typer.echo(
-            f"segment={data['segment_id']} nodes={data['node_count']} edges={data['edge_count']}"
+            f"segment={data.get('segment_id', '?')} nodes={data.get('node_count', 0)} edges={data.get('edge_count', 0)}"
         )
         return
 

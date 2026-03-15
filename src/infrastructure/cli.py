@@ -1,6 +1,7 @@
 """Trifecta CLI with T8 Telemetry."""
 
 import json
+import logging
 import os
 import sys
 import time
@@ -80,6 +81,8 @@ app = typer.Typer(
     rich_markup_mode="rich",
     cls=TrifectaGroup,
 )
+
+logger = logging.getLogger(__name__)
 
 app.add_typer(ast_app, name="ast")
 app.add_typer(graph_app, name="graph")
@@ -2524,7 +2527,9 @@ def _cleanup_daemon_runtime_artifacts(socket_path: Path, pid_path: Path) -> None
     for path in (socket_path, pid_path):
         try:
             path.unlink()
-        except (FileNotFoundError, IsADirectoryError, PermissionError):
+        except PermissionError as exc:
+            logger.warning("Failed to unlink %s: permission denied (%s)", path, exc)
+        except (FileNotFoundError, IsADirectoryError):
             pass
 
 
