@@ -81,3 +81,12 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Commands**: git diff, pytest
 - **Pack SHA**: `24aafcfcd3c77523`
 
+## 2026-03-15 16:22 UTC
+- **Summary**: Fix skill-hub --help flag handler
+- **Problem**: `skill-hub --help` searched for "--help" string instead of showing usage
+- **Solution**: Add explicit --help/-h handler before query processing
+- **Files**: ~/.local/bin/skill-hub → scripts/skill-hub (versioned)
+- **Commit**: `c43e6d7` feat(skill-hub): add --help/-h flag handler
+- **Validation**: Tested --help, -h, empty args, and normal search
+- **Pack SHA**: `c43e6d7780c2a583`
+
