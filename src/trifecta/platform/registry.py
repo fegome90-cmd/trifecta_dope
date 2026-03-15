@@ -10,7 +10,7 @@ Date: 2026-03-06
 
 from abc import abstractmethod
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any, NoReturn, Protocol
 
 
 class Registry(Protocol):
@@ -50,6 +50,12 @@ class RegistryFactory:
     """Factory for creating registry instances."""
 
     @staticmethod
+    def _missing_implementation(registry_type: str) -> NoReturn:
+        raise NotImplementedError(
+            f"{registry_type} registry implementation is not available in this repo"
+        )
+
+    @staticmethod
     def create(registry_type: str = "sqlite", **kwargs: Any) -> Registry:
         """
         Create a registry instance.
@@ -62,12 +68,8 @@ class RegistryFactory:
             Registry implementation instance
         """
         if registry_type == "memory":
-            from trifecta.platform.memory_registry import MemoryRegistry
-
-            return MemoryRegistry(**kwargs)
+            RegistryFactory._missing_implementation("memory")
         elif registry_type == "sqlite":
-            from trifecta.platform.repo_store import SQLiteRegistry
-
-            return SQLiteRegistry(**kwargs)
+            RegistryFactory._missing_implementation("sqlite")
         else:
             raise ValueError(f"Unknown registry type: {registry_type}")

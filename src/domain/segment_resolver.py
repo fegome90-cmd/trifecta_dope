@@ -30,6 +30,10 @@ class SegmentRef:
         id: Combined identifier (slug_fingerprint) for unique operations
     """
 
+    _root_abs: Path
+    _slug: str
+    _fingerprint: str
+    _id: str
     __slots__ = ("_root_abs", "_slug", "_fingerprint", "_id")
 
     def __init__(self, root_abs: Path, slug: str, fingerprint: str, id: str) -> None:

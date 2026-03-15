@@ -9,7 +9,7 @@ Date: 2026-03-06
 """
 
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, NoReturn
 
 
 class RuntimeManager(ABC):
@@ -54,6 +54,12 @@ class RuntimeManagerFactory:
     """Factory for creating runtime manager instances."""
 
     @staticmethod
+    def _missing_implementation(manager_type: str) -> NoReturn:
+        raise NotImplementedError(
+            f"{manager_type} runtime manager implementation is not available in this repo"
+        )
+
+    @staticmethod
     def create(manager_type: str = "daemon", **kwargs: Any) -> RuntimeManager:
         """
         Create a runtime manager instance.
@@ -66,12 +72,8 @@ class RuntimeManagerFactory:
             RuntimeManager implementation instance
         """
         if manager_type == "daemon":
-            from trifecta.platform.daemon_runtime import DaemonRuntimeManager
-
-            return DaemonRuntimeManager(**kwargs)
+            RuntimeManagerFactory._missing_implementation("daemon")
         elif manager_type == "embedded":
-            from trifecta.platform.embedded_runtime import EmbeddedRuntimeManager
-
-            return EmbeddedRuntimeManager(**kwargs)
+            RuntimeManagerFactory._missing_implementation("embedded")
         else:
             raise ValueError(f"Unknown manager type: {manager_type}")

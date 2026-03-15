@@ -11,6 +11,10 @@ from typing import Protocol
 class RepoRecord:
     """Immutable record of a registered repository."""
 
+    _repo_id: str
+    _root_path: Path
+    _created_at: str
+    _last_accessed: str | None
     __slots__ = ("_repo_id", "_root_path", "_created_at", "_last_accessed")
 
     def __init__(
