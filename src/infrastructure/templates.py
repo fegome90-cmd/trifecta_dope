@@ -86,8 +86,7 @@ profile: load_only
 
 # Prime {config.segment.replace("-", " ").title()} - Lista de Lectura
 
-> **REPO_ROOT**: `{config.repo_root}`
-> Todas las rutas son relativas a esta raiz.
+> **SEGMENT_ROOT**: `.` (all paths relative to segment root)
 >
 > **Orden de lectura**: Fundamentos -> Implementacion -> Referencias
 
