@@ -12,6 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from src.domain.result import Err, Ok
 from src.domain.skill_contracts import SkillValidationError, validate_skill_meta
 from src.infrastructure.skills_fs import discover_skills_from_paths
 
@@ -79,15 +80,19 @@ def lint_skills(
                 )
             )
         else:
-            errors = validation.unwrap_err()
-            results.append(
-                SkillLintResult(
-                    path=str(skill.path),
-                    name=skill.meta.name or "(unnamed)",
-                    valid=False,
-                    errors=errors,
-                )
-            )
+            # Pattern match instead of unwrap_err()
+            match validation:
+                case Err(errs):
+                    results.append(
+                        SkillLintResult(
+                            path=str(skill.path),
+                            name=skill.meta.name or "(unnamed)",
+                            valid=False,
+                            errors=errs,
+                        )
+                    )
+                case Ok(_):
+                    pass  # Already handled by is_ok() check
 
     valid_count = sum(1 for r in results if r.valid)
     invalid_count = len(results) - valid_count

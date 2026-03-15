@@ -144,8 +144,8 @@ class RefreshPrimeUseCase:
         prime_path = prime_files[0]
         segment = prime_path.stem.replace("prime_", "")
 
-        # Scan docs
-        docs = self.file_system.scan_docs(scan_path, repo_root)
+        # Scan docs - pass scan_path as both args (repo_root is now ignored)
+        docs = self.file_system.scan_docs(scan_path, scan_path)
 
         # Build minimal config
         config = TrifectaConfig(
@@ -169,7 +169,7 @@ class BuildContextPackUseCase:
         self.telemetry = telemetry
 
     def _extract_references(
-        self, content: str, root: Path, repo_root: Path | None = None
+        self, content: str, root: Path
     ) -> dict[str, Path]:
         """Extract referenced files from Prime content with STRICT SECURITY."""
 
@@ -206,7 +206,7 @@ class BuildContextPackUseCase:
                     break
 
                 if self._is_valid_ref(path_str):
-                    resolved = self._resolve_path(path_str, root, repo_root)
+                    resolved = self._resolve_path(path_str, root)
 
                     if resolved:
                         # Cycle/Duplicate Check
@@ -268,21 +268,22 @@ class BuildContextPackUseCase:
         except ValueError:
             return False
 
-    def _resolve_path(self, path_str: str, root: Path, repo_root: Path | None) -> Path | None:
-        # 1. Try relative to component root
+    def _resolve_path(self, path_str: str, root: Path) -> Path | None:
+        """Resolve path relative to segment root only.
+
+        Paths in prime files must be segment-relative (e.g., 'skill.md', 'docs/guide.md').
+        This ensures compatibility with git worktrees where the segment root differs
+        from the main repo's REPO_ROOT.
+
+        Args:
+            path_str: Path string from prime file (segment-relative)
+            root: Segment root directory
+
+        Returns:
+            Resolved Path if file exists, None otherwise
+        """
         p = root / path_str
-        if p.exists() and p.is_file():
-            return p
-
-        # 2. Try relative to REPO_ROOT (if known) -- BUT ONLY if it resolves inside segment
-        # (This effectively disables repo-root links unless they point back into segment,
-        # complying with "Scope limited to segment")
-        if repo_root:
-            p = repo_root / path_str
-            if p.exists() and p.is_file():
-                return p
-
-        return None
+        return p if p.exists() and p.is_file() else None
 
     def execute(self, target_path: Path) -> "Ok[ContextPack] | Err[list[str]]":
         if self.telemetry:
@@ -394,7 +395,7 @@ class BuildContextPackUseCase:
             sources["session"] = expected_session
 
         # 4.5 Extract references from Prime
-        refs = self._extract_references(prime_content, target_path, repo_root)
+        refs = self._extract_references(prime_content, target_path)
 
         # Compute primary source paths for exclusion (path-aware deduplication)
         primary_skill_path = target_path / "skill.md"
@@ -490,7 +491,7 @@ class BuildContextPackUseCase:
             mtime = file_path.stat().st_mtime
 
             # Extract relative path from source_key (format: "repo:relative/path")
-            source_rel_path = doc_type.split(":", 1)[1] if ":" in doc_type else file_path.name
+            source_rel_path = doc_type.split(":", 1)[1] if ":" in doc_type else str(file_path.relative_to(target_path))
 
             source_files.append(
                 SourceFile(

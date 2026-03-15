@@ -128,15 +128,20 @@ def validate_skill_meta(meta: SkillMeta) -> Result[SkillMeta, list[SkillValidati
     for i, inp in enumerate(meta.inputs):
         inp_result = validate_skill_input(inp)
         if inp_result.is_err():
-            for inp_err in inp_result.unwrap_err():
-                # Prefix with input index
-                errors.append(
-                    SkillValidationError(
-                        f"inputs[{i}].{inp_err.field}",
-                        inp_err.message,
-                        inp_err.value,
-                    )
-                )
+            # Pattern match instead of unwrap_err()
+            match inp_result:
+                case Err(inp_errs):
+                    for inp_err in inp_errs:
+                        # Prefix with input index
+                        errors.append(
+                            SkillValidationError(
+                                f"inputs[{i}].{inp_err.field}",
+                                inp_err.message,
+                                inp_err.value,
+                            )
+                        )
+                case Ok(_):
+                    pass  # Already handled by is_err() check
 
     if errors:
         return Err(errors)

@@ -1911,13 +1911,11 @@ def refresh_prime(
     template_renderer, file_system, _ = _get_dependencies(segment)
     use_case = RefreshPrimeUseCase(template_renderer, file_system)
 
-    # Validate paths
+    # Validate paths - segment is both scan_path and repo_root for worktree compatibility
     path = Path(segment).resolve()
-    repo_root = path.parent if path.parent != path else path
-    scan_path = path
 
     try:
-        output = use_case.execute(path, scan_path, repo_root)
+        output = use_case.execute(path, path, path)
         typer.echo(output)
     except Exception as e:
         typer.echo(_format_error(e, "Refresh Error"), err=True)
