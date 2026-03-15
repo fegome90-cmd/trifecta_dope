@@ -1513,3 +1513,27 @@ Created WO-0055 (P1) to fix hook bypass system issues discovered during WO-0050 
 - **Commands**: pytest tests/integration/test_export_wo_index_atomicity.py, pytest tests/integration/cli/test_status_doctor_repo.py, python -m src.infrastructure.cli doctor --json, ruff check, ruff format
 - **Pack SHA**: `fac5ddcf14590d10`
 
+## 2026-03-15 12:27 UTC
+- **Summary**: Resume remediation worktree: inspect anchor-text scope and git hygiene before continuing
+- **Files**: _ctx/checkpoints/2026-03-15/checkpoint_085345_ci-baseline-next-mypy-cluster.md, _ctx/handoff/remediation-ci-baseline-next-window.md, _ctx/handoff/remediation-ci-baseline-next-window-checklist.md
+- **Commands**: skill-hub, make install, session append
+- **Pack SHA**: `fac5ddcf14590d10`
+
+## 2026-03-15 12:32 UTC
+- **Summary**: Completed Task 4 Step 1 first mypy cluster: explicit factory errors plus typed private attrs; targeted mypy and unit tests green
+- **Files**: src/trifecta/platform/runtime_manager.py, src/trifecta/platform/registry.py, src/platform/registry.py, src/domain/segment_resolver.py, tests/unit/test_platform_factory_contracts.py
+- **Commands**: uv run pytest tests/unit/test_platform_factory_contracts.py tests/unit/test_segment_resolver.py, uv run mypy src/trifecta/platform/runtime_manager.py src/trifecta/platform/registry.py src/platform/registry.py src/domain/segment_resolver.py
+- **Pack SHA**: `fac5ddcf14590d10`
+
+## 2026-03-15 13:13 UTC
+- **Summary**: Completed Task 4 Step 2 second mypy cluster: typed defaultdict/result shapes in zero_hit_reports telemetry_health and skill_contracts; targeted mypy and unit tests green
+- **Files**: src/application/zero_hit_reports.py, src/application/telemetry_health.py, src/domain/skill_contracts.py
+- **Commands**: uv run mypy src/application/zero_hit_reports.py src/application/telemetry_health.py src/domain/skill_contracts.py, uv run pytest tests/unit/test_telemetry_health.py tests/unit/test_skill_contracts_validation.py
+- **Pack SHA**: `fac5ddcf14590d10`
+
+## 2026-03-15 13:17 UTC
+- **Summary**: Completed Task 4 Step 3 final mypy cluster: fixed typed API mismatches in Linear/CLI modules; targeted and full mypy green; LinearMCP and daemon tests green
+- **Files**: src/infrastructure/linear_mcp_client.py, src/application/skill_lint_use_case.py, src/application/linear_sync_use_case.py, src/infrastructure/cli.py
+- **Commands**: uv run mypy src/infrastructure/linear_mcp_client.py src/application/skill_lint_use_case.py src/application/linear_sync_use_case.py src/infrastructure/cli.py, uv run mypy src/, uv run pytest tests/unit/test_linear_mcp_client_compat.py, uv run pytest tests/integration/test_lsp_daemon.py
+- **Pack SHA**: `fac5ddcf14590d10`
+
