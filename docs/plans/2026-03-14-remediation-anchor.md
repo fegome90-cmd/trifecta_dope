@@ -131,13 +131,14 @@ These artifacts were intentionally separated because they were not part of the s
 
 Read these first regardless of branch:
 
-1. `docs/plans/2026-03-14-remediation-anchor.md` (this file)
+1. `docs/plans/2026-03-14-remediation-anchor.md`
 2. `docs/plans/2026-03-09-wo-remediation-execution-decomposition.md`
-3. The merge-review handoff docs live only on `codex/wo-remediation-plan`; retrieve with:
+3. `docs/plans/2026-03-14-ci-baseline-remediation-branch-review-first.md`
+4. The merge-review checklists live only in the remediation-plan history; fetch them with:
 
 ```bash
-git show codex/wo-remediation-plan:_ctx/handoff/remediation-merge-review-next-window.md
-git show codex/wo-remediation-plan:_ctx/handoff/remediation-merge-review-next-window-checklist.md
+git show ecc55f1:_ctx/handoff/remediation-merge-review-next-window.md
+git show ecc55f1:_ctx/handoff/remediation-merge-review-next-window-checklist.md
 ```
 
 ## Secondary Documents Still Relevant
