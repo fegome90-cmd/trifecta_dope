@@ -259,9 +259,13 @@ class LinearSyncUseCase:
 
     def push_wo(self, wo_id: str) -> LinearActionResult:
         try:
-            status_map = self._status_map()
             cache = self._load_status_map_cache()
-            resolved_team_id = cache["team_id"].strip() if cache else ""
+            if not cache:
+                raise LinearMCPError("status_map cache missing or invalid; run linear bootstrap")
+
+            status_map = cache["status_map"]
+            resolved_team_id = str(cache.get("team_id") or "").strip()
+            linear_state_id_to_name = cache.get("linear_state_id_to_name")
             state = load_or_rebuild_state(self.root)
             wo_pair = next(
                 ((wo, path) for wo, path in self._load_work_orders() if wo.get("id") == wo_id), None
@@ -317,7 +321,7 @@ class LinearSyncUseCase:
                 current_norm = self._normalize_issue_for_diff(
                     current,
                     comparable_payload,
-                    (cache.get("linear_state_id_to_name") if isinstance(cache, dict) else None),
+                    linear_state_id_to_name,
                 )
                 diffs = diff_payload(comparable_payload, current_norm)
                 changed_fields = set(diffs.keys())

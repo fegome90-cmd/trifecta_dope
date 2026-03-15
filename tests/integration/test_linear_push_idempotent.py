@@ -76,6 +76,7 @@ def test_push_is_idempotent_and_no_duplicates(tmp_path: Path, monkeypatch) -> No
 
     uc = LinearSyncUseCase(tmp_path)
     assert uc.bootstrap().ok
+    uc._status_map = lambda: (_ for _ in ()).throw(AssertionError("push_wo should use cache snapshot"))  # type: ignore[method-assign]
 
     first = uc.push_wo("WO-0001")
     second = uc.push_wo("WO-0001")
