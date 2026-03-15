@@ -79,6 +79,27 @@ These artifacts were intentionally separated because they were not part of the s
 - No `reviewctl` run id was produced from this pass, so there is no new `_ctx/review_runs/<run-id>/final.json` artifact yet.
 - A later preflight retry confirmed auth is no longer the blocker: `REVIEW_API_TOKEN_OK` in-shell.
 - The remaining blockers are structural repo prerequisites, so `reviewctl` still must not run yet.
+- The repo surface was then added and pushed in `0134596` to let `branch-review` advance past preflight.
+- First actual run id: `run_20260314_5bb4bc88`
+- Plan contract for this run:
+  - `plan_status`: `MISSING`
+  - required agents: `code-reviewer`, `code-simplifier`, `pr-test-analyzer`
+  - required statics from `plan.json`: `ruff`, `pytest`
+- Static status recorded by the run:
+  - `biome`: `NOT_APPLICABLE`
+  - `ruff`: `NOT_APPLICABLE`
+  - `pytest`: `NOT_APPLICABLE`
+  - `pyrefly`: `NOT_APPLICABLE`
+  - `coderabbit`: `NOT_APPLICABLE`
+- Official verdict artifact for this run:
+  - `_ctx/review_runs/run_20260314_5bb4bc88/final.json`
+  - verdict: `INCOMPLETE`
+  - status: `pending_reports`
+  - missing agents: `code-reviewer`, `code-simplifier`, `pr-test-analyzer`
+- Local companion artifacts created for continuity:
+  - `apps/pae-wizard/outputs/reviewctl/run_20260314_5bb4bc88-summary.md`
+  - `apps/pae-wizard/outputs/reviewctl/lint-debt-backlog.md`
+  - `apps/pae-wizard/outputs/reviewctl/run_20260314_5bb4bc88-debt-log.md`
 
 ## Guardrails
 
