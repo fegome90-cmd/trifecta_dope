@@ -4,7 +4,7 @@ import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict
 
 import yaml
 
@@ -47,6 +47,14 @@ class LinearActionResult:
     exit_code: int = 0
 
 
+class StatusMapCache(TypedDict):
+    team_id: str
+    policy_version: str
+    generated_at: str
+    status_map: dict[str, str]
+    linear_state_id_to_name: dict[str, str]
+
+
 class LinearSyncUseCase:
     def __init__(self, root: Path, mcp_client: LinearMCPClient | None = None):
         self.root = root.resolve()
@@ -55,7 +63,7 @@ class LinearSyncUseCase:
         self.policy: LinearPolicy = load_linear_policy(self.policy_path)
         self.client = mcp_client or LinearMCPClient()
 
-    def _load_status_map_cache(self) -> dict[str, Any] | None:
+    def _load_status_map_cache(self) -> StatusMapCache | None:
         if not self.status_map_path.exists():
             return None
         try:
@@ -80,7 +88,20 @@ class LinearSyncUseCase:
             for s in REQUIRED_TRIFECTA_STATUSES
         ):
             return None
-        return data
+        linear_state_id_to_name_raw = data.get("linear_state_id_to_name", {})
+        linear_state_id_to_name: dict[str, str] = {}
+        if isinstance(linear_state_id_to_name_raw, dict):
+            for key, value in linear_state_id_to_name_raw.items():
+                if isinstance(key, str) and isinstance(value, str):
+                    linear_state_id_to_name[key] = value
+
+        return {
+            "team_id": team_id,
+            "policy_version": self.policy.policy_version,
+            "generated_at": str(data.get("generated_at") or ""),
+            "status_map": {state: str(status_map[state]) for state in REQUIRED_TRIFECTA_STATUSES},
+            "linear_state_id_to_name": linear_state_id_to_name,
+        }
 
     def _save_status_map_cache(
         self,
@@ -239,8 +260,8 @@ class LinearSyncUseCase:
     def push_wo(self, wo_id: str) -> LinearActionResult:
         try:
             status_map = self._status_map()
-            cache = self._load_status_map_cache() or {}
-            resolved_team_id = str(cache.get("team_id") or "").strip()
+            cache = self._load_status_map_cache()
+            resolved_team_id = cache["team_id"].strip() if cache else ""
             state = load_or_rebuild_state(self.root)
             wo_pair = next(
                 ((wo, path) for wo, path in self._load_work_orders() if wo.get("id") == wo_id), None
@@ -403,10 +424,11 @@ class LinearSyncUseCase:
                 current = current_resp.get("issue") or {}
                 if not isinstance(current, dict):
                     continue
+                status_map_cache = self._load_status_map_cache()
                 current_norm = self._normalize_issue_for_diff(
                     current,
                     comparable_payload,
-                    (self._load_status_map_cache() or {}).get("linear_state_id_to_name"),
+                    status_map_cache["linear_state_id_to_name"] if status_map_cache else None,
                 )
                 diffs = diff_payload(comparable_payload, current_norm)
                 if not diffs:

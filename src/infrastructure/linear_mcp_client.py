@@ -172,8 +172,12 @@ class LinearMCPClient:
         return [t for t in tools if isinstance(t, dict)]
 
     def check_capabilities(self) -> None:
-        names = {t.get("name") for t in self.tools_list() if isinstance(t.get("name"), str)}
-        self._tool_names = set(names)
+        names: set[str] = set()
+        for tool in self.tools_list():
+            name = tool.get("name")
+            if isinstance(name, str):
+                names.add(name)
+        self._tool_names = names
         resolved: dict[str, str] = {}
         missing: list[str] = []
         for op in REQUIRED_LINEAR_OPS:

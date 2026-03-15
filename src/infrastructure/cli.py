@@ -2650,12 +2650,12 @@ def daemon_run() -> None:
 
                 conn.settimeout(5.0)
                 try:
-                    data = conn.recv(256)
-                    if not data:
+                    raw_data = conn.recv(256)
+                    if not raw_data:
                         conn.close()
                         continue
 
-                    data = data.decode("utf-8", errors="replace").strip()
+                    data = raw_data.decode("utf-8", errors="replace").strip()
 
                     if len(data) > 128:
                         conn.sendall(b"ERROR: Command too long\n")
