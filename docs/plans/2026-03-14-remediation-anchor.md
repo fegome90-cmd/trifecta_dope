@@ -10,14 +10,15 @@ Purpose: preserve the remediation thread across branch switches, worktree change
 - Base of clean merge candidate: `origin/main` at `fca52dc`
 - Original long-lived remediation branch: `codex/wo-remediation-plan`
 - Original long-lived remediation HEAD: `f49ef95`
-- Preserved non-mergeable local artifacts: `stash@{0}` named `remediation-nonmerge-artifacts`
+- Preserved non-mergeable local artifacts: stash entry named `remediation-nonmerge-artifacts` currently at `stash@{1}`
+- Preserved CI-baseline exploration artifacts: stash entry named `ci-baseline-lint-exploration` currently at `stash@{0}`
 - Current PR for the clean merge candidate: `#71` `chore(remediation): recover merge-ready E-0020 state`
 - Current PR URL: `https://github.com/fegome90-cmd/trifecta_dope/pull/71`
 
 ## What Was Recovered
 
 - The original remediation worktree was classified into mergeable versus non-mergeable artifacts.
-- The non-mergeable local artifacts were preserved in `stash@{0}` instead of being mixed into the merge candidate.
+- The non-mergeable local artifacts were preserved in the stash entry named `remediation-nonmerge-artifacts` instead of being mixed into the merge candidate.
 - Two authoritative remediation commits were isolated on the long-lived branch:
   - `64e750f` `chore(remediation): [emergency] snapshot wo-0061 and wo-0067 state`
   - `f49ef95` `docs(remediation): [bypass] harden e-0020 execution contract`
@@ -54,15 +55,29 @@ These artifacts were intentionally separated because they were not part of the s
 ## Pending Decisions
 
 - Decide whether to merge locally after reconciling how `main` local differs from `origin/main`.
-- Decide whether `stash@{0}` should remain preserved only or be reviewed in a separate follow-up task.
+- Decide whether the stash entry named `remediation-nonmerge-artifacts` should remain preserved only or be reviewed in a separate follow-up task.
 - Decide whether to create a second cleanup track for the non-mergeable artifacts instead of reopening this merge candidate.
 - Decide whether the `DRIFT_RISK` on the review run requires a follow-up plan-backed review or is acceptable for this recovery PR.
+- Decide whether to absorb baseline CI remediation into this PR or split it into a distinct follow-up branch from the same merge-ready base.
 
 ## Active Blockers
 
-- There are no remaining hard blockers on opening or reviewing PR `#71`.
+- PR `#71` is still blocked on GitHub Actions `Lint and Type Check`.
 - `branch-review` passed, but the run still records `DRIFT_RISK` because no authoritative plan source was attached to the review contract.
-- The non-mergeable artifact stash is still intentionally unresolved and should not be mixed into this branch without a separate decision.
+- The non-mergeable artifact stash named `remediation-nonmerge-artifacts` is still intentionally unresolved and should not be mixed into this branch without a separate decision.
+- The failing CI stage is not introduced by the remediation surface alone; `uv run mypy src/` reproduces the same baseline failure set on `origin/main`.
+
+## PR Check Status
+
+- Latest investigated failing check on PR `#71`: `Lint and Type Check`
+- Failure source after lint triage: `uv run mypy src/`
+- Local reproduction on `codex/wo-remediation-merge-ready`: fails with baseline type errors in 11 files and 54 errors after the `ruff` layer is cleared
+- Local reproduction on `origin/main`: fails with the same baseline `mypy` family, confirming the blocker predates this remediation PR
+- Local exploratory cleanup for the lint layer was preserved in worktree stash `stash@{0}`:
+  - message: `ci-baseline-lint-exploration`
+  - purpose: preserve the partial `ruff`/format cleanup without broadening the PR before the next lot is plan-backed
+- Next-lot execution plan for this blocker:
+  - `docs/plans/2026-03-14-ci-baseline-remediation-branch-review-first.md`
 
 ## Branch Review Status
 
@@ -108,7 +123,7 @@ These artifacts were intentionally separated because they were not part of the s
 ## Guardrails
 
 - Do not open a PR from `codex/wo-remediation-plan`; it is a long-lived branch and will over-include unrelated history.
-- Do not restore `stash@{0}` into `codex/wo-remediation-merge-ready` by accident.
+- Do not restore the stash entry named `remediation-nonmerge-artifacts` into `codex/wo-remediation-merge-ready` by accident.
 - Do not describe the run as plan-backed; the final verdict is `PASS`, but the recorded drift remains `DRIFT_RISK`.
 - Remember that the two remediation commits used audited bypasses for hook blockers. Treat that as recorded historical fact, not as permission to broaden manual state edits.
 
@@ -149,7 +164,7 @@ git status --short --branch
 git log --oneline origin/main..HEAD
 git diff --stat origin/main...HEAD
 git stash list | sed -n '1,3p'
-git stash show --stat stash@{0}
+git stash show --stat stash@{1}
 ```
 
 ## Exit Criteria For This Thread
