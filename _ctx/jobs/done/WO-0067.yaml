@@ -1,8 +1,7 @@
 version: 1
 id: WO-0067
 epic_id: E-0020
-title: '[WO-FINISH-RUNTIME-ROOT-P0] Resolve finish runtime-root semantics for remediation
-  worktrees'
+title: '[WO-FINISH-RUNTIME-ROOT-P0] Resolve finish runtime-root semantics for remediation worktrees'
 priority: P0
 status: done
 owner: felipe_gonzalez
