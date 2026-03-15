@@ -13,6 +13,7 @@ scope:
   - docs/guides/*.md
   - .claude/**
   - AGENTS.md
+  - _ctx/jobs/AGENTS.md
   - skill.md
   - tests/unit/test_wo_*
   - tests/integration/test_wo_*
