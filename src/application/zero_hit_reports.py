@@ -5,10 +5,27 @@ and build SHA to enable precise measurement of zero-hit reduction interventions.
 """
 
 import json
+from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Dict, Optional
-from collections import defaultdict
+from typing import Dict, DefaultDict, Optional, TypedDict
+
+
+class ZeroHitBuildStats(TypedDict):
+    total: int
+    zero_hits: int
+
+
+class ZeroHitSourceStats(ZeroHitBuildStats):
+    reasons: dict[str, int]
+
+
+def _new_build_stats() -> ZeroHitBuildStats:
+    return {"total": 0, "zero_hits": 0}
+
+
+def _new_source_stats() -> ZeroHitSourceStats:
+    return {"total": 0, "zero_hits": 0, "reasons": defaultdict(int)}
 
 
 def generate_zero_hit_report(
@@ -65,8 +82,8 @@ def generate_zero_hit_report(
     ]
 
     # Aggregate by source
-    by_source = defaultdict(lambda: {"total": 0, "zero_hits": 0, "reasons": defaultdict(int)})
-    by_build = defaultdict(lambda: {"total": 0, "zero_hits": 0})
+    by_source: DefaultDict[str, ZeroHitSourceStats] = defaultdict(_new_source_stats)
+    by_build: DefaultDict[str, ZeroHitBuildStats] = defaultdict(_new_build_stats)
 
     for event in search_events:
         # Get source from extended fields (x) or default to "unknown"
@@ -137,9 +154,15 @@ def generate_zero_hit_report(
 
     # Sort by most recent builds (assuming SHA order correlates with time)
     for build_sha in sorted(by_build.keys(), reverse=True)[:10]:
-        data = by_build[build_sha]
-        ratio = (data["zero_hits"] / data["total"] * 100) if data["total"] > 0 else 0
-        lines.append(f"| {build_sha} | {data['total']} | {data['zero_hits']} | {ratio:.1f}% |")
+        build_data = by_build[build_sha]
+        ratio = (
+            (build_data["zero_hits"] / build_data["total"] * 100)
+            if build_data["total"] > 0
+            else 0
+        )
+        lines.append(
+            f"| {build_sha} | {build_data['total']} | {build_data['zero_hits']} | {ratio:.1f}% |"
+        )
 
     report = "\n".join(lines)
 
@@ -192,7 +215,7 @@ def get_zero_hit_metrics(segment_path: Path, days: int = 30) -> Dict:
         e for e in events if e.get("cmd") == "ctx.search" and parse_ts(e.get("ts")) > cutoff
     ]
 
-    by_source = defaultdict(lambda: {"total": 0, "zero_hits": 0})
+    by_source: DefaultDict[str, ZeroHitBuildStats] = defaultdict(_new_build_stats)
 
     for event in search_events:
         x = event.get("x", {})

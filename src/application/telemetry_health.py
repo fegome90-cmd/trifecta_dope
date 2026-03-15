@@ -14,7 +14,7 @@ Health by Source:
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import DefaultDict, Optional, TypedDict
 
 from src.application.telemetry_reports import load_telemetry_data
 from src.application.zero_hit_tracker import create_zero_hit_tracker
@@ -27,6 +27,51 @@ class HealthResult:
     status: str  # "OK", "WARN", "FAIL"
     message: str
     details: dict
+
+
+class SourceStat(TypedDict):
+    searches: int
+    zero_hits: int
+
+
+class SourceBreakdownEntry(TypedDict):
+    source: str
+    searches: int
+    zero_hits: int
+    ratio: float
+
+
+class RatioSummary(TypedDict):
+    searches: int
+    zero_hits: int
+    ratio: float
+
+
+class ZeroHitBySourceResult(TypedDict):
+    overall: RatioSummary
+    operational: RatioSummary
+    sources: list[SourceBreakdownEntry]
+
+
+class AliasCount(TypedDict):
+    term: str
+    count: int
+
+
+class SpanishAliasImpact(TypedDict):
+    total_applied: int
+    total_recovered: int
+    recovery_rate: float
+    top_aliases: list[AliasCount]
+    window_events: int
+
+
+def _new_source_stat() -> SourceStat:
+    return {"searches": 0, "zero_hits": 0}
+
+
+def _new_alias_count(term: str, count: int) -> AliasCount:
+    return {"term": term, "count": count}
 
 
 class TelemetryHealth:
@@ -45,7 +90,7 @@ class TelemetryHealth:
         """Load telemetry data from segment."""
         self.events, self.metrics, self.last_run = load_telemetry_data(self.segment_path)
 
-    def _compute_zero_hit_by_source(self) -> dict:
+    def _compute_zero_hit_by_source(self) -> ZeroHitBySourceResult:
         """Compute zero-hit ratios by source from events.
 
         Returns:
@@ -59,7 +104,7 @@ class TelemetryHealth:
         from collections import defaultdict
 
         # Count searches and zero-hits by source
-        source_stats = defaultdict(lambda: {"searches": 0, "zero_hits": 0})
+        source_stats: DefaultDict[str, SourceStat] = defaultdict(_new_source_stat)
 
         for event in self.events:
             if event.get("cmd") != "ctx.search":
@@ -73,7 +118,7 @@ class TelemetryHealth:
                 source_stats[source]["zero_hits"] += 1
 
         # Compute ratios
-        result = {
+        result: ZeroHitBySourceResult = {
             "overall": {"searches": 0, "zero_hits": 0, "ratio": 0.0},
             "operational": {"searches": 0, "zero_hits": 0, "ratio": 0.0},
             "sources": [],
@@ -118,7 +163,7 @@ class TelemetryHealth:
 
         return result
 
-    def _compute_spanish_alias_impact(self) -> dict:
+    def _compute_spanish_alias_impact(self) -> SpanishAliasImpact:
         from collections import defaultdict
 
         alias_events = [e for e in self.events if e.get("cmd") == "ctx.search.spanish_alias"]
@@ -129,12 +174,13 @@ class TelemetryHealth:
                 "total_recovered": 0,
                 "recovery_rate": 0.0,
                 "top_aliases": [],
+                "window_events": len(self.events),
             }
 
         total_applied = len(alias_events)
 
         total_recovered = 0
-        alias_term_counts = defaultdict(int)
+        alias_term_counts: DefaultDict[str, int] = defaultdict(int)
         known_spanish_terms = {
             "servicio",
             "servicios",
@@ -183,9 +229,9 @@ class TelemetryHealth:
                     if term in lower_q:
                         alias_term_counts[term] += 1
 
-        top_aliases = [
-            {"term": t, "count": c}
-            for t, c in sorted(alias_term_counts.items(), key=lambda x: -x[1])
+        top_aliases: list[AliasCount] = [
+            _new_alias_count(term, count)
+            for term, count in sorted(alias_term_counts.items(), key=lambda x: -x[1])
         ][:10]
         recovery_rate = total_recovered / total_applied if total_applied > 0 else 0.0
 
