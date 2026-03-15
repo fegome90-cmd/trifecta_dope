@@ -28,7 +28,7 @@ class _DirectCallCollector(ast_module.NodeVisitor):
     def visit_Call(self, node: ast_module.Call) -> None:
         if isinstance(node.func, ast_module.Name):
             self.call_names.append(node.func.id)
-        self.generic_visit(node)
+        return None
 
     def visit_FunctionDef(self, node: ast_module.FunctionDef) -> None:
         return None
@@ -114,20 +114,23 @@ class GraphIndexer:
         except SyntaxError:
             return []
 
-        node_ids = {node.symbol_name: node.id for node in nodes if node.kind == "function"}
+        caller_ids = {node.symbol_name: node.id for node in nodes if node.kind == "function"}
+        call_target_ids = {
+            node.symbol_name: node.id for node in nodes if node.kind in {"function", "class"}
+        }
         edges: list[GraphEdge] = []
 
         for node in tree.body:
             if not isinstance(node, (ast_module.FunctionDef, ast_module.AsyncFunctionDef)):
                 continue
-            caller_id = node_ids.get(node.name)
+            caller_id = caller_ids.get(node.name)
             if caller_id is None:
                 continue
             collector = _DirectCallCollector()
             for statement in node.body:
                 collector.visit(statement)
             for callee_name in collector.call_names:
-                callee_id = node_ids.get(callee_name)
+                callee_id = call_target_ids.get(callee_name)
                 if callee_id is None or callee_id == caller_id:
                     continue
                 edge_id = make_edge_id(segment_id, caller_id, callee_id, "calls")

@@ -90,6 +90,56 @@ def test_graph_indexer_preserves_top_level_edges_when_nested_calls_exist(tmp_pat
     assert [node.symbol_name for node in callers] == ["root"]
 
 
+def test_graph_indexer_tracks_direct_constructor_calls_to_top_level_classes(tmp_path: Path) -> None:
+    segment = tmp_path / "segment"
+    source_dir = segment / "src" / "pkg"
+    source_dir.mkdir(parents=True)
+    (source_dir / "sample.py").write_text(
+        "class Helper:\n"
+        "    pass\n\n"
+        "def root():\n"
+        "    return Helper()\n"
+    )
+
+    store = GraphStore(segment / ".trifecta" / "cache" / "graph_test.db")
+    indexer = GraphIndexer(store=store)
+
+    summary = indexer.index_segment(segment)
+    callees = store.get_callees(summary.segment_id, "root")
+    callers = store.get_callers(summary.segment_id, "Helper")
+
+    assert summary.edge_count == 1
+    assert [(node.symbol_name, node.kind) for node in callees] == [("Helper", "class")]
+    assert [node.symbol_name for node in callers] == ["root"]
+
+
+def test_graph_indexer_does_not_treat_nested_call_arguments_as_direct_edges(tmp_path: Path) -> None:
+    segment = tmp_path / "segment"
+    source_dir = segment / "src" / "pkg"
+    source_dir.mkdir(parents=True)
+    (source_dir / "sample.py").write_text(
+        "def leaf():\n"
+        "    return 1\n\n"
+        "def wrapper(value):\n"
+        "    return value\n\n"
+        "def root():\n"
+        "    return wrapper(leaf())\n"
+    )
+
+    store = GraphStore(segment / ".trifecta" / "cache" / "graph_test.db")
+    indexer = GraphIndexer(store=store)
+
+    summary = indexer.index_segment(segment)
+    callees = store.get_callees(summary.segment_id, "root")
+    leaf_callers = store.get_callers(summary.segment_id, "leaf")
+    wrapper_callers = store.get_callers(summary.segment_id, "wrapper")
+
+    assert summary.edge_count == 1
+    assert [node.symbol_name for node in callees] == ["wrapper"]
+    assert leaf_callers == []
+    assert [node.symbol_name for node in wrapper_callers] == ["root"]
+
+
 def test_graph_indexer_uses_segment_ref_v1_as_ssot(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -104,7 +154,7 @@ def test_graph_indexer_uses_segment_ref_v1_as_ssot(
         id="segment_cafebabe",
     )
 
-    def fake_resolve(segment_input: Path | str) -> SegmentRef:
+    def fake_resolve(segment_input: Path | str, hash_length: int | None = None) -> SegmentRef:
         assert segment_input == segment
         return fake_ref
 

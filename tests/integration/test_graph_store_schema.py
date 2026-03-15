@@ -43,9 +43,8 @@ def test_graph_store_initializes_schema_and_reports_empty_status(tmp_path: Path)
     store = GraphStore(db_path)
     status = store.get_status("seg_1234")
 
-    conn = sqlite3.connect(db_path)
-    row = conn.execute("SELECT version FROM schema_version").fetchone()
-    conn.close()
+    with sqlite3.connect(db_path) as conn:
+        row = conn.execute("SELECT version FROM schema_version").fetchone()
 
     assert row == (1,)
     assert status.exists is True
@@ -82,12 +81,11 @@ def test_graph_store_writable_path_repairs_partial_db_with_valid_schema_version(
 
     GraphStore(db_path)
 
-    conn = sqlite3.connect(db_path)
-    tables = {
-        row[0]
-        for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
-    }
-    conn.close()
+    with sqlite3.connect(db_path) as conn:
+        tables = {
+            row[0]
+            for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
+        }
 
     assert {"schema_version", "graph_index", "nodes", "edges"}.issubset(tables)
 
@@ -132,3 +130,82 @@ def test_graph_store_roundtrips_nodes_and_edges(tmp_path: Path) -> None:
     assert results[0].symbol_name == "root"
     assert [node.symbol_name for node in callees] == ["leaf"]
     assert [node.symbol_name for node in callers] == ["root"]
+
+
+def test_graph_store_relations_only_follow_calls_edges(tmp_path: Path) -> None:
+    store = GraphStore(tmp_path / "graph.db")
+    segment_id = "seg_calls_only"
+    root = GraphNode(
+        id=f"{segment_id}:src/pkg/sample.py:root",
+        segment_id=segment_id,
+        file_rel="src/pkg/sample.py",
+        symbol_name="root",
+        qualified_name="root",
+        kind="function",
+        line=4,
+        metadata_json=None,
+    )
+    leaf = GraphNode(
+        id=f"{segment_id}:src/pkg/sample.py:leaf",
+        segment_id=segment_id,
+        file_rel="src/pkg/sample.py",
+        symbol_name="leaf",
+        qualified_name="leaf",
+        kind="function",
+        line=1,
+        metadata_json=None,
+    )
+    reference_edge = GraphEdge(
+        id=f"{segment_id}:{root.id}->{leaf.id}:references",
+        segment_id=segment_id,
+        from_node_id=root.id,
+        to_node_id=leaf.id,
+        edge_kind="references",
+        source="ast",
+        confidence=1.0,
+    )
+
+    store.replace_segment(segment_id, [root, leaf], [reference_edge])
+
+    assert store.get_callees(segment_id, "root") == []
+    assert store.get_callers(segment_id, "leaf") == []
+
+
+def test_graph_store_relations_are_scoped_to_segment_id(tmp_path: Path) -> None:
+    store = GraphStore(tmp_path / "graph.db")
+    primary_segment = "seg_primary"
+    foreign_segment = "seg_foreign"
+    target = GraphNode(
+        id=f"{primary_segment}:src/pkg/sample.py:leaf",
+        segment_id=primary_segment,
+        file_rel="src/pkg/sample.py",
+        symbol_name="leaf",
+        qualified_name="leaf",
+        kind="function",
+        line=1,
+        metadata_json=None,
+    )
+    foreign_root = GraphNode(
+        id=f"{foreign_segment}:src/pkg/other.py:root",
+        segment_id=foreign_segment,
+        file_rel="src/pkg/other.py",
+        symbol_name="root",
+        qualified_name="root",
+        kind="function",
+        line=4,
+        metadata_json=None,
+    )
+    leaking_edge = GraphEdge(
+        id=f"{foreign_segment}:{foreign_root.id}->{target.id}:calls",
+        segment_id=foreign_segment,
+        from_node_id=foreign_root.id,
+        to_node_id=target.id,
+        edge_kind="calls",
+        source="ast",
+        confidence=1.0,
+    )
+
+    store.replace_segment(primary_segment, [target], [])
+    store.replace_segment(foreign_segment, [foreign_root], [leaking_edge])
+
+    assert store.get_callers(primary_segment, "leaf") == []

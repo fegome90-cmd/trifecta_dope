@@ -2,10 +2,8 @@ from pathlib import Path
 
 from src.domain.segment_resolver import SegmentRef, resolve_segment_ref
 from src.infrastructure.graph_store import (
-    AmbiguousGraphTargetError,
     GraphStore,
     GraphStoreAccessError,
-    GraphTargetNotFoundError,
 )
 
 
@@ -15,10 +13,10 @@ class GraphService:
 
     def status(self, segment: Path | str) -> dict[str, object]:
         segment_ref = resolve_segment_ref(segment)
-        if self._store is not None:
+        db_path = GraphStore.db_path_for_segment(segment_ref.root_abs, segment_ref.id)
+        if self._uses_injected_store(db_path):
             status = self._store.get_status(segment_ref.id)
         else:
-            db_path = GraphStore.db_path_for_segment(segment_ref.root_abs, segment_ref.id)
             status = GraphStore.probe_status(db_path, segment_ref.id)
         return {"status": "ok", **status.to_dict()}
 
@@ -88,12 +86,7 @@ class GraphService:
         }
 
     def _resolve_related_target(self, store: GraphStore, segment_id: str, symbol: str):
-        matches = store.find_target_candidates(segment_id, symbol)
-        if not matches:
-            raise GraphTargetNotFoundError(segment_id, symbol)
-        if len(matches) > 1:
-            raise AmbiguousGraphTargetError(segment_id, symbol, matches)
-        return matches[0]
+        return store._resolve_target_node(segment_id, symbol)
 
     def _resolve_existing(
         self,
@@ -103,7 +96,7 @@ class GraphService:
     ) -> tuple[SegmentRef, GraphStore] | None:
         segment_ref = resolve_segment_ref(segment)
         db_path = GraphStore.db_path_for_segment(segment_ref.root_abs, segment_ref.id)
-        if self._store is not None:
+        if self._uses_injected_store(db_path):
             return segment_ref, self._store
         if not db_path.exists():
             return None
@@ -111,4 +104,16 @@ class GraphService:
             db_path,
             segment_ref.id,
             required_tables=required_tables,
+        )
+
+    def _uses_injected_store(self, expected_db_path: Path) -> bool:
+        if self._store is None:
+            return False
+        store_db_path = self._store.db_path.resolve(strict=False)
+        normalized_expected_path = expected_db_path.resolve(strict=False)
+        if store_db_path == normalized_expected_path:
+            return True
+        return (
+            store_db_path.parent == normalized_expected_path.parent
+            and not expected_db_path.exists()
         )

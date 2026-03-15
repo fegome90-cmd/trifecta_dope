@@ -135,6 +135,22 @@ class GraphStore:
     STATUS_REQUIRED_TABLES = ("graph_index", "nodes", "edges")
     SEARCH_REQUIRED_TABLES = ("nodes",)
     RELATION_REQUIRED_TABLES = ("nodes", "edges")
+    _CALLERS_FOR_NODE_QUERY = (
+        "SELECT n.* FROM nodes n "
+        "JOIN edges e ON e.from_node_id = n.id "
+        "JOIN nodes target ON e.to_node_id = target.id "
+        "WHERE target.segment_id = ? AND target.id = ? "
+        "AND e.segment_id = ? AND n.segment_id = ? AND e.edge_kind = 'calls' "
+        "ORDER BY n.file_rel, n.line"
+    )
+    _CALLEES_FOR_NODE_QUERY = (
+        "SELECT n.* FROM nodes n "
+        "JOIN edges e ON e.to_node_id = n.id "
+        "JOIN nodes target ON e.from_node_id = target.id "
+        "WHERE target.segment_id = ? AND target.id = ? "
+        "AND e.segment_id = ? AND n.segment_id = ? AND e.edge_kind = 'calls' "
+        "ORDER BY n.file_rel, n.line"
+    )
 
     def __init__(
         self,
@@ -456,15 +472,10 @@ class GraphStore:
         conn = self._connect(segment_id)
         conn.row_factory = sqlite3.Row
         try:
+            query = self._CALLERS_FOR_NODE_QUERY if reverse else self._CALLEES_FOR_NODE_QUERY
             rows = conn.execute(
-                "SELECT n.* FROM nodes n "
-                "JOIN edges e ON "
-                + ("e.from_node_id = n.id " if reverse else "e.to_node_id = n.id ")
-                + "JOIN nodes target ON "
-                + ("e.to_node_id = target.id " if reverse else "e.from_node_id = target.id ")
-                + "WHERE target.segment_id = ? AND target.id = ? "
-                "ORDER BY n.file_rel, n.line",
-                (segment_id, node_id),
+                query,
+                (segment_id, node_id, segment_id, segment_id),
             ).fetchall()
         except sqlite3.Error as exc:
             raise GraphStoreUnavailableError(segment_id, str(exc)) from exc

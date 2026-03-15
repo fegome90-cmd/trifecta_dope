@@ -78,6 +78,100 @@ def test_graph_service_status_does_not_create_db_for_pristine_segment(tmp_path: 
     assert not db_path.exists()
 
 
+@pytest.mark.parametrize(
+    ("method_name", "args", "expected_key", "expected_value"),
+    [
+        ("status", tuple(), "exists", False),
+        ("search", ("root",), "nodes", []),
+        ("callers", ("root",), "nodes", []),
+        ("callees", ("root",), "nodes", []),
+    ],
+)
+def test_graph_service_injected_store_preserves_pristine_read_semantics(
+    tmp_path: Path,
+    method_name: str,
+    args: tuple[object, ...],
+    expected_key: str,
+    expected_value: object,
+) -> None:
+    indexed_segment = tmp_path / "indexed"
+    indexed_source_dir = indexed_segment / "src" / "pkg"
+    indexed_source_dir.mkdir(parents=True)
+    (indexed_source_dir / "sample.py").write_text(
+        "def leaf():\n"
+        "    return 1\n\n"
+        "def root():\n"
+        "    return leaf()\n"
+    )
+    store = GraphStore(indexed_segment / ".trifecta" / "cache" / "graph_test.db")
+    GraphIndexer(store=store).index_segment(indexed_segment)
+
+    pristine_segment = tmp_path / "pristine"
+    (pristine_segment / "src").mkdir(parents=True)
+    pristine_ref = resolve_segment_ref(pristine_segment)
+    pristine_db_path = GraphStore.db_path_for_segment(pristine_ref.root_abs, pristine_ref.id)
+
+    service = GraphService(store=store)
+    payload = getattr(service, method_name)(pristine_segment, *args)
+
+    assert payload["status"] == "ok"
+    assert payload["segment_id"] == pristine_ref.id
+    assert payload[expected_key] == expected_value
+    assert not pristine_db_path.exists()
+
+
+def test_graph_service_ignores_neighbor_injected_store_when_segment_db_exists(tmp_path: Path) -> None:
+    segment = tmp_path / "segment"
+    source_dir = segment / "src" / "pkg"
+    source_dir.mkdir(parents=True)
+    (source_dir / "sample.py").write_text(
+        "def leaf():\n"
+        "    return 1\n\n"
+        "def root():\n"
+        "    return leaf()\n"
+    )
+
+    GraphIndexer().index_segment(segment)
+    neighbor_store = GraphStore(segment / ".trifecta" / "cache" / "graph_test.db")
+    service = GraphService(store=neighbor_store)
+
+    payload = service.status(segment)
+
+    assert payload["status"] == "ok"
+    assert payload["node_count"] == 2
+    assert payload["edge_count"] == 1
+
+
+def test_graph_service_accepts_alias_path_for_injected_store(tmp_path: Path) -> None:
+    segment = tmp_path / "segment"
+    source_dir = segment / "src" / "pkg"
+    source_dir.mkdir(parents=True)
+    (source_dir / "sample.py").write_text(
+        "def leaf():\n"
+        "    return 1\n\n"
+        "def root():\n"
+        "    return leaf()\n"
+    )
+    alias_segment = tmp_path / "segment_alias"
+    alias_segment.symlink_to(segment, target_is_directory=True)
+
+    alias_store = GraphStore(alias_segment / ".trifecta" / "cache" / "graph_test.db")
+    GraphIndexer(store=alias_store).index_segment(alias_segment)
+    service = GraphService(store=alias_store)
+
+    status = service.status(segment)
+    search = service.search(segment, "roo")
+    callers = service.callers(segment, "leaf")
+    callees = service.callees(segment, "root")
+
+    assert status["status"] == "ok"
+    assert status["node_count"] == 2
+    assert status["edge_count"] == 1
+    assert [node["symbol_name"] for node in search["nodes"]] == ["root"]
+    assert [node["symbol_name"] for node in callers["nodes"]] == ["root"]
+    assert [node["symbol_name"] for node in callees["nodes"]] == ["leaf"]
+
+
 def test_graph_service_callers_fail_closed_on_ambiguous_symbol(tmp_path: Path) -> None:
     segment = tmp_path / "segment"
     source_dir = segment / "src" / "pkg"
