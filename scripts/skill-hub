@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+# skill-hub: Search global skills via trifecta with lightweight alias-aware reranking
+# Usage: skill-hub "query"
+# Example: skill-hub "refactor"
+
+set -euo pipefail
+
+# Handle help flags before processing query
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
+    cat << 'EOF'
+Usage: skill-hub [OPTIONS] "query"
+
+Search for skills in the global skills hub using natural language queries.
+
+Options:
+  -h, --help    Show this help message and exit
+
+Arguments:
+  query         Natural language description of what you need
+                (e.g., "refactor", "testing", "debug workflow")
+
+Examples:
+  skill-hub "refactor"
+  skill-hub "how to implement TDD"
+  skill-hub "docker best practices"
+
+Environment Variables:
+  SKILL_HUB_RERANK    Reranking mode: auto (default), always, never
+
+Note:
+  Multi-word queries may show a "Canonical alias match:" block
+  before the normal results for better skill discovery.
+EOF
+    exit 0
+fi
+
+QUERY="$*"
+SEGMENT="$HOME/.trifecta/segments/skills-hub"
+TRIFECTA_ROOT="$HOME/Developer/agent_h/trifecta_dope"
+
+if [ -z "$QUERY" ]; then
+    echo "Usage: skill-hub \"query\""
+    echo "Example: skill-hub \"refactor\""
+    echo ""
+    echo "Run 'skill-hub --help' for more information."
+    exit 1
+fi
+
+cd "$TRIFECTA_ROOT"
+
+run_search_capture() {
+    local output status
+    set +e
+    output="$(TRIFECTA_LINT=1 uv run trifecta ctx search --segment "$SEGMENT" "$@" 2>&1)"
+    status=$?
+    set -e
+    printf '%s' "$output"
+    return "$status"
+}
+
+RERANK_MODE="${SKILL_HUB_RERANK:-auto}"
+SHOULD_RERANK=0
+case "$RERANK_MODE" in
+  1|true|always)
+    SHOULD_RERANK=1
+    ;;
+  0|false|never)
+    SHOULD_RERANK=0
+    ;;
+  *)
+    if [[ "$QUERY" == *" "* ]]; then
+      SHOULD_RERANK=1
+    fi
+    ;;
+esac
+
+EXPLAIN_JSON=""
+CANONICAL_ALIAS_MATCH=""
+if [ "$SHOULD_RERANK" -eq 1 ] && EXPLAIN_JSON="$(TRIFECTA_LINT=1 uv run trifecta ctx search --segment "$SEGMENT" --query "$QUERY" --limit 20 --explain --explain-format json 2>/dev/null)"; then
+    CANONICAL_ALIAS_MATCH="$(EXPLAIN_JSON="$EXPLAIN_JSON" python3 - <<'PY'
+import json
+import os
+import re
+
+try:
+    data = json.loads(os.environ.get("EXPLAIN_JSON", ""))
+except json.JSONDecodeError:
+    print("")
+    raise SystemExit(0)
+
+expanded_terms = data.get("expansions", {}).get("expanded_terms", [])
+hits = data.get("hits", [])
+if not hits:
+    print("")
+    raise SystemExit(0)
+
+top_ref = hits[0].get("ref", "")
+for term in expanded_terms:
+    if not re.fullmatch(r"[a-z0-9-]+", term):
+        continue
+    repo_prefix = f"repo:{term}.md:"
+    for hit in hits:
+        ref = hit.get("ref", "")
+        if ref.startswith(repo_prefix):
+            if ref != top_ref:
+                print(term)
+            else:
+                print("")
+            raise SystemExit(0)
+
+print("")
+PY
+)"
+fi
+
+if [ "$SHOULD_RERANK" -eq 1 ] && [ -n "$CANONICAL_ALIAS_MATCH" ]; then
+    echo "Canonical alias match: $CANONICAL_ALIAS_MATCH"
+    ALIAS_OUTPUT="$(run_search_capture --query "$CANONICAL_ALIAS_MATCH" --limit 1)"
+    printf '%s\n' "$ALIAS_OUTPUT"
+    echo
+    echo "Additional results for: $QUERY"
+fi
+
+MAIN_OUTPUT="$(run_search_capture --query "$QUERY")"
+printf '%s\n' "$MAIN_OUTPUT"
+
+# Show info card only on interactive terminals (silently skip failures)
+if [ -t 1 ]; then
+    python3 "$HOME/.local/bin/skill_hub_info_card.py" || true
+fi
