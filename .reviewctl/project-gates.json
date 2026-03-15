@@ -1,0 +1,12 @@
+{
+  "frontend": {
+    "enabled": false,
+    "runner": "vercel-browser-agent",
+    "blocking": false
+  },
+  "statics": {
+    "biome_mode": "changed-files",
+    "ruff_mode": "changed-files",
+    "pytest_mode": "targeted"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "trifecta-reviewctl-surface",
+  "private": true,
+  "scripts": {
+    "lint:biome": "bash scripts/reviewctl/lint_biome_changed.sh",
+    "lint:ruff": "bash scripts/reviewctl/lint_ruff_changed.sh"
+  }
+}
