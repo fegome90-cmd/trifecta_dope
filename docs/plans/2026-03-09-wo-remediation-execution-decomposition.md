@@ -1,14 +1,6 @@
 # WO Remediation Execution Decomposition
 
-Source of truth on this branch: `docs/plans/2026-03-14-remediation-anchor.md`
-Historical iteration plan (`docs/plans/2026-03-09-wo-remediation-plan-iteration-2.md`) lives only in the remediation-plan history; retrieve it with:
-
-```bash
-git show ecc55f1:docs/plans/2026-03-09-wo-remediation-plan-iteration-2.md
-git show f2fba2e:docs/plans/2026-03-09-wo-remediation-plan-iteration-2.md
-git show d68366f:docs/plans/2026-03-09-wo-remediation-plan-iteration-2.md
-```
-
+Source of truth: `docs/plans/2026-03-09-wo-remediation-plan-iteration-2.md` (lives on `codex/wo-remediation-plan`; retrieve with `git show codex/wo-remediation-plan:docs/plans/2026-03-09-wo-remediation-plan-iteration-2.md`)
 Baseline persisted in commits: `ecc55f1`, `f2fba2e`, `d68366f`
 
 ## 1. Resumen ejecutivo
@@ -22,7 +14,7 @@ Baseline persisted in commits: `ecc55f1`, `f2fba2e`, `d68366f`
 7. Eso multiplicaria retrabajo y podria reintroducir hybrids nuevos mientras el intake siga admitiendo formas ambiguas.
 8. Primero hay que cerrar la admision de hybrids nuevos; despues se limpia el inventario activo bajo reglas estables y manifest explicito.
 9. La normalizacion de `pending/` queda desbloqueada por el cutover y por `status/list`, no al reves.
-10. La documentacion y `.claude` se actualizan al final porque deben ensenar el sistema ya endurecido, no anticiparlo.
+10. La documentacion y `.claude` se actualizan al final porque deben enseñar el sistema ya endurecido, no anticiparlo.
 11. La unica correccion operativa al memo es usar IDs repo-native `WO-0061..WO-0066` con alias semanticos, porque la toolchain viva aun privilegia `WO-XXXX`.
 
 ## 2. Epic propuesta
