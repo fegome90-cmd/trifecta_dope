@@ -1,0 +1,11 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.11, pytest-9.0.2, pluggy-1.6.0 -- /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope
+configfile: pyproject.toml
+plugins: env-1.2.0
+collecting ... ERROR: file or directory not found: 2
+
+collected 0 items
+
+============================ no tests ran in 0.01s =============================

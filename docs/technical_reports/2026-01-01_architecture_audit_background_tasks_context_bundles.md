@@ -1,3 +1,8 @@
+# STATUS: PARTIALLY OBSOLETE
+Reemplazo vigente: `docs/graph-research/04-graph-pcc-boundary-audit.md`, `docs/graph-research/06-mvp-launch-synthesis.md`
+Motivo: la auditoría sigue siendo útil, pero su afirmación sobre chunk IDs estables quedó invalidada para el boundary actual de Graph.
+No usar como base de implementación.
+
 ---
 title: "Auditoría de Arquitectura: Background Tasks & Context Bundles"
 date: 2026-01-01

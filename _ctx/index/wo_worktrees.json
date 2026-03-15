@@ -1,9 +1,9 @@
 {
   "version": 1,
   "schema": "trifecta.sidecar.wo_index.v1",
-  "generated_at": "2026-03-06T20:13:16.049407+00:00",
+  "generated_at": "2026-03-15T12:39:43.888851+00:00",
   "repo_root": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope",
-  "git_head_sha_repo_root": "60cc8c36472986f987f310a6f188add428dacf89",
+  "git_head_sha_repo_root": "76257453b0fa6007db65fbd4108dc62844bb1055",
   "work_orders": [
     {
       "id": "WO-0037",
@@ -86,6 +86,22 @@
       "last_error": null
     },
     {
+      "id": "WO-0066",
+      "title": "[WO-DOCS-CLAUDE-ALIGN-P1] Align docs and .claude to the hardened contract",
+      "status": "pending",
+      "priority": "P1",
+      "owner": null,
+      "epic_id": "E-0020",
+      "worktree_path": "../.worktrees/WO-0066",
+      "worktree_exists": false,
+      "branch": null,
+      "worktree_head_sha": null,
+      "wo_yaml_path": "_ctx/jobs/pending/WO-0066.yaml",
+      "created_at": "",
+      "closed_at": null,
+      "last_error": null
+    },
+    {
       "id": "WO-0031",
       "title": "Implement validate-references (bash + python parser)",
       "status": "pending",
@@ -129,6 +145,38 @@
       "branch": null,
       "worktree_head_sha": null,
       "wo_yaml_path": "_ctx/jobs/pending/WO-0033.yaml",
+      "created_at": "",
+      "closed_at": null,
+      "last_error": null
+    },
+    {
+      "id": "WO-0064",
+      "title": "[WO-STATUS-VISIBILITY-P0] Honest status and parse visibility",
+      "status": "pending",
+      "priority": "P0",
+      "owner": null,
+      "epic_id": "E-0020",
+      "worktree_path": "../.worktrees/WO-0064",
+      "worktree_exists": false,
+      "branch": null,
+      "worktree_head_sha": null,
+      "wo_yaml_path": "_ctx/jobs/pending/WO-0064.yaml",
+      "created_at": "",
+      "closed_at": null,
+      "last_error": null
+    },
+    {
+      "id": "WO-0065",
+      "title": "[WO-PENDING-NORMALIZATION-P1] Normalize active pending hybrids",
+      "status": "pending",
+      "priority": "P1",
+      "owner": null,
+      "epic_id": "E-0020",
+      "worktree_path": "../.worktrees/WO-0065",
+      "worktree_exists": false,
+      "branch": null,
+      "worktree_head_sha": null,
+      "wo_yaml_path": "_ctx/jobs/pending/WO-0065.yaml",
       "created_at": "",
       "closed_at": null,
       "last_error": null
@@ -182,6 +230,22 @@
       "last_error": null
     },
     {
+      "id": "WO-0062",
+      "title": "[WO-CONTRACT-TESTS-P0] P0 cross-layer contract tests and fixtures",
+      "status": "pending",
+      "priority": "P0",
+      "owner": null,
+      "epic_id": "E-0020",
+      "worktree_path": "../.worktrees/WO-0062",
+      "worktree_exists": false,
+      "branch": null,
+      "worktree_head_sha": null,
+      "wo_yaml_path": "_ctx/jobs/pending/WO-0062.yaml",
+      "created_at": "",
+      "closed_at": null,
+      "last_error": null
+    },
+    {
       "id": "WO-0039",
       "title": "Integration Tests (internal/plugins/td/)",
       "status": "pending",
@@ -209,6 +273,22 @@
       "branch": "job/WO-0043",
       "worktree_head_sha": null,
       "wo_yaml_path": "_ctx/jobs/pending/WO-0043.yaml",
+      "created_at": "",
+      "closed_at": null,
+      "last_error": null
+    },
+    {
+      "id": "WO-0063",
+      "title": "[WO-INTAKE-CUTOVER-P0] Intake cutover and manifest-based grandfathering",
+      "status": "pending",
+      "priority": "P0",
+      "owner": null,
+      "epic_id": "E-0020",
+      "worktree_path": "../.worktrees/WO-0063",
+      "worktree_exists": false,
+      "branch": null,
+      "worktree_head_sha": null,
+      "wo_yaml_path": "_ctx/jobs/pending/WO-0063.yaml",
       "created_at": "",
       "closed_at": null,
       "last_error": null
@@ -310,6 +390,22 @@
       "last_error": null
     },
     {
+      "id": "WO-0061",
+      "title": "[WO-AUTHORITY-P0] Shared WO authority core and classifier",
+      "status": "done",
+      "priority": "P0",
+      "owner": "felipe_gonzalez",
+      "epic_id": "E-0020",
+      "worktree_path": "../.worktrees/remediation/.worktrees/WO-0061",
+      "worktree_exists": true,
+      "branch": "feat/wo-WO-0061",
+      "worktree_head_sha": "bb3a1e272d524338f6ffc8cae6225066105a8137",
+      "wo_yaml_path": "_ctx/jobs/done/WO-0061.yaml",
+      "created_at": "",
+      "closed_at": "2026-03-13T00:34:19.982621+00:00",
+      "last_error": null
+    },
+    {
       "id": "WO-0009",
       "title": "ctx sync debe indexar contenido del repo (docs/src), no solo _ctx",
       "status": "done",
@@ -403,6 +499,22 @@
       "wo_yaml_path": "_ctx/jobs/done/WO-0012.1.yaml",
       "created_at": "",
       "closed_at": null,
+      "last_error": null
+    },
+    {
+      "id": "WO-0067",
+      "title": "[WO-FINISH-RUNTIME-ROOT-P0] Resolve finish runtime-root semantics for remediation worktrees",
+      "status": "done",
+      "priority": "P0",
+      "owner": "felipe_gonzalez",
+      "epic_id": "E-0020",
+      "worktree_path": "../.worktrees/remediation/.worktrees/WO-0067",
+      "worktree_exists": true,
+      "branch": "feat/wo-WO-0067",
+      "worktree_head_sha": "fca52dc6e80482d28579cc212df37055744b8273",
+      "wo_yaml_path": "_ctx/jobs/done/WO-0067.yaml",
+      "created_at": "",
+      "closed_at": "2026-03-13T16:54:26.455206+00:00",
       "last_error": null
     },
     {

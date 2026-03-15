@@ -1,54 +1,70 @@
-# . - Trifecta Documentation
+# Trifecta_Dope - Trifecta Documentation
 
-> **Trifecta System**: Este segmento usa el sistema Trifecta para comprensión rápida por agentes de código.
+> **Trifecta System**: Este segmento usa el sistema Trifecta para comprension rapida por agentes de codigo.
 
-## 📁 Estructura
+## [FILE] Estructura
 
 ```
-./
-├── readme_tf.md                 # Este archivo - guía rápida
-├── skill.md                     # Reglas y contratos (MAX 100 líneas)
-└── _ctx/                        # Context resources
-    ├── prime_..md # Lista de lectura obligatoria
-    ├── agent.md                 # Stack técnico y configuración
-    └── session_..md # Log de handoffs (runtime)
+trifecta_dope/
+|-- readme_tf.md                 # Este archivo - guia rapida
+|-- skill.md                     # Reglas y contratos (MAX 100 lineas)
+|__ _ctx/                        # Context resources
+    |-- prime_trifecta_dope.md # Lista de lectura obligatoria
+    |-- agent.md                 # Stack tecnico y configuracion
+    |__ session_trifecta_dope.md # Log de handoffs (runtime)
 ```
 
-## 🚀 Flujo de Onboarding (Para Agentes)
+## [CLI] CLI Usage
 
-1. **Leer `skill.md`** — Reglas, roles, y contratos del segmento
-2. **Leer `_ctx/prime_..md`** — Lista de documentos obligatorios
-3. **Leer `_ctx/agent.md`** — Stack técnico, configuración, y gates
+### Opcion A: alias con TRIFECTA_CLI_ROOT
+```bash
+export TRIFECTA_CLI_ROOT="/absolute/path/to/trifecta_dope"
+alias trifecta='uv --directory "$TRIFECTA_CLI_ROOT" run trifecta'
+```
+
+### Opcion B: directo
+
+```bash
+uv --directory "$TRIFECTA_CLI_ROOT" run trifecta ctx sync --segment .
+uv --directory "$TRIFECTA_CLI_ROOT" run trifecta ctx search --segment . --query "parser" --limit 6
+uv --directory "$TRIFECTA_CLI_ROOT" run trifecta load --segment . --mode fullfiles --task "My task"
+```
+
+## [GO] Flujo de Onboarding (Para Agentes)
+
+1. **Leer `skill.md`** - Reglas, roles, y contratos del segmento
+2. **Leer `_ctx/prime_trifecta_dope.md`** - Lista de documentos obligatorios
+3. **Leer `_ctx/agent.md`** - Stack tecnico, configuracion, y gates
 
 > [!CAUTION]
-> **No ejecutes código sin completar los 3 pasos anteriores.**
+> **No ejecutes codigo sin completar los 3 pasos anteriores.**
 
-## 📊 Perfiles de Output
+## [DATA] Perfiles de Output
 
-| Perfil | Propósito | Contract |
+| Perfil | Proposito | Contract |
 |--------|-----------|----------|
-| `diagnose_micro` | Máximo texto, código ≤3 líneas | `code_max_lines: 3` |
-| `impl_patch` | Patch con verificación | `require: [FilesTouched, CommandsToVerify]` |
+| `diagnose_micro` | Maximo texto, codigo <=3 lineas | `code_max_lines: 3` |
+| `impl_patch` | Patch con verificacion | `require: [FilesTouched, CommandsToVerify]` |
 | `only_code` | Solo archivos + diff + comandos | `forbid: [explanations]` |
-| `plan` | DoD + pasos (sin código) | `forbid: [code_blocks]` |
-| `handoff_log` | Bitácora + handoff | `append_only: true` |
+| `plan` | DoD + pasos (sin codigo) | `forbid: [code_blocks]` |
+| `handoff_log` | Bitacora + handoff | `append_only: true` |
 
-## 🔄 Actualización
+## [SYNC] Actualizacion
 
-- **Prime**: Actualizar cuando se agregue/modifique documentación del segmento
-- **Session**: Actualizar después de cada handoff entre sesiones
-- **Agent**: Revisar cuando cambie el stack técnico o configuración
+- **Prime**: Actualizar cuando se agregue/modifique documentacion del segmento
+- **Session**: Actualizar despues de cada handoff entre sesiones
+- **Agent**: Revisar cuando cambie el stack tecnico o configuracion
 - **Skill**: Actualizar siguiendo **superpowers:writing-skills** (ver abajo)
 
-## ✏️ Cómo Actualizar skill.md
+## [EDIT] Como Actualizar skill.md
 
 > **IMPORTANTE**: Al actualizar `skill.md`, seguir el proceso TDD de `writing-skills`
 
 **Referencia obligatoria**: `~/.claude/skills/superpowers/writing-skills/SKILL.md`
 
 **Proceso RED-GREEN-REFACTOR:**
-1. **RED**: Crear escenario de presión sin skill - documentar violaciones
-2. **GREEN**: Escribir skill que aborde esas violaciones específicas
+1. **RED**: Crear escenario de presion sin skill - documentar violaciones
+2. **GREEN**: Escribir skill que aborde esas violaciones especificas
 3. **REFACTOR**: Cerrar loopholes y re-verificar
 
 **Iron Law**: `NO SKILL WITHOUT A FAILING TEST FIRST`
@@ -56,29 +72,29 @@
 **Estructura recomendada de skill.md:**
 ```yaml
 ---
-name: .
-description: Use when working on Verification
+name: trifecta_dope
+description: Use when working on Scope
 ---
 
-# .
+# Trifecta_Dope
 
 ## Overview
-<!-- 1-2 sentences describiendo el propósito -->
+<!-- 1-2 sentences describiendo el proposito -->
 
 ## When to Use
-<!-- Bullet list de síntomas y casos de uso -->
+<!-- Bullet list de sintomas y casos de uso -->
 
 ## Core Pattern
-<!-- Patrón principal con ejemplos -->
+<!-- Patron principal con ejemplos -->
 
 ## Common Mistakes
-<!-- Errores comunes + cómo evitarlos -->
+<!-- Errores comunes + como evitarlos -->
 ```
 
-## 📖 Referencias
+## [REF] Referencias
 
-- **Scope**: Verification
+- **Scope**: Scope
 - **Default Profile**: `impl_patch`
-- **Last Verified**: 2025-12-29
-- **Repo Root**: `/Users/felipe_gonzalez/Developer/agent_h`
+- **Last Verified**: 2026-03-06
+- **Repo Root**: `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope`
 - **Writing Skills**: `~/.claude/skills/superpowers/writing-skills/SKILL.md`
