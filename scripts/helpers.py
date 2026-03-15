@@ -428,19 +428,27 @@ def create_lock(lock_path: Path, wo_id: str) -> bool:
         return False
 
 
-def check_lock_age(lock_path: Path, max_age_seconds: int = 3600) -> bool:
+def check_lock_age(lock_path: Path, max_age_seconds: int | None = None) -> bool:
     """
     Check if a lock is stale (older than max_age_seconds).
 
     Args:
         lock_path: Path to lock file
-        max_age_seconds: Maximum age in seconds (default: 3600 = 1 hour)
+        max_age_seconds: Maximum age in seconds (default: from WO_LOCK_TTL_SEC env or 86400)
 
     Returns:
         True if lock is stale, False if active or doesn't exist
     """
     if not lock_path.exists():
         return False
+
+    # Resolve TTL: parameter > env var > default
+    if max_age_seconds is None:
+        env_ttl = os.environ.get("WO_LOCK_TTL_SEC", "86400")
+        try:
+            max_age_seconds = int(env_ttl)
+        except ValueError:
+            max_age_seconds = 86400  # Fallback to 24h on invalid env
 
     import time
     age = time.time() - lock_path.stat().st_mtime
