@@ -1,6 +1,7 @@
 """Trifecta CLI with T8 Telemetry."""
 
 import json
+import logging
 import os
 import sys
 import time
@@ -14,6 +15,7 @@ from click.exceptions import UsageError
 
 # AST/LSP Integration (Phase 2a/2b)
 from src.infrastructure.cli_ast import ast_app
+from src.infrastructure.cli_graph import graph_app
 
 # Path Guardrails
 from src.infrastructure.path_utils import (
@@ -80,7 +82,10 @@ app = typer.Typer(
     cls=TrifectaGroup,
 )
 
+logger = logging.getLogger(__name__)
+
 app.add_typer(ast_app, name="ast")
+app.add_typer(graph_app, name="graph")
 
 ctx_app = typer.Typer(
     help="Manage Trifecta Context Packs (ctx.search, ctx.get).",
@@ -2522,7 +2527,9 @@ def _cleanup_daemon_runtime_artifacts(socket_path: Path, pid_path: Path) -> None
     for path in (socket_path, pid_path):
         try:
             path.unlink()
-        except FileNotFoundError:
+        except PermissionError as exc:
+            logger.warning("Failed to unlink %s: permission denied (%s)", path, exc)
+        except (FileNotFoundError, IsADirectoryError):
             pass
 
 
