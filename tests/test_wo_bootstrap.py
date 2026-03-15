@@ -6,7 +6,6 @@ import json
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any
 
 import pytest
 import yaml
@@ -69,7 +68,17 @@ def tmp_repo(tmp_path: Path) -> Path:
     schema_data = {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
-        "required": ["version", "id", "epic_id", "title", "status", "scope", "verify", "dod_id", "execution"],
+        "required": [
+            "version",
+            "id",
+            "epic_id",
+            "title",
+            "status",
+            "scope",
+            "verify",
+            "dod_id",
+            "execution",
+        ],
         "properties": {
             "version": {"type": "integer", "const": 1},
             "id": {"type": "string", "pattern": "^WO-"},
@@ -140,12 +149,18 @@ def run_bootstrap(
     cmd = [
         sys.executable,
         "scripts/ctx_wo_bootstrap.py",
-        "--root", str(root),
-        "--id", wo_id,
-        "--epic", epic_id,
-        "--title", title,
-        "--priority", priority,
-        "--dod", dod_id,
+        "--root",
+        str(root),
+        "--id",
+        wo_id,
+        "--epic",
+        epic_id,
+        "--title",
+        title,
+        "--priority",
+        priority,
+        "--dod",
+        dod_id,
     ]
     if scope_allow:
         cmd.extend(["--scope-allow"] + scope_allow)
@@ -171,7 +186,8 @@ def run_preflight(
     cmd = [
         sys.executable,
         "scripts/ctx_wo_preflight.py",
-        "--root", str(root),
+        "--root",
+        str(root),
         wo_ref,
     ]
     if json_output:

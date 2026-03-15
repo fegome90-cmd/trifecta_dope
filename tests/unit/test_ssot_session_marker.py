@@ -46,7 +46,7 @@ def test_validate_session_evidence_exact_match(tmp_path: Path):
     assert result.is_err()
 
     # 2. Invalid markers (variation in brackets/case) -> Err
-    session_path.write_text(f"[wo-1234] intent:\n(WO-1234) result:")
+    session_path.write_text("[wo-1234] intent:\n(WO-1234) result:")
     result = validate_session_evidence(wo_id, root)
     assert result.is_err()
 

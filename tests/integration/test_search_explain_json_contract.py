@@ -1,4 +1,5 @@
 """Integration tests for --explain JSON contract in ctx search."""
+
 import json
 import subprocess
 from pathlib import Path
@@ -20,13 +21,9 @@ class TestSearchExplainJsonContract:
 
     def test_explain_returns_valid_json(self):
         """Verify --explain returns valid JSON."""
-        code, out, _ = run_cli([
-            "ctx", "search",
-            "--query", "test",
-            "--segment", ".",
-            "--limit", "1",
-            "--explain"
-        ])
+        code, out, _ = run_cli(
+            ["ctx", "search", "--query", "test", "--segment", ".", "--limit", "1", "--explain"]
+        )
         assert code == 0
         # Should parse as valid JSON
         data = json.loads(out)
@@ -34,13 +31,9 @@ class TestSearchExplainJsonContract:
 
     def test_explain_has_required_top_level_keys(self):
         """Verify JSON has all required top-level keys."""
-        code, out, _ = run_cli([
-            "ctx", "search",
-            "--query", "test",
-            "--segment", ".",
-            "--limit", "1",
-            "--explain"
-        ])
+        code, out, _ = run_cli(
+            ["ctx", "search", "--query", "test", "--segment", ".", "--limit", "1", "--explain"]
+        )
         assert code == 0
         data = json.loads(out)
 
@@ -50,13 +43,9 @@ class TestSearchExplainJsonContract:
 
     def test_explain_linter_structure(self):
         """Verify linter object has correct structure."""
-        code, out, _ = run_cli([
-            "ctx", "search",
-            "--query", "test",
-            "--segment", ".",
-            "--limit", "1",
-            "--explain"
-        ])
+        code, out, _ = run_cli(
+            ["ctx", "search", "--query", "test", "--segment", ".", "--limit", "1", "--explain"]
+        )
         assert code == 0
         data = json.loads(out)
 
@@ -71,13 +60,9 @@ class TestSearchExplainJsonContract:
 
     def test_explain_expansions_structure(self):
         """Verify expansions object has correct structure."""
-        code, out, _ = run_cli([
-            "ctx", "search",
-            "--query", "test",
-            "--segment", ".",
-            "--limit", "1",
-            "--explain"
-        ])
+        code, out, _ = run_cli(
+            ["ctx", "search", "--query", "test", "--segment", ".", "--limit", "1", "--explain"]
+        )
         assert code == 0
         data = json.loads(out)
 
@@ -91,13 +76,9 @@ class TestSearchExplainJsonContract:
 
     def test_explain_hits_structure(self):
         """Verify each hit has correct structure."""
-        code, out, _ = run_cli([
-            "ctx", "search",
-            "--query", "TDD",
-            "--segment", ".",
-            "--limit", "2",
-            "--explain"
-        ])
+        code, out, _ = run_cli(
+            ["ctx", "search", "--query", "TDD", "--segment", ".", "--limit", "2", "--explain"]
+        )
         assert code == 0
         data = json.loads(out)
 
@@ -118,14 +99,21 @@ class TestSearchExplainJsonContract:
 
     def test_explain_text_format(self):
         """Verify --explain-format text works."""
-        code, out, _ = run_cli([
-            "ctx", "search",
-            "--query", "test",
-            "--segment", ".",
-            "--limit", "1",
-            "--explain",
-            "--explain-format", "text"
-        ])
+        code, out, _ = run_cli(
+            [
+                "ctx",
+                "search",
+                "--query",
+                "test",
+                "--segment",
+                ".",
+                "--limit",
+                "1",
+                "--explain",
+                "--explain-format",
+                "text",
+            ]
+        )
         assert code == 0
         # Should NOT be JSON
         assert not out.strip().startswith("{")
@@ -134,13 +122,19 @@ class TestSearchExplainJsonContract:
 
     def test_explain_query_is_preserved(self):
         """Verify original query is preserved in output."""
-        code, out, _ = run_cli([
-            "ctx", "search",
-            "--query", "TDD Workflow With Pytest",
-            "--segment", ".",
-            "--limit", "1",
-            "--explain"
-        ])
+        code, out, _ = run_cli(
+            [
+                "ctx",
+                "search",
+                "--query",
+                "TDD Workflow With Pytest",
+                "--segment",
+                ".",
+                "--limit",
+                "1",
+                "--explain",
+            ]
+        )
         assert code == 0
         data = json.loads(out)
 
@@ -148,13 +142,19 @@ class TestSearchExplainJsonContract:
 
     def test_explain_normalized_query_is_lowercase(self):
         """Verify normalized query is lowercase."""
-        code, out, _ = run_cli([
-            "ctx", "search",
-            "--query", "TDD WORKFLOW",
-            "--segment", ".",
-            "--limit", "1",
-            "--explain"
-        ])
+        code, out, _ = run_cli(
+            [
+                "ctx",
+                "search",
+                "--query",
+                "TDD WORKFLOW",
+                "--segment",
+                ".",
+                "--limit",
+                "1",
+                "--explain",
+            ]
+        )
         assert code == 0
         data = json.loads(out)
 
@@ -163,13 +163,9 @@ class TestSearchExplainJsonContract:
 
     def test_explain_total_hits_matches_hits_length(self):
         """Verify total_hits matches length of hits array."""
-        code, out, _ = run_cli([
-            "ctx", "search",
-            "--query", "test",
-            "--segment", ".",
-            "--limit", "3",
-            "--explain"
-        ])
+        code, out, _ = run_cli(
+            ["ctx", "search", "--query", "test", "--segment", ".", "--limit", "3", "--explain"]
+        )
         assert code == 0
         data = json.loads(out)
 
@@ -177,40 +173,61 @@ class TestSearchExplainJsonContract:
 
     def test_explain_invalid_format_rejected(self):
         """Verify invalid explain-format value is rejected with error."""
-        code, out, err = run_cli([
-            "ctx", "search",
-            "--query", "test",
-            "--segment", ".",
-            "--limit", "1",
-            "--explain",
-            "--explain-format", "xml"
-        ])
+        code, out, err = run_cli(
+            [
+                "ctx",
+                "search",
+                "--query",
+                "test",
+                "--segment",
+                ".",
+                "--limit",
+                "1",
+                "--explain",
+                "--explain-format",
+                "xml",
+            ]
+        )
         assert code == 1
         assert "Invalid explain-format" in out or "Invalid explain-format" in err
 
     def test_explain_valid_formats_work(self):
         """Verify both valid explain-format values work."""
         # json format
-        code, out, _ = run_cli([
-            "ctx", "search",
-            "--query", "test",
-            "--segment", ".",
-            "--limit", "1",
-            "--explain",
-            "--explain-format", "json"
-        ])
+        code, out, _ = run_cli(
+            [
+                "ctx",
+                "search",
+                "--query",
+                "test",
+                "--segment",
+                ".",
+                "--limit",
+                "1",
+                "--explain",
+                "--explain-format",
+                "json",
+            ]
+        )
         assert code == 0
         data = json.loads(out)
         assert "query" in data
 
         # text format
-        code, out, _ = run_cli([
-            "ctx", "search",
-            "--query", "test",
-            "--segment", ".",
-            "--limit", "1",
-            "--explain",
-            "--explain-format", "text"
-        ])
+        code, out, _ = run_cli(
+            [
+                "ctx",
+                "search",
+                "--query",
+                "test",
+                "--segment",
+                ".",
+                "--limit",
+                "1",
+                "--explain",
+                "--explain-format",
+                "text",
+            ]
+        )
         assert code == 0
         assert "Search Explanation" in out

@@ -1,4 +1,5 @@
 """Unit tests for error_cards.py module."""
+
 import sys
 from pathlib import Path
 

@@ -23,7 +23,9 @@ class FakeLinearMCP:
     def __init__(self) -> None:
         self.team_id = os.environ.get("LINEAR_FAKE_TEAM_ID", "team-123")
         self.missing_cap = {
-            x.strip() for x in os.environ.get("LINEAR_FAKE_MISSING_CAPABILITY", "").split(",") if x.strip()
+            x.strip()
+            for x in os.environ.get("LINEAR_FAKE_MISSING_CAPABILITY", "").split(",")
+            if x.strip()
         }
         self.rate_limit_tool = os.environ.get("LINEAR_FAKE_RATE_LIMIT_TOOL", "")
         self.rate_limit_count = int(os.environ.get("LINEAR_FAKE_RATE_LIMIT_COUNT", "0"))

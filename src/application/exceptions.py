@@ -48,7 +48,9 @@ class InvalidSegmentPathError(FileNotFoundError):
 class InvalidConfigScopeError(ValueError):
     """Raised when trifecta_config.json repo_root does not match resolved segment root."""
 
-    def __init__(self, config_repo_root: Path, resolved_segment_root: Path, message: str | None = None):
+    def __init__(
+        self, config_repo_root: Path, resolved_segment_root: Path, message: str | None = None
+    ):
         self.config_repo_root = config_repo_root
         self.resolved_segment_root = resolved_segment_root
         if message is None:

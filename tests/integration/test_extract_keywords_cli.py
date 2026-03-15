@@ -140,9 +140,7 @@ class TestExtractKeywordsCLI:
         assert result.exit_code == 0
         assert "segment" in result.output.lower() or "extract" in result.output.lower()
 
-    def test_cli_generates_aliases_file(
-        self, runner: CliRunner, mock_segment: Path
-    ) -> None:
+    def test_cli_generates_aliases_file(self, runner: CliRunner, mock_segment: Path) -> None:
         """CLI should generate aliases.generated.yaml."""
         from src.infrastructure.cli_skills import skills_app
 
@@ -157,9 +155,7 @@ class TestExtractKeywordsCLI:
         generated_path = mock_segment / "_ctx" / "aliases.generated.yaml"
         assert generated_path.exists()
 
-    def test_cli_output_has_correct_schema(
-        self, runner: CliRunner, mock_segment: Path
-    ) -> None:
+    def test_cli_output_has_correct_schema(self, runner: CliRunner, mock_segment: Path) -> None:
         """Generated file should have schema_version: 1."""
         from src.infrastructure.cli_skills import skills_app
 
@@ -173,9 +169,7 @@ class TestExtractKeywordsCLI:
 
         assert data["schema_version"] == 1
 
-    def test_cli_compatible_with_alias_loader(
-        self, runner: CliRunner, mock_segment: Path
-    ) -> None:
+    def test_cli_compatible_with_alias_loader(self, runner: CliRunner, mock_segment: Path) -> None:
         """Generated file should be readable by AliasLoader."""
         from src.infrastructure.cli_skills import skills_app
 
@@ -191,9 +185,7 @@ class TestExtractKeywordsCLI:
         # Should be a non-empty dict
         assert isinstance(aliases, dict)
 
-    def test_cli_stdout_flag(
-        self, runner: CliRunner, mock_segment: Path
-    ) -> None:
+    def test_cli_stdout_flag(self, runner: CliRunner, mock_segment: Path) -> None:
         """--stdout should print YAML without writing file."""
         from src.infrastructure.cli_skills import skills_app
 
@@ -211,9 +203,7 @@ class TestExtractKeywordsCLI:
         generated_path = mock_segment / "_ctx" / "aliases.generated.yaml"
         assert not generated_path.exists()
 
-    def test_cli_dry_run_flag(
-        self, runner: CliRunner, mock_segment: Path
-    ) -> None:
+    def test_cli_dry_run_flag(self, runner: CliRunner, mock_segment: Path) -> None:
         """--dry-run should not write file."""
         from src.infrastructure.cli_skills import skills_app
 
@@ -248,9 +238,7 @@ class TestExtractKeywordsCLI:
         # Manual file should be unchanged
         assert manual_path.read_text() == original_content
 
-    def test_cli_respects_custom_output_path(
-        self, runner: CliRunner, mock_segment: Path
-    ) -> None:
+    def test_cli_respects_custom_output_path(self, runner: CliRunner, mock_segment: Path) -> None:
         """--output should use custom path."""
         from src.infrastructure.cli_skills import skills_app
 
@@ -269,9 +257,7 @@ class TestExtractKeywordsCLI:
         assert result.exit_code == 0
         assert custom_path.exists()
 
-    def test_cli_reports_metrics(
-        self, runner: CliRunner, mock_segment: Path
-    ) -> None:
+    def test_cli_reports_metrics(self, runner: CliRunner, mock_segment: Path) -> None:
         """CLI should report metrics (skills processed, tokens, aliases)."""
         from src.infrastructure.cli_skills import skills_app
 
@@ -286,9 +272,7 @@ class TestExtractKeywordsCLI:
         output = result.output.lower()
         assert "skill" in output or "alias" in output
 
-    def test_cli_min_frequency_option(
-        self, runner: CliRunner, mock_segment: Path
-    ) -> None:
+    def test_cli_min_frequency_option(self, runner: CliRunner, mock_segment: Path) -> None:
         """--min-frequency should control frequency threshold."""
         from src.infrastructure.cli_skills import skills_app
 
@@ -304,9 +288,7 @@ class TestExtractKeywordsCLI:
 
         assert result.exit_code == 0
 
-    def test_cli_max_skills_option(
-        self, runner: CliRunner, mock_segment: Path
-    ) -> None:
+    def test_cli_max_skills_option(self, runner: CliRunner, mock_segment: Path) -> None:
         """--max-skills-per-alias should control cap."""
         from src.infrastructure.cli_skills import skills_app
 
@@ -322,9 +304,7 @@ class TestExtractKeywordsCLI:
 
         assert result.exit_code == 0
 
-    def test_cli_deterministic_output(
-        self, runner: CliRunner, mock_segment: Path
-    ) -> None:
+    def test_cli_deterministic_output(self, runner: CliRunner, mock_segment: Path) -> None:
         """Running twice should produce identical output."""
         from src.infrastructure.cli_skills import skills_app
 
@@ -344,9 +324,7 @@ class TestExtractKeywordsCLI:
 
         assert first_content == second_content
 
-    def test_cli_check_flag_pass(
-        self, runner: CliRunner, mock_segment: Path
-    ) -> None:
+    def test_cli_check_flag_pass(self, runner: CliRunner, mock_segment: Path) -> None:
         """--check should pass if output matches existing file."""
         from src.infrastructure.cli_skills import skills_app
 
@@ -364,18 +342,14 @@ class TestExtractKeywordsCLI:
 
         assert result.exit_code == 0
 
-    def test_cli_check_flag_fails_on_drift(
-        self, runner: CliRunner, mock_segment: Path
-    ) -> None:
+    def test_cli_check_flag_fails_on_drift(self, runner: CliRunner, mock_segment: Path) -> None:
         """--check should fail if output differs from existing file."""
         from src.infrastructure.cli_skills import skills_app
 
         # Create a file with different content
         generated_path = mock_segment / "_ctx" / "aliases.generated.yaml"
         generated_path.parent.mkdir(parents=True, exist_ok=True)
-        generated_path.write_text(
-            yaml.dump({"schema_version": 1, "aliases": {"old": ["skill"]}})
-        )
+        generated_path.write_text(yaml.dump({"schema_version": 1, "aliases": {"old": ["skill"]}}))
 
         # Run with --check should detect drift
         result = runner.invoke(
@@ -386,9 +360,7 @@ class TestExtractKeywordsCLI:
         # Should fail with non-zero exit code
         assert result.exit_code != 0
 
-    def test_cli_handles_missing_manifest(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_cli_handles_missing_manifest(self, runner: CliRunner, tmp_path: Path) -> None:
         """Should handle missing skills_manifest.json gracefully."""
         from src.infrastructure.cli_skills import skills_app
 
@@ -404,9 +376,7 @@ class TestExtractKeywordsCLI:
         # Should not crash
         assert result.exit_code == 0 or "no skills" in result.output.lower()
 
-    def test_cli_handles_empty_skills_list(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_cli_handles_empty_skills_list(self, runner: CliRunner, tmp_path: Path) -> None:
         """Should handle empty skills list gracefully."""
         from src.infrastructure.cli_skills import skills_app
 
@@ -447,9 +417,7 @@ class TestAliasLoaderCompatIntegration:
 
         return tmp_path
 
-    def test_alias_loader_reads_generated_file(
-        self, segment_with_generated: Path
-    ) -> None:
+    def test_alias_loader_reads_generated_file(self, segment_with_generated: Path) -> None:
         """AliasLoader should read generated aliases file."""
         # Note: This tests that AliasLoader can read the generated file format
         # The actual AliasLoader only reads aliases.yaml by default
@@ -462,9 +430,7 @@ class TestAliasLoaderCompatIntegration:
         assert "aliases" in data
         assert "testing" in data["aliases"]
 
-    def test_generated_aliases_valid_structure(
-        self, segment_with_generated: Path
-    ) -> None:
+    def test_generated_aliases_valid_structure(self, segment_with_generated: Path) -> None:
         """Generated aliases should have valid structure for AliasLoader."""
         generated_path = segment_with_generated / "_ctx" / "aliases.generated.yaml"
         data = yaml.safe_load(generated_path.read_text())

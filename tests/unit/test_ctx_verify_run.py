@@ -72,11 +72,25 @@ def test_verify_run_executes_and_writes_verdict(tmp_path: Path):
     subprocess.run(["git", "commit", "--allow-empty", "-m", "init"], cwd=root, check=True)
 
     result = subprocess.run(
-        ["uv", "run", "bash", "scripts/ctx_verify_run.sh", "WO-TEST", "--root", str(root), "--allow-dirty"],
+        [
+            "uv",
+            "run",
+            "bash",
+            "scripts/ctx_verify_run.sh",
+            "WO-TEST",
+            "--root",
+            str(root),
+            "--allow-dirty",
+        ],
         cwd=root,
         capture_output=True,
         text=True,
-        env={**os.environ, "OVERRIDE_REASON": "Test override", "OVERRIDE_WO": "WO-0000", "OVERRIDE_UNTIL": "2099-12-31"},
+        env={
+            **os.environ,
+            "OVERRIDE_REASON": "Test override",
+            "OVERRIDE_WO": "WO-0000",
+            "OVERRIDE_UNTIL": "2099-12-31",
+        },
     )
 
     assert result.returncode == 0, result.stderr
@@ -104,7 +118,9 @@ def _setup_verify_repo(tmp_path: Path, wo_id: str = "WO-TEST") -> tuple[Path, Pa
     return root, wo_dir / f"{wo_id}.yaml"
 
 
-def _run_verify(root: Path, wo_id: str = "WO-TEST", allow_dirty: bool = True) -> subprocess.CompletedProcess[str]:
+def _run_verify(
+    root: Path, wo_id: str = "WO-TEST", allow_dirty: bool = True
+) -> subprocess.CompletedProcess[str]:
     cmd = ["uv", "run", "bash", "scripts/ctx_verify_run.sh", wo_id, "--root", str(root)]
     if allow_dirty:
         cmd.append("--allow-dirty")
@@ -112,11 +128,13 @@ def _run_verify(root: Path, wo_id: str = "WO-TEST", allow_dirty: bool = True) ->
     # Default override env vars for --allow-dirty (required by wo_verify.sh)
     env = os.environ.copy()
     if allow_dirty:
-        env.update({
-            "OVERRIDE_REASON": f"Test override for {wo_id}",
-            "OVERRIDE_WO": "WO-0000",
-            "OVERRIDE_UNTIL": "2099-12-31",
-        })
+        env.update(
+            {
+                "OVERRIDE_REASON": f"Test override for {wo_id}",
+                "OVERRIDE_WO": "WO-0000",
+                "OVERRIDE_UNTIL": "2099-12-31",
+            }
+        )
 
     return subprocess.run(
         cmd,
@@ -269,11 +287,25 @@ def test_verify_run_is_wrapper_for_wo_verify(tmp_path: Path):
 
     # Call ctx_verify_run.sh with --allow-dirty (untracked files exist)
     result = subprocess.run(
-        ["uv", "run", "bash", "scripts/ctx_verify_run.sh", "WO-TEST", "--root", str(root), "--allow-dirty"],
+        [
+            "uv",
+            "run",
+            "bash",
+            "scripts/ctx_verify_run.sh",
+            "WO-TEST",
+            "--root",
+            str(root),
+            "--allow-dirty",
+        ],
         cwd=root,
         capture_output=True,
         text=True,
-        env={**os.environ, "OVERRIDE_REASON": "Test override for wrapper", "OVERRIDE_WO": "WO-0000", "OVERRIDE_UNTIL": "2099-12-31"},
+        env={
+            **os.environ,
+            "OVERRIDE_REASON": "Test override for wrapper",
+            "OVERRIDE_WO": "WO-0000",
+            "OVERRIDE_UNTIL": "2099-12-31",
+        },
     )
 
     assert result.returncode == 0
@@ -358,11 +390,25 @@ def test_wo_verify_with_allow_dirty_passes(tmp_path: Path):
 
     # Call wo_verify.sh with --allow-dirty
     result = subprocess.run(
-        ["uv", "run", "bash", "scripts/wo_verify.sh", "WO-TEST", "--root", str(root), "--allow-dirty"],
+        [
+            "uv",
+            "run",
+            "bash",
+            "scripts/wo_verify.sh",
+            "WO-TEST",
+            "--root",
+            str(root),
+            "--allow-dirty",
+        ],
         cwd=root,
         capture_output=True,
         text=True,
-        env={**os.environ, "OVERRIDE_REASON": "Test override for allow-dirty", "OVERRIDE_WO": "WO-0000", "OVERRIDE_UNTIL": "2099-12-31"},
+        env={
+            **os.environ,
+            "OVERRIDE_REASON": "Test override for allow-dirty",
+            "OVERRIDE_WO": "WO-0000",
+            "OVERRIDE_UNTIL": "2099-12-31",
+        },
     )
 
     assert result.returncode == 0, "Should pass with --allow-dirty: " + result.stderr

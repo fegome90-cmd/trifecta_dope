@@ -110,7 +110,8 @@ def run_extract_keywords(
         # Calculate metrics
         raw_tokens = sum(len(e.keywords) for e in extracted)
         capped_count = sum(
-            1 for skills_list in alias_map.aliases.values()
+            1
+            for skills_list in alias_map.aliases.values()
             if len(skills_list) >= max_skills_per_alias
         )
 
@@ -180,7 +181,9 @@ def extract_keywords_standalone(
     segment: str = typer.Option(..., "--segment", "-s", help="Target segment path"),
     output: Optional[str] = typer.Option(None, "--output", "-o", help="Custom output path"),
     min_frequency: int = typer.Option(2, "--min-frequency", "-f", help="Minimum frequency"),
-    max_skills_per_alias: int = typer.Option(8, "--max-skills-per-alias", "-m", help="Max skills per alias"),
+    max_skills_per_alias: int = typer.Option(
+        8, "--max-skills-per-alias", "-m", help="Max skills per alias"
+    ),
     stdout: bool = typer.Option(False, "--stdout", help="Print to stdout"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Don't persist"),
     check: bool = typer.Option(False, "--check", help="Fail if differs"),

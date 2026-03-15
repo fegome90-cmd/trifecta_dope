@@ -4,7 +4,6 @@ import re
 from typing import List, Tuple
 
 
-
 class QueryValidationError(Exception):
     """Raised when query fails validation."""
 

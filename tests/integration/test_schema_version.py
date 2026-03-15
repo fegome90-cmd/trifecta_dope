@@ -11,7 +11,7 @@ def test_new_db_has_schema_version_1():
         temp_path = Path(tmpdir)
         db_path = temp_path / "test.db"
 
-        store = RepoStore(db_path)
+        RepoStore(db_path)
 
         conn = sqlite3.connect(db_path)
         cur = conn.execute("SELECT version FROM schema_version")

@@ -106,23 +106,17 @@ def validate_skill_meta(meta: SkillMeta) -> Result[SkillMeta, list[SkillValidati
     # Validate requires (must be list of strings)
     for i, req in enumerate(meta.requires):
         if not isinstance(req, str):
-            errors.append(
-                SkillValidationError(f"requires[{i}]", "must be a string", req)
-            )
+            errors.append(SkillValidationError(f"requires[{i}]", "must be a string", req))
 
     # Validate outputs (must be list of strings)
     for i, out in enumerate(meta.outputs):
         if not isinstance(out, str):
-            errors.append(
-                SkillValidationError(f"outputs[{i}]", "must be a string", out)
-            )
+            errors.append(SkillValidationError(f"outputs[{i}]", "must be a string", out))
 
     # Validate levels (must be list of strings if present)
     for i, level in enumerate(meta.levels):
         if not isinstance(level, str):
-            errors.append(
-                SkillValidationError(f"levels[{i}]", "must be a string", level)
-            )
+            errors.append(SkillValidationError(f"levels[{i}]", "must be a string", level))
 
     # Validate inputs (must be valid SkillInput objects)
     for i, inp in enumerate(meta.inputs):

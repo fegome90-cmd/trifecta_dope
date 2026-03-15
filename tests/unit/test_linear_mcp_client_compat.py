@@ -148,22 +148,16 @@ def test_decode_content_payload_fail_closed_invalid_shapes() -> None:
         LinearMCPClient._decode_content_payload({"content": []})
 
     with pytest.raises(LinearMCPError, match="not valid JSON"):
-        LinearMCPClient._decode_content_payload(
-            {"content": [{"type": "text", "text": "not-json"}]}
-        )
+        LinearMCPClient._decode_content_payload({"content": [{"type": "text", "text": "not-json"}]})
 
     with pytest.raises(LinearMCPError, match="empty or invalid"):
-        LinearMCPClient._decode_content_payload(
-            {"content": [{"type": "text", "text": "   "}]}
-        )
+        LinearMCPClient._decode_content_payload({"content": [{"type": "text", "text": "   "}]})
 
 
 def test_decode_content_payload_fail_closed_size_limit() -> None:
     huge = "a" * (262144 + 1)
     with pytest.raises(LinearMCPError, match="exceeds max size"):
-        LinearMCPClient._decode_content_payload(
-            {"content": [{"type": "text", "text": huge}]}
-        )
+        LinearMCPClient._decode_content_payload({"content": [{"type": "text", "text": huge}]})
 
 
 def test_alias_resolution_is_deterministic_and_logs_mapping_in_debug(monkeypatch) -> None:

@@ -112,9 +112,7 @@ class TestQueryExpansionSmoke:
         return KeywordExtractor(min_frequency=1)  # Use min_frequency=1 for small sample
 
     @pytest.fixture
-    def generated_aliases(
-        self, extractor: KeywordExtractor
-    ) -> dict[str, list[str]]:
+    def generated_aliases(self, extractor: KeywordExtractor) -> dict[str, list[str]]:
         """Generate aliases from sample skills."""
         skills = MockSkillSet.get_sample_skills()
         extracted = extractor.extract_from_skills(skills)
@@ -147,88 +145,72 @@ class TestQueryExpansionSmoke:
     ) -> None:
         """Query 'security' should find security-related skills."""
         security_aliases = [
-            alias for alias in generated_aliases.keys()
-            if "security" in alias.lower()
+            alias for alias in generated_aliases.keys() if "security" in alias.lower()
         ]
 
         assert len(security_aliases) > 0, (
-            f"Expected 'security' related aliases. "
-            f"Got: {list(generated_aliases.keys())[:10]}..."
+            f"Expected 'security' related aliases. Got: {list(generated_aliases.keys())[:10]}..."
         )
 
     def test_sqlite_query_finds_sqlite_skills(
         self, generated_aliases: dict[str, list[str]]
     ) -> None:
         """Query 'sqlite' should find sqlite-related skills."""
-        sqlite_aliases = [
-            alias for alias in generated_aliases.keys()
-            if "sqlite" in alias.lower()
-        ]
+        sqlite_aliases = [alias for alias in generated_aliases.keys() if "sqlite" in alias.lower()]
 
         assert len(sqlite_aliases) > 0, (
-            f"Expected 'sqlite' related aliases. "
-            f"Got: {list(generated_aliases.keys())[:10]}..."
+            f"Expected 'sqlite' related aliases. Got: {list(generated_aliases.keys())[:10]}..."
         )
 
-    def test_clean_architecture_query(
-        self, generated_aliases: dict[str, list[str]]
-    ) -> None:
+    def test_clean_architecture_query(self, generated_aliases: dict[str, list[str]]) -> None:
         """Query 'clean architecture' should find architecture skills."""
         arch_aliases = [
-            alias for alias in generated_aliases.keys()
+            alias
+            for alias in generated_aliases.keys()
             if "architecture" in alias.lower() or "clean" in alias.lower()
         ]
 
         assert len(arch_aliases) > 0, (
-            f"Expected architecture related aliases. "
-            f"Got: {list(generated_aliases.keys())[:10]}..."
+            f"Expected architecture related aliases. Got: {list(generated_aliases.keys())[:10]}..."
         )
 
-    def test_code_review_query(
-        self, generated_aliases: dict[str, list[str]]
-    ) -> None:
+    def test_code_review_query(self, generated_aliases: dict[str, list[str]]) -> None:
         """Query 'code review' should find review skills."""
         review_aliases = [
-            alias for alias in generated_aliases.keys()
+            alias
+            for alias in generated_aliases.keys()
             if "review" in alias.lower() or "code" in alias.lower()
         ]
 
         assert len(review_aliases) > 0, (
-            f"Expected review related aliases. "
-            f"Got: {list(generated_aliases.keys())[:10]}..."
+            f"Expected review related aliases. Got: {list(generated_aliases.keys())[:10]}..."
         )
 
-    def test_performance_query(
-        self, generated_aliases: dict[str, list[str]]
-    ) -> None:
+    def test_performance_query(self, generated_aliases: dict[str, list[str]]) -> None:
         """Query 'performance' should find performance skills."""
         perf_aliases = [
-            alias for alias in generated_aliases.keys()
+            alias
+            for alias in generated_aliases.keys()
             if "performance" in alias.lower() or "optimization" in alias.lower()
         ]
 
         assert len(perf_aliases) > 0, (
-            f"Expected performance related aliases. "
-            f"Got: {list(generated_aliases.keys())[:10]}..."
+            f"Expected performance related aliases. Got: {list(generated_aliases.keys())[:10]}..."
         )
 
-    def test_debug_python_query(
-        self, generated_aliases: dict[str, list[str]]
-    ) -> None:
+    def test_debug_python_query(self, generated_aliases: dict[str, list[str]]) -> None:
         """Query 'debug python' should find debugging skills."""
         debug_aliases = [
-            alias for alias in generated_aliases.keys()
+            alias
+            for alias in generated_aliases.keys()
             if "debug" in alias.lower() or "debugging" in alias.lower()
         ]
 
         assert len(debug_aliases) > 0, (
-            f"Expected debug related aliases. "
-            f"Got: {list(generated_aliases.keys())[:10]}..."
+            f"Expected debug related aliases. Got: {list(generated_aliases.keys())[:10]}..."
         )
 
-    def test_no_generic_aliases_generated(
-        self, generated_aliases: dict[str, list[str]]
-    ) -> None:
+    def test_no_generic_aliases_generated(self, generated_aliases: dict[str, list[str]]) -> None:
         """No generic/useless aliases should be generated."""
         # These are examples of overly generic terms that should NOT appear
         banned_terms = {"use", "using", "when", "help", "task", "user"}
@@ -238,16 +220,12 @@ class TestQueryExpansionSmoke:
                 f"Generic term '{banned}' should not be in aliases"
             )
 
-    def test_aliases_are_lowercase(
-        self, generated_aliases: dict[str, list[str]]
-    ) -> None:
+    def test_aliases_are_lowercase(self, generated_aliases: dict[str, list[str]]) -> None:
         """All alias keys should be lowercase."""
         for alias in generated_aliases.keys():
             assert alias == alias.lower(), f"Alias '{alias}' should be lowercase"
 
-    def test_aliases_have_valid_structure(
-        self, generated_aliases: dict[str, list[str]]
-    ) -> None:
+    def test_aliases_have_valid_structure(self, generated_aliases: dict[str, list[str]]) -> None:
         """All aliases should have valid structure."""
         for alias, skills in generated_aliases.items():
             assert isinstance(alias, str), f"Alias key should be string: {alias}"
@@ -328,8 +306,7 @@ class TestBenchmarkQueriesCoverage:
         for query in BENCHMARK_QUERIES:
             query_terms = query.lower().split()
             matching_aliases = [
-                alias for alias in all_aliases
-                if any(term in alias for term in query_terms)
+                alias for alias in all_aliases if any(term in alias for term in query_terms)
             ]
             coverage_report[query] = matching_aliases
 

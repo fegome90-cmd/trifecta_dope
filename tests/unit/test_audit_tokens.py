@@ -143,7 +143,9 @@ def test_fails_when_synthesis_prompt_missing(tmp_path: Path) -> None:
     mod, root = setup_workspace(tmp_path, with_prompt=False)
     mod.main()  # Should NOT raise, uses graceful degradation
 
-    results = json.loads((root / "_ctx/audits/token_audit/results.json").read_text(encoding="utf-8"))
+    results = json.loads(
+        (root / "_ctx/audits/token_audit/results.json").read_text(encoding="utf-8")
+    )
     assert results["synthesis"]["in_type"] == "MISSING"
     assert results["synthesis"]["in_tokens"] is None
 
@@ -152,7 +154,9 @@ def test_records_llm_synthesis_and_computes_a_task_complete(tmp_path: Path) -> N
     mod, root = setup_workspace(tmp_path, with_prompt=True)
     mod.main()
 
-    results = json.loads((root / "_ctx/audits/token_audit/results.json").read_text(encoding="utf-8"))
+    results = json.loads(
+        (root / "_ctx/audits/token_audit/results.json").read_text(encoding="utf-8")
+    )
     assert "in_tokens" in results["synthesis"]
     assert results["synthesis"]["out_tokens"] > 0
     assert results["synthesis"]["out_type"] == "MEDIDO"
@@ -170,7 +174,9 @@ def test_strict_mode_keeps_b_task_complete_missing_without_artifacts(tmp_path: P
     mod, root = setup_workspace(tmp_path, with_prompt=True)
     mod.main()
 
-    results = json.loads((root / "_ctx/audits/token_audit/results.json").read_text(encoding="utf-8"))
+    results = json.loads(
+        (root / "_ctx/audits/token_audit/results.json").read_text(encoding="utf-8")
+    )
     t = results["task_complete"]  # Direct access, not nested
 
     assert t["status"] == "blocked"

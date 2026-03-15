@@ -1,4 +1,5 @@
 """Integration tests for skill lint CLI command."""
+
 import json
 import subprocess
 from pathlib import Path

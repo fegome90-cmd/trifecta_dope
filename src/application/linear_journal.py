@@ -47,7 +47,10 @@ def _rebuild_state_from_journal(root: Path) -> dict[str, dict[str, str]]:
             fingerprint = row.get("last_fingerprint")
             policy_version = row.get("policy_version")
             updated_at = row.get("updated_at") or row.get("ts")
-            if not all(isinstance(x, str) and x for x in [issue_id, fingerprint, policy_version, updated_at]):
+            if not all(
+                isinstance(x, str) and x
+                for x in [issue_id, fingerprint, policy_version, updated_at]
+            ):
                 continue
             state[wo_id] = {
                 "linear_issue_id": issue_id,

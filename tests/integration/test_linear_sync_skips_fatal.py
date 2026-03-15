@@ -12,14 +12,28 @@ def _write_policy(root: Path) -> None:
         "policy_version": "v1",
         "team_key": "TRI",
         "team_id": "",
-        "outbound_allow": ["title", "description", "priority", "labels", "assignee", "state", "comments"],
+        "outbound_allow": [
+            "title",
+            "description",
+            "priority",
+            "labels",
+            "assignee",
+            "state",
+            "comments",
+        ],
         "inbound_allow": [],
         "drift_severity": {
             "INFO": ["description", "labels"],
             "WARN": ["priority", "assignee"],
             "FATAL": ["status_critical", "dod", "verify", "execution", "evidence"],
         },
-        "status_map": {"pending": None, "running": None, "partial": None, "done": None, "failed": None},
+        "status_map": {
+            "pending": None,
+            "running": None,
+            "partial": None,
+            "done": None,
+            "failed": None,
+        },
     }
     path = root / "_ctx" / "policy" / "linear_sync_policy.yaml"
     path.parent.mkdir(parents=True, exist_ok=True)

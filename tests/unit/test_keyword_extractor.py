@@ -271,9 +271,7 @@ class TestKeywordExtractor:
         assert "code-review" in names
         assert "sqlite-query-plans" in names
 
-    def test_build_alias_map_min_frequency(
-        self, extractor: KeywordExtractor
-    ) -> None:
+    def test_build_alias_map_min_frequency(self, extractor: KeywordExtractor) -> None:
         """Should enforce min_frequency=2 default."""
         # Two skills with 'testing' keyword
         skills = [
@@ -301,9 +299,7 @@ class TestKeywordExtractor:
         # 'xyzabc' only appears once -> should NOT be in alias map
         assert "xyzabc" not in alias_map.aliases
 
-    def test_build_alias_map_max_skills_per_alias(
-        self, extractor: KeywordExtractor
-    ) -> None:
+    def test_build_alias_map_max_skills_per_alias(self, extractor: KeywordExtractor) -> None:
         """Should enforce max_skills_per_alias=8 default."""
         # Create 10 skills all sharing 'database' keyword
         skills = [
@@ -333,9 +329,7 @@ class TestKeywordExtractor:
 
         assert alias_map1.aliases == alias_map2.aliases
 
-    def test_alias_ordering_deterministic(
-        self, extractor: KeywordExtractor
-    ) -> None:
+    def test_alias_ordering_deterministic(self, extractor: KeywordExtractor) -> None:
         """Alias skill lists should be ordered deterministically."""
         skills = [
             {"name": "zebra-skill", "source_path": "/z.md", "description": "testing"},

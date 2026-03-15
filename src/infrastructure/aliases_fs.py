@@ -235,11 +235,13 @@ def load_skills_manifest(segment_path: Path) -> list[dict[str, str]]:
                 source_path = skill.get("source_path", "")
                 description = skill.get("description", "")
                 if name:
-                    result.append({
-                        "name": name,
-                        "source_path": source_path,
-                        "description": description,
-                    })
+                    result.append(
+                        {
+                            "name": name,
+                            "source_path": source_path,
+                            "description": description,
+                        }
+                    )
 
         return result
 

@@ -1,4 +1,5 @@
 """Unit tests for scripts.metadata_inference module."""
+
 from pathlib import Path
 from unittest.mock import patch
 import pytest
@@ -10,7 +11,6 @@ from scripts.metadata_inference import (
     is_lock_process_alive,
     check_lock_validity,
     InferenceResult,
-    infer_metadata_from_system,
     verify_metadata_completeness,
     validate_inferred_metadata,
 )
@@ -38,9 +38,7 @@ def test_get_worktrees_from_git_relative_path():
 """
 
     with patch("subprocess.check_output", return_value=git_output):
-        worktrees = get_worktrees_from_git(
-            Path("/Users/felipe/Developer/agent_h/trifecta_dope")
-        )
+        worktrees = get_worktrees_from_git(Path("/Users/felipe/Developer/agent_h/trifecta_dope"))
 
         assert "WO-0010" in worktrees
         assert worktrees["WO-0010"]["path"] == "../.worktrees/WO-0010"
@@ -57,7 +55,9 @@ def test_get_worktrees_from_git_slug_wo_id_preserved():
         worktrees = get_worktrees_from_git(Path("/repo"))
 
         assert "WO-0021-verdict-generator" in worktrees
-        assert worktrees["WO-0021-verdict-generator"]["branch"] == "feat/wo-WO-0021-verdict-generator"
+        assert (
+            worktrees["WO-0021-verdict-generator"]["branch"] == "feat/wo-WO-0021-verdict-generator"
+        )
 
 
 def test_get_worktrees_from_git_empty_output():
@@ -88,7 +88,7 @@ User: testuser
 Hostname: testhost
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.lock') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".lock") as f:
         f.write(lock_content)
         lock_path = Path(f.name)
 
@@ -116,7 +116,7 @@ def test_parse_lock_file_malformed():
 no proper format
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.lock') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".lock") as f:
         f.write(lock_content)
         lock_path = Path(f.name)
 
@@ -131,9 +131,8 @@ no proper format
 def test_is_lock_stale():
     """Test lock staleness detection."""
     import tempfile
-    import time
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.lock') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".lock") as f:
         f.write("test")
         lock_path = Path(f.name)
 
@@ -156,11 +155,11 @@ def test_is_lock_process_alive():
 
     # Use current process PID which should be alive
     lock_content = f"""Locked by ctx_wo_take.py at 2025-02-10T15:30:00
-PID: {__import__('os').getpid()}
+PID: {__import__("os").getpid()}
 User: testuser
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.lock') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".lock") as f:
         f.write(lock_content)
         lock_path = Path(f.name)
 
@@ -181,7 +180,7 @@ PID: 99999
 User: testuser
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.lock') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".lock") as f:
         f.write(lock_content)
         lock_path = Path(f.name)
 
@@ -197,11 +196,11 @@ def test_check_lock_validity():
     import tempfile
 
     lock_content = f"""Locked by ctx_wo_take.py at 2025-02-10T15:30:00
-PID: {__import__('os').getpid()}
+PID: {__import__("os").getpid()}
 User: testuser
 """
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.lock') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".lock") as f:
         f.write(lock_content)
         lock_path = Path(f.name)
 
@@ -266,7 +265,6 @@ def test_verify_metadata_completeness_incomplete():
 def test_validate_inferred_metadata_valid():
     """Test validation of valid inferred metadata."""
     import tempfile
-    from scripts.paths import get_lock_path
 
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir) / "repo"

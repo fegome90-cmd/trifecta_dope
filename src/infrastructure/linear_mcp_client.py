@@ -92,7 +92,13 @@ class LinearMCPClient:
                 try:
                     self._queue.put(json.loads(line))
                 except json.JSONDecodeError:
-                    self._queue.put({"jsonrpc": "2.0", "id": None, "error": {"code": "INVALID_JSON", "message": line}})
+                    self._queue.put(
+                        {
+                            "jsonrpc": "2.0",
+                            "id": None,
+                            "error": {"code": "INVALID_JSON", "message": line},
+                        }
+                    )
 
         self._reader_thread = threading.Thread(target=_reader, daemon=True)
         self._reader_thread.start()
@@ -138,10 +144,14 @@ class LinearMCPClient:
             try:
                 response = self._queue.get(timeout=self.timeout_ms / 1000)
             except queue.Empty as exc:
-                raise LinearMCPError(f"MCP request timeout after {self.timeout_ms}ms ({method})") from exc
+                raise LinearMCPError(
+                    f"MCP request timeout after {self.timeout_ms}ms ({method})"
+                ) from exc
 
             if response.get("id") != req_id:
-                raise LinearMCPError(f"MCP protocol mismatch: expected id={req_id}, got={response.get('id')}")
+                raise LinearMCPError(
+                    f"MCP protocol mismatch: expected id={req_id}, got={response.get('id')}"
+                )
 
             if "error" in response:
                 err = response["error"]
@@ -289,7 +299,9 @@ class LinearMCPClient:
             raw = self._decode_content_payload(self.call_tool("get_team", {"query": team_key}))
             teams = self._team_candidates(raw)
         else:
-            raw = self._decode_content_payload(self.call_tool("list_teams", {"query": team_key, "limit": 50}))
+            raw = self._decode_content_payload(
+                self.call_tool("list_teams", {"query": team_key, "limit": 50})
+            )
             teams = self._team_candidates(raw)
             if not teams:
                 raw = self._decode_content_payload(self.call_tool("list_teams", {"limit": 250}))
@@ -420,5 +432,7 @@ class LinearMCPClient:
     def transition_issue_state(self, issue_id: str, state_id: str) -> dict[str, Any]:
         tool = self._tool_for("transition_issue_state")
         if tool == "transition_issue_state":
-            return self.call_tool("transition_issue_state", {"issue_id": issue_id, "state_id": state_id})
+            return self.call_tool(
+                "transition_issue_state", {"issue_id": issue_id, "state_id": state_id}
+            )
         return self.call_tool("update_issue", {"id": issue_id, "state": state_id})

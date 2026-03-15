@@ -70,7 +70,9 @@ def build_linear_payload(
         _render_read_only_section("Objective", [objective] if objective else []),
         _render_read_only_section("Definition of Done", _render_dod(wo)),
         _render_read_only_section("Verification Commands", _render_verify_commands(wo)),
-        _render_read_only_section("Source", [f"- WO YAML: `{wo_yaml_path}`", f"- WO ID: `{wo_id}`"]),
+        _render_read_only_section(
+            "Source", [f"- WO YAML: `{wo_yaml_path}`", f"- WO ID: `{wo_id}`"]
+        ),
     ]
 
     labels = ["trifecta", f"status:{wo.get('status', 'pending')}"]

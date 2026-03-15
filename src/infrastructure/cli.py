@@ -48,9 +48,6 @@ from src.infrastructure.telemetry import Telemetry
 from src.infrastructure.templates import TemplateRenderer
 from src.application.obsidian_sync_use_case import create_sync_use_case
 from src.application.linear_sync_use_case import LinearSyncUseCase
-from src.application.status_use_case import StatusUseCase
-from src.application.doctor_use_case import DoctorUseCase
-from src.application.repo_use_case import RepoUseCase
 from src.application.index_use_case import IndexUseCase
 from src.application.query_use_case import QueryUseCase
 from src.application.daemon_use_case import DaemonUseCase
@@ -2397,68 +2394,6 @@ def main() -> None:
 # =============================================================================
 
 
-@app.command("status")
-def status_cmd(
-    repo: str = typer.Option(..., "--repo", "-r", help="Repository path"),
-    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
-) -> None:
-    """Show status of a repository."""
-    use_case = StatusUseCase()
-    status = use_case.execute(repo)
-
-    if json_output:
-        output = {
-            "repo_id": status.segment_ref.id,
-            "path": str(status.segment_ref.root_abs),
-            "slug": status.segment_ref.slug,
-            "has_ctx_dir": status.has_ctx_dir,
-            "has_context_pack": status.has_context_pack,
-            "has_telemetry": status.has_telemetry,
-            "has_skill_md": status.has_skill_md,
-            "has_prime": status.has_prime,
-            "has_agent": status.has_agent,
-            "has_session": status.has_session,
-        }
-        typer.echo(json.dumps(output, indent=2))
-    else:
-        typer.echo(f"Status for {status.segment_ref.slug}")
-        typer.echo(f"  Path: {status.segment_ref.root_abs}")
-        typer.echo(f"  ID: {status.segment_ref.id}")
-        typer.echo(f"  _ctx/: {'✓' if status.has_ctx_dir else '✗'}")
-        typer.echo(f"  context_pack.json: {'✓' if status.has_context_pack else '✗'}")
-        typer.echo(f"  telemetry: {'✓' if status.has_telemetry else '✗'}")
-        typer.echo(f"  skill.md: {'✓' if status.has_skill_md else '✗'}")
-        typer.echo(f"  prime_*.md: {'✓' if status.has_prime else '✗'}")
-        typer.echo(f"  agent*.md: {'✓' if status.has_agent else '✗'}")
-        typer.echo(f"  session_*.md: {'✓' if status.has_session else '✗'}")
-
-
-@app.command("doctor")
-def doctor_cmd(
-    repo: str = typer.Option(..., "--repo", "-r", help="Repository path"),
-    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
-) -> None:
-    """Diagnose issues in a repository."""
-    use_case = DoctorUseCase()
-    diagnosis = use_case.execute(repo)
-
-    if json_output:
-        output = {
-            "score": diagnosis.health_score,
-            "healthy": diagnosis.health_score >= 70,
-            "issues": diagnosis.issues,
-        }
-        typer.echo(json.dumps(output, indent=2))
-    else:
-        typer.echo(f"Doctor diagnosis for {diagnosis.segment_ref.slug}")
-        typer.echo(f"  Health score: {diagnosis.health_score}/100")
-        typer.echo(f"  Healthy: {'✓' if diagnosis.health_score >= 70 else '✗'}")
-        if diagnosis.issues:
-            typer.echo("  Issues:")
-            for issue in diagnosis.issues:
-                typer.echo(f"    - {issue}")
-
-
 @app.command("repo")
 def repo_cmd() -> None:
     """Repository management commands."""
@@ -2466,7 +2401,7 @@ def repo_cmd() -> None:
 
 
 @app.command("repo-register")
-def repo_register(
+def repo_register_alias(
     repo: str = typer.Argument(..., help="Repository path to register"),
     json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
 ) -> None:
@@ -2482,7 +2417,9 @@ def repo_register(
 
 
 @app.command("repo-list")
-def repo_list(json_output: bool = typer.Option(False, "--json", help="Output as JSON")) -> None:
+def repo_list_alias(
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+) -> None:
     """List registered repositories."""
     use_case = RepoUseCase()
     repos = use_case.list_repos()
@@ -2499,7 +2436,7 @@ def repo_list(json_output: bool = typer.Option(False, "--json", help="Output as 
 
 
 @app.command("repo-show")
-def repo_show(
+def repo_show_alias(
     repo_id: str = typer.Argument(..., help="Repository ID"),
     json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
 ) -> None:
@@ -2604,7 +2541,7 @@ def daemon_stop(
         Path.home() / ".local" / "share" / "trifecta" / "repos" / ref.fingerprint / "runtime"
     )
     use_case = DaemonUseCase(runtime_dir)
-    result = use_case.stop()
+    use_case.stop()
 
     typer.echo("Daemon stopped")
 

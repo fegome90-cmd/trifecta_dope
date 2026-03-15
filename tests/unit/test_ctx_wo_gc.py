@@ -10,7 +10,6 @@ Tests cover:
 """
 
 import json
-import subprocess
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -27,7 +26,6 @@ from ctx_wo_gc import (
     check_worktree_dirty,
     classify_worktrees,
     get_wo_state,
-    get_worktrees,
     remove_worktree,
     run_gc,
 )
@@ -320,7 +318,7 @@ class TestRunGc:
         json_path = tmp_path / "report.json"
 
         with patch("ctx_wo_gc.get_worktrees", return_value=[]):
-            report = run_gc(tmp_path, dry_run=True, force_dirty=False, json_path=str(json_path))
+            run_gc(tmp_path, dry_run=True, force_dirty=False, json_path=str(json_path))
 
         assert json_path.exists()
         data = json.loads(json_path.read_text())

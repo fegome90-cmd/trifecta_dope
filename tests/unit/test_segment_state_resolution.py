@@ -26,7 +26,9 @@ def _write_config(segment_root: Path, *, segment: str, repo_root: str) -> None:
     )
 
 
-def test_resolve_segment_state_dot_equals_abs_cwd(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_resolve_segment_state_dot_equals_abs_cwd(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     segment_root = tmp_path / "my_segment"
     segment_root.mkdir()
     _write_config(

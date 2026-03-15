@@ -1,9 +1,6 @@
 import pytest
-import os
-import shutil
-import tarfile
 from pathlib import Path
-from scripts.helpers import check_lock_age, check_lock_validity
+from scripts.helpers import check_lock_age
 
 
 def test_lock_ttl_default_semantic(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):

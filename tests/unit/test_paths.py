@@ -1,5 +1,5 @@
 """Unit tests for scripts.paths module."""
-import os
+
 import tempfile
 from pathlib import Path
 import pytest
@@ -55,7 +55,7 @@ def test_get_worktree_path_mkdir_fails():
         repo_root.mkdir()
 
         # Mock Path.mkdir to raise OSError (simulates permission denied)
-        with patch.object(Path, 'mkdir', side_effect=OSError("[Errno 13] Permission denied")):
+        with patch.object(Path, "mkdir", side_effect=OSError("[Errno 13] Permission denied")):
             with pytest.raises(PermissionError, match="Cannot create .worktrees directory"):
                 get_worktree_path(repo_root, "WO-0001")
 

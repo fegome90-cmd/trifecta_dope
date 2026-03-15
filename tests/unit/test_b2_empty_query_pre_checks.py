@@ -1,9 +1,7 @@
 """Tests for B2 intervention: Empty query pre-checks."""
 
 import json
-from pathlib import Path
 from unittest.mock import MagicMock
-import pytest
 
 from src.application.search_get_usecases import SearchUseCase
 from src.application.query_normalizer import QueryNormalizer

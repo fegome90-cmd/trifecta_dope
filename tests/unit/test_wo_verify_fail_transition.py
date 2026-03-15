@@ -13,12 +13,11 @@ Ensures that when wo_verify.sh fails a WO:
 import subprocess
 from pathlib import Path
 import yaml
-import pytest
 
 
 # Extract transition_to_failed function from wo_verify.sh as a standalone script
 # This is necessary because wo_verify.sh exits early when sourced without args
-TRANSITION_FUNC = '''
+TRANSITION_FUNC = """
 transition_to_failed() {
   local wo_id="$1"
   local root="${2:-.}"
@@ -92,7 +91,7 @@ PY
   echo "ERROR: Invariant violation - found $count WO files for $wo_id" >&2
   return 1
 }
-'''
+"""
 
 
 class TestTransitionToFailed:

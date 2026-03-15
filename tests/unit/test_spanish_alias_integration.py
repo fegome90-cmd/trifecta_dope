@@ -90,7 +90,10 @@ class TestSpanishAliasIndependentOfLint:
 
             # Execute with Spanish query and lint DISABLED
             result = use_case.execute(
-                tmp_path, "servicio", limit=5, enable_lint=False  # Lint DISABLED
+                tmp_path,
+                "servicio",
+                limit=5,
+                enable_lint=False,  # Lint DISABLED
             )
 
             # ASSERT: Should return hits (via Spanish alias expansion), not "No results"
@@ -145,7 +148,10 @@ class TestSpanishAliasIndependentOfLint:
 
             # Execute with Spanish query and lint DISABLED
             use_case.execute(
-                tmp_path, "configuración", limit=5, enable_lint=False  # Lint DISABLED
+                tmp_path,
+                "configuración",
+                limit=5,
+                enable_lint=False,  # Lint DISABLED
             )
 
             # ASSERT: Spanish alias telemetry should be recorded
@@ -153,9 +159,7 @@ class TestSpanishAliasIndependentOfLint:
             incr_calls = [str(call) for call in mock_telemetry.incr.call_args_list]
             event_calls = [str(call) for call in mock_telemetry.event.call_args_list]
 
-            has_spanish_alias_counter = any(
-                "spanish_alias" in call for call in incr_calls
-            )
+            has_spanish_alias_counter = any("spanish_alias" in call for call in incr_calls)
             has_spanish_alias_event = any("spanish_alias" in call for call in event_calls)
 
             assert has_spanish_alias_counter or has_spanish_alias_event, (

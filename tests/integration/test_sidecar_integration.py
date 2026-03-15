@@ -7,6 +7,7 @@ This test verifies that:
 
 Run with: uv run pytest tests/integration/test_sidecar_integration.py -v
 """
+
 import json
 import subprocess
 import shutil
@@ -75,9 +76,9 @@ class TestSidecarIntegration:
             data = json.load(f)
 
         assert data["version"] == 1, f"Unexpected version: {data['version']}"
-        assert (
-            data["schema"] == "trifecta.sidecar.wo_index.v1"
-        ), f"Unexpected schema: {data['schema']}"
+        assert data["schema"] == "trifecta.sidecar.wo_index.v1", (
+            f"Unexpected schema: {data['schema']}"
+        )
 
     def test_work_orders_is_list(self, index_path: Path):
         """G5: work_orders is a list."""
@@ -190,7 +191,9 @@ def test_take_finish_updates_index_in_isolated_repo(tmp_path: Path):
     (root / "scripts").mkdir(parents=True)
 
     # Hook target scripts must exist under target repo root
-    shutil.copy(script_repo / "scripts" / "export_wo_index.py", root / "scripts" / "export_wo_index.py")
+    shutil.copy(
+        script_repo / "scripts" / "export_wo_index.py", root / "scripts" / "export_wo_index.py"
+    )
     shutil.copy(script_repo / "scripts" / "paths.py", root / "scripts" / "paths.py")
 
     (root / "docs" / "backlog" / "schema" / "work_order.schema.json").write_text(
@@ -198,7 +201,16 @@ def test_take_finish_updates_index_in_isolated_repo(tmp_path: Path):
             {
                 "$schema": "https://json-schema.org/draft/2020-12/schema",
                 "type": "object",
-                "required": ["version", "id", "epic_id", "title", "priority", "status", "dod_id", "execution"],
+                "required": [
+                    "version",
+                    "id",
+                    "epic_id",
+                    "title",
+                    "priority",
+                    "status",
+                    "dod_id",
+                    "execution",
+                ],
                 "properties": {
                     "version": {"type": "integer"},
                     "id": {"type": "string"},
@@ -228,9 +240,7 @@ def test_take_finish_updates_index_in_isolated_repo(tmp_path: Path):
         encoding="utf-8",
     )
     (root / "_ctx" / "dod" / "DOD-DEFAULT.yaml").write_text(
-        "dod:\n"
-        "  - id: DOD-DEFAULT\n"
-        "    checklist: []\n",
+        "dod:\n  - id: DOD-DEFAULT\n    checklist: []\n",
         encoding="utf-8",
     )
     (root / "_ctx" / "jobs" / "pending" / "WO-0001.yaml").write_text(
@@ -258,7 +268,9 @@ def test_take_finish_updates_index_in_isolated_repo(tmp_path: Path):
     subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=root, check=True)
     subprocess.run(["git", "config", "user.name", "Test User"], cwd=root, check=True)
     subprocess.run(["git", "add", "."], cwd=root, check=True)
-    subprocess.run(["git", "commit", "-m", "init"], cwd=root, check=True, capture_output=True, text=True)
+    subprocess.run(
+        ["git", "commit", "-m", "init"], cwd=root, check=True, capture_output=True, text=True
+    )
 
     take = subprocess.run(
         ["python", str(script_repo / "scripts" / "ctx_wo_take.py"), "WO-0001", "--root", str(root)],

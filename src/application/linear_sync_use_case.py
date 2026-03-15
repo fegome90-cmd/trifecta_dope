@@ -9,7 +9,11 @@ from typing import Any
 import yaml
 
 from src.application.linear_fingerprint import compute_projection_fingerprint
-from src.application.linear_journal import append_journal_event, load_or_rebuild_state, write_state_snapshot
+from src.application.linear_journal import (
+    append_journal_event,
+    load_or_rebuild_state,
+    write_state_snapshot,
+)
 from src.application.linear_mapper import build_linear_payload
 from src.application.linear_reconcile import classify_drift, diff_payload, write_reconcile_reports
 from src.domain.linear_models import REQUIRED_TRIFECTA_STATUSES, LinearPolicy
@@ -71,7 +75,10 @@ class LinearSyncUseCase:
         status_map = data.get("status_map")
         if not isinstance(status_map, dict):
             return None
-        if any(not isinstance(status_map.get(s), str) or not status_map.get(s) for s in REQUIRED_TRIFECTA_STATUSES):
+        if any(
+            not isinstance(status_map.get(s), str) or not status_map.get(s)
+            for s in REQUIRED_TRIFECTA_STATUSES
+        ):
             return None
         return data
 
@@ -98,7 +105,9 @@ class LinearSyncUseCase:
             self.client.check_capabilities()
             cached = self._load_status_map_cache()
             if cached:
-                return LinearActionResult(ok=True, exit_code=BOOTSTRAP_EXIT_OK, message="status_map cache valid")
+                return LinearActionResult(
+                    ok=True, exit_code=BOOTSTRAP_EXIT_OK, message="status_map cache valid"
+                )
 
             team_id = self.policy.team_id
             if not team_id:
@@ -137,7 +146,9 @@ class LinearSyncUseCase:
                     raise LinearMCPError(f"Missing required workflow state for '{key}'")
                 resolved_map[key] = state_id
 
-            self._save_status_map_cache(team_id=team_id, status_map=resolved_map, linear_state_id_to_name=id_to_name)
+            self._save_status_map_cache(
+                team_id=team_id, status_map=resolved_map, linear_state_id_to_name=id_to_name
+            )
             return LinearActionResult(ok=True, exit_code=BOOTSTRAP_EXIT_OK)
         except (LinearMCPError, LinearMCPCapabilityError) as exc:
             return LinearActionResult(ok=False, exit_code=BOOTSTRAP_EXIT_TECH, message=str(exc))
@@ -231,7 +242,9 @@ class LinearSyncUseCase:
             cache = self._load_status_map_cache() or {}
             resolved_team_id = str(cache.get("team_id") or "").strip()
             state = load_or_rebuild_state(self.root)
-            wo_pair = next(((wo, path) for wo, path in self._load_work_orders() if wo.get("id") == wo_id), None)
+            wo_pair = next(
+                ((wo, path) for wo, path in self._load_work_orders() if wo.get("id") == wo_id), None
+            )
             if wo_pair is None:
                 raise LinearMCPError(f"WO not found: {wo_id}")
             wo, wo_path = wo_pair
@@ -254,7 +267,9 @@ class LinearSyncUseCase:
                 issue_id = ""
 
             if not issue_id:
-                issues = self.client.list_issues(resolved_team_id or self.policy.team_id or self.policy.team_key)
+                issues = self.client.list_issues(
+                    resolved_team_id or self.policy.team_id or self.policy.team_key
+                )
                 for issue in issues.get("issues", []):
                     if not isinstance(issue, dict):
                         continue
@@ -297,14 +312,18 @@ class LinearSyncUseCase:
                                 "op": "push",
                                 "wo_id": wo_id,
                                 "linear_issue_id": issue_id,
-                                "last_fingerprint": str(entry.get("last_fingerprint") if isinstance(entry, dict) else ""),
+                                "last_fingerprint": str(
+                                    entry.get("last_fingerprint") if isinstance(entry, dict) else ""
+                                ),
                                 "policy_version": self.policy.policy_version,
                                 "updated_at": datetime.now(timezone.utc).isoformat(),
                                 "severity": "FATAL",
                                 "changed_fields": sorted(changed_fields),
                             },
                         )
-                        return LinearActionResult(ok=False, fatal=True, exit_code=SYNC_EXIT_FATAL, message="fatal drift")
+                        return LinearActionResult(
+                            ok=False, fatal=True, exit_code=SYNC_EXIT_FATAL, message="fatal drift"
+                        )
                 self.client.update_issue(issue_id, payload)
                 action = "update"
 
@@ -350,7 +369,12 @@ class LinearSyncUseCase:
                 fatal_count += 1
 
         if fatal_count > 0:
-            return LinearActionResult(ok=False, fatal=True, exit_code=SYNC_EXIT_FATAL, message=f"fatal_count={fatal_count}")
+            return LinearActionResult(
+                ok=False,
+                fatal=True,
+                exit_code=SYNC_EXIT_FATAL,
+                message=f"fatal_count={fatal_count}",
+            )
         return LinearActionResult(ok=True, exit_code=SYNC_EXIT_OK)
 
     def reconcile(self, dry_run: bool = True) -> LinearActionResult:

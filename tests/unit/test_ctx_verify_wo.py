@@ -1,4 +1,5 @@
 """Unit tests for ctx_verify_wo.py contract."""
+
 from __future__ import annotations
 
 import subprocess

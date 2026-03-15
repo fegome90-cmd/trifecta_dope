@@ -1,4 +1,5 @@
 """Anti-split-brain test - guarantees one WO = one state file."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -29,9 +30,7 @@ def test_no_split_brain() -> None:
 
     wo_files = get_wo_state_files(jobs_dir)
 
-    duplicates = {
-        wo_id: paths for wo_id, paths in wo_files.items() if len(paths) > 1
-    }
+    duplicates = {wo_id: paths for wo_id, paths in wo_files.items() if len(paths) > 1}
 
     if duplicates:
         msg_lines = ["SPLIT-BRAIN DETECTED:"]

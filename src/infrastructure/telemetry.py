@@ -7,7 +7,7 @@ import tempfile
 from pathlib import Path
 from typing import Dict
 
-from src.domain.segment_resolver import resolve_segment_ref, get_segment_fingerprint
+from src.domain.segment_resolver import resolve_segment_ref
 
 
 def _relpath(root: Path, target: Path) -> str:
