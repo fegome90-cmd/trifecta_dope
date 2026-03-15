@@ -36,7 +36,10 @@ def _emit(data: dict[str, object], json_output: bool) -> None:
         nodes = []
     typer.echo(f"{len(nodes)} result(s)")
     for node in nodes:
-        typer.echo(f"- {node['symbol_name']} [{node['kind']}] {node['file_rel']}:{node['line']}")
+        typer.echo(
+            f"- {node.get('symbol_name', '?')} [{node.get('kind', '?')}]"
+            f" {node.get('file_rel', '?')}:{node.get('line', '?')}"
+        )
 
 
 def _handle_graph_error(exc: GraphCommandError, json_output: bool) -> None:

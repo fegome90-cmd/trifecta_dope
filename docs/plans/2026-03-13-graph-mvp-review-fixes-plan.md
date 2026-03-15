@@ -10,7 +10,7 @@
 
 ---
 
-### Task 1: Make read paths non-mutating
+## Task 1: Make read paths non-mutating
 
 **Files:**
 - Modify: `src/infrastructure/graph_store.py`
@@ -45,7 +45,7 @@
 7. Re-run the focused tests and confirm they pass.
    - `uv run pytest -q tests/unit/test_graph_service.py tests/integration/cli/test_graph_cli.py`
 
-### Task 2: Make edge extraction honest for top-level symbols
+## Task 2: Make edge extraction honest for top-level symbols
 
 **Files:**
 - Modify: `src/application/graph_indexer.py`
@@ -74,7 +74,7 @@
 6. Re-run the focused tests and confirm they pass.
    - `uv run pytest -q tests/unit/test_graph_indexer.py tests/integration/cli/test_graph_cli.py`
 
-### Task 3: Fail closed on ambiguous callers/callees
+## Task 3: Fail closed on ambiguous callers/callees
 
 **Files:**
 - Modify: `src/infrastructure/graph_store.py`
@@ -109,7 +109,7 @@
 6. Re-run the focused tests and confirm they pass.
    - `uv run pytest -q tests/unit/test_graph_service.py tests/integration/cli/test_graph_cli.py`
 
-### Task 4: Decide the JSON-by-default contract explicitly
+## Task 4: Decide the JSON-by-default contract explicitly
 
 **Files:**
 - Modify: `src/infrastructure/cli_graph.py`
@@ -128,7 +128,7 @@
 4. Re-run the CLI tests.
    - `uv run pytest -q tests/integration/cli/test_graph_cli.py`
 
-### Task 5: Final verification and closure
+## Task 5: Final verification and closure
 
 **Files:**
 - Modify: `_ctx/session_trifecta_dope.md`

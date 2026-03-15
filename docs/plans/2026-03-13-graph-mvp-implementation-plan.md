@@ -8,7 +8,7 @@
 
 **Tech Stack:** Python 3.12+, Typer, stdlib `sqlite3`, stdlib `ast`, existing `SkeletonMapBuilder`, pytest.
 
-### Task 1: Foundation and RED tests
+## Task 1: Foundation and RED tests
 
 **Files:**
 - Create: `tests/integration/test_graph_store_schema.py`
@@ -21,7 +21,7 @@
 3. Write failing tests for AST indexing, search, callers, and callees on a small fixture.
 4. Run the focused tests and confirm they fail for the expected missing-feature reasons.
 
-### Task 2: Minimal graph implementation
+## Task 2: Minimal graph implementation
 
 **Files:**
 - Create: `src/domain/graph_models.py`
@@ -38,7 +38,7 @@
 4. Add conservative direct-call edge extraction for top-level symbols only.
 5. Wire `graph` Typer commands into the main CLI with JSON-first output.
 
-### Task 3: Verification and closeout
+## Task 3: Verification and closeout
 
 **Files:**
 - Modify: `_ctx/session_trifecta_dope.md`
