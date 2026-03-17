@@ -205,7 +205,7 @@ def validate_segment(
 def validate_wo_id(wo_id: str) -> str:
     """Validate Work Order ID format.
 
-    Pattern: WO-\d{4}
+    Pattern: WO-\\d{4}
 
     Args:
         wo_id: Work Order ID string
