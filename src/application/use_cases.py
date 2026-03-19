@@ -350,16 +350,8 @@ class BuildContextPackUseCase:
 
         prime_path = expected_prime
 
-        # Try to parse REPO_ROOT from prime header
-        repo_root = None
+        # Read prime content for reference extraction
         prime_content = prime_path.read_text()
-
-        rr_match = re.search(r">\s*\*\*REPO_ROOT\*\*:\s*`?([^`\n]+)`?", prime_content)
-        if rr_match:
-            try:
-                repo_root = Path(rr_match.group(1).strip())
-            except Exception:
-                pass
 
         # 4. Identify source files with STRICT VALIDATION
         sources = {
