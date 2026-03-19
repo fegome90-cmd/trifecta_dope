@@ -13,11 +13,10 @@ Date: 2026-03-19
 
 from __future__ import annotations
 
-import logging
-from pathlib import Path
-
 import hashlib
+import logging
 from datetime import datetime
+from pathlib import Path
 
 from src.domain.context_models import ContextChunk, ContextPack, ContextIndexEntry, SourceFile
 from src.domain.result import Err, Ok, Result
@@ -25,15 +24,6 @@ from src.domain.segment_indexing_policy import SegmentIndexingPolicy
 from src.domain.skill_manifest import SkillManifest
 
 logger = logging.getLogger(__name__)
-
-
-# Files to exclude from indexing (segment metadata)
-EXCLUDED_METADATA_PATTERNS = (
-    "skill.md",
-    "skill.mdc",
-    "AGENTS.md",
-    "CLAUDE.md",
-)
 
 
 class SkillHubIndexingStrategy:
