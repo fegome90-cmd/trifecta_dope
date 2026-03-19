@@ -316,3 +316,83 @@ class TestSkillHubIndexingStrategyMetadata:
         # prime_*.md should NOT be in chunks
         for chunk in pack.chunks:
             assert "prime_" not in chunk.source_path
+
+
+class TestSkillHubSegmentIdConsistency:
+    """Test segment_id consistency between GENERIC and SKILL_HUB policies."""
+
+    @pytest.fixture
+    def segment_with_config_id(self, tmp_path: Path) -> Path:
+        """Create a segment with custom segment_id in config."""
+        segment = tmp_path / "my-segment-dir"
+        segment.mkdir()
+        ctx_dir = segment / "_ctx"
+        ctx_dir.mkdir()
+
+        # Config with segment_id different from directory name
+        config = {
+            "segment": "my-segment-dir",
+            "segment_id": "custom-segment-id",  # Different from directory!
+            "scope": "Test segment",
+            "repo_root": str(segment),
+            "indexing_policy": "skill_hub"
+        }
+        (ctx_dir / "trifecta_config.json").write_text(json.dumps(config, indent=2))
+
+        # Create manifest with skill
+        manifest = {
+            "schema_version": 2,
+            "skills": [
+                {
+                    "id": "skill:test-skill",
+                    "name": "test-skill",
+                    "relative_path": "test-skill.md",
+                    "source": "test",
+                    "description": "Test skill",
+                    "canonical": True,
+                }
+            ]
+        }
+        (ctx_dir / "skills_manifest.json").write_text(json.dumps(manifest, indent=2))
+
+        # Create the skill file
+        (segment / "test-skill.md").write_text("# Test Skill\n\nContent here.\n")
+
+        return segment
+
+    def test_skill_hub_uses_config_segment_id(self, segment_with_config_id: Path) -> None:
+        """
+        SKILL_HUB should use segment_id from config, not directory name.
+        """
+        from src.application.skill_hub_indexing_strategy import SkillHubIndexingStrategy
+
+        strategy = SkillHubIndexingStrategy(segment_with_config_id)
+        result = strategy.build()
+
+        assert isinstance(result, Ok)
+        pack = result.value
+
+        # Should use custom-segment-id from config, NOT my-segment-dir
+        assert pack.segment == "custom-segment-id", (
+            f"Expected segment_id from config ('custom-segment-id'), "
+            f"got directory name ('{pack.segment}')"
+        )
+
+    def test_skill_hub_segment_id_parameter_override(self, segment_with_config_id: Path) -> None:
+        """
+        SKILL_HUB segment_id parameter should override auto-detection.
+        """
+        from src.application.skill_hub_indexing_strategy import SkillHubIndexingStrategy
+
+        # Pass explicit segment_id
+        strategy = SkillHubIndexingStrategy(
+            segment_with_config_id,
+            segment_id="explicit-override-id"
+        )
+        result = strategy.build()
+
+        assert isinstance(result, Ok)
+        pack = result.value
+
+        # Should use explicit override
+        assert pack.segment == "explicit-override-id"

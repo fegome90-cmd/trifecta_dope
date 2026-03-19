@@ -14,6 +14,7 @@ Date: 2026-03-19
 from __future__ import annotations
 
 import hashlib
+import json
 import logging
 from datetime import datetime
 from pathlib import Path
@@ -35,15 +36,34 @@ class SkillHubIndexingStrategy:
     Fail-closed if manifest is invalid.
     """
 
-    def __init__(self, segment_path: Path) -> None:
+    def __init__(self, segment_path: Path, segment_id: str | None = None) -> None:
         """
         Initialize strategy.
 
         Args:
             segment_path: Path to segment root directory
+            segment_id: Optional segment ID. If None, reads from trifecta_config.json
         """
         self.segment_path = segment_path
         self.ctx_dir = segment_path / "_ctx"
+
+        # Derive segment_id: explicit param > config > directory name
+        if segment_id is not None:
+            self.segment_id = segment_id
+        else:
+            self.segment_id = self._read_segment_id_from_config()
+
+    def _read_segment_id_from_config(self) -> str:
+        """Read segment_id from trifecta_config.json, fallback to directory name."""
+        config_path = self.ctx_dir / "trifecta_config.json"
+        if config_path.exists():
+            try:
+                data = json.loads(config_path.read_text(encoding="utf-8"))
+                if "segment_id" in data:
+                    return str(data["segment_id"])
+            except (json.JSONDecodeError, OSError):
+                pass
+        return self.segment_path.name
 
     def build(self) -> Result[ContextPack, list[str]]:
         """
@@ -139,7 +159,7 @@ class SkillHubIndexingStrategy:
         # 4. Build context pack
         pack = ContextPack(
             schema_version=1,
-            segment=self.segment_path.name,
+            segment=self.segment_id,
             created_at=datetime.now().isoformat(),
             digest="",
             source_files=source_files,

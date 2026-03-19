@@ -314,7 +314,14 @@ class BuildContextPackUseCase:
         policy = SegmentIndexingPolicy.detect(target_path)
         if policy == SegmentIndexingPolicy.SKILL_HUB:
             logger.info(f"Detected SKILL_HUB policy for {target_path}, delegating to strategy")
-            strategy = SkillHubIndexingStrategy(target_path)
+            # Derive segment_id consistently with GENERIC path
+            try:
+                config = self.file_system.load_trifecta_config(target_path)
+                segment_id = config.segment_id if config else target_path.name
+            except (ValueError, OSError):
+                segment_id = target_path.name
+
+            strategy = SkillHubIndexingStrategy(target_path, segment_id=segment_id)
             result = strategy.build()
             if isinstance(result, Err):
                 return result
