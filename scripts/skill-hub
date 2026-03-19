@@ -98,10 +98,10 @@ top_ref = hits[0].get("ref", "")
 for term in expanded_terms:
     if not re.fullmatch(r"[a-z0-9-]+", term):
         continue
-    repo_prefix = f"repo:{term}.md:"
+    skill_prefix = f"skill:{term}:"
     for hit in hits:
         ref = hit.get("ref", "")
-        if ref.startswith(repo_prefix):
+        if ref.startswith(skill_prefix):
             if ref != top_ref:
                 print(term)
             else:

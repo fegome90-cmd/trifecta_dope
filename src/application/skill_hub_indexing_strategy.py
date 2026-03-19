@@ -98,11 +98,12 @@ class SkillHubIndexingStrategy:
         chunks: list[ContextChunk] = []
         index_entries: list[ContextIndexEntry] = []
         source_files: list[SourceFile] = []
+        skipped_non_canonical: list[str] = []  # Track skipped entries for observability
 
         for skill_entry in manifest.skills:
             # Skip non-canonical skills
             if not skill_entry.canonical:
-                logger.debug(f"Skipping non-canonical skill: {skill_entry.name}")
+                skipped_non_canonical.append(skill_entry.name)
                 continue
 
             # Read skill file
@@ -155,6 +156,14 @@ class SkillHubIndexingStrategy:
 
         if errors:
             return Err(errors)
+
+        # 3.5 Report skipped entries for observability
+        if skipped_non_canonical:
+            logger.info(
+                f"SkillHubIndexing: Skipped {len(skipped_non_canonical)} non-canonical skills: "
+                f"{', '.join(skipped_non_canonical[:5])}"
+                f"{'...' if len(skipped_non_canonical) > 5 else ''}"
+            )
 
         # 4. Build context pack
         pack = ContextPack(
