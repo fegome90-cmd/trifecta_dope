@@ -290,6 +290,19 @@ class BuildContextPackUseCase:
         p = root / path_str
         return p if p.exists() and p.is_file() else None
 
+    def _save_pack(self, target_path: Path, pack: ContextPack) -> None:
+        """Save context pack atomically with lock.
+
+        Args:
+            target_path: Path to segment root directory
+            pack: ContextPack to save
+        """
+        ctx_dir = target_path / "_ctx"
+        pack_path = ctx_dir / "context_pack.json"
+        lock_path = ctx_dir / ".autopilot.lock"
+        with file_lock(lock_path):
+            AtomicWriter.write(pack_path, pack.model_dump_json(indent=2))
+
     def execute(self, target_path: Path) -> "Ok[ContextPack] | Err[list[str]]":
         """Scan a Trifecta segment and build a context_pack.json."""
         if self.telemetry:
@@ -307,11 +320,7 @@ class BuildContextPackUseCase:
                 return result
             pack = result.value
             # Save pack atomically
-            ctx_dir = target_path / "_ctx"
-            pack_path = ctx_dir / "context_pack.json"
-            lock_path = ctx_dir / ".autopilot.lock"
-            with file_lock(lock_path):
-                AtomicWriter.write(pack_path, pack.model_dump_json(indent=2))
+            self._save_pack(target_path, pack)
             return Ok(pack)
 
         # 1. GENERIC policy (default): Standard indexing behavior
@@ -551,11 +560,7 @@ class BuildContextPackUseCase:
         )
 
         # 4. Save to disk atomically with lock
-        pack_path = ctx_dir / "context_pack.json"
-        lock_path = ctx_dir / ".autopilot.lock"
-
-        with file_lock(lock_path):
-            AtomicWriter.write(pack_path, pack.model_dump_json(indent=2))
+        self._save_pack(target_path, pack)
 
         return Ok(pack)
 
