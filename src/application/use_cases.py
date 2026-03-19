@@ -1,4 +1,5 @@
 import json
+import logging
 import re
 import subprocess
 import sys
@@ -9,6 +10,7 @@ from typing import Any
 import yaml
 
 from src.application.context_service import ContextService
+from src.application.skill_hub_indexing_strategy import SkillHubIndexingStrategy
 from src.domain.constants import MAX_SKILL_LINES
 from src.domain.context_models import (
     ContextChunk,
@@ -18,9 +20,12 @@ from src.domain.context_models import (
 )
 from src.domain.models import TrifectaConfig, TrifectaPack, ValidationResult
 from src.domain.result import Err, Ok
+from src.domain.segment_indexing_policy import SegmentIndexingPolicy
 from src.infrastructure.file_system import FileSystemAdapter
 from src.infrastructure.file_system_utils import AtomicWriter, file_lock
 from src.infrastructure.templates import TemplateRenderer
+
+logger = logging.getLogger(__name__)
 
 
 class CreateTrifectaUseCase:
@@ -286,13 +291,31 @@ class BuildContextPackUseCase:
         return p if p.exists() and p.is_file() else None
 
     def execute(self, target_path: Path) -> "Ok[ContextPack] | Err[list[str]]":
+        """Scan a Trifecta segment and build a context_pack.json."""
         if self.telemetry:
             self.telemetry.incr("ctx_build_count")
-        """Scan a Trifecta segment and build a context_pack.json."""
-        from src.domain.segment_resolver import get_segment_slug
-        from src.domain.result import Err, Ok
 
-        # 1. Derive segment_id deterministically
+        from src.domain.segment_resolver import get_segment_slug
+
+        # 0. Detect indexing policy and delegate if SKILL_HUB
+        policy = SegmentIndexingPolicy.detect(target_path)
+        if policy == SegmentIndexingPolicy.SKILL_HUB:
+            logger.info(f"Detected SKILL_HUB policy for {target_path}, delegating to strategy")
+            strategy = SkillHubIndexingStrategy(target_path)
+            result = strategy.build()
+            if isinstance(result, Err):
+                return result
+            pack = result.value
+            # Save pack atomically
+            ctx_dir = target_path / "_ctx"
+            pack_path = ctx_dir / "context_pack.json"
+            lock_path = ctx_dir / ".autopilot.lock"
+            with file_lock(lock_path):
+                AtomicWriter.write(pack_path, pack.model_dump_json(indent=2))
+            return Ok(pack)
+
+        # 1. GENERIC policy (default): Standard indexing behavior
+        # 1a. Derive segment_id deterministically
         # Priority: trifecta_config.json (source of truth) > directory name (fallback)
         try:
             config = self.file_system.load_trifecta_config(target_path)
