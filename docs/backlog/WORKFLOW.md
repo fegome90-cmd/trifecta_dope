@@ -214,18 +214,28 @@ python scripts/ctx_wo_finish.py WO-0013
 1. **DoD validation**: Runs verification commands from WO YAML
 2. **SHA capture**: Records current commit SHA in `verified_at_sha`
 3. **Status transition**: Moves YAML from `running/` to `done/`
-4. **Lock release**: Removes atomic lock
-5. **Backlog update**: Updates epic status in `backlog.yaml`
+4. **Closeout policy**: After a successful terminal transition, `finish` either:
+   - removes the official WO worktree at `.../.worktrees/WO-XXXX` when the WO branch is already merged, or
+   - rehomes that checkout to a preserved non-WO baseline path like `../wo-xxxx-baseline` when the branch still needs to stay available
+5. **Lock release**: Removes atomic lock
+6. **Backlog update**: Updates epic status in `backlog.yaml`
 
-### 5. Cleanup (Optional)
+**Closeout evidence:**
+- The terminal WO YAML records `closeout.checked_refs`, `closeout.merge_status`, `closeout.action`, `closeout.official_worktree_path`, and `closeout.resulting_path`.
+- If preservation succeeds, `_ctx/handoff/WO-XXXX/decision.md` explains why the official WO path disappeared and where the preserved baseline now lives.
+- A successful `done` WO must not remain mounted at `.../.worktrees/WO-XXXX`.
+- Finish rollback is fail-closed: if closeout fails after the terminal write starts, rollback must remove `decision.md`, remove any `done/*.yaml` or `failed/*.yaml` written by that attempt, and restore `running/*.lock` plus the authoritative `running/*.yaml`.
+- A preserved checkout is valid only once it lives outside the official `.worktrees/WO-*` pattern. Audit `zombie_worktree` findings apply only to official WO-named mounts.
 
-**Worktree persists for reference** after completion. To cleanup:
+### 5. Cleanup (Operator Follow-up Only)
+
+`ctx_wo_finish.py` now performs the official closeout automatically. Operators should only need manual cleanup for stale historical state or forensic recovery:
 
 ```bash
 # List all worktrees
 git worktree list
 
-# Remove specific worktree
+# Remove a stale official WO worktree that should already be gone
 git worktree remove .worktrees/WO-0013
 
 # Prune stale references
@@ -234,6 +244,11 @@ git worktree prune
 # Or use the helper
 python scripts/ctx_reconcile_state.py
 ```
+
+If a closeout outcome looks wrong, inspect these first:
+1. `_ctx/jobs/done/WO-XXXX.yaml` for the structured `closeout` record
+2. `_ctx/handoff/WO-XXXX/decision.md` when preservation was selected
+3. `uv run python scripts/wo_audit.py --out /tmp/wo_audit.json` to confirm whether an official zombie worktree still exists
 
 ## Worktree Management
 

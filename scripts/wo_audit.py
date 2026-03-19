@@ -25,7 +25,7 @@ FINDING_CODES = {
     "running_without_lock": "WO in running/ has no corresponding .lock file.",
     "lock_without_running": "Lock file exists but no running YAML (stale lock).",
     "ghost_worktree": "Worktree exists in .worktrees/ but has no WO YAML in any state.",
-    "zombie_worktree": "Worktree exists but WO is in a final state (done/failed).",
+    "zombie_worktree": "Official WO worktree exists but WO is in a final state (done/failed).",
     "running_without_worktree": "WO is running but has no active worktree directory.",
     "duplicate_yaml": "Multiple YAML files for the same WO ID in one state dir (e.g. WO-0008 and WO-0008_job).",
     "pending_in_done": "WO YAML exists in both pending/ and done/.",
@@ -225,7 +225,10 @@ def _find_worktree_scouts(
                     "worktree_path": wt_path,
                     "final_states": final_states,
                     "message": f"Worktree alive for {wt_id} which is in {final_states}.",
-                    "invariant_violated": "Completing a WO must remove its worktree.",
+                    "invariant_violated": (
+                        "DONE/FAILED WOs must not remain mounted at official "
+                        ".worktrees/WO-* paths."
+                    ),
                 }
             )
 

@@ -22,6 +22,7 @@ from src.domain.result import Result, Ok, Err
 # Centralized path management
 from scripts.paths import (
     get_lock_path,
+    get_preserved_worktree_path,
     get_wo_pending_path,
     get_wo_running_path,
     get_worktree_path,
@@ -198,6 +199,98 @@ def git_get_default_branch(root: Path) -> str:
 
     # Ultimate fallback
     return DEFAULT_BRANCH
+
+
+def detect_merge_status(
+    root: Path,
+    branch: str,
+    target_refs: tuple[str, ...] = ("main", "origin/main"),
+) -> dict[str, object]:
+    """Classify whether a WO branch has been merged into explicit target refs."""
+    checked_refs = tuple(target_refs)
+    for ref in target_refs:
+        result = run_command(
+            ["git", "merge-base", "--is-ancestor", branch, ref],
+            cwd=root,
+            check=False,
+        )
+        if result.returncode == 0:
+            return {"merge_status": "merged", "checked_refs": checked_refs}
+
+    return {"merge_status": "unmerged", "checked_refs": checked_refs}
+
+
+def resolve_closeout_policy(
+    *,
+    root: Path,
+    wo_id: str,
+    merge_status: str,
+    official_worktree_path: Path,
+) -> dict[str, object]:
+    """Resolve whether finish should clean the official WO worktree or preserve it."""
+    official_candidates = {
+        (root / ".worktrees" / wo_id).resolve(),
+        (root.parent / ".worktrees" / wo_id).resolve(),
+    }
+    resolved_path = official_worktree_path.resolve()
+
+    is_official_topology = resolved_path in official_candidates
+    if merge_status == "merged" and is_official_topology:
+        return {
+            "action": "cleanup_official_worktree",
+            "official_worktree_path": str(resolved_path),
+            "preserved_path": None,
+        }
+
+    preserved_path = get_preserved_worktree_path(root, wo_id, current_path=resolved_path)
+    return {
+        "action": "preserve_baseline_checkout",
+        "official_worktree_path": str(resolved_path),
+        "preserved_path": preserved_path,
+    }
+
+
+def execute_closeout_action(root: Path, closeout_policy: dict[str, object]) -> Result[dict[str, object], str]:
+    """Execute the selected closeout action after finish state transition succeeds."""
+    action = str(closeout_policy["action"])
+    official_worktree_path = Path(str(closeout_policy["official_worktree_path"]))
+
+    if action == "cleanup_official_worktree":
+        if official_worktree_path.exists():
+            result = run_command(
+                ["git", "worktree", "remove", str(official_worktree_path)],
+                cwd=root,
+                check=False,
+            )
+            if result.returncode != 0:
+                stderr = getattr(result, "stderr", "").strip()
+                return Err(f"failed to remove official worktree {official_worktree_path}: {stderr}")
+            run_command(["git", "worktree", "prune"], cwd=root, check=False)
+        return Ok({"resulting_path": None})
+
+    if action == "preserve_baseline_checkout":
+        preserved_value = closeout_policy.get("preserved_path")
+        if preserved_value is None:
+            return Err("preserve_baseline_checkout requires preserved_path")
+
+        preserved_path = Path(str(preserved_value))
+        if official_worktree_path.resolve() != preserved_path.resolve():
+            preserved_path.parent.mkdir(parents=True, exist_ok=True)
+            if preserved_path.exists():
+                return Err(f"preserved baseline path already exists: {preserved_path}")
+            result = run_command(
+                ["git", "worktree", "move", str(official_worktree_path), str(preserved_path)],
+                cwd=root,
+                check=False,
+            )
+            if result.returncode != 0:
+                stderr = getattr(result, "stderr", "").strip()
+                return Err(
+                    f"failed to rehome official worktree {official_worktree_path} to {preserved_path}: {stderr}"
+                )
+        return Ok({"resulting_path": str(preserved_path)})
+
+    return Err(f"unknown closeout action: {action}")
 
 
 def create_worktree(

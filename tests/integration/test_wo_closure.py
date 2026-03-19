@@ -9,10 +9,68 @@ import shutil
 import subprocess
 from pathlib import Path
 
+import yaml
+
 
 def repo_root() -> Path:
     """Find repository root by searching for pyproject.toml."""
     return Path(__file__).resolve().parents[2]
+
+
+def _run_checked(cmd: list[str], cwd: Path) -> None:
+    subprocess.run(cmd, cwd=cwd, check=True, capture_output=True, text=True)
+
+
+def _init_finishable_worktree_repo(tmp_path: Path) -> tuple[Path, Path]:
+    runtime_root = tmp_path / "runtime"
+    runtime_root.mkdir()
+
+    (runtime_root / ".gitignore").write_text(".worktrees/\n")
+    (runtime_root / "README.md").write_text("fixture\n")
+
+    running_dir = runtime_root / "_ctx" / "jobs" / "running"
+    running_dir.mkdir(parents=True)
+    dod_dir = runtime_root / "_ctx" / "dod"
+    dod_dir.mkdir(parents=True)
+
+    (dod_dir / "DOD-TEST.yaml").write_text(
+        "dod:\n"
+        "  - id: DOD-TEST\n"
+        '    name: "Test DoD"\n'
+        "    requirements: []\n"
+    )
+    (running_dir / "WO-TEST.yaml").write_text(
+        "version: 1\n"
+        "id: WO-TEST\n"
+        "epic_id: E-TEST\n"
+        'title: "Test WO"\n'
+        "priority: P1\n"
+        "status: running\n"
+        "owner: tester\n"
+        "dod_id: DOD-TEST\n"
+        'x_objective: "Exercise frictionless closeout"\n'
+        "branch: feat/wo-WO-TEST\n"
+        "worktree: .worktrees/WO-TEST\n"
+    )
+
+    _run_checked(["git", "init", "-b", "main"], cwd=runtime_root)
+    _run_checked(["git", "config", "user.email", "test@example.com"], cwd=runtime_root)
+    _run_checked(["git", "config", "user.name", "Test User"], cwd=runtime_root)
+    _run_checked(["git", "add", "."], cwd=runtime_root)
+    _run_checked(["git", "commit", "-m", "init runtime fixture"], cwd=runtime_root)
+
+    official_worktree = runtime_root / ".worktrees" / "WO-TEST"
+    _run_checked(
+        ["git", "worktree", "add", str(official_worktree), "-b", "feat/wo-WO-TEST"],
+        cwd=runtime_root,
+    )
+
+    (official_worktree / "feature.txt").write_text("merged change\n")
+    _run_checked(["git", "add", "feature.txt"], cwd=official_worktree)
+    _run_checked(["git", "commit", "-m", "feat: add merged change"], cwd=official_worktree)
+    _run_checked(["git", "merge", "--no-ff", "feat/wo-WO-TEST", "-m", "merge feature"], cwd=runtime_root)
+
+    return runtime_root, official_worktree
 
 
 class TestWoClosureCLI:
@@ -100,6 +158,36 @@ class TestWoClosureCLI:
 
 class TestWoClosureWithFixtures:
     """Test WO closure workflow using fixtures."""
+
+    def test_frictionless_closeout_succeeds_from_supported_sibling_topology(self, tmp_path):
+        """Merged WO finish should not leave the official WO worktree alive."""
+        runtime_root, official_worktree = _init_finishable_worktree_repo(tmp_path)
+
+        result = subprocess.run(
+            [
+                "python",
+                "scripts/ctx_wo_finish.py",
+                "WO-TEST",
+                "--root",
+                str(official_worktree),
+                "--skip-dod",
+                "--skip-verification",
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+            cwd=repo_root(),
+        )
+
+        assert result.returncode == 0, result.stdout + result.stderr
+
+        done_yaml = runtime_root / "_ctx" / "jobs" / "done" / "WO-TEST.yaml"
+        assert done_yaml.exists()
+        done_data = yaml.safe_load(done_yaml.read_text())
+        assert done_data["status"] == "done"
+        assert not official_worktree.exists()
+        assert done_data["closeout"]["action"] == "cleanup_official_worktree"
+        assert done_data["closeout"]["merge_status"] == "merged"
 
     def test_wo_finish_all_artifacts_created(self, tmp_path):
         """Test that all 5 required artifacts are created."""

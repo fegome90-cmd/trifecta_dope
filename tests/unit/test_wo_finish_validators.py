@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 from unittest.mock import Mock
 
+import yaml
 
 # Add scripts directory to path for imports
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
@@ -18,6 +19,7 @@ from ctx_wo_finish import (
     validate_minimum_evidence,
     generate_artifacts,
     REQUIRED_ARTIFACTS,
+    _resolve_official_worktree_path,
     resolve_runtime_root,
     run_verification_gate,
 )
@@ -676,6 +678,12 @@ x_objective: "Test"
 
         monkeypatch.setattr("subprocess.run", mock_subprocess_run)
         monkeypatch.setattr("subprocess.check_output", mock_check_output)
+        from src.domain.result import Ok
+
+        monkeypatch.setattr(
+            "ctx_wo_finish.execute_closeout_action",
+            lambda *a, **k: Ok({"resulting_path": None}),
+        )
 
         from ctx_wo_finish import finish_wo_transaction
 
@@ -716,6 +724,12 @@ x_objective: "Test"
 
         monkeypatch.setattr("subprocess.run", mock_subprocess_run)
         monkeypatch.setattr("subprocess.check_output", mock_check_output)
+        from src.domain.result import Ok
+
+        monkeypatch.setattr(
+            "ctx_wo_finish.execute_closeout_action",
+            lambda *a, **k: Ok({"resulting_path": None}),
+        )
 
         from ctx_wo_finish import finish_wo_transaction
 
@@ -799,6 +813,12 @@ x_objective: "Test"
             return result
 
         monkeypatch.setattr("subprocess.run", mock_subprocess_run)
+        from src.domain.result import Ok
+
+        monkeypatch.setattr(
+            "ctx_wo_finish.execute_closeout_action",
+            lambda *a, **k: Ok({"resulting_path": None}),
+        )
 
         from ctx_wo_finish import finish_wo_transaction
 
@@ -807,6 +827,103 @@ x_objective: "Test"
         assert result.is_ok()
         # Lock should be removed
         assert not lock_file.exists()
+
+    def test_finish_wo_transaction_records_explicit_closeout_evidence(self, tmp_path, monkeypatch):
+        """Successful finish must persist explicit merge and closeout evidence."""
+        running_dir = tmp_path / "_ctx" / "jobs" / "running"
+        running_dir.mkdir(parents=True)
+        (running_dir / "WO-TEST.yaml").write_text("""version: 1
+id: WO-TEST
+status: running
+dod_id: DOD-TEST
+x_objective: "Test"
+branch: feat/wo-WO-TEST
+worktree: .worktrees/WO-TEST
+""")
+
+        done_dir = tmp_path / "_ctx" / "jobs" / "done"
+        done_dir.mkdir(parents=True)
+
+        def mock_subprocess_run(cmd, **kwargs):
+            result = Mock()
+            if "status" in cmd:
+                result.stdout = ""
+            return result
+
+        def mock_check_output(cmd, **kwargs):
+            if "rev-parse" in cmd and "--abbrev-ref" in cmd:
+                return "main\n"
+            return "abc123\n"
+
+        monkeypatch.setattr("subprocess.run", mock_subprocess_run)
+        monkeypatch.setattr("subprocess.check_output", mock_check_output)
+        from src.domain.result import Ok
+
+        monkeypatch.setattr(
+            "ctx_wo_finish.execute_closeout_action",
+            lambda *a, **k: Ok({"resulting_path": None}),
+        )
+
+        from ctx_wo_finish import finish_wo_transaction
+
+        result = finish_wo_transaction("WO-TEST", tmp_path, "done")
+
+        assert result.is_ok()
+        done_data = yaml.safe_load((done_dir / "WO-TEST.yaml").read_text())
+        closeout = done_data["closeout"]
+        assert closeout["merge_status"] in {"merged", "unmerged"}
+        assert closeout["action"] in {
+            "cleanup_official_worktree",
+            "preserve_baseline_checkout",
+        }
+        assert closeout["official_worktree_path"].endswith("WO-TEST")
+
+    def test_finish_wo_transaction_keeps_merge_status_distinct_from_done_state(
+        self, tmp_path, monkeypatch
+    ):
+        """Closeout merge status must not be inferred from terminal WO state."""
+        running_dir = tmp_path / "_ctx" / "jobs" / "running"
+        running_dir.mkdir(parents=True)
+        (running_dir / "WO-TEST.yaml").write_text("""version: 1
+id: WO-TEST
+status: running
+dod_id: DOD-TEST
+x_objective: "Test"
+branch: feat/wo-WO-TEST
+worktree: .worktrees/WO-TEST
+""")
+
+        done_dir = tmp_path / "_ctx" / "jobs" / "done"
+        done_dir.mkdir(parents=True)
+
+        def mock_subprocess_run(cmd, **kwargs):
+            result = Mock()
+            if "status" in cmd:
+                result.stdout = ""
+            return result
+
+        def mock_check_output(cmd, **kwargs):
+            if "rev-parse" in cmd and "--abbrev-ref" in cmd:
+                return "main\n"
+            return "abc123\n"
+
+        monkeypatch.setattr("subprocess.run", mock_subprocess_run)
+        monkeypatch.setattr("subprocess.check_output", mock_check_output)
+        from src.domain.result import Ok
+
+        monkeypatch.setattr(
+            "ctx_wo_finish.execute_closeout_action",
+            lambda *a, **k: Ok({"resulting_path": None}),
+        )
+
+        from ctx_wo_finish import finish_wo_transaction
+
+        result = finish_wo_transaction("WO-TEST", tmp_path, "done")
+
+        assert result.is_ok()
+        done_data = yaml.safe_load((done_dir / "WO-TEST.yaml").read_text())
+        assert done_data["status"] == "done"
+        assert done_data["closeout"]["merge_status"] != done_data["status"]
 
     def test_finish_wo_transaction_rollback_partial_write(self, tmp_path, monkeypatch):
         """Test rollback removes result YAML when write succeeds but running unlink fails."""
@@ -855,6 +972,106 @@ x_objective: "Test"
         assert not (done_dir / "WO-TEST.yaml").exists()
         # Running YAML should still exist (unlink failed)
         assert (running_dir / "WO-TEST.yaml").exists()
+
+    def test_finish_wo_transaction_rolls_back_terminal_side_effects_after_closeout_failure(
+        self, tmp_path, monkeypatch
+    ):
+        """Rollback must explicitly undo terminal YAML, lock removal, and decision artifact."""
+        running_dir = tmp_path / "_ctx" / "jobs" / "running"
+        running_dir.mkdir(parents=True)
+        running_yaml = """version: 1
+id: WO-TEST
+status: running
+dod_id: DOD-TEST
+x_objective: "Test"
+branch: feat/wo-WO-TEST
+worktree: .worktrees/WO-TEST
+"""
+        running_path = running_dir / "WO-TEST.yaml"
+        running_path.write_text(running_yaml)
+        lock_path = running_dir / "WO-TEST.lock"
+        lock_path.write_text('{"pid": 12345, "started_at": "2026-03-18T00:00:00Z"}')
+
+        handoff_dir = tmp_path / "_ctx" / "handoff" / "WO-TEST"
+        handoff_dir.mkdir(parents=True)
+        done_dir = tmp_path / "_ctx" / "jobs" / "done"
+        done_dir.mkdir(parents=True)
+
+        def mock_subprocess_run(cmd, **kwargs):
+            result = Mock()
+            if "status" in cmd:
+                result.stdout = ""
+            return result
+
+        def mock_check_output(cmd, **kwargs):
+            if "rev-parse" in cmd and "--abbrev-ref" in cmd:
+                return "main\n"
+            return "abc123\n"
+
+        monkeypatch.setattr("subprocess.run", mock_subprocess_run)
+        monkeypatch.setattr("subprocess.check_output", mock_check_output)
+        monkeypatch.setattr(
+            "ctx_wo_finish.detect_merge_status",
+            lambda *a, **k: {
+                "merge_status": "unmerged",
+                "checked_refs": ("main", "origin/main"),
+            },
+        )
+        monkeypatch.setattr(
+            "ctx_wo_finish.resolve_closeout_policy",
+            lambda *a, **k: {
+                "action": "preserve_baseline_checkout",
+                "official_worktree_path": str(tmp_path / ".worktrees" / "WO-TEST"),
+                "preserved_path": tmp_path.parent / "wo-test-baseline",
+            },
+        )
+        from src.domain.result import Err
+
+        def fail_closeout(*args, **kwargs):
+            assert (handoff_dir / "decision.md").exists()
+            return Err("simulated closeout failure")
+
+        monkeypatch.setattr("ctx_wo_finish.execute_closeout_action", fail_closeout)
+
+        from ctx_wo_finish import finish_wo_transaction
+
+        result = finish_wo_transaction("WO-TEST", tmp_path, "done")
+
+        assert result.is_err()
+        assert running_path.read_text() == running_yaml
+        assert lock_path.read_text() == '{"pid": 12345, "started_at": "2026-03-18T00:00:00Z"}'
+        assert not (done_dir / "WO-TEST.yaml").exists()
+        assert not (handoff_dir / "decision.md").exists()
+
+
+class TestOfficialWorktreeResolution:
+    """Test official WO worktree path resolution."""
+
+    def test_resolve_official_worktree_path_prefers_existing_candidate_when_yaml_missing(
+        self, tmp_path
+    ):
+        root = tmp_path / "repo"
+        root.mkdir()
+
+        inside_repo = root / ".worktrees" / "WO-TEST"
+        inside_repo.mkdir(parents=True)
+
+        resolved = _resolve_official_worktree_path({"id": "WO-TEST"}, root, "WO-TEST")
+
+        assert resolved == inside_repo.resolve()
+
+    def test_resolve_official_worktree_path_prefers_existing_sibling_candidate_when_yaml_missing(
+        self, tmp_path
+    ):
+        root = tmp_path / "repo"
+        root.mkdir()
+
+        sibling = root.parent / ".worktrees" / "WO-TEST"
+        sibling.mkdir(parents=True)
+
+        resolved = _resolve_official_worktree_path({"id": "WO-TEST"}, root, "WO-TEST")
+
+        assert resolved == sibling.resolve()
 
 
 class TestMainFunctionMocked:

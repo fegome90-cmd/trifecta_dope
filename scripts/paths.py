@@ -164,6 +164,30 @@ def get_worktree_path(root: Path, wo_id: str) -> Path:
     return worktrees_dir / wo_id
 
 
+def get_preserved_worktree_path(
+    root: Path,
+    wo_id: str,
+    current_path: Path | None = None,
+) -> Path:
+    """Get the deterministic non-WO path for a preserved baseline checkout.
+
+    Args:
+        root: Repository root directory
+        wo_id: Work Order ID (e.g., "WO-0001")
+        current_path: Existing checkout path. If already rehomed to the
+            preserved baseline name, it is kept as-is.
+
+    Returns:
+        Path to the preserved baseline checkout outside the WO naming scheme.
+    """
+    baseline_name = f"{wo_id.lower()}-baseline"
+
+    if current_path is not None and current_path.name == baseline_name:
+        return current_path
+
+    return root.parent / baseline_name
+
+
 def get_branch_name(wo_id: str) -> str:
     """Get the git branch name for a WO.
 

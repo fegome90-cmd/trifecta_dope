@@ -126,7 +126,7 @@ class TestClassifyWorktrees:
 
         worktrees = [
             WorktreeInfo(
-                path="/path/.worktrees/WO-0001",
+                path=str(tmp_path / ".worktrees" / "WO-0001"),
                 head="abc",
                 branch="feat/wo-WO-0001",
                 wo_id="WO-0001",
@@ -144,7 +144,7 @@ class TestClassifyWorktrees:
         """Test ghost detection (worktree without WO YAML)."""
         worktrees = [
             WorktreeInfo(
-                path="/path/.worktrees/WO-0002",
+                path=str(tmp_path / ".worktrees" / "WO-0002"),
                 head="abc",
                 branch="feat/wo-WO-0002",
                 wo_id="WO-0002",
@@ -167,10 +167,32 @@ class TestClassifyWorktrees:
 
         worktrees = [
             WorktreeInfo(
-                path="/path/.worktrees/WO-0003",
+                path=str(tmp_path / ".worktrees" / "WO-0003"),
                 head="abc",
                 branch="feat/wo-WO-0003",
                 wo_id="WO-0003",
+            )
+        ]
+
+        with patch("ctx_wo_gc.check_worktree_dirty", return_value=False):
+            zombies, ghosts = classify_worktrees(tmp_path, worktrees)
+
+        assert len(zombies) == 0
+        assert len(ghosts) == 0
+
+    def test_classify_preserved_baseline_is_not_a_zombie(self, tmp_path):
+        """A rehomed non-WO baseline path should not stay in GC zombie scope."""
+        jobs_dir = tmp_path / "_ctx" / "jobs"
+        done_dir = jobs_dir / "done"
+        done_dir.mkdir(parents=True)
+        (done_dir / "WO-0004.yaml").write_text("id: WO-0004")
+
+        worktrees = [
+            WorktreeInfo(
+                path="/path/preserved/wo-0004-baseline",
+                head="abc",
+                branch="feat/wo-WO-0004",
+                wo_id="WO-0004",
             )
         ]
 
@@ -246,7 +268,7 @@ class TestRunGc:
 
         worktrees = [
             WorktreeInfo(
-                path="/path/.worktrees/WO-0001",
+                path=str(tmp_path / ".worktrees" / "WO-0001"),
                 head="abc",
                 branch="feat/wo-WO-0001",
                 wo_id="WO-0001",
@@ -270,7 +292,7 @@ class TestRunGc:
 
         worktrees = [
             WorktreeInfo(
-                path="/path/.worktrees/WO-0001",
+                path=str(tmp_path / ".worktrees" / "WO-0001"),
                 head="abc",
                 branch="feat/wo-WO-0001",
                 wo_id="WO-0001",
@@ -298,7 +320,7 @@ class TestRunGc:
 
         worktrees = [
             WorktreeInfo(
-                path="/path/.worktrees/WO-0001",
+                path=str(tmp_path / ".worktrees" / "WO-0001"),
                 head="abc",
                 branch="feat/wo-WO-0001",
                 wo_id="WO-0001",

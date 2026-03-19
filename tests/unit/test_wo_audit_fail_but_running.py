@@ -15,6 +15,11 @@ from pathlib import Path
 from typing import Any, cast
 
 import pytest
+import yaml
+
+from src.domain.result import Ok
+from scripts.wo_audit import _find_worktree_scouts, get_active_worktrees
+from ctx_wo_finish import finish_wo_transaction
 
 
 def run_audit(tmp_path: Path) -> dict[str, Any]:
@@ -176,6 +181,175 @@ scope:
             f"Expected no fail_but_running finding when WO is properly in failed/, "
             f"got: {fail_but_running_findings}"
         )
+
+
+class TestFrictionlessCloseoutAudit:
+    """Tests for the frictionless closeout audit contract."""
+
+    def test_done_wo_official_worktree_is_reported_as_zombie(self) -> None:
+        findings = _find_worktree_scouts(
+            {"WO-4242": "/repo/.worktrees/WO-4242"},
+            {"WO-4242": ["done"]},
+            set(),
+        )
+
+        zombie_findings = [f for f in findings if f["code"] == "zombie_worktree"]
+
+        assert len(zombie_findings) == 1
+        assert zombie_findings[0]["wo_id"] == "WO-4242"
+        assert zombie_findings[0]["worktree_path"] == "/repo/.worktrees/WO-4242"
+
+    def test_preserved_baseline_path_is_ignored_by_active_worktree_scan(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        output = "\n".join(
+            [
+                "worktree /repo",
+                "HEAD deadbeef",
+                "branch refs/heads/main",
+                "",
+                "worktree /repo.parent/wo-4242-baseline",
+                "HEAD cafe1234",
+                "branch refs/heads/feat/wo-WO-4242",
+                "",
+            ]
+        )
+
+        def mock_run(*args, **kwargs):
+            return subprocess.CompletedProcess(args[0], 0, stdout=output, stderr="")
+
+        monkeypatch.setattr(subprocess, "run", mock_run)
+
+        worktrees = get_active_worktrees(Path("/repo"))
+
+        assert worktrees == {}
+
+    def test_preserved_baseline_finish_writes_decision_artifact(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        running_dir = tmp_path / "_ctx" / "jobs" / "running"
+        running_dir.mkdir(parents=True)
+        (running_dir / "WO-4242.yaml").write_text(
+            """version: 1
+id: WO-4242
+status: running
+dod_id: DOD-TEST
+x_objective: "Test"
+branch: feat/wo-WO-4242
+worktree: .worktrees/WO-4242
+"""
+        )
+
+        handoff_dir = tmp_path / "_ctx" / "handoff" / "WO-4242"
+        handoff_dir.mkdir(parents=True)
+
+        def mock_subprocess_run(cmd, **kwargs):
+            result = pytest.MonkeyPatch()
+            del result
+            completed = type("Completed", (), {})()
+            completed.stdout = ""
+            completed.returncode = 0
+            return completed
+
+        def mock_check_output(cmd, **kwargs):
+            if "rev-parse" in cmd and "--abbrev-ref" in cmd:
+                return "main\n"
+            return "abc123\n"
+
+        monkeypatch.setattr("subprocess.run", mock_subprocess_run)
+        monkeypatch.setattr("subprocess.check_output", mock_check_output)
+        monkeypatch.setattr(
+            "ctx_wo_finish.detect_merge_status",
+            lambda *a, **k: {
+                "merge_status": "unmerged",
+                "checked_refs": ("main", "origin/main"),
+            },
+        )
+        monkeypatch.setattr(
+            "ctx_wo_finish.resolve_closeout_policy",
+            lambda *a, **k: {
+                "action": "preserve_baseline_checkout",
+                "official_worktree_path": str(tmp_path / ".worktrees" / "WO-4242"),
+                "preserved_path": tmp_path.parent / "wo-4242-baseline",
+            },
+        )
+        monkeypatch.setattr(
+            "ctx_wo_finish.execute_closeout_action",
+            lambda *a, **k: Ok({"resulting_path": str(tmp_path.parent / "wo-4242-baseline")}),
+        )
+
+        result = finish_wo_transaction("WO-4242", tmp_path, "done")
+
+        assert result.is_ok()
+        decision_path = handoff_dir / "decision.md"
+        assert decision_path.exists()
+        decision_text = decision_path.read_text()
+        assert "preserve_baseline_checkout" in decision_text
+        assert "wo-4242-baseline" in decision_text
+
+    def test_zombie_destroy_path_still_records_closeout_evidence(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        running_dir = tmp_path / "_ctx" / "jobs" / "running"
+        running_dir.mkdir(parents=True)
+        (running_dir / "WO-4242.yaml").write_text(
+            """version: 1
+id: WO-4242
+status: running
+dod_id: DOD-TEST
+x_objective: "Test"
+branch: feat/wo-WO-4242
+worktree: .worktrees/WO-4242
+"""
+        )
+        done_dir = tmp_path / "_ctx" / "jobs" / "done"
+        done_dir.mkdir(parents=True)
+
+        def mock_subprocess_run(cmd, **kwargs):
+            completed = type("Completed", (), {})()
+            completed.stdout = ""
+            completed.returncode = 0
+            return completed
+
+        def mock_check_output(cmd, **kwargs):
+            if "rev-parse" in cmd and "--abbrev-ref" in cmd:
+                return "main\n"
+            return "abc123\n"
+
+        monkeypatch.setattr("subprocess.run", mock_subprocess_run)
+        monkeypatch.setattr("subprocess.check_output", mock_check_output)
+        monkeypatch.setattr(
+            "ctx_wo_finish.detect_merge_status",
+            lambda *a, **k: {
+                "merge_status": "merged",
+                "checked_refs": ("main", "origin/main"),
+            },
+        )
+        monkeypatch.setattr(
+            "ctx_wo_finish.resolve_closeout_policy",
+            lambda *a, **k: {
+                "action": "cleanup_official_worktree",
+                "official_worktree_path": str(tmp_path / ".worktrees" / "WO-4242"),
+                "preserved_path": None,
+            },
+        )
+        monkeypatch.setattr(
+            "ctx_wo_finish.execute_closeout_action",
+            lambda *a, **k: Ok({"resulting_path": None}),
+        )
+
+        result = finish_wo_transaction("WO-4242", tmp_path, "done")
+
+        assert result.is_ok()
+        done_data = yaml.safe_load((done_dir / "WO-4242.yaml").read_text())
+        assert done_data["closeout"] == {
+            "checked_refs": ["main", "origin/main"],
+            "merge_status": "merged",
+            "action": "cleanup_official_worktree",
+            "official_worktree_path": str(tmp_path / ".worktrees" / "WO-4242"),
+            "preserved_path": None,
+            "resulting_path": None,
+        }
 
 
 if __name__ == "__main__":

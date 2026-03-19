@@ -153,6 +153,44 @@ ctx_wo_finish.py
 
 Si cualquiera falla → estado `FAILED`, no `DONE`.
 
+### Política de Closeout Post-Finish
+
+Cuando `ctx_wo_finish.py` completa un WO con éxito, el estado terminal y el closeout son dos pasos distintos pero coordinados:
+
+* **Merged branch**: el worktree oficial `.../.worktrees/WO-XXXX` se destruye.
+* **Unmerged branch / preserve-worthy checkout**: el checkout se reubica a un baseline no-WO, por ejemplo `../wo-xxxx-baseline`.
+
+Regla operativa: un WO en `done/` o `failed/` no debe seguir montado en el path oficial `.../.worktrees/WO-XXXX`.
+
+### Evidencia de Closeout (qué revisar primero)
+
+El cierre exitoso deja dos fuentes de evidencia:
+
+* **YAML autoritativo**: `_ctx/jobs/done/WO-XXXX.yaml`
+  * `closeout.checked_refs`
+  * `closeout.merge_status`
+  * `closeout.action`
+  * `closeout.official_worktree_path`
+  * `closeout.resulting_path`
+* **Artefacto operator-facing**: `_ctx/handoff/WO-XXXX/decision.md`
+  * se crea solo cuando el closeout `preserve_baseline_checkout` termina con éxito
+  * explica por qué desapareció el path oficial y dónde quedó el checkout preservado
+
+Contrato de rollback fail-closed:
+
+* Si `finish` falla durante closeout, no puede persistir `decision.md`.
+* Si `finish` falla durante closeout, no puede persistir `done/*.yaml` ni `failed/*.yaml` de ese intento.
+* Si `finish` falla durante closeout, `running/*.lock` debe quedar restaurado junto con `running/*.yaml`.
+* Un checkout preservado válido vive fuera del patrón oficial `.worktrees/WO-*`.
+* `zombie_worktree` aplica solo a mounts oficiales con nombre WO en `.worktrees/WO-*`.
+
+Si la topología final parece incorrecta:
+
+1. Leer el bloque `closeout` del YAML terminal.
+2. Leer `decision.md` si la acción fue `preserve_baseline_checkout`.
+3. Ejecutar `uv run python scripts/wo_audit.py --out /tmp/wo_audit.json`.
+4. Confirmar que `ctx_wo_gc.py --dry-run` no proponga borrar un WO que ya debió desaparecer por closeout.
+
 ---
 
 ## 5. Referencia de Scripts Operativos
@@ -307,4 +345,3 @@ El sistema exporta un índice en `_ctx/index/wo_worktrees.json` cada vez que se 
 > Si el sistema permite bypass sin dolor, el bypass se convierte en el camino principal.
 
 Trifecta es **workflow como contrato ejecutable**, no sugerencia.
-

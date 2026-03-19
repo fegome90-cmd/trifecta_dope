@@ -56,6 +56,16 @@ class GCReport:
 CANONICAL_STATES = ["pending", "running", "done", "failed"]
 
 
+def is_official_wo_worktree_path(repo_root: Path, wo_id: str, worktree_path: str) -> bool:
+    """Return True only for the official WO worktree locations managed by the lifecycle."""
+    resolved_path = Path(worktree_path).resolve()
+    candidates = {
+        (repo_root / ".worktrees" / wo_id).resolve(),
+        (repo_root.parent / ".worktrees" / wo_id).resolve(),
+    }
+    return resolved_path in candidates
+
+
 def run_command(
     cmd: list[str], cwd: Path | None = None, check: bool = True
 ) -> subprocess.CompletedProcess:
@@ -146,6 +156,9 @@ def classify_worktrees(
 
     for wt in worktrees:
         if wt.wo_id == "main":
+            continue
+
+        if not is_official_wo_worktree_path(repo_root, wt.wo_id, wt.path):
             continue
 
         # Get WO state

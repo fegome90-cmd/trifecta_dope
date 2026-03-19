@@ -19,10 +19,11 @@ import sys
 import yaml
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Literal
+from typing import Callable, Literal
 
 from src.domain.result import Result, Ok, Err
 from src.cli.error_cards import render_error_card
+from scripts.helpers import detect_merge_status, execute_closeout_action, resolve_closeout_policy
 
 logger = logging.getLogger(__name__)
 
@@ -181,6 +182,42 @@ def _ensure_list(value: object) -> list[str]:
     return [str(value)]
 
 
+def _write_closeout_decision_artifact(
+    root: Path,
+    wo_id: str,
+    closeout: dict[str, object],
+) -> Path | None:
+    """Write an operator-facing closeout decision when finish preserves a checkout."""
+    if closeout.get("action") != "preserve_baseline_checkout":
+        return None
+
+    handoff_dir = root / "_ctx" / "handoff" / wo_id
+    if not handoff_dir.exists():
+        return None
+
+    decision_path = handoff_dir / "decision.md"
+    checked_refs = ", ".join(str(ref) for ref in closeout.get("checked_refs", []))
+    official_path = str(closeout.get("official_worktree_path"))
+    preserved_path = str(closeout.get("preserved_path"))
+    resulting_path = str(closeout.get("resulting_path"))
+
+    decision_md = f"""# Closeout Decision: {wo_id}
+
+- Action: `{closeout.get("action")}`
+- Merge status: `{closeout.get("merge_status")}`
+- Checked refs: `{checked_refs}`
+- Official WO path: `{official_path}`
+- Preserved path: `{preserved_path}`
+- Resulting path: `{resulting_path}`
+
+The WO finished successfully, but the branch was not merged into the checked refs.
+Finish preserved the checkout at a non-WO baseline path and removed the official
+`.../.worktrees/{wo_id}` mount from the active WO lifecycle.
+"""
+    decision_path.write_text(decision_md)
+    return decision_path
+
+
 # =============================================================================
 # Existing Utilities
 # =============================================================================
@@ -298,6 +335,23 @@ def update_worktree_index(root: Path) -> None:
         )
     except (subprocess.CalledProcessError, OSError) as e:
         print(f"WARNING: failed to update index via export_wo_index.py: {e}")
+
+
+def _resolve_official_worktree_path(wo: dict[str, object], root: Path, wo_id: str) -> Path:
+    """Resolve the currently-recorded official WO worktree path."""
+    stored_path = wo.get("worktree")
+    if isinstance(stored_path, str) and stored_path.strip():
+        path = Path(stored_path)
+        return path if path.is_absolute() else (root / path).resolve()
+
+    candidates = [
+        (root / ".worktrees" / wo_id).resolve(),
+        (root.parent / ".worktrees" / wo_id).resolve(),
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return candidates[0]
 
 
 def run_verification_gate(wo_id: str, root: Path) -> Result[None, str]:
@@ -821,7 +875,9 @@ def finish_wo_transaction(
         return Err(f"WO not in running/: {running_path}")
 
     # Load WO data
-    wo = yaml.safe_load(running_path.read_text())
+    running_yaml_text = running_path.read_text()
+    wo = yaml.safe_load(running_yaml_text)
+    lock_contents = lock_path.read_text() if lock_path.exists() else None
 
     # Validate git state
     try:
@@ -859,48 +915,87 @@ def finish_wo_transaction(
             cwd=root,
             text=True,
         ).strip()
+
+        branch_name = str(wo.get("branch") or f"feat/wo-{wo_id}")
+        official_worktree_path = _resolve_official_worktree_path(wo, root, wo_id)
+        merge_info = detect_merge_status(root, branch_name)
+        closeout_policy = resolve_closeout_policy(
+            root=root,
+            wo_id=wo_id,
+            merge_status=str(merge_info["merge_status"]),
+            official_worktree_path=official_worktree_path,
+        )
     except subprocess.CalledProcessError as e:
         return Err(f"Git state validation failed: {e}")
 
-    # Transaction operations
-    ops_completed = []
+    # Transaction contract:
+    # - every new terminal side effect in finish must register a rollback compensation here
+    # - rollback must restore the authoritative running state
+    # - decision.md is operator evidence only; it must never outlive a failed rollback
+    rollback_actions: list[Callable[[], None]] = []
 
     try:
         # Operation 1: Create result directory
         done_path.parent.mkdir(parents=True, exist_ok=True)
-        ops_completed.append("create_result_dir")
 
         # Operation 2: Update WO metadata
         wo["status"] = result
         wo["verified_at_sha"] = commit_sha
         wo["closed_at"] = datetime.now(timezone.utc).isoformat()
         wo["result"] = result
+        wo["closeout"] = {
+            "checked_refs": list(merge_info["checked_refs"]),
+            "merge_status": merge_info["merge_status"],
+            "action": closeout_policy["action"],
+            "official_worktree_path": closeout_policy["official_worktree_path"],
+            "preserved_path": (
+                str(closeout_policy["preserved_path"])
+                if closeout_policy["preserved_path"] is not None
+                else None
+            ),
+            "resulting_path": (
+                str(closeout_policy["preserved_path"])
+                if closeout_policy["preserved_path"] is not None
+                else None
+            ),
+        }
 
         done_path.write_text(yaml.dump(wo, sort_keys=False))
-        ops_completed.append("write_result_yaml")
+        rollback_actions.append(lambda: done_path.exists() and done_path.unlink())
 
         # Operation 3: Remove running WO
         running_path.unlink()
-        ops_completed.append("remove_running_yaml")
+        rollback_actions.append(lambda: running_path.write_text(running_yaml_text))
 
         # Operation 4: Remove lock (with validation)
         if lock_path.exists():
             lock_path.unlink()
-        ops_completed.append("remove_lock")
+            rollback_actions.append(lambda: lock_path.write_text(lock_contents or ""))
+
+        # Operation 5: Write the preserve decision before side effects so rollback stays coherent.
+        decision_path = _write_closeout_decision_artifact(root, wo_id, dict(wo["closeout"]))
+        if decision_path is not None:
+            rollback_actions.append(lambda: decision_path.exists() and decision_path.unlink())
+
+        # Operation 6: Execute closeout action only after authoritative state transition succeeds.
+        closeout_result = execute_closeout_action(root, closeout_policy)
+        if closeout_result.is_err():
+            raise RuntimeError(closeout_result.unwrap_err())
 
         return Ok(None)
 
     except Exception as e:
-        # Rollback based on what completed
-        if "remove_running_yaml" in ops_completed:
-            # Restore running YAML from result/
-            if done_path.exists():
-                running_path.write_text(done_path.read_text())
-        if "write_result_yaml" in ops_completed and "remove_running_yaml" not in ops_completed:
-            # Remove result YAML
-            if done_path.exists():
-                done_path.unlink()
-        return Err(f"WO finish failed, rolled back: {e}")
+        rollback_errors = []
+        for rollback_action in reversed(rollback_actions):
+            try:
+                rollback_action()
+            except Exception as rollback_error:  # pragma: no cover - defensive path
+                rollback_errors.append(str(rollback_error))
+
+        rollback_suffix = ""
+        if rollback_errors:
+            rollback_suffix = f" (rollback errors: {'; '.join(rollback_errors)})"
+        return Err(f"WO finish failed, rolled back: {e}{rollback_suffix}")
 
 
 # =============================================================================

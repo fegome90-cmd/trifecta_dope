@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from scripts.paths import (
     get_worktree_path,
+    get_preserved_worktree_path,
     get_lock_path,
     get_wo_pending_path,
     get_wo_running_path,
@@ -77,6 +78,35 @@ def test_get_worktree_path_creates_dotworktrees():
         # Verify .worktrees was created
         assert worktrees_dir.exists()
         assert worktree_path == worktrees_dir / "WO-0001"
+
+
+def test_get_preserved_worktree_path_is_deterministic_and_non_wo():
+    """Preserved baseline path should be stable and stop using the WO directory name."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir) / "repo"
+        repo_root.mkdir()
+
+        preserved_path = get_preserved_worktree_path(repo_root, "WO-0001")
+
+        assert preserved_path == Path(tmpdir) / "wo-0001-baseline"
+        assert ".worktrees" not in str(preserved_path)
+        assert preserved_path.name == "wo-0001-baseline"
+
+
+def test_get_preserved_worktree_path_keeps_already_rehomed_baseline():
+    """Already-rehomed baselines should not be rewritten back into WO naming."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir) / "repo"
+        repo_root.mkdir()
+        existing = Path(tmpdir) / "wo-0001-baseline"
+
+        preserved_path = get_preserved_worktree_path(
+            repo_root,
+            "WO-0001",
+            current_path=existing,
+        )
+
+        assert preserved_path == existing
 
 
 def test_get_worktree_path_parent_missing():
