@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Any, Literal, Optional
 
-from src.domain.context_models import ContextPack, GetResult, SearchHit, SearchResult
+from src.domain.context_models import ContextChunk, ContextPack, GetResult, SearchHit, SearchResult
 
 
 def parse_chunk_id(chunk_id: str) -> tuple[str, str]:
@@ -222,7 +222,7 @@ class ContextService:
             evidence_metadata=evidence_metadata,
         )
 
-    def _check_evidence(self, chunk, query: str) -> dict[str, Any]:
+    def _check_evidence(self, chunk: ContextChunk, query: str) -> dict[str, Any]:
         """
         Check for deterministic evidence signals.
 
