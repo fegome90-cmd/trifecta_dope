@@ -1,3 +1,10 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pytest
+
 from src.domain.segment_resolver import (
     resolve_segment_ref,
     get_segment_root,
@@ -5,6 +12,32 @@ from src.domain.segment_resolver import (
     get_segment_fingerprint,
     get_segment_id,
 )
+from src.infrastructure.file_system import FileSystemAdapter
+from src.infrastructure.segment_state import resolve_segment_state
+
+
+def _write_tracked_triplet(root: Path, segment_id: str) -> None:
+    ctx = root / "_ctx"
+    ctx.mkdir(parents=True, exist_ok=True)
+    (ctx / f"agent_{segment_id}.md").write_text("agent\n")
+    (ctx / f"prime_{segment_id}.md").write_text("prime\n")
+    (ctx / f"session_{segment_id}.md").write_text("session\n")
+
+
+def _write_trifecta_config(root: Path, *, segment: str, repo_root: Path) -> None:
+    ctx = root / "_ctx"
+    ctx.mkdir(parents=True, exist_ok=True)
+    (ctx / "trifecta_config.json").write_text(
+        json.dumps(
+            {
+                "segment": segment,
+                "scope": "tests",
+                "repo_root": str(repo_root),
+                "default_profile": "impl_patch",
+                "last_verified": "2026-03-19",
+            }
+        )
+    )
 
 
 class TestSegmentRef:
@@ -156,3 +189,95 @@ class TestSegmentRefEquality:
         ref = resolve_segment_ref(test_dir)
         s = {ref}
         assert ref in s
+
+
+class TestSegmentCanonContract:
+    def test_resolver_prefers_tracked_top_level_ctx_triplet(self, tmp_path: Path) -> None:
+        segment_root = tmp_path / "tracked-segment"
+        segment_root.mkdir()
+        _write_tracked_triplet(segment_root, "tracked-segment")
+
+        state = resolve_segment_state(str(segment_root), FileSystemAdapter())
+
+        assert state.source_of_truth == "tracked"
+
+    def test_resolver_fails_when_canon_missing_in_non_bootstrap_operation(
+        self, tmp_path: Path
+    ) -> None:
+        segment_root = tmp_path / "missing-canon"
+        segment_root.mkdir()
+
+        with pytest.raises(ValueError, match="SEGMENT_CANON_MISSING"):
+            resolve_segment_state(str(segment_root), FileSystemAdapter())
+
+    def test_resolver_fails_when_ctx_triplet_incomplete(self, tmp_path: Path) -> None:
+        segment_root = tmp_path / "incomplete-canon"
+        segment_root.mkdir()
+        ctx = segment_root / "_ctx"
+        ctx.mkdir(parents=True, exist_ok=True)
+        (ctx / "agent_incomplete-canon.md").write_text("agent\n")
+        (ctx / "prime_incomplete-canon.md").write_text("prime\n")
+
+        with pytest.raises(ValueError, match="SEGMENT_CANON_INCOMPLETE"):
+            resolve_segment_state(str(segment_root), FileSystemAdapter())
+
+    def test_resolver_fails_when_multiple_versioned_candidates_exist(
+        self, tmp_path: Path
+    ) -> None:
+        segment_root = tmp_path / "ambiguous-canon"
+        segment_root.mkdir()
+        _write_tracked_triplet(segment_root, "ambiguous-a")
+        _write_tracked_triplet(segment_root, "ambiguous-b")
+
+        with pytest.raises(ValueError, match="SEGMENT_CANON_AMBIGUOUS"):
+            resolve_segment_state(str(segment_root), FileSystemAdapter())
+
+    def test_resolver_fails_when_candidate_is_contaminated_by_nontracked_canonical_family_file(
+        self, tmp_path: Path
+    ) -> None:
+        segment_root = tmp_path / "contaminated-family"
+        segment_root.mkdir()
+        _write_tracked_triplet(segment_root, "contaminated-family")
+        (segment_root / "_ctx" / "agent_shadow.md").write_text("shadow\n")
+
+        with pytest.raises(ValueError, match="SEGMENT_CANON_CONTAMINATED"):
+            resolve_segment_state(str(segment_root), FileSystemAdapter())
+
+    def test_resolver_fails_when_candidate_is_contaminated_by_legacy_singleton(
+        self, tmp_path: Path
+    ) -> None:
+        segment_root = tmp_path / "legacy-singleton"
+        segment_root.mkdir()
+        _write_tracked_triplet(segment_root, "legacy-singleton")
+        ctx = segment_root / "_ctx"
+        (ctx / "agent.md").write_text("legacy agent\n")
+        (ctx / "prime.md").write_text("legacy prime\n")
+        (ctx / "session.md").write_text("legacy session\n")
+
+        with pytest.raises(ValueError, match="SEGMENT_CANON_CONTAMINATED"):
+            resolve_segment_state(str(segment_root), FileSystemAdapter())
+
+    def test_resolver_fails_when_local_config_contradicts_tracked_candidate(
+        self, tmp_path: Path
+    ) -> None:
+        segment_root = tmp_path / "config-contradiction"
+        segment_root.mkdir()
+        _write_tracked_triplet(segment_root, "config-contradiction")
+        _write_trifecta_config(
+            segment_root,
+            segment="different-segment",
+            repo_root=segment_root,
+        )
+
+        with pytest.raises(ValueError, match="SEGMENT_CANON_CONTRADICTED_BY_LOCAL_CONFIG"):
+            resolve_segment_state(str(segment_root), FileSystemAdapter())
+
+    def test_resolver_ignores_versioned_path_when_not_physically_present(
+        self, tmp_path: Path
+    ) -> None:
+        segment_root = tmp_path / "deleted-versioned-path"
+        segment_root.mkdir()
+        # A candidate path may be versioned upstream but missing locally; that must not count.
+
+        with pytest.raises(ValueError, match="SEGMENT_CANON_MISSING"):
+            resolve_segment_state(str(segment_root), FileSystemAdapter())

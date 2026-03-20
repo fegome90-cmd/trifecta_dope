@@ -143,6 +143,8 @@ The active phase is the **V3 contractual migration**. The safe order is mandator
 
 This order exists to avoid a broken migration in which `wo_verify.sh` stops mutating state before the harness and contract surfaces are prepared.
 
+**Anchor change status**: **No change** to the anchor's planning authority model. This phase only adds a frozen normative reference for segment canon and keeps the roadmap itself intact.
+
 ---
 
 ## Residual Risks
@@ -179,6 +181,7 @@ This anchor governs the program roadmap.
 
 ## Normative References
 
+- `../adr/ADR-004-segment-canon-authority.md` — frozen normative reference for segment canon authority, bootstrap rules, and the write-zero `create` contract.
 - `../adr/ADR-TBD-wo-lifecycle-ownership-v3.md` — **pending normative reference only**; placeholder for the future ADR/spec V3, not evidence that it is already merged.
 - `../backlog/MANUAL_WO.md`
 - `../backlog/WORKFLOW.md`
