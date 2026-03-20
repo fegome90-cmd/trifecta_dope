@@ -1542,3 +1542,15 @@ Created WO-0055 (P1) to fix hook bypass system issues discovered during WO-0050 
 - **Files**: src/application/graph_service.py, tests/unit/test_graph_service.py
 - **Commands**: uv run pytest -q tests/unit/test_graph_service.py -k alias_path_for_injected_store, uv run pytest -q tests/integration/test_graph_store_schema.py tests/unit/test_graph_indexer.py tests/unit/test_graph_service.py tests/integration/cli/test_graph_cli.py, uv run ruff check src/application/graph_indexer.py src/application/graph_service.py src/infrastructure/graph_store.py tests/integration/test_graph_store_schema.py tests/unit/test_graph_indexer.py tests/unit/test_graph_service.py tests/integration/cli/test_graph_cli.py
 - **Pack SHA**: `005855ec718feceb`
+
+## 2026-03-15 14:38 UTC
+- **Summary**: Reframed the blocked WO remediation into a manual sprint plan with isolated worktrees, sprint anchor branch, slice-by-slice merge discipline, and constant noise checks to stabilize non-Graph CI without polluting Graph PR scope.
+- **Files**: docs/plans/2026-03-15-non-graph-ci-remediation-sprint.md, _ctx/session_trifecta_dope.md
+- **Commands**: skill-hub, sed, git worktree list, uv run ruff check ., uv run pytest -q tests/integration -x, apply_patch
+- **Pack SHA**: (unchanged)
+
+## 2026-03-15 14:42 UTC
+- **Summary**: Applied approved audit fixes to the manual sprint plan: clarified `slice green` versus `sprint green`, made sprint anchor bootstrap idempotent with `.worktrees` ignore preflight, and promoted `uv run pyrefly check` to a required final sprint gate.
+- **Files**: docs/plans/2026-03-15-non-graph-ci-remediation-sprint.md, _ctx/session_trifecta_dope.md
+- **Commands**: tmux-plan-auditor, skill-hub, git check-ignore .worktrees, apply_patch
+- **Pack SHA**: (unchanged)
