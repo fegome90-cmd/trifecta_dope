@@ -92,11 +92,6 @@ def resolve_segment_state(segment_input: str, file_system: FileSystemAdapter) ->
     config_path = ctx_dir / "trifecta_config.json"
     config = file_system.load_trifecta_config(resolved_root)
 
-    config_scope_mismatch = False
-    if config is not None:
-        config_root = Path(config.repo_root).expanduser().resolve()
-        config_scope_mismatch = config_root != resolved_root
-
     if not ctx_dir.exists():
         _raise_canon_error("SEGMENT_CANON_MISSING")
 
@@ -122,7 +117,7 @@ def resolve_segment_state(segment_input: str, file_system: FileSystemAdapter) ->
     if legacy_singletons:
         _raise_canon_error("SEGMENT_CANON_CONTAMINATED")
 
-    if config is not None and (config_scope_mismatch or config.segment_id != segment_id):
+    if config is not None and config.segment_id != segment_id:
         _raise_canon_error("SEGMENT_CANON_CONTRADICTED_BY_LOCAL_CONFIG")
 
     source = "tracked"
