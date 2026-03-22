@@ -1415,69 +1415,65 @@ def ctx_reset(
 ) -> None:
     """[DESTRUCTIVE] Regenerate ALL context files (templates + pack). Use with caution."""
     telemetry = _get_telemetry(segment, telemetry_level)
-    start_time = time.time()
     template_renderer, file_system, _ = _get_dependencies(segment, telemetry)
 
     try:
+        # Load config
+        config_path = Path(segment) / "_ctx" / "trifecta_config.json"
+        if not config_path.exists():
+            typer.echo("❌ No trifecta_config.json found. Use 'trifecta create' for new segments.")
+            raise typer.Exit(1)
+
+        import json
+
+        try:
+            config_data = json.loads(config_path.read_text())
+            from src.domain.models import TrifectaConfig
+
+            config = TrifectaConfig(**config_data)
+        except (json.JSONDecodeError, ValueError) as e:
+            typer.echo(f"❌ Invalid config file: {e}", err=True)
+            typer.echo("   Fix _ctx/trifecta_config.json or run 'trifecta create' to regenerate.")
+            raise typer.Exit(1)
+
+        # Confirmation prompt
         if not force:
             typer.echo(
-                "⚠️  WARNING: This will overwrite skill.md, _ctx/agent_<segment>.md, _ctx/prime_<segment>.md, _ctx/session_<segment>.md, readme_tf.md"
+                "⚠️  WARNING: This will overwrite skill.md, _ctx/agent_<segment>.md, "
+                "_ctx/prime_<segment>.md, _ctx/session_<segment>.md, readme_tf.md"
             )
             typer.echo("Press Ctrl+C to cancel, or Enter to continue...")
             input()
 
         typer.echo("🔄 Regenerating templates...")
-        config_path = Path(segment) / "_ctx" / "trifecta_config.json"
-        if config_path.exists():
-            import json
 
-            try:
-                config_data = json.loads(config_path.read_text())
-                from src.domain.models import TrifectaConfig
+        # Use case execution
+        from src.application.reset_context_use_case import ResetContextUseCase
+        from src.application.use_cases import BuildContextPackUseCase, ValidateContextPackUseCase
 
-                config = TrifectaConfig(**config_data)
-            except (json.JSONDecodeError, ValueError) as e:
-                typer.echo(f"❌ Invalid config file: {e}", err=True)
-                typer.echo("   Fix _ctx/trifecta_config.json or run 'trifecta create' to regenerate.")
-                raise typer.Exit(1)
-        else:
-            typer.echo("❌ No trifecta_config.json found. Use 'trifecta create' for new segments.")
-            raise typer.Exit(1)
+        build_uc = BuildContextPackUseCase(file_system, telemetry)
+        validate_uc = ValidateContextPackUseCase(file_system, telemetry)
+        reset_uc = ResetContextUseCase(template_renderer, build_uc, validate_uc, telemetry)
 
-        segment_id = config.segment_id
-        (Path(segment) / FILE_SKILL_MD).write_text(template_renderer.render_skill(config))
-        (Path(segment) / "_ctx" / f"agent_{segment_id}.md").write_text(
-            template_renderer.render_agent(config)
-        )
-        (Path(segment) / "_ctx" / f"prime_{segment_id}.md").write_text(
-            template_renderer.render_prime(config, [])
-        )
-        (Path(segment) / "_ctx" / f"session_{segment_id}.md").write_text(
-            template_renderer.render_session(config)
-        )
-        (Path(segment) / "readme_tf.md").write_text(template_renderer.render_readme(config))
+        result = reset_uc.execute(Path(segment), config)
+
+        # Output results
+        if result.files_written:
+            typer.echo(f"✅ Wrote {len(result.files_written)} files")
 
         typer.echo("✅ Templates regenerated. Running sync...")
 
-        build_uc = BuildContextPackUseCase(file_system, telemetry)
-        build_uc.execute(Path(segment))
+        if result.errors:
+            for error in result.errors:
+                typer.echo(f"  Error: {error}", err=True)
 
-        validate_uc = ValidateContextPackUseCase(file_system, telemetry)
-        output = validate_uc.execute(Path(segment))
-        typer.echo(output)
-
-        telemetry.observe("ctx.reset", int((time.time() - start_time) * 1000))
-
-        if not output.passed:
+        if not result.success:
             raise typer.Exit(code=1)
 
     except KeyboardInterrupt:
         typer.echo("\n❌ Reset cancelled")
         raise typer.Exit(0)
     except Exception as e:
-        telemetry.event(
-            "ctx.reset", {}, {"status": "error"}, int((time.time() - start_time) * 1000)
-        )
         typer.echo(_format_error(e, "Reset Error"), err=True)
         if not isinstance(e, typer.Exit):
             raise typer.Exit(1)
