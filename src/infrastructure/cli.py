@@ -644,7 +644,9 @@ def search(
     limit: int = typer.Option(5, "--limit", "-l", help="Max results"),
     telemetry_level: str = typer.Option("lite", "--telemetry", help=HELP_TELEMETRY),
     no_lint: bool = typer.Option(
-        False, "--no-lint", help="Disable query linting (anchor guidance expansion)"
+        False,
+        "--no-lint",
+        help="Disable query linting (anchor expansion). Default: linting OFF unless TRIFECTA_LINT=1",
     ),
     explain: bool = typer.Option(
         False, "--explain", help="Return structured JSON explanation of search ranking"
@@ -1429,10 +1431,15 @@ def ctx_reset(
         if config_path.exists():
             import json
 
-            config_data = json.loads(config_path.read_text())
-            from src.domain.models import TrifectaConfig
+            try:
+                config_data = json.loads(config_path.read_text())
+                from src.domain.models import TrifectaConfig
 
-            config = TrifectaConfig(**config_data)
+                config = TrifectaConfig(**config_data)
+            except (json.JSONDecodeError, ValueError) as e:
+                typer.echo(f"❌ Invalid config file: {e}", err=True)
+                typer.echo("   Fix _ctx/trifecta_config.json or run 'trifecta create' to regenerate.")
+                raise typer.Exit(1)
         else:
             typer.echo("❌ No trifecta_config.json found. Use 'trifecta create' for new segments.")
             raise typer.Exit(1)
@@ -2584,20 +2591,32 @@ def daemon_run() -> None:
 
                 conn.settimeout(5.0)
                 try:
-                    raw_data = conn.recv(4096)
+                    # Read request with size limit (fix for unreachable guard)
+                    MAX_REQUEST_SIZE = 16384  # 16KB
+                    raw_data = b""
+                    while len(raw_data) < MAX_REQUEST_SIZE:
+                        chunk = conn.recv(4096)
+                        if not chunk:
+                            break
+                        raw_data += chunk
+                        if b"\n" in raw_data:  # framing por newline
+                            break
+
                     if not raw_data:
                         conn.close()
                         continue
 
-                    data = raw_data.decode("utf-8", errors="replace").strip()
-
-                    if len(data) > 4096:
+                    if len(raw_data) > MAX_REQUEST_SIZE:
                         conn.sendall(
-                            json.dumps({"status": "error", "message": "Command too long"}).encode()
+                            json.dumps(
+                                {"status": "error", "message": "Request too large (max 16KB)"}
+                            ).encode()
                             + b"\n"
                         )
                         conn.close()
                         continue
+
+                    data = raw_data.decode("utf-8", errors="replace").strip()
                 except socket.timeout:
                     conn.sendall(b"ERROR: Timeout\n")
                     conn.close()
