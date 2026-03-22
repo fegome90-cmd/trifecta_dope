@@ -27,10 +27,17 @@ def test_ctx_stats_registered_once() -> None:
 
 
 def test_ctx_stats_command_exists() -> None:
-    """ctx stats command should be recognized."""
+    """ctx stats command should be recognized and produce output."""
     result = runner.invoke(app, ["ctx", "stats", "--segment", "/nonexistent/path"])
 
-    # Command should run (even if it fails due to missing segment)
-    # The important thing is that the command is recognized
-    assert "No such command" not in result.stdout
-    assert "No such command" not in result.stderr
+    # Command should be recognized (not "No such command")
+    assert "No such command" not in result.output
+
+    # Command should produce some output (even if empty stats for nonexistent segment)
+    # Note: Currently returns exit_code=0 with empty stats - this documents current behavior
+    assert result.output.strip(), "Command should produce some output"
+
+    # Should show stats header (graceful handling of missing data)
+    assert "Stats" in result.output or "No telemetry" in result.output or result.exit_code != 0, (
+        f"Expected stats output or error. Got: exit_code={result.exit_code}, output={result.output[:200]}"
+    )
