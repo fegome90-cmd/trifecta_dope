@@ -7,6 +7,7 @@ from pathlib import Path
 from src.domain.models import TrifectaConfig
 from src.application.use_cases import (
     CreateTrifectaUseCase,
+    MacroLoadUseCase,
     ValidateTrifectaUseCase,
 )
 from src.infrastructure.templates import TemplateRenderer
@@ -38,20 +39,17 @@ class TestCreateTrifectaUseCase:
 
 class TestValidateTrifectaUseCase:
     def test_validate_complete_trifecta(self) -> None:
-        template_renderer = TemplateRenderer()
         file_system = FileSystemAdapter()
-        create_use_case = CreateTrifectaUseCase(template_renderer, file_system)
         validate_use_case = ValidateTrifectaUseCase(file_system)
-
-        config = TrifectaConfig(
-            segment="valid-segment",
-            scope="Valid scope",
-            repo_root="/tmp",
-        )
 
         with tempfile.TemporaryDirectory() as tmpdir:
             target = Path(tmpdir) / "valid-segment"
-            create_use_case.execute(config, target, [])
+            ctx_dir = target / "_ctx"
+            ctx_dir.mkdir(parents=True)
+            (target / "skill.md").write_text("# Skill")
+            (ctx_dir / "prime_valid-segment.md").write_text("# Prime")
+            (ctx_dir / "agent_valid-segment.md").write_text("# Agent")
+            (ctx_dir / "session_valid-segment.md").write_text("# Session")
 
             result = validate_use_case.execute(target)
             assert result.passed
@@ -81,3 +79,39 @@ class TestValidateTrifectaUseCase:
             result = use_case.execute(target)
             assert not result.passed
             assert "Missing: _ctx/ directory" in result.errors
+
+    def test_validate_accepts_canonical_agent_file_without_legacy_agent_md(self) -> None:
+        file_system = FileSystemAdapter()
+        use_case = ValidateTrifectaUseCase(file_system)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "canon-segment"
+            ctx_dir = target / "_ctx"
+            ctx_dir.mkdir(parents=True)
+            (target / "skill.md").write_text("# Skill")
+            (ctx_dir / "prime_canon-segment.md").write_text("# Prime")
+            (ctx_dir / "agent_canon-segment.md").write_text("# Agent")
+
+            result = use_case.execute(target)
+
+            assert result.passed
+            assert "Missing: _ctx/agent.md" not in result.errors
+
+
+class TestMacroLoadUseCase:
+    def test_fallback_load_prefers_canonical_agent_file_for_implementation_tasks(self) -> None:
+        use_case = MacroLoadUseCase(file_system=FileSystemAdapter())
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "canon-segment"
+            ctx_dir = target / "_ctx"
+            ctx_dir.mkdir(parents=True)
+            (target / "skill.md").write_text("# Skill Root")
+            (ctx_dir / "agent_canon-segment.md").write_text("# Canon Agent")
+            (ctx_dir / "agent.md").write_text("# Legacy Agent")
+
+            output = use_case._fallback_load(target, "implement runtime fix")
+
+            assert "## File: agent_canon-segment.md" in output
+            assert "# Canon Agent" in output
+            assert "# Legacy Agent" not in output

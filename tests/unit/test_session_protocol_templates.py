@@ -118,3 +118,51 @@ def test_skill_protocol_has_5_steps() -> None:
     # Check for 5 numbered steps
     for i in range(1, 6):
         assert f"{i})" in output, f"Missing step {i} in Session Evidence Persistence protocol"
+
+
+def test_render_skill_points_to_canonical_agent_context_file() -> None:
+    renderer = TemplateRenderer()
+    config = TrifectaConfig(
+        segment="test-segment",
+        scope="Test segment",
+        repo_root="/tmp/test",
+        last_verified="2025-12-29",
+        default_profile="impl_patch",
+    )
+
+    output = renderer.render_skill(config)
+
+    assert "@_ctx/agent_test-segment.md" in output
+    assert "@_ctx/agent.md" not in output
+
+
+def test_render_session_watcher_tracks_canonical_agent_context_file() -> None:
+    renderer = TemplateRenderer()
+    config = TrifectaConfig(
+        segment="test-segment",
+        scope="Test segment",
+        repo_root="/tmp/test",
+        last_verified="2025-12-29",
+        default_profile="impl_patch",
+    )
+
+    output = renderer.render_session(config)
+
+    assert "agent_test-segment.md" in output
+    assert "agent.md|session.md" not in output
+
+
+def test_render_readme_uses_canonical_agent_context_file() -> None:
+    renderer = TemplateRenderer()
+    config = TrifectaConfig(
+        segment="test-segment",
+        scope="Test segment",
+        repo_root="/tmp/test",
+        last_verified="2025-12-29",
+        default_profile="impl_patch",
+    )
+
+    output = renderer.render_readme(config)
+
+    assert "agent_test-segment.md" in output
+    assert "_ctx/agent.md" not in output

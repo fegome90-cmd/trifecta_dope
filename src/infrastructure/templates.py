@@ -63,7 +63,7 @@ If `ctx validate` fails or `stale_detected=true`:
 
 ## Resources (On-Demand)
 - `@_ctx/prime_{config.segment}.md` - Reading list
-- `@_ctx/agent.md` - Tech stack & gates
+- `@_ctx/agent_{config.segment}.md` - Tech stack & gates
 - `@_ctx/session_{config.segment}.md` - Session log
 
 ---
@@ -336,7 +336,7 @@ autopilot:
 
 ```bash
 # Ignore _ctx to avoid loops.
-fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \\
+fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent_{config.segment}.md|session.md" . \\
   | while read; do trifecta ctx sync --segment "$SEGMENT"; done
 ```
 
@@ -359,7 +359,7 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \\
 |-- skill.md                     # Reglas y contratos (MAX 100 lineas)
 |__ _ctx/                        # Context resources
     |-- prime_{config.segment}.md # Lista de lectura obligatoria
-    |-- agent.md                 # Stack tecnico y configuracion
+    |-- agent_{config.segment}.md # Stack tecnico y configuracion
     |__ session_{config.segment}.md # Log de handoffs (runtime)
 ```
 
@@ -383,7 +383,7 @@ uv --directory "$TRIFECTA_CLI_ROOT" run trifecta load --segment . --mode fullfil
 
 1. **Leer `skill.md`** - Reglas, roles, y contratos del segmento
 2. **Leer `_ctx/prime_{config.segment}.md`** - Lista de documentos obligatorios
-3. **Leer `_ctx/agent.md`** - Stack tecnico, configuracion, y gates
+3. **Leer `_ctx/agent_{config.segment}.md`** - Stack tecnico, configuracion, y gates
 
 > [!CAUTION]
 > **No ejecutes codigo sin completar los 3 pasos anteriores.**

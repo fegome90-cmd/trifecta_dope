@@ -102,8 +102,9 @@ class ValidateTrifectaUseCase:
             if not prime_files:
                 errors.append("Missing: _ctx/prime_*.md")
 
-            agent_path = ctx_dir / "agent.md"
-            if not agent_path.exists():
+            canonical_agent_files = list(ctx_dir.glob("agent_*.md"))
+            legacy_agent_path = ctx_dir / "agent.md"
+            if not canonical_agent_files and not legacy_agent_path.exists():
                 errors.append("Missing: _ctx/agent.md")
 
             session_files = list(ctx_dir.glob("session_*.md"))
@@ -646,7 +647,11 @@ class MacroLoadUseCase:
 
         # Heuristics
         if any(kw in task_lower for kw in ["implement", "debug", "fix", "code"]):
-            files_to_load.append(ctx_dir / "agent.md")
+            canonical_agent_files = sorted(ctx_dir.glob("agent_*.md"))
+            if canonical_agent_files:
+                files_to_load.append(canonical_agent_files[0])
+            else:
+                files_to_load.append(ctx_dir / "agent.md")
 
         if any(kw in task_lower for kw in ["plan", "design", "doc"]):
             if prime_path:
