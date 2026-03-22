@@ -2,7 +2,7 @@
 
 > **Generated**: __DATE__
 > **Purpose**: High-level module navigation for ctx.plan code_navigation feature
-> **Hash**: b00baa3ab7bd
+> **Hash**: b0205f894d14
 
 ---
 
