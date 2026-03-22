@@ -3,8 +3,12 @@ Use case for resetting/regenerating context files.
 
 This module provides the business logic for ctx reset command,
 separated from CLI concerns (I/O, confirmation prompts).
+
+Note: This is a DESTRUCTIVE operation that overwrites existing files.
+Note: Caller is responsible for flushing telemetry (e.g., in finally block).
 """
 
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -66,8 +70,6 @@ class ResetContextUseCase:
         Returns:
             ResetResult with success status, files written, and any errors.
         """
-        import time
-
         start_time = time.time()
         files_written: list[str] = []
         errors: list[str] = []
@@ -98,6 +100,8 @@ class ResetContextUseCase:
 
             for file_path, content in templates:
                 try:
+                    # Ensure parent directory exists
+                    file_path.parent.mkdir(parents=True, exist_ok=True)
                     file_path.write_text(content)
                     files_written.append(str(file_path))
                 except Exception as e:
