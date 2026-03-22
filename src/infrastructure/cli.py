@@ -6,10 +6,11 @@ import sys
 import time
 import traceback
 from pathlib import Path
-from typing import Literal, Optional, Tuple
+from typing import Any, Literal, Optional, Tuple
 
 import click
 import typer
+import typer.core
 from click.exceptions import UsageError
 
 # AST/LSP Integration (Phase 2a/2b)
@@ -53,6 +54,17 @@ from src.infrastructure.templates import TemplateRenderer
 from src.application.obsidian_sync_use_case import create_sync_use_case
 from src.application.linear_sync_use_case import LinearSyncUseCase
 from src.infrastructure.obsidian_config import ObsidianConfigManager
+from src.infrastructure.lsp_client import LSPClient, LSPState
+from src.domain.lsp_contracts import LSPResponse, FallbackReason
+
+# --- CLI Constants ---
+HELP_REPO_PATH = "Repository path"
+HELP_OUTPUT_JSON = "Output as JSON"
+CMD_CTX_BUILD = "ctx.build"
+CMD_CTX_SYNC = "ctx.sync"
+FILE_SKILL_MD = "skill.md"
+HELP_REPO_ROOT = "Repository root"
+DIR_LOCAL = ".local"
 
 
 class TrifectaGroup(typer.core.TyperGroup):
@@ -129,14 +141,35 @@ def _resolve_segment(segment: str, require_ctx: bool = False) -> Path:
         raise typer.Exit(code=1)
 
 
+def _resolve_segment_soft(segment: str) -> Path:
+    """Resolve segment path without requiring ctx.
+
+    Unlike _resolve_segment(require_ctx=False), this:
+    - Resolves against the provided segment path, not cwd
+    - Still validates path traversal protection
+    - Returns the resolved path even if _ctx/ doesn't exist
+
+    Used by _get_telemetry() to ensure telemetry writes to the correct segment.
+    """
+    from src.infrastructure.path_utils import canonicalize_path
+
+    # Use canonicalize_path which includes basic path validation
+    try:
+        path = canonicalize_path(segment)
+    except ValueError as e:
+        typer.echo(f"Error: Invalid segment path: {e}", err=True)
+        raise typer.Exit(code=1)
+
+    return path
+
+
 def _get_telemetry(segment: str, level: str, require_ctx: bool = True) -> Telemetry:
     """Initialize telemetry."""
     if require_ctx:
         path = _resolve_segment(segment, require_ctx=True)
     else:
-        # Allow precondition handlers (e.g., ctx build/sync/create) to classify
-        # invalid paths without failing early or mutating target segment paths.
-        path = Path.cwd().resolve()
+        # Resolve against segment path (not cwd) but without requiring ctx
+        path = _resolve_segment_soft(segment)
     env_level = os.environ.get("TRIFECTA_TELEMETRY_LEVEL", level)
     return Telemetry(path, level=env_level)
 
@@ -167,7 +200,6 @@ def _is_runtime_dir_allowed(runtime_dir: Path, allowed_bases: list[Path]) -> boo
     return is_runtime_dir_allowed(runtime_dir, allowed_bases)
 
 
-
 def _classify_north_star_precondition(errors: list[str]) -> str:
     """Classify structural precondition errors into stable Error Card codes."""
     if any("ambiguous" in err.lower() for err in errors):
@@ -178,7 +210,7 @@ def _classify_north_star_precondition(errors: list[str]) -> str:
 
 
 def _get_dependencies(
-    segment: str, telemetry: Optional[Telemetry] = None
+    _segment: str, telemetry: Optional[Telemetry] = None
 ) -> Tuple[TemplateRenderer, FileSystemAdapter, Optional[Telemetry]]:
     # Simplified: just return filesystem and template renderer
     fs = FileSystemAdapter()
@@ -196,6 +228,54 @@ def _format_error(e: Exception, title: str = "Error") -> str:
 # =============================================================================
 
 
+def _load_json_stats(file_path: Path) -> dict[str, Any]:
+    if file_path.exists():
+        try:
+            return json.loads(file_path.read_text())
+        except Exception:
+            pass
+    return {}
+
+def _print_alias_expansion_stats(metrics: dict[str, Any]) -> None:
+    alias_expansion_count = metrics.get("ctx_search_alias_expansion_count", 0)
+    alias_terms_total = metrics.get("ctx_search_alias_terms_total", 0)
+    search_count = metrics.get("ctx_search_count", 0)
+
+    if alias_expansion_count > 0 and search_count > 0:
+        avg_terms = alias_terms_total / alias_expansion_count if alias_expansion_count > 0 else 0
+        typer.echo("\nAlias Expansion:")
+        typer.echo(
+            f"  {alias_expansion_count} searches expanded ({alias_expansion_count / search_count * 100:.1f}%), avg {avg_terms:.1f} terms"
+        )
+
+def _print_last_run_stats(last_run: dict[str, Any]) -> None:
+    if not last_run:
+        return
+    typer.echo("\nLast Run:")
+    typer.echo(f"  Timestamp: {last_run.get('ts', 'unknown')}")
+    latencies = last_run.get("latencies", {})
+    if latencies:
+        typer.echo("  Latencies:")
+        for cmd, stats in latencies.items():
+            count = stats.get("count", 0)
+            # Read new keys (p50_ms, p95_ms, max_ms) with backward compat
+            p50 = stats.get("p50_ms", stats.get("p50", 0))
+            p95 = stats.get("p95_ms", stats.get("p95", 0))
+            max_ms = stats.get("max_ms", stats.get("max", 0))
+
+            if count == 0:
+                typer.echo(f"    {cmd}: no samples")
+            else:
+                typer.echo(
+                    f"    {cmd}: p50={p50:.3f}ms p95={p95:.3f}ms max={max_ms:.3f}ms (n={count})"
+                )
+
+    warnings = last_run.get("top_warnings", [])
+    if warnings:
+        typer.echo("\n  Top Warnings:")
+        for w in warnings:
+            typer.echo(f"    - {w}")
+
 @ctx_app.command("stats")
 def ctx_stats(
     segment: str = typer.Option(..., "--segment", "-s", help=HELP_SEGMENT),
@@ -208,23 +288,8 @@ def ctx_stats(
         typer.echo(f"No telemetry found at {telemetry_dir}")
         return
 
-    # Load metrics
-    metrics = {}
-    metrics_path = telemetry_dir / "metrics.json"
-    if metrics_path.exists():
-        try:
-            metrics = json.loads(metrics_path.read_text())
-        except Exception:
-            pass
-
-    # Load last run
-    last_run = {}
-    last_run_path = telemetry_dir / "last_run.json"
-    if last_run_path.exists():
-        try:
-            last_run = json.loads(last_run_path.read_text())
-        except Exception:
-            pass
+    metrics = _load_json_stats(telemetry_dir / "metrics.json")
+    last_run = _load_json_stats(telemetry_dir / "last_run.json")
 
     typer.echo(f"📊 Telemetry for {segment}")
     typer.echo(f"Path: {telemetry_dir}\n")
@@ -233,90 +298,60 @@ def ctx_stats(
     for k, v in sorted(metrics.items()):
         typer.echo(f"  {k}: {v}")
 
-    # Alias expansion summary
-    alias_expansion_count = metrics.get("ctx_search_alias_expansion_count", 0)
-    alias_terms_total = metrics.get("ctx_search_alias_terms_total", 0)
-    search_count = metrics.get("ctx_search_count", 0)
-
-    if alias_expansion_count > 0 and search_count > 0:
-        avg_terms = alias_terms_total / alias_expansion_count if alias_expansion_count > 0 else 0
-        typer.echo("\nAlias Expansion:")
-        typer.echo(
-            f"  {alias_expansion_count} searches expanded ({alias_expansion_count / search_count * 100:.1f}%), avg {avg_terms:.1f} terms"
-        )
-
-    if last_run:
-        typer.echo("\nLast Run:")
-        typer.echo(f"  Timestamp: {last_run.get('ts', 'unknown')}")
-        latencies = last_run.get("latencies", {})
-        if latencies:
-            typer.echo("  Latencies:")
-            for cmd, stats in latencies.items():
-                count = stats.get("count", 0)
-                # Read new keys (p50_ms, p95_ms, max_ms) with backward compat
-                p50 = stats.get("p50_ms", stats.get("p50", 0))
-                p95 = stats.get("p95_ms", stats.get("p95", 0))
-                max_ms = stats.get("max_ms", stats.get("max", 0))
-
-                if count == 0:
-                    typer.echo(f"    {cmd}: no samples")
-                else:
-                    typer.echo(
-                        f"    {cmd}: p50={p50:.3f}ms p95={p95:.3f}ms max={max_ms:.3f}ms (n={count})"
-                    )
-
-        warnings = last_run.get("top_warnings", [])
-        if warnings:
-            typer.echo("\n  Top Warnings:")
-            for w in warnings:
-                typer.echo(f"    - {w}")
+    _print_alias_expansion_stats(metrics)
+    _print_last_run_stats(last_run)
 
 
 # =============================================================================
 # Status and Doctor Commands
 # =============================================================================
 
+def _print_json_status(status: Any) -> None:
+    output = {
+        "repo_id": status.segment_ref.id,
+        "path": str(status.segment_ref.root_abs),
+        "slug": status.segment_ref.slug,
+        "has_ctx_dir": status.has_ctx_dir,
+        "has_context_pack": status.has_context_pack,
+        "has_telemetry": status.has_telemetry,
+        "has_skill_md": status.has_skill_md,
+        "has_prime": status.has_prime,
+        "has_agent": status.has_agent,
+        "has_session": status.has_session,
+    }
+    typer.echo(json.dumps(output, indent=2))
+
+def _print_text_status(status: Any) -> None:
+    typer.echo(f"Status for {status.segment_ref.slug}")
+    typer.echo(f"  Path: {status.segment_ref.root_abs}")
+    typer.echo(f"  ID: {status.segment_ref.id}")
+    typer.echo(f"  _ctx/: {'✓' if status.has_ctx_dir else '✗'}")
+    typer.echo(f"  context_pack.json: {'✓' if status.has_context_pack else '✗'}")
+    typer.echo(f"  telemetry: {'✓' if status.has_telemetry else '✗'}")
+    typer.echo(f"  skill.md: {'✓' if status.has_skill_md else '✗'}")
+    typer.echo(f"  prime_*.md: {'✓' if status.has_prime else '✗'}")
+    typer.echo(f"  agent*.md: {'✓' if status.has_agent else '✗'}")
+    typer.echo(f"  session_*.md: {'✓' if status.has_session else '✗'}")
 
 @app.command("status")
 def status_cmd(
-    repo: str = typer.Option(..., "--repo", "-r", help="Repository path"),
-    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+    repo: str = typer.Option(..., "--repo", "-r", help=HELP_REPO_PATH),
+    json_output: bool = typer.Option(False, "--json", help=HELP_OUTPUT_JSON),
 ) -> None:
     """Show status of a repository."""
     use_case = StatusUseCase()
     status = use_case.execute(repo)
 
     if json_output:
-        output = {
-            "repo_id": status.segment_ref.id,
-            "path": str(status.segment_ref.root_abs),
-            "slug": status.segment_ref.slug,
-            "has_ctx_dir": status.has_ctx_dir,
-            "has_context_pack": status.has_context_pack,
-            "has_telemetry": status.has_telemetry,
-            "has_skill_md": status.has_skill_md,
-            "has_prime": status.has_prime,
-            "has_agent": status.has_agent,
-            "has_session": status.has_session,
-        }
-        typer.echo(json.dumps(output, indent=2))
+        _print_json_status(status)
     else:
-        typer.echo(f"Status for {status.segment_ref.slug}")
-        typer.echo(f"  Path: {status.segment_ref.root_abs}")
-        typer.echo(f"  ID: {status.segment_ref.id}")
-        typer.echo(f"  _ctx/: {'✓' if status.has_ctx_dir else '✗'}")
-        typer.echo(f"  context_pack.json: {'✓' if status.has_context_pack else '✗'}")
-        typer.echo(f"  telemetry: {'✓' if status.has_telemetry else '✗'}")
-        typer.echo(f"  skill.md: {'✓' if status.has_skill_md else '✗'}")
-        typer.echo(f"  prime_*.md: {'✓' if status.has_prime else '✗'}")
-        typer.echo(f"  agent*.md: {'✓' if status.has_agent else '✗'}")
-        typer.echo(f"  session_*.md: {'✓' if status.has_session else '✗'}")
+        _print_text_status(status)
 
 
 @app.command("doctor")
 def doctor_cmd(
-    repo: str = typer.Option(..., "--repo", "-r", help="Repository path"),
-    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+    repo: str = typer.Option(..., "--repo", "-r", help=HELP_REPO_PATH),
+    json_output: bool = typer.Option(False, "--json", help=HELP_OUTPUT_JSON),
 ) -> None:
     """Diagnose issues in a repository."""
     use_case = DoctorUseCase()
@@ -414,14 +449,14 @@ def _render_repo_show_output(entry: RepoEntry, json_output: bool) -> None:
 @repo_app.command("register")
 def repo_register(
     path: str = typer.Argument(..., help="Repository path to register"),
-    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+    json_output: bool = typer.Option(False, "--json", help=HELP_OUTPUT_JSON),
 ) -> None:
     """Register a repository."""
     _render_repo_register_output(_register_repo_entry(path), json_output)
 
 
 @repo_app.command("list")
-def repo_list(json_output: bool = typer.Option(False, "--json", help="Output as JSON")) -> None:
+def repo_list(json_output: bool = typer.Option(False, "--json", help=HELP_OUTPUT_JSON)) -> None:
     """List registered repositories."""
     _render_repo_list_output(_list_repo_entries(), json_output)
 
@@ -429,7 +464,7 @@ def repo_list(json_output: bool = typer.Option(False, "--json", help="Output as 
 @repo_app.command("show")
 def repo_show(
     repo_id: str = typer.Argument(..., help="Repository ID to show"),
-    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+    json_output: bool = typer.Option(False, "--json", help=HELP_OUTPUT_JSON),
 ) -> None:
     """Show details of a registered repository."""
     _render_repo_show_output(_get_repo_entry_or_exit(repo_id), json_output)
@@ -440,6 +475,199 @@ def repo_show(
 # =============================================================================
 
 
+def _handle_segment_resolution_error(e: Exception, segment: str, cmd_name: str, telemetry: Any, start_time: float) -> None:
+    from src.application.exceptions import InvalidConfigScopeError, InvalidSegmentPathError
+    from src.cli.error_cards import render_error_card
+
+    if isinstance(e, InvalidSegmentPathError):
+        error_code = "INVALID_SEGMENT_PATH"
+        next_steps = [
+            "Verify the segment path exists and is a directory",
+            "Use absolute path or run from the segment root",
+        ]
+    elif isinstance(e, InvalidConfigScopeError):
+        error_code = "INVALID_CONFIG_SCOPE"
+        next_steps = [
+            "Fix _ctx/trifecta_config.json repo_root to match segment root",
+            "Or remove config and re-run create/sync",
+        ]
+    else:
+        raise e
+
+    error_card = render_error_card(
+        error_code=error_code,
+        error_class="PRECONDITION",
+        cause=str(e),
+        next_steps=next_steps,
+        verify_cmd=f"trifecta {cmd_name.replace('ctx.', 'ctx ')} -s {segment}",
+    )
+    telemetry.event(
+        cmd_name,
+        {"segment": segment},
+        {"status": "error", "error_code": error_code},
+        int((time.time() - start_time) * 1000),
+    )
+    telemetry.flush()
+    typer.echo(error_card, err=True)
+    raise typer.Exit(code=1)
+
+
+def _validate_north_star(state: Any, segment: str, cmd_name: str, telemetry: Any, start_time: float) -> None:
+    from src.cli.error_cards import render_error_card
+    from src.infrastructure.validators import validate_segment_structure_with_segment_id
+
+    validation = validate_segment_structure_with_segment_id(
+        state.segment_root_resolved, state.segment_id
+    )
+    if not validation.valid:
+        errors = validation.errors
+        code = _classify_north_star_precondition(errors)
+        if code == "SEGMENT_NOT_INITIALIZED" and cmd_name == CMD_CTX_SYNC:
+            next_steps = [
+                f"trifecta create -s {segment}",
+                f"trifecta refresh-prime -s {segment}",
+            ]
+        else:
+            next_steps = [
+                "Ensure _ctx contains exactly one agent_*.md, prime_*.md, session_*.md",
+                f"Expected suffix for this segment: {state.segment_id}",
+            ]
+        error_card = render_error_card(
+            error_code=code,
+            error_class="PRECONDITION",
+            cause="; ".join(errors),
+            next_steps=next_steps,
+            verify_cmd=f"trifecta {cmd_name.replace('ctx.', 'ctx ')} -s {segment}",
+        )
+        if cmd_name == CMD_CTX_BUILD:
+            status_obj = {"status": "validation_failed", "error_code": code, "errors": len(errors)}
+        else:
+            status_obj = {"status": "error", "error_code": code, "errors": len(errors)}
+            
+        telemetry.event(
+            cmd_name,
+            {
+                "segment": segment,
+                "segment_id_resolved": state.segment_id,
+                "segment_root_resolved": str(state.segment_root_resolved),
+                "segment_state_source": state.source_of_truth,
+            },
+            status_obj,
+            int((time.time() - start_time) * 1000),
+        )
+        telemetry.flush()
+        typer.echo(error_card, err=True)
+        raise typer.Exit(code=1)
+
+
+def _validate_build_specifics(state: Any, segment: str, telemetry: Any, start_time: float) -> None:
+    from src.domain.result import Err, Ok
+    from src.infrastructure.validators import detect_legacy_context_files, validate_agents_constitution
+    
+    match validate_agents_constitution(state.segment_root_resolved):
+        case Err(errors):
+            typer.echo("❌ Constitution Failed (AGENTS.md):")
+            for err in errors:
+                typer.echo(f"   - {err}")
+            telemetry.event(
+                CMD_CTX_BUILD,
+                {"segment": segment},
+                {"status": "constitution_failed", "errors": len(errors)},
+                int((time.time() - start_time) * 1000),
+            )
+            telemetry.flush()
+            raise typer.Exit(code=1)
+        case Ok(_):
+            pass
+
+    legacy = detect_legacy_context_files(state.segment_root_resolved)
+    if legacy:
+        typer.echo("❌ Legacy context files detected (Fail-Closed):")
+        for lf in legacy:
+            typer.echo(f"   - _ctx/{lf} (rename to suffix format: rule 3+1)")
+        telemetry.event(
+            CMD_CTX_BUILD,
+            {"segment": segment},
+            {"status": "legacy_files_error", "count": len(legacy)},
+            int((time.time() - start_time) * 1000),
+        )
+        telemetry.flush()
+        raise typer.Exit(code=1)
+
+
+def _handle_sync_build_error(e: Exception, segment: str, state: Any, telemetry: Any, start_time: float) -> None:
+    from src.application.exceptions import PrimeFileNotFoundError
+    from src.cli.error_cards import render_error_card
+    
+    if isinstance(e, PrimeFileNotFoundError):
+        error_card = render_error_card(
+            error_code="SEGMENT_NOT_INITIALIZED",
+            error_class="PRECONDITION",
+            cause=f"Missing prime file: {e.expected_path}",
+            next_steps=[
+                f"trifecta create -s {segment}",
+                f"trifecta refresh-prime -s {segment}",
+            ],
+            verify_cmd=f"trifecta ctx sync -s {segment}",
+        )
+        telemetry.event(
+            CMD_CTX_SYNC,
+            {
+                "segment": segment,
+                "segment_id_resolved": state.segment_id,
+                "segment_root_resolved": str(state.segment_root_resolved),
+                "segment_state_source": state.source_of_truth,
+            },
+            {"status": "error", "error_code": "SEGMENT_NOT_INITIALIZED"},
+            int((time.time() - start_time) * 1000),
+        )
+        typer.echo(error_card, err=True)
+        raise typer.Exit(1)
+    elif isinstance(e, FileNotFoundError) and "Expected prime file not found" in str(e):
+        from src.infrastructure.deprecations import maybe_emit_deprecated
+        maybe_emit_deprecated("fallback_prime_missing_string_match", telemetry)
+        typer.echo("TRIFECTA_DEPRECATED: fallback_prime_missing_string_match_used", err=True)
+        error_card = render_error_card(
+            error_code="SEGMENT_NOT_INITIALIZED",
+            error_class="PRECONDITION",
+            cause=str(e),
+            next_steps=[
+                f"trifecta create -s {segment}",
+                f"trifecta refresh-prime -s {segment}",
+            ],
+            verify_cmd=f"trifecta ctx sync -s {segment}",
+        )
+        telemetry.event(
+            CMD_CTX_SYNC,
+            {
+                "segment": segment,
+                "segment_id_resolved": state.segment_id,
+                "segment_root_resolved": str(state.segment_root_resolved),
+                "segment_state_source": state.source_of_truth,
+            },
+            {"status": "error", "error_code": "SEGMENT_NOT_INITIALIZED"},
+            int((time.time() - start_time) * 1000),
+        )
+        typer.echo(error_card, err=True)
+        raise typer.Exit(1)
+    else:
+        telemetry.event(
+            CMD_CTX_SYNC,
+            {
+                "segment": segment,
+                "segment_id_resolved": state.segment_id,
+                "segment_root_resolved": str(state.segment_root_resolved),
+                "segment_state_source": state.source_of_truth,
+            },
+            {"status": "error"},
+            int((time.time() - start_time) * 1000),
+        )
+        typer.echo(_format_error(e, "Sync Error"), err=True)
+        if not isinstance(e, typer.Exit):
+            raise typer.Exit(1)
+        raise e
+
+
 @ctx_app.command("build")
 def build(
     segment: str = typer.Option(..., "--segment", "-s", help=HELP_SEGMENT),
@@ -447,14 +675,8 @@ def build(
 ) -> None:
     """Build a Context Pack (context_pack.json) for a segment."""
     from src.domain.result import Err, Ok
-    from src.infrastructure.validators import (
-        detect_legacy_context_files,
-        validate_agents_constitution,
-        validate_segment_structure_with_segment_id,
-    )
     from src.infrastructure.segment_state import resolve_segment_state
     from src.application.exceptions import InvalidConfigScopeError, InvalidSegmentPathError
-    from src.cli.error_cards import render_error_card
 
     telemetry = _get_telemetry(segment, telemetry_level, require_ctx=False)
     start_time = time.time()
@@ -462,110 +684,11 @@ def build(
 
     try:
         state = resolve_segment_state(segment, file_system)
-    except InvalidSegmentPathError as e:
-        error_card = render_error_card(
-            error_code="INVALID_SEGMENT_PATH",
-            error_class="PRECONDITION",
-            cause=str(e),
-            next_steps=[
-                "Verify the segment path exists and is a directory",
-                "Use absolute path or run from the segment root",
-            ],
-            verify_cmd=f"trifecta ctx build -s {segment}",
-        )
-        telemetry.event(
-            "ctx.build",
-            {"segment": segment},
-            {"status": "error", "error_code": "INVALID_SEGMENT_PATH"},
-            int((time.time() - start_time) * 1000),
-        )
-        telemetry.flush()
-        typer.echo(error_card, err=True)
-        raise typer.Exit(code=1)
-    except InvalidConfigScopeError as e:
-        error_card = render_error_card(
-            error_code="INVALID_CONFIG_SCOPE",
-            error_class="PRECONDITION",
-            cause=str(e),
-            next_steps=[
-                "Fix _ctx/trifecta_config.json repo_root to match segment root",
-                "Or remove config and re-run create/sync",
-            ],
-            verify_cmd=f"trifecta ctx build -s {segment}",
-        )
-        telemetry.event(
-            "ctx.build",
-            {"segment": segment},
-            {"status": "error", "error_code": "INVALID_CONFIG_SCOPE"},
-            int((time.time() - start_time) * 1000),
-        )
-        telemetry.flush()
-        typer.echo(error_card, err=True)
-        raise typer.Exit(code=1)
+    except (InvalidSegmentPathError, InvalidConfigScopeError) as e:
+        _handle_segment_resolution_error(e, segment, CMD_CTX_BUILD, telemetry, start_time)
 
-    # FP Gate: North Star Strict Validation
-    validation = validate_segment_structure_with_segment_id(
-        state.segment_root_resolved, state.segment_id
-    )
-    if not validation.valid:
-        errors = validation.errors
-        code = _classify_north_star_precondition(errors)
-        error_card = render_error_card(
-            error_code=code,
-            error_class="PRECONDITION",
-            cause="; ".join(errors),
-            next_steps=[
-                "Ensure _ctx contains exactly one agent_*.md, prime_*.md, session_*.md",
-                f"Expected suffix for this segment: {state.segment_id}",
-            ],
-            verify_cmd=f"trifecta ctx build -s {segment}",
-        )
-        typer.echo(error_card, err=True)
-        telemetry.event(
-            "ctx.build",
-            {
-                "segment": segment,
-                "segment_id_resolved": state.segment_id,
-                "segment_root_resolved": str(state.segment_root_resolved),
-                "segment_state_source": state.source_of_truth,
-            },
-            {"status": "validation_failed", "error_code": code, "errors": len(errors)},
-            int((time.time() - start_time) * 1000),
-        )
-        telemetry.flush()
-        raise typer.Exit(code=1)
-    else:
-        # 1. Fail-Closed: AGENTS.md Constitution
-        match validate_agents_constitution(state.segment_root_resolved):
-            case Err(errors):
-                typer.echo("❌ Constitution Failed (AGENTS.md):")
-                for err in errors:
-                    typer.echo(f"   - {err}")
-                telemetry.event(
-                    "ctx.build",
-                    {"segment": segment},
-                    {"status": "constitution_failed", "errors": len(errors)},
-                    int((time.time() - start_time) * 1000),
-                )
-                telemetry.flush()
-                raise typer.Exit(code=1)
-            case Ok(_):
-                pass
-
-        # 2. Check for legacy file errors (Blocking)
-        legacy = detect_legacy_context_files(state.segment_root_resolved)
-        if legacy:
-            typer.echo("❌ Legacy context files detected (Fail-Closed):")
-            for lf in legacy:
-                typer.echo(f"   - _ctx/{lf} (rename to suffix format: rule 3+1)")
-            telemetry.event(
-                "ctx.build",
-                {"segment": segment},
-                {"status": "legacy_files_error", "count": len(legacy)},
-                int((time.time() - start_time) * 1000),
-            )
-            telemetry.flush()
-            raise typer.Exit(code=1)
+    _validate_north_star(state, segment, CMD_CTX_BUILD, telemetry, start_time)
+    _validate_build_specifics(state, segment, telemetry, start_time)
 
     use_case = BuildContextPackUseCase(file_system, telemetry)
     segment_fs = state.segment_root_resolved
@@ -575,7 +698,7 @@ def build(
             case Ok(pack):
                 typer.echo(pack)
                 telemetry.event(
-                    "ctx.build",
+                    CMD_CTX_BUILD,
                     {
                         "segment": segment,
                         "segment_id_resolved": state.segment_id,
@@ -590,7 +713,7 @@ def build(
                 for err in errors:
                     typer.echo(f"   - {err}")
                 telemetry.event(
-                    "ctx.build",
+                    CMD_CTX_BUILD,
                     {
                         "segment": segment,
                         "segment_id_resolved": state.segment_id,
@@ -604,7 +727,7 @@ def build(
                 raise typer.Exit(code=1)
     except Exception as e:
         telemetry.event(
-            "ctx.build",
+            CMD_CTX_BUILD,
             {
                 "segment": segment,
                 "segment_id_resolved": state.segment_id,
@@ -946,7 +1069,7 @@ def plan(
     segment: str = typer.Option(..., "--segment", "-s", help=HELP_SEGMENT),
     task: str = typer.Option(..., "--task", "-t", help="Task description to plan"),
     telemetry_level: str = typer.Option("lite", "--telemetry", help=HELP_TELEMETRY),
-    json_output: bool = typer.Option(False, "--json", "-j", help="Output as JSON"),
+    json_output: bool = typer.Option(False, "--json", "-j", help=HELP_OUTPUT_JSON),
 ) -> None:
     """Generate execution plan using PRIME index (no RAG)."""
     telemetry = _get_telemetry(segment, telemetry_level)
@@ -1075,7 +1198,7 @@ def eval_plan(
     # Run evaluation
     use_case = PlanUseCase(file_system, telemetry)
 
-    results = []
+    results: list[dict[str, Any]] = []
     feature_count = 0
     nl_trigger_count = 0
     alias_count = 0
@@ -1314,14 +1437,8 @@ def sync(
     telemetry_level: str = typer.Option("lite", "--telemetry", help=HELP_TELEMETRY),
 ) -> None:
     """Macro: Build + Validate."""
-    from src.application.exceptions import (
-        InvalidConfigScopeError,
-        InvalidSegmentPathError,
-        PrimeFileNotFoundError,
-    )
-    from src.cli.error_cards import render_error_card
+    from src.application.exceptions import InvalidConfigScopeError, InvalidSegmentPathError
     from src.infrastructure.segment_state import resolve_segment_state
-    from src.infrastructure.validators import validate_segment_structure_with_segment_id
 
     telemetry = _get_telemetry(segment, telemetry_level, require_ctx=False)
     start_time = time.time()
@@ -1329,84 +1446,11 @@ def sync(
 
     try:
         state = resolve_segment_state(segment, file_system)
-    except InvalidSegmentPathError as e:
-        error_card = render_error_card(
-            error_code="INVALID_SEGMENT_PATH",
-            error_class="PRECONDITION",
-            cause=str(e),
-            next_steps=[
-                "Verify the segment path exists and is a directory",
-                "Use absolute path or run from the segment root",
-            ],
-            verify_cmd=f"trifecta ctx sync -s {segment}",
-        )
-        telemetry.event(
-            "ctx.sync",
-            {"segment": segment},
-            {"status": "error", "error_code": "INVALID_SEGMENT_PATH"},
-            int((time.time() - start_time) * 1000),
-        )
-        telemetry.flush()
-        typer.echo(error_card, err=True)
-        raise typer.Exit(1)
-    except InvalidConfigScopeError as e:
-        error_card = render_error_card(
-            error_code="INVALID_CONFIG_SCOPE",
-            error_class="PRECONDITION",
-            cause=str(e),
-            next_steps=[
-                "Fix _ctx/trifecta_config.json repo_root to match segment root",
-                "Or remove config and re-run create/sync",
-            ],
-            verify_cmd=f"trifecta ctx sync -s {segment}",
-        )
-        telemetry.event(
-            "ctx.sync",
-            {"segment": segment},
-            {"status": "error", "error_code": "INVALID_CONFIG_SCOPE"},
-            int((time.time() - start_time) * 1000),
-        )
-        telemetry.flush()
-        typer.echo(error_card, err=True)
-        raise typer.Exit(1)
+    except (InvalidSegmentPathError, InvalidConfigScopeError) as e:
+        _handle_segment_resolution_error(e, segment, CMD_CTX_SYNC, telemetry, start_time)
 
-    validation = validate_segment_structure_with_segment_id(
-        state.segment_root_resolved, state.segment_id
-    )
-    if not validation.valid:
-        errors = validation.errors
-        code = _classify_north_star_precondition(errors)
-        if code == "SEGMENT_NOT_INITIALIZED":
-            next_steps = [
-                f"trifecta create -s {segment}",
-                f"trifecta refresh-prime -s {segment}",
-            ]
-        else:
-            next_steps = [
-                "Ensure _ctx contains exactly one agent_*.md, prime_*.md, session_*.md",
-                f"Expected suffix for this segment: {state.segment_id}",
-            ]
-        error_card = render_error_card(
-            error_code=code,
-            error_class="PRECONDITION",
-            cause="; ".join(errors),
-            next_steps=next_steps,
-            verify_cmd=f"trifecta ctx sync -s {segment}",
-        )
-        telemetry.event(
-            "ctx.sync",
-            {
-                "segment": segment,
-                "segment_id_resolved": state.segment_id,
-                "segment_root_resolved": str(state.segment_root_resolved),
-                "segment_state_source": state.source_of_truth,
-            },
-            {"status": "error", "error_code": code, "errors": len(errors)},
-            int((time.time() - start_time) * 1000),
-        )
-        telemetry.flush()
-        typer.echo(error_card, err=True)
-        raise typer.Exit(1)
+    _validate_north_star(state, segment, CMD_CTX_SYNC, telemetry, start_time)
+    _validate_build_specifics(state, segment, telemetry, start_time)
 
     try:
         typer.echo("🔄 Running build...")
@@ -1447,7 +1491,7 @@ def sync(
                     typer.echo(f"      - {err}")
 
         telemetry.event(
-            "ctx.sync",
+            CMD_CTX_SYNC,
             {
                 "segment": segment,
                 "segment_id_resolved": state.segment_id,
@@ -1462,82 +1506,7 @@ def sync(
             raise typer.Exit(code=1)
 
     except Exception as e:
-        if isinstance(e, PrimeFileNotFoundError):
-            error_card = render_error_card(
-                error_code="SEGMENT_NOT_INITIALIZED",
-                error_class="PRECONDITION",
-                cause=f"Missing prime file: {e.expected_path}",
-                next_steps=[
-                    f"trifecta create -s {segment}",
-                    f"trifecta refresh-prime -s {segment}",
-                ],
-                verify_cmd=f"trifecta ctx sync -s {segment}",
-            )
-            telemetry.event(
-                "ctx.sync",
-                {
-                    "segment": segment,
-                    "segment_id_resolved": state.segment_id,
-                    "segment_root_resolved": str(state.segment_root_resolved),
-                    "segment_state_source": state.source_of_truth,
-                },
-                {"status": "error", "error_code": "SEGMENT_NOT_INITIALIZED"},
-                int((time.time() - start_time) * 1000),
-            )
-            typer.echo(error_card, err=True)
-            raise typer.Exit(1)
-
-        # Substring fallback for backward compatibility (deprecated)
-        elif isinstance(e, FileNotFoundError) and "Expected prime file not found" in str(e):
-            from src.infrastructure.deprecations import maybe_emit_deprecated
-
-            # Track deprecated usage (policy: off|warn|fail via env var)
-            maybe_emit_deprecated("fallback_prime_missing_string_match", telemetry)
-
-            # Emit deprecation warning for harness detection (legacy)
-            typer.echo("TRIFECTA_DEPRECATED: fallback_prime_missing_string_match_used", err=True)
-
-            error_card = render_error_card(
-                error_code="SEGMENT_NOT_INITIALIZED",
-                error_class="PRECONDITION",
-                cause=str(e),
-                next_steps=[
-                    f"trifecta create -s {segment}",
-                    f"trifecta refresh-prime -s {segment}",
-                ],
-                verify_cmd=f"trifecta ctx sync -s {segment}",
-            )
-            telemetry.event(
-                "ctx.sync",
-                {
-                    "segment": segment,
-                    "segment_id_resolved": state.segment_id,
-                    "segment_root_resolved": str(state.segment_root_resolved),
-                    "segment_state_source": state.source_of_truth,
-                },
-                {"status": "error", "error_code": "SEGMENT_NOT_INITIALIZED"},
-                int((time.time() - start_time) * 1000),
-            )
-            typer.echo(error_card, err=True)
-            raise typer.Exit(1)
-
-        # All other exceptions (fail-closed)
-        else:
-            telemetry.event(
-                "ctx.sync",
-                {
-                    "segment": segment,
-                    "segment_id_resolved": state.segment_id,
-                    "segment_root_resolved": str(state.segment_root_resolved),
-                    "segment_state_source": state.source_of_truth,
-                },
-                {"status": "error"},
-                int((time.time() - start_time) * 1000),
-            )
-        typer.echo(_format_error(e, "Sync Error"), err=True)
-        if not isinstance(e, typer.Exit):
-            raise typer.Exit(1)
-        raise e
+        _handle_sync_build_error(e, segment, state, telemetry, start_time)
     finally:
         telemetry.flush()
 
@@ -1575,7 +1544,7 @@ def ctx_reset(
             raise typer.Exit(1)
 
         segment_id = config.segment_id
-        (Path(segment) / "skill.md").write_text(template_renderer.render_skill(config))
+        (Path(segment) / FILE_SKILL_MD).write_text(template_renderer.render_skill(config))
         (Path(segment) / "_ctx" / f"agent_{segment_id}.md").write_text(
             template_renderer.render_agent(config)
         )
@@ -1801,7 +1770,7 @@ def create(
 
     files = {
         "AGENTS.md": "# AGENTS\n\nRead skill.md and _ctx files before running commands.\n",
-        "skill.md": template_renderer.render_skill(config),
+        FILE_SKILL_MD: template_renderer.render_skill(config),
         "readme_tf.md": template_renderer.render_readme(config),
         f"_ctx/prime_{segment_id}.md": template_renderer.render_prime(config, []),
         f"_ctx/agent_{segment_id}.md": template_renderer.render_agent(config),
@@ -1820,7 +1789,7 @@ def create(
 
         required_bootstrap = [
             target_dir / "AGENTS.md",
-            target_dir / "skill.md",
+            target_dir / FILE_SKILL_MD,
             target_dir / "_ctx" / "trifecta_config.json",
             target_dir / "_ctx" / f"agent_{segment_id}.md",
             target_dir / "_ctx" / f"prime_{segment_id}.md",
@@ -1831,7 +1800,7 @@ def create(
         ]
 
         # Verify line count of skill.md
-        skill_lines = len(files["skill.md"].splitlines())
+        skill_lines = len(files[FILE_SKILL_MD].splitlines())
         if skill_lines > 100:
             raise ValueError(f"skill.md exceeds 100 lines ({skill_lines})")
 
@@ -2267,7 +2236,7 @@ def obsidian_validate() -> None:
 
 @linear_app.command("bootstrap")
 def linear_bootstrap(
-    root: str = typer.Option(".", "--root", help="Repository root"),
+    root: str = typer.Option(".", "--root", help=HELP_REPO_ROOT),
 ) -> None:
     """Bootstrap Linear status map by state IDs."""
     use_case = LinearSyncUseCase(Path(root))
@@ -2282,7 +2251,7 @@ def linear_bootstrap(
 
 @linear_app.command("doctor")
 def linear_doctor(
-    root: str = typer.Option(".", "--root", help="Repository root"),
+    root: str = typer.Option(".", "--root", help=HELP_REPO_ROOT),
 ) -> None:
     """Diagnose Linear viewer-mode readiness (policy/capabilities/status map)."""
     try:
@@ -2302,7 +2271,7 @@ def linear_doctor(
 @linear_app.command("push")
 def linear_push(
     wo_id: str = typer.Argument(..., help="WO ID, e.g. WO-0001"),
-    root: str = typer.Option(".", "--root", help="Repository root"),
+    root: str = typer.Option(".", "--root", help=HELP_REPO_ROOT),
 ) -> None:
     """Push one WO projection to Linear (outbound only)."""
     use_case = LinearSyncUseCase(Path(root))
@@ -2323,7 +2292,7 @@ def linear_push(
 
 @linear_app.command("sync")
 def linear_sync(
-    root: str = typer.Option(".", "--root", help="Repository root"),
+    root: str = typer.Option(".", "--root", help=HELP_REPO_ROOT),
 ) -> None:
     """Sync all WO projections to Linear (outbound only)."""
     use_case = LinearSyncUseCase(Path(root))
@@ -2344,7 +2313,7 @@ def linear_sync(
 
 @linear_app.command("reconcile")
 def linear_reconcile(
-    root: str = typer.Option(".", "--root", help="Repository root"),
+    root: str = typer.Option(".", "--root", help=HELP_REPO_ROOT),
     dry_run: bool = typer.Option(True, "--dry-run/--apply", help="Default dry-run"),
 ) -> None:
     """Reconcile local WO projection vs Linear state."""
@@ -2422,7 +2391,6 @@ def _render_repo_register_alias_output(entry: RepoEntry, json_output: bool) -> N
         typer.echo(f"Registered: {entry.repo_id}")
 
 
-
 def _render_repo_list_alias_output(repos: list[RepoEntry], json_output: bool) -> None:
     if json_output:
         output = [{"repo_id": r.repo_id, "path": r.path} for r in repos]
@@ -2433,7 +2401,6 @@ def _render_repo_list_alias_output(repos: list[RepoEntry], json_output: bool) ->
         else:
             for repo in repos:
                 typer.echo(f"{repo.repo_id}: {repo.path}")
-
 
 
 def _render_repo_show_alias_output(entry: RepoEntry, json_output: bool) -> None:
@@ -2449,14 +2416,16 @@ def _render_repo_show_alias_output(entry: RepoEntry, json_output: bool) -> None:
 @app.command("repo-register")
 def repo_register_alias(
     repo: str = typer.Argument(..., help="Repository path to register"),
-    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+    json_output: bool = typer.Option(False, "--json", help=HELP_OUTPUT_JSON),
 ) -> None:
     """Register a repository."""
     _render_repo_register_alias_output(_register_repo_entry(repo), json_output)
 
 
 @app.command("repo-list")
-def repo_list_alias(json_output: bool = typer.Option(False, "--json", help="Output as JSON")) -> None:
+def repo_list_alias(
+    json_output: bool = typer.Option(False, "--json", help=HELP_OUTPUT_JSON),
+) -> None:
     """List registered repositories."""
     _render_repo_list_alias_output(_list_repo_entries(), json_output)
 
@@ -2464,7 +2433,7 @@ def repo_list_alias(json_output: bool = typer.Option(False, "--json", help="Outp
 @app.command("repo-show")
 def repo_show_alias(
     repo_id: str = typer.Argument(..., help="Repository ID"),
-    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+    json_output: bool = typer.Option(False, "--json", help=HELP_OUTPUT_JSON),
 ) -> None:
     """Show repository details."""
     _render_repo_show_alias_output(_get_repo_entry_or_exit(repo_id), json_output)
@@ -2472,15 +2441,15 @@ def repo_show_alias(
 
 @app.command("index")
 def index_cmd(
-    repo: str = typer.Option(..., "--repo", "-r", help="Repository path"),
-    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+    repo: str = typer.Option(..., "--repo", "-r", help=HELP_REPO_PATH),
+    json_output: bool = typer.Option(False, "--json", help=HELP_OUTPUT_JSON),
 ) -> None:
     """Index a repository for search."""
     from src.domain.segment_resolver import resolve_segment_ref
 
     ref = resolve_segment_ref(repo)
     runtime_dir = (
-        Path.home() / ".local" / "share" / "trifecta" / "repos" / ref.fingerprint / "runtime"
+        Path.home() / DIR_LOCAL / "share" / "trifecta" / "repos" / ref.fingerprint / "runtime"
     )
     use_case = IndexUseCase(runtime_dir)
     result = use_case.execute(ref.root_abs)
@@ -2494,16 +2463,16 @@ def index_cmd(
 @app.command("query")
 def query_cmd(
     query: str = typer.Argument(..., help="Search query"),
-    repo: str = typer.Option(..., "--repo", "-r", help="Repository path"),
+    repo: str = typer.Option(..., "--repo", "-r", help=HELP_REPO_PATH),
     limit: int = typer.Option(10, "--limit", "-l", help="Max results"),
-    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+    json_output: bool = typer.Option(False, "--json", help=HELP_OUTPUT_JSON),
 ) -> None:
     """Search indexed repository."""
     from src.domain.segment_resolver import resolve_segment_ref
 
     ref = resolve_segment_ref(repo)
     runtime_dir = (
-        Path.home() / ".local" / "share" / "trifecta" / "repos" / ref.fingerprint / "runtime"
+        Path.home() / DIR_LOCAL / "share" / "trifecta" / "repos" / ref.fingerprint / "runtime"
     )
     use_case = QueryUseCase(runtime_dir)
     result = use_case.execute(query, limit)
@@ -2517,14 +2486,12 @@ def query_cmd(
             typer.echo(f"    {r.get('snippet')}")
 
 
-
 def _cleanup_daemon_runtime_artifacts(socket_path: Path, pid_path: Path) -> None:
     for path in (socket_path, pid_path):
         try:
             path.unlink()
         except FileNotFoundError:
             pass
-
 
 
 def _close_daemon_server(server: object | None) -> None:
@@ -2535,21 +2502,20 @@ def _close_daemon_server(server: object | None) -> None:
         close_method()
 
 
-
 daemon_app = typer.Typer(help="Daemon management commands")
 app.add_typer(daemon_app, name="daemon")
 
 
 @daemon_app.command("start")
 def daemon_start(
-    repo: str = typer.Option(..., "--repo", "-r", help="Repository path"),
+    repo: str = typer.Option(..., "--repo", "-r", help=HELP_REPO_PATH),
 ) -> None:
     """Start daemon for repository."""
     from src.domain.segment_resolver import resolve_segment_ref
 
     ref = resolve_segment_ref(repo)
     runtime_dir = (
-        Path.home() / ".local" / "share" / "trifecta" / "repos" / ref.fingerprint / "runtime"
+        Path.home() / DIR_LOCAL / "share" / "trifecta" / "repos" / ref.fingerprint / "runtime"
     )
     use_case = DaemonUseCase(runtime_dir)
     result = use_case.start()
@@ -2563,14 +2529,14 @@ def daemon_start(
 
 @daemon_app.command("stop")
 def daemon_stop(
-    repo: str = typer.Option(..., "--repo", "-r", help="Repository path"),
+    repo: str = typer.Option(..., "--repo", "-r", help=HELP_REPO_PATH),
 ) -> None:
     """Stop daemon for repository."""
     from src.domain.segment_resolver import resolve_segment_ref
 
     ref = resolve_segment_ref(repo)
     runtime_dir = (
-        Path.home() / ".local" / "share" / "trifecta" / "repos" / ref.fingerprint / "runtime"
+        Path.home() / DIR_LOCAL / "share" / "trifecta" / "repos" / ref.fingerprint / "runtime"
     )
     use_case = DaemonUseCase(runtime_dir)
     use_case.stop()
@@ -2580,15 +2546,15 @@ def daemon_stop(
 
 @daemon_app.command("status")
 def daemon_status(
-    repo: str = typer.Option(..., "--repo", "-r", help="Repository path"),
-    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+    repo: str = typer.Option(..., "--repo", "-r", help=HELP_REPO_PATH),
+    json_output: bool = typer.Option(False, "--json", help=HELP_OUTPUT_JSON),
 ) -> None:
     """Show daemon status for repository."""
     from src.domain.segment_resolver import resolve_segment_ref
 
     ref = resolve_segment_ref(repo)
     runtime_dir = (
-        Path.home() / ".local" / "share" / "trifecta" / "repos" / ref.fingerprint / "runtime"
+        Path.home() / DIR_LOCAL / "share" / "trifecta" / "repos" / ref.fingerprint / "runtime"
     )
     use_case = DaemonUseCase(runtime_dir)
     result = use_case.status()
@@ -2604,14 +2570,14 @@ def daemon_status(
 
 @daemon_app.command("restart")
 def daemon_restart(
-    repo: str = typer.Option(..., "--repo", "-r", help="Repository path"),
+    repo: str = typer.Option(..., "--repo", "-r", help=HELP_REPO_PATH),
 ) -> None:
     """Restart daemon for repository."""
     from src.domain.segment_resolver import resolve_segment_ref
 
     ref = resolve_segment_ref(repo)
     runtime_dir = (
-        Path.home() / ".local" / "share" / "trifecta" / "repos" / ref.fingerprint / "runtime"
+        Path.home() / DIR_LOCAL / "share" / "trifecta" / "repos" / ref.fingerprint / "runtime"
     )
     use_case = DaemonUseCase(runtime_dir)
     result = use_case.restart()
@@ -2630,7 +2596,7 @@ def daemon_run() -> None:
     import socket
     import stat
     import sys
-    import time
+    import time as _time
 
     runtime_dir_env = os.environ.get("TRIFECTA_RUNTIME_DIR")
     if not runtime_dir_env:
@@ -2672,24 +2638,62 @@ def daemon_run() -> None:
     signal.signal(signal.SIGTERM, shutdown_signal)
     signal.signal(signal.SIGINT, shutdown_signal)
 
-    start_time = time.time()
+    start_time = _time.time()
+
+    # Fase 4: TTL support (optional, default infinite)
+    ttl_env = os.environ.get("TRIFECTA_DAEMON_TTL")
+    ttl_seconds = int(ttl_env) if ttl_env else 0  # 0 = infinite
+
+    # Initialize LSPClient (Fase 3: costura de integración LSP)
+    lsp_client = None
+    try:
+        lsp_client = LSPClient(runtime_dir, telemetry=None)
+        lsp_client.start()
+    except Exception:
+        lsp_client = None  # Graceful degradation if LSP fails
+
+    # Emit daemon_status telemetry event
+    try:
+        runtime_dir_env = os.environ.get("TRIFECTA_RUNTIME_DIR", "")
+        _telem = Telemetry(Path(runtime_dir_env).resolve() if runtime_dir_env else Path.cwd())
+        _telem.event(
+            "daemon_status",
+            {},
+            {
+                "state": "running",
+                "pid": os.getpid(),
+                "uptime": 0,
+                "lsp_enabled": lsp_client is not None,
+            },
+            1,
+        )
+        _telem.flush()
+    except Exception:
+        pass  # Telemetry is non-blocking
 
     try:
         while running:
+            # Fase 4: Check TTL (only if configured)
+            if ttl_seconds > 0 and (_time.time() - start_time) > ttl_seconds:
+                break
+
             try:
                 conn, _ = server.accept()
 
                 conn.settimeout(5.0)
                 try:
-                    raw_data = conn.recv(256)
+                    raw_data = conn.recv(4096)
                     if not raw_data:
                         conn.close()
                         continue
 
                     data = raw_data.decode("utf-8", errors="replace").strip()
 
-                    if len(data) > 128:
-                        conn.sendall(b"ERROR: Command too long\n")
+                    if len(data) > 4096:
+                        conn.sendall(
+                            json.dumps({"status": "error", "message": "Command too long"}).encode()
+                            + b"\n"
+                        )
                         conn.close()
                         continue
                 except socket.timeout:
@@ -2701,15 +2705,29 @@ def daemon_run() -> None:
                     conn.close()
                     continue
 
+                # Try JSON envelope (Fase 3: LSP requests)
+                try:
+                    req = json.loads(data)
+                    if isinstance(req, dict) and "method" in req:
+                        resp = _handle_daemon_lsp_request(req, lsp_client, start_time)
+                        conn.sendall(json.dumps(resp).encode() + b"\n")
+                        conn.close()
+                        continue
+                except (json.JSONDecodeError, TypeError):
+                    pass  # Not JSON, fall through to text protocol
+
+                # Text protocol (backward compat)
                 if data == "PING":
                     conn.sendall(b"PONG\n")
                 elif data == "HEALTH":
+                    lsp_state = lsp_client.state.value if lsp_client else "unavailable"
                     status = {
                         "status": "ok",
                         "pid": os.getpid(),
-                        "uptime": int(time.time() - start_time),
+                        "uptime": int(_time.time() - start_time),
                         "version": "1.0.0",
                         "protocol": ["PING", "HEALTH", "SHUTDOWN"],
+                        "lsp": {"state": lsp_state, "enabled": lsp_client is not None},
                     }
                     conn.sendall(json.dumps(status).encode() + b"\n")
                 elif data == "SHUTDOWN":
@@ -2725,8 +2743,58 @@ def daemon_run() -> None:
                 sys.stderr.write(f"Daemon error: {exc}\n")
                 break
     finally:
+        if lsp_client:
+            try:
+                lsp_client.stop()
+            except Exception:
+                pass
         _close_daemon_server(server)
         _cleanup_daemon_runtime_artifacts(socket_path, pid_path)
+
+
+def _handle_daemon_lsp_request(req: dict, lsp_client, _start_time: float) -> dict:
+    """Handle JSON envelope LSP requests for daemon run (Fase 3)."""
+    method = req.get("method", "")
+    params = req.get("params", {})
+
+    if not lsp_client:
+        resp = LSPResponse.unavailable_response(
+            fallback_reason=FallbackReason.DAEMON_UNAVAILABLE,
+            message="LSP client not initialized",
+        )
+        return resp.to_dict()
+
+    if not lsp_client.is_ready():
+        resp = LSPResponse.degraded_response(
+            fallback_reason=FallbackReason.LSP_NOT_READY,
+            message=f"LSP state: {lsp_client.state.value}",
+        )
+        return resp.to_dict()
+
+    if lsp_client.state == LSPState.FAILED:
+        resp = LSPResponse.degraded_response(
+            fallback_reason=FallbackReason.LSP_ERROR,
+            message="LSP in FAILED state",
+        )
+        return resp.to_dict()
+
+    try:
+        result = lsp_client.request(method, params)
+        if result:
+            return LSPResponse.full_response(result).to_dict()
+        else:
+            resp = LSPResponse.degraded_response(
+                fallback_reason=FallbackReason.LSP_REQUEST_TIMEOUT,
+                message=f"LSP request '{method}' returned no data",
+            )
+            return resp.to_dict()
+    except Exception as exc:
+        resp = LSPResponse.error_response(
+            error_code="LSP_ERROR",
+            fallback_reason=FallbackReason.LSP_ERROR,
+            message=str(exc),
+        )
+        return resp.to_dict()
 
 
 if __name__ == "__main__":
