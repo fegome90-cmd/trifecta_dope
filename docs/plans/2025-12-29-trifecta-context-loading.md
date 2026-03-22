@@ -1,3 +1,8 @@
+# STATUS: PARTIALLY OBSOLETE
+Reemplazo vigente: `docs/graph-research/04-graph-pcc-boundary-audit.md`, `docs/graph-research/06-mvp-launch-synthesis.md`
+Motivo: la intuición PCC sigue siendo útil, pero su modelado de contexto/prompt y suposiciones de carga no deben guiar Graph MVP.
+No usar como base de implementación.
+
 # Trifecta Context Loading — Programmatic Context Calling
 
 **Status**: Architecture Corrected  

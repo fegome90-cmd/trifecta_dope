@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 
 from src.platform.daemon_manager import DaemonManager
 from src.platform.health import HealthChecker
@@ -9,19 +10,19 @@ class DaemonUseCase:
         self._manager = DaemonManager(runtime_dir)
         self._health = HealthChecker(runtime_dir)
 
-    def start(self) -> dict:
+    def start(self) -> dict[str, Any]:
         ok = self._manager.start()
         return {"status": "ok" if ok else "error", "running": ok}
 
-    def stop(self) -> dict:
+    def stop(self) -> dict[str, Any]:
         ok = self._manager.stop()
         return {"status": "ok", "running": not ok}
 
-    def restart(self) -> dict:
+    def restart(self) -> dict[str, Any]:
         ok = self._manager.restart()
         return {"status": "ok" if ok else "error", "running": ok}
 
-    def status(self) -> dict:
+    def status(self) -> dict[str, Any]:
         status = self._manager.status()
         health = self._health.check()
         return {

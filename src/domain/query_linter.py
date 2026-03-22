@@ -1,4 +1,4 @@
-from typing import TypedDict
+from typing import Any, TypedDict
 from src.domain.anchor_extractor import extract_anchors
 
 
@@ -16,13 +16,15 @@ class LinterPlan(TypedDict):
     original_query: str
     query_class: str
     token_count: int
-    anchors_detected: dict
+    anchors_detected: dict[str, Any]
     expanded_query: str
     changed: bool
     changes: LinterChanges
 
 
-def classify_query(query: str, anchors_cfg: dict, aliases_cfg: dict) -> dict:
+def classify_query(
+    query: str, anchors_cfg: dict[str, Any], aliases_cfg: dict[str, Any]
+) -> dict[str, Any]:
     """
     Clasifica una query en vague/semi/guided basándose en anchors y tokens.
     Función pura.
@@ -53,7 +55,9 @@ def classify_query(query: str, anchors_cfg: dict, aliases_cfg: dict) -> dict:
     }
 
 
-def expand_query(query: str, analysis: dict, anchors_cfg: dict) -> dict:
+def expand_query(
+    query: str, analysis: dict[str, Any], anchors_cfg: dict[str, Any]
+) -> dict[str, Any]:
     """
     Expande una query VAGUE de forma determinista.
     Función pura.
@@ -129,7 +133,7 @@ def expand_query(query: str, analysis: dict, anchors_cfg: dict) -> dict:
     }
 
 
-def lint_query(query: str, anchors_cfg: dict, aliases_cfg: dict) -> LinterPlan:
+def lint_query(query: str, anchors_cfg: dict[str, Any], aliases_cfg: dict[str, Any]) -> LinterPlan:
     """
     Orquesta clasificación y expansión para producir un plan auditable.
 

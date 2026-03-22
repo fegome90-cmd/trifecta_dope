@@ -14,7 +14,7 @@ Health by Source:
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from src.application.telemetry_reports import load_telemetry_data
 from src.application.zero_hit_tracker import create_zero_hit_tracker
@@ -26,7 +26,7 @@ class HealthResult:
 
     status: str  # "OK", "WARN", "FAIL"
     message: str
-    details: dict
+    details: dict[str, Any]
 
 
 class TelemetryHealth:
@@ -36,16 +36,16 @@ class TelemetryHealth:
 
     def __init__(self, segment_path: Path):
         self.segment_path = segment_path
-        self.events: list = []
-        self.metrics: dict = {}
-        self.last_run: dict = {}
+        self.events: list[dict[str, Any]] = []
+        self.metrics: dict[str, Any] = {}
+        self.last_run: dict[str, Any] = {}
         self._load_data()
 
     def _load_data(self):
         """Load telemetry data from segment."""
         self.events, self.metrics, self.last_run = load_telemetry_data(self.segment_path)
 
-    def _compute_zero_hit_by_source(self) -> dict:
+    def _compute_zero_hit_by_source(self) -> dict[str, Any]:
         """Compute zero-hit ratios by source from events.
 
         Returns:
@@ -118,7 +118,7 @@ class TelemetryHealth:
 
         return result
 
-    def _compute_spanish_alias_impact(self) -> dict:
+    def _compute_spanish_alias_impact(self) -> dict[str, Any]:
         from collections import defaultdict
 
         alias_events = [e for e in self.events if e.get("cmd") == "ctx.search.spanish_alias"]

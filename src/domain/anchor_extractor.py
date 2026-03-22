@@ -1,4 +1,9 @@
-def extract_anchors(query: str, anchors_cfg: dict, aliases_cfg: dict) -> dict:
+from typing import Any
+
+
+def extract_anchors(
+    query: str, anchors_cfg: dict[str, Any], aliases_cfg: dict[str, Any]
+) -> dict[str, Any]:
     """
     Pure logic extractor for anchors and aliases.
     Args:

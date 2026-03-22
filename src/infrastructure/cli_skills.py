@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Optional
 
 import typer
-import yaml  # type: ignore[import-untyped]
+import yaml
 
 from src.application.keyword_extractor import (
     GeneratedAliasMap,

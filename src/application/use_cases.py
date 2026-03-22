@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-import yaml  # type: ignore[import-untyped]
+import yaml
 
 from src.application.context_service import ContextService
 from src.domain.constants import MAX_SKILL_LINES
@@ -102,8 +102,9 @@ class ValidateTrifectaUseCase:
             if not prime_files:
                 errors.append("Missing: _ctx/prime_*.md")
 
-            agent_path = ctx_dir / "agent.md"
-            if not agent_path.exists():
+            canonical_agent_files = list(ctx_dir.glob("agent_*.md"))
+            legacy_agent_path = ctx_dir / "agent.md"
+            if not canonical_agent_files and not legacy_agent_path.exists():
                 errors.append("Missing: _ctx/agent.md")
 
             session_files = list(ctx_dir.glob("session_*.md"))
@@ -289,22 +290,15 @@ class BuildContextPackUseCase:
         if self.telemetry:
             self.telemetry.incr("ctx_build_count")
         """Scan a Trifecta segment and build a context_pack.json."""
-        from src.domain.segment_resolver import get_segment_slug
         from src.domain.result import Err, Ok
+        from src.infrastructure.segment_state import resolve_segment_state
 
-        # 1. Derive segment_id deterministically
-        # Priority: trifecta_config.json (source of truth) > directory name (fallback)
+        # 1. Derive segment_id from the canonical tracked _ctx triplet.
         try:
-            config = self.file_system.load_trifecta_config(target_path)
-            if config:
-                # Source of Truth: Config
-                segment_id = config.segment_id
-            else:
-                # Fallback: Directory Name
-                segment_id = get_segment_slug(target_path)
+            state = resolve_segment_state(str(target_path), self.file_system)
+            segment_id = state.segment_id
         except ValueError:
-            # Deterministic Fail-Closed
-            return Err(["Failed Constitution: trifecta_config.json is invalid"])
+            return Err(["Failed Constitution: segment canon is invalid"])
 
         ctx_dir = target_path / "_ctx"
 
@@ -653,7 +647,11 @@ class MacroLoadUseCase:
 
         # Heuristics
         if any(kw in task_lower for kw in ["implement", "debug", "fix", "code"]):
-            files_to_load.append(ctx_dir / "agent.md")
+            canonical_agent_files = sorted(ctx_dir.glob("agent_*.md"))
+            if canonical_agent_files:
+                files_to_load.append(canonical_agent_files[0])
+            else:
+                files_to_load.append(ctx_dir / "agent.md")
 
         if any(kw in task_lower for kw in ["plan", "design", "doc"]):
             if prime_path:

@@ -1,0 +1,49 @@
+[
+  {
+    "adapter": "Debugpy",
+    "label": "Python Active File",
+    "request": "launch",
+    "program": "$ZED_FILE"
+  },
+  {
+    "adapter": "Debugpy",
+    "label": "Trifecta CLI: --help",
+    "request": "launch",
+    "module": "src.infrastructure.cli",
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "justMyCode": true,
+    "args": [
+      "--help"
+    ]
+  },
+  {
+    "adapter": "Debugpy",
+    "label": "Trifecta CLI: ctx search",
+    "request": "launch",
+    "module": "src.infrastructure.cli",
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "justMyCode": true,
+    "args": [
+      "ctx",
+      "search",
+      "--segment",
+      ".",
+      "--query",
+      "Find documentation about the AST cache architecture and CLI integration",
+      "--limit",
+      "5"
+    ]
+  },
+  {
+    "adapter": "Debugpy",
+    "label": "Pytest Current File",
+    "request": "launch",
+    "module": "pytest",
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "justMyCode": false,
+    "args": [
+      "-q",
+      "$ZED_FILE"
+    ]
+  }
+]

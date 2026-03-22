@@ -1,8 +1,8 @@
-# Trifecta Dope - Repository Map
+# Wo Lifecycle Harness Anchor - Repository Map
 
 > **Generated**: __DATE__
 > **Purpose**: High-level module navigation for ctx.plan code_navigation feature
-> **Hash**: f313fbe86ce2
+> **Hash**: b0205f894d14
 
 ---
 

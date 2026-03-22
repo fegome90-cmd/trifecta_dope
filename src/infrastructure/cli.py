@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Literal, Optional, Tuple
 
 import click
-import typer  # type: ignore
+import typer
 from click.exceptions import UsageError
 
 # AST/LSP Integration (Phase 2a/2b)
@@ -1784,7 +1784,7 @@ def create(
     # Segment ID derived from directory name
     target_dir = Path(segment).resolve()
 
-    template_renderer, _, _ = _get_dependencies(str(target_dir))
+    template_renderer, file_system, _ = _get_dependencies(str(target_dir))
     telemetry = _get_telemetry(str(target_dir), "lite", require_ctx=False)
     start_time = time.time()
 
@@ -1815,6 +1815,16 @@ def create(
     }
 
     try:
+        from src.infrastructure.segment_state import resolve_segment_state
+
+        try:
+            resolve_segment_state(str(target_dir), file_system)
+        except ValueError as e:
+            if str(e) != "SEGMENT_CANON_MISSING":
+                raise
+        else:
+            raise ValueError("SEGMENT_ALREADY_INITIALIZED")
+
         for rel_path, content in files.items():
             full_path = target_dir / rel_path
             full_path.parent.mkdir(parents=True, exist_ok=True)

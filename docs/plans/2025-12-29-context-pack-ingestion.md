@@ -1,3 +1,8 @@
+# STATUS: HISTORICAL
+Reemplazo vigente: `docs/graph-research/04-graph-pcc-boundary-audit.md`, `docs/graph-research/06-mvp-launch-synthesis.md`
+Motivo: asume IDs de chunks estables y un modelo prompt-first que no debe usarse para diseñar Graph hoy.
+No usar como base de implementación.
+
 # Trifecta Context Pack - Implementation Plan
 
 **Date**: 2025-12-29

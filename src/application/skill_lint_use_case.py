@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from src.domain.result import Err, Ok
 from src.domain.skill_contracts import SkillValidationError, validate_skill_meta
@@ -26,7 +27,7 @@ class SkillLintResult:
     valid: bool
     errors: list[SkillValidationError]
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "path": self.path,
             "name": self.name,
@@ -44,7 +45,7 @@ class SkillLintReport:
     valid_count: int
     invalid_count: int
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "total": self.total,
             "valid": self.valid_count,

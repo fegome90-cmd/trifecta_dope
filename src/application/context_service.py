@@ -2,7 +2,7 @@
 
 import json
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 
 from src.domain.context_models import ContextPack, GetResult, SearchHit, SearchResult
 
@@ -222,7 +222,7 @@ class ContextService:
             evidence_metadata=evidence_metadata,
         )
 
-    def _check_evidence(self, chunk, query: str) -> dict:
+    def _check_evidence(self, chunk, query: str) -> dict[str, Any]:
         """
         Check for deterministic evidence signals.
 

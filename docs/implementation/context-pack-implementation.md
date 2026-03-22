@@ -1,3 +1,8 @@
+# STATUS: PARTIALLY OBSOLETE
+Reemplazo vigente: `docs/graph-research/04-graph-pcc-boundary-audit.md`, `docs/graph-research/06-mvp-launch-synthesis.md`
+Motivo: conserva valor de diseño fundacional, pero su framing de digest/index "always in prompt" no es contrato vigente para implementar Graph.
+No usar como base de implementación.
+
 # Context Pack Implementation - Foundational Design Document
 
 **Date**: 2025-12-29 (Original Design)

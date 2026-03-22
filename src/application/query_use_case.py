@@ -1,5 +1,6 @@
 import sqlite3
 from pathlib import Path
+from typing import Any
 
 
 class QueryUseCase:
@@ -7,7 +8,7 @@ class QueryUseCase:
         self._runtime_dir = runtime_dir
         self._search_db = runtime_dir / "search.db"
 
-    def execute(self, query: str, limit: int = 10) -> dict:
+    def execute(self, query: str, limit: int = 10) -> dict[str, Any]:
         if not self._search_db.exists():
             return {"status": "error", "message": "No index found. Run index first."}
         conn = sqlite3.connect(self._search_db)

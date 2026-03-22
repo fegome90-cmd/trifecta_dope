@@ -9,7 +9,7 @@ src.infrastructure.aliases_fs which combines both sources.
 from pathlib import Path
 from typing import Dict, List
 
-import yaml  # type: ignore[import-untyped]
+import yaml
 
 
 class AliasLoader:

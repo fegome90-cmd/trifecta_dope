@@ -6,11 +6,11 @@ Generate concise reports from Trifecta telemetry data.
 import json
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from collections import Counter
 
 
-def load_telemetry_data(segment_path: Path) -> tuple[List[Dict], Dict, Dict]:
+def load_telemetry_data(segment_path: Path) -> tuple[list[dict[str, Any]], dict[str, Any], dict[str, Any]]:
     """Load telemetry data from segment.
 
     Args:
@@ -51,7 +51,7 @@ def load_telemetry_data(segment_path: Path) -> tuple[List[Dict], Dict, Dict]:
     return events, metrics, last_run
 
 
-def filter_events_by_date(events: List[Dict], days: int) -> List[Dict]:
+def filter_events_by_date(events: list[dict[str, Any]], days: int) -> list[dict[str, Any]]:
     """Filter events to last N days.
 
     Args:
@@ -164,7 +164,7 @@ def generate_report(segment_path: Path, last_days: int = 7, format_type: str = "
     # Token efficiency by command
     lines.append("Token Efficiency")
     lines.append("─" * 50)
-    cmd_token_stats: Dict[str, Dict] = {}
+    cmd_token_stats: dict[str, dict[str, Any]] = {}
     for e in events:
         cmd = e["cmd"]
         tokens = e.get("tokens", {})
@@ -233,7 +233,7 @@ def export_data(
     return data
 
 
-def get_quick_stats(segment_path: Path) -> Dict[str, Any]:
+def get_quick_stats(segment_path: Path) -> dict[str, Any]:
     """Get quick stats for summary display.
 
     Args:

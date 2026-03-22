@@ -39,7 +39,7 @@ class DaemonManager(Protocol):
         """Stop daemon for repo."""
         ...
 
-    def status(self, repo_id: str) -> dict:
+    def status(self, repo_id: str) -> dict[str, Any]:
         """Get daemon status."""
         ...
 
@@ -51,6 +51,6 @@ class DaemonManager(Protocol):
 class HealthChecker(Protocol):
     """Protocol defining health check interface."""
 
-    def check(self, repo_id: str) -> dict:
+    def check(self, repo_id: str) -> dict[str, Any]:
         """Perform health check."""
         ...

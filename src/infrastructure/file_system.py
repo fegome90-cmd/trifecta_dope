@@ -33,14 +33,27 @@ class FileSystemAdapter:
     def scan_docs(
         self,
         scan_path: Path,
-        repo_root: Path,
+        repo_root: Path,  # noqa: ARG002 - kept for API compatibility, but unused
         limit: int = 10,
     ) -> list[str]:
-        """Scan a directory for markdown docs."""
+        """Scan a directory for markdown docs.
+
+        Returns paths relative to scan_path (segment), not repo_root.
+        This ensures worktree compatibility - paths work regardless of
+        whether segment is in main repo or a git worktree.
+
+        Args:
+            scan_path: The segment directory to scan
+            repo_root: Deprecated - kept for API compatibility only
+            limit: Maximum number of docs to return
+
+        Returns:
+            List of paths relative to scan_path
+        """
         if not scan_path.exists():
             return []
 
-        docs = [str(p.relative_to(repo_root)) for p in scan_path.glob("**/*.md")]
+        docs = [str(p.relative_to(scan_path)) for p in scan_path.glob("**/*.md")]
         return sorted(docs)[:limit]
 
     def load_trifecta_config(self, segment_path: Path) -> "TrifectaConfig | None":
@@ -61,6 +74,13 @@ class FileSystemAdapter:
             content = config_path.read_text()
             data = json.loads(content)
             return TrifectaConfig(**data)
-        except Exception:
-            # Deterministic strict error (fail-closed)
-            raise ValueError("Failed Constitution: trifecta_config.json is invalid")
+        except json.JSONDecodeError as e:
+            # Fail-closed: invalid JSON syntax
+            raise ValueError(
+                f"Failed Constitution: trifecta_config.json has invalid JSON: {e.msg} at line {e.lineno}"
+            ) from e
+        except Exception as e:
+            # Fail-closed: validation errors (Pydantic) or other issues
+            raise ValueError(
+                f"Failed Constitution: trifecta_config.json is invalid: {type(e).__name__}: {e}"
+            ) from e

@@ -1,5 +1,6 @@
 import sqlite3
 from pathlib import Path
+from typing import Any
 
 
 class IndexUseCase:
@@ -7,7 +8,7 @@ class IndexUseCase:
         self._runtime_dir = runtime_dir
         self._search_db = runtime_dir / "search.db"
 
-    def execute(self, segment_path: Path) -> dict:
+    def execute(self, segment_path: Path) -> dict[str, Any]:
         self._init_search_db()
         indexed_files = self._index_segment(segment_path)
         return {"status": "ok", "indexed": indexed_files}

@@ -1,5 +1,7 @@
 {
   "flags": [
+    "--explain",
+    "--explain-format",
     "--help",
     "--limit",
     "--no-lint",

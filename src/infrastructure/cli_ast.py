@@ -1,8 +1,8 @@
-import typer  # type: ignore
+import typer
 import time
 import json
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 from src.infrastructure.telemetry import Telemetry
 from src.domain.result import Ok, Err
 from src.application.symbol_selector import SymbolQuery
@@ -14,7 +14,7 @@ from src.domain.lsp_contracts import LSPResponse, FallbackReason, Backend
 ast_app = typer.Typer(help="AST & Parsing Commands")
 
 
-def _json_output(data: dict):
+def _json_output(data: dict[str, Any]):
     typer.echo(json.dumps(data, indent=2))
 
 
@@ -239,6 +239,16 @@ def hover(
         data={"uri": uri, "line": line, "char": character, "lsp": "detected"},
         message="Hover not yet implemented. LSP detected but not connected.",
     )
+
+    # Fail-closed: --require-lsp with WIP response should error
+    if require_lsp:
+        response = LSPResponse.error_response(
+            error_code="LSP_NOT_IMPLEMENTED",
+            fallback_reason=FallbackReason.LSP_NOT_IMPLEMENTED,
+            message="LSP hover not yet implemented. --require-lsp specified.",
+        )
+        _json_output(response.to_dict())
+        raise typer.Exit(1)
 
     if telemetry:
         telemetry.event(
