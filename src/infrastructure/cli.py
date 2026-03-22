@@ -42,6 +42,11 @@ from src.application.use_cases import (
 from src.application.status_use_case import StatusUseCase
 from src.application.doctor_use_case import DoctorUseCase
 from src.application.repo_use_case import RepoEntry, RepoUseCase
+from src.infrastructure.cli_renderers import (
+    render_repo_list,
+    render_repo_register,
+    render_repo_show,
+)
 from src.application.index_use_case import IndexUseCase
 from src.application.query_use_case import QueryUseCase
 from src.application.daemon_use_case import DaemonUseCase
@@ -224,85 +229,6 @@ def _format_error(e: Exception, title: str = "Error") -> str:
 
 
 # =============================================================================
-# T8: Stats Command
-# =============================================================================
-
-
-def _load_json_stats(file_path: Path) -> dict[str, Any]:
-    if file_path.exists():
-        try:
-            return json.loads(file_path.read_text())
-        except Exception:
-            pass
-    return {}
-
-def _print_alias_expansion_stats(metrics: dict[str, Any]) -> None:
-    alias_expansion_count = metrics.get("ctx_search_alias_expansion_count", 0)
-    alias_terms_total = metrics.get("ctx_search_alias_terms_total", 0)
-    search_count = metrics.get("ctx_search_count", 0)
-
-    if alias_expansion_count > 0 and search_count > 0:
-        avg_terms = alias_terms_total / alias_expansion_count if alias_expansion_count > 0 else 0
-        typer.echo("\nAlias Expansion:")
-        typer.echo(
-            f"  {alias_expansion_count} searches expanded ({alias_expansion_count / search_count * 100:.1f}%), avg {avg_terms:.1f} terms"
-        )
-
-def _print_last_run_stats(last_run: dict[str, Any]) -> None:
-    if not last_run:
-        return
-    typer.echo("\nLast Run:")
-    typer.echo(f"  Timestamp: {last_run.get('ts', 'unknown')}")
-    latencies = last_run.get("latencies", {})
-    if latencies:
-        typer.echo("  Latencies:")
-        for cmd, stats in latencies.items():
-            count = stats.get("count", 0)
-            # Read new keys (p50_ms, p95_ms, max_ms) with backward compat
-            p50 = stats.get("p50_ms", stats.get("p50", 0))
-            p95 = stats.get("p95_ms", stats.get("p95", 0))
-            max_ms = stats.get("max_ms", stats.get("max", 0))
-
-            if count == 0:
-                typer.echo(f"    {cmd}: no samples")
-            else:
-                typer.echo(
-                    f"    {cmd}: p50={p50:.3f}ms p95={p95:.3f}ms max={max_ms:.3f}ms (n={count})"
-                )
-
-    warnings = last_run.get("top_warnings", [])
-    if warnings:
-        typer.echo("\n  Top Warnings:")
-        for w in warnings:
-            typer.echo(f"    - {w}")
-
-@ctx_app.command("stats")
-def ctx_stats(
-    segment: str = typer.Option(..., "--segment", "-s", help=HELP_SEGMENT),
-) -> None:
-    """[T8] Show telemetry stats for a segment."""
-    path = _resolve_segment(segment)
-    telemetry_dir = path / "_ctx" / "telemetry"
-
-    if not telemetry_dir.exists():
-        typer.echo(f"No telemetry found at {telemetry_dir}")
-        return
-
-    metrics = _load_json_stats(telemetry_dir / "metrics.json")
-    last_run = _load_json_stats(telemetry_dir / "last_run.json")
-
-    typer.echo(f"📊 Telemetry for {segment}")
-    typer.echo(f"Path: {telemetry_dir}\n")
-
-    typer.echo("Counters:")
-    for k, v in sorted(metrics.items()):
-        typer.echo(f"  {k}: {v}")
-
-    _print_alias_expansion_stats(metrics)
-    _print_last_run_stats(last_run)
-
-
-# =============================================================================
 # Status and Doctor Commands
 # =============================================================================
 
@@ -403,47 +329,15 @@ def _get_repo_entry_or_exit(repo_id: str) -> RepoEntry:
 
 
 def _render_repo_register_output(entry: RepoEntry, json_output: bool) -> None:
-    if json_output:
-        output = {
-            "repo_id": entry.repo_id,
-            "path": entry.path,
-            "slug": entry.slug,
-            "fingerprint": entry.fingerprint,
-        }
-        typer.echo(json.dumps(output, indent=2))
-    else:
-        typer.echo(f"Registered: {entry.slug}")
-        typer.echo(f"  ID: {entry.repo_id}")
-        typer.echo(f"  Path: {entry.path}")
+    render_repo_register(entry, json_output, legacy_mode=False)
 
 
 def _render_repo_list_output(repos: list[RepoEntry], json_output: bool) -> None:
-    if json_output:
-        output = {"repos": [{"repo_id": r.repo_id, "path": r.path, "slug": r.slug} for r in repos]}
-        typer.echo(json.dumps(output, indent=2))
-    else:
-        if not repos:
-            typer.echo("No registered repositories")
-        else:
-            typer.echo(f"Registered Repositories ({len(repos)}):")
-            for repo in repos:
-                typer.echo(f"  - {repo.slug}: {repo.repo_id}")
+    render_repo_list(repos, json_output, legacy_mode=False)
 
 
 def _render_repo_show_output(entry: RepoEntry, json_output: bool) -> None:
-    if json_output:
-        output = {
-            "repo_id": entry.repo_id,
-            "path": entry.path,
-            "slug": entry.slug,
-            "fingerprint": entry.fingerprint,
-        }
-        typer.echo(json.dumps(output, indent=2))
-    else:
-        typer.echo(f"Repository: {entry.slug}")
-        typer.echo(f"  ID: {entry.repo_id}")
-        typer.echo(f"  Path: {entry.path}")
-        typer.echo(f"  Fingerprint: {entry.fingerprint}")
+    render_repo_show(entry, json_output, legacy_mode=False)
 
 
 @repo_app.command("register")
@@ -1850,8 +1744,13 @@ def validate_trifecta(
     """
     Validate structure of a Trifecta Segment (files exist, YAML valid).
 
-    TIP: Run this after creating or modifying a Trifecta pack.
+    DEPRECATED: This command is deprecated and will be removed in a future version.
+    Use 'trifecta ctx validate' instead.
     """
+    typer.echo(
+        "⚠️  DEPRECATED: 'validate-trifecta' is deprecated. Use 'trifecta ctx validate' instead.",
+        err=True,
+    )
     _, file_system, _ = _get_dependencies(segment)
     use_case = ValidateTrifectaUseCase(file_system)
 
@@ -2384,33 +2283,15 @@ def main() -> None:
 
 
 def _render_repo_register_alias_output(entry: RepoEntry, json_output: bool) -> None:
-    if json_output:
-        output = {"repo_id": entry.repo_id, "path": entry.path}
-        typer.echo(json.dumps(output, indent=2))
-    else:
-        typer.echo(f"Registered: {entry.repo_id}")
+    render_repo_register(entry, json_output, legacy_mode=True)
 
 
 def _render_repo_list_alias_output(repos: list[RepoEntry], json_output: bool) -> None:
-    if json_output:
-        output = [{"repo_id": r.repo_id, "path": r.path} for r in repos]
-        typer.echo(json.dumps(output, indent=2))
-    else:
-        if not repos:
-            typer.echo("No registered repositories")
-        else:
-            for repo in repos:
-                typer.echo(f"{repo.repo_id}: {repo.path}")
+    render_repo_list(repos, json_output, legacy_mode=True)
 
 
 def _render_repo_show_alias_output(entry: RepoEntry, json_output: bool) -> None:
-    if json_output:
-        output = {"repo_id": entry.repo_id, "path": entry.path, "slug": entry.slug}
-        typer.echo(json.dumps(output, indent=2))
-    else:
-        typer.echo(f"Repository: {entry.repo_id}")
-        typer.echo(f"  Path: {entry.path}")
-        typer.echo(f"  Slug: {entry.slug}")
+    render_repo_show(entry, json_output, legacy_mode=True)
 
 
 @app.command("repo-register")
@@ -2418,7 +2299,14 @@ def repo_register_alias(
     repo: str = typer.Argument(..., help="Repository path to register"),
     json_output: bool = typer.Option(False, "--json", help=HELP_OUTPUT_JSON),
 ) -> None:
-    """Register a repository."""
+    """Register a repository.
+
+    DEPRECATED: Use 'trifecta repo register' instead.
+    """
+    typer.echo(
+        "⚠️  DEPRECATED: 'repo-register' is deprecated. Use 'trifecta repo register' instead.",
+        err=True,
+    )
     _render_repo_register_alias_output(_register_repo_entry(repo), json_output)
 
 
@@ -2426,7 +2314,14 @@ def repo_register_alias(
 def repo_list_alias(
     json_output: bool = typer.Option(False, "--json", help=HELP_OUTPUT_JSON),
 ) -> None:
-    """List registered repositories."""
+    """List registered repositories.
+
+    DEPRECATED: Use 'trifecta repo list' instead.
+    """
+    typer.echo(
+        "⚠️  DEPRECATED: 'repo-list' is deprecated. Use 'trifecta repo list' instead.",
+        err=True,
+    )
     _render_repo_list_alias_output(_list_repo_entries(), json_output)
 
 
@@ -2435,7 +2330,14 @@ def repo_show_alias(
     repo_id: str = typer.Argument(..., help="Repository ID"),
     json_output: bool = typer.Option(False, "--json", help=HELP_OUTPUT_JSON),
 ) -> None:
-    """Show repository details."""
+    """Show repository details.
+
+    DEPRECATED: Use 'trifecta repo show' instead.
+    """
+    typer.echo(
+        "⚠️  DEPRECATED: 'repo-show' is deprecated. Use 'trifecta repo show' instead.",
+        err=True,
+    )
     _render_repo_show_alias_output(_get_repo_entry_or_exit(repo_id), json_output)
 
 
