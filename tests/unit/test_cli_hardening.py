@@ -17,6 +17,7 @@ runner = CliRunner()
 class FakeConnection:
     def __init__(self, payload: bytes) -> None:
         self._payload = payload
+        self._consumed = False
         self.sent: list[bytes] = []
         self.closed = False
         self.timeout: float | None = None
@@ -25,6 +26,9 @@ class FakeConnection:
         self.timeout = value
 
     def recv(self, _: int) -> bytes:
+        if self._consumed:
+            return b""
+        self._consumed = True
         return self._payload
 
     def sendall(self, data: bytes) -> None:
@@ -58,6 +62,23 @@ class FakeServer:
 
     def close(self) -> None:
         self.closed = True
+
+
+class FakeLSPClient:
+    def __init__(self, *_args, **_kwargs) -> None:
+        self.state = SimpleNamespace(value="READY")
+
+    def start(self) -> None:
+        return None
+
+    def stop(self) -> None:
+        return None
+
+    def is_ready(self) -> bool:
+        return True
+
+    def request(self, method: str, params: dict) -> dict:
+        return {"method": method, "params": params}
 
 
 
@@ -99,7 +120,9 @@ def test_daemon_run_cleans_runtime_artifacts_on_socket_setup_failure(
     fake_server = FakeServer(socket_path=socket_path, connections=[])
 
     monkeypatch.setenv("TRIFECTA_RUNTIME_DIR", str(runtime_dir))
+    monkeypatch.setenv("TRIFECTA_REPO_ROOT", str(tmp_path))
     monkeypatch.setattr(cli_module, "ALLOWED_BASES", [tmp_path])
+    monkeypatch.setattr("src.infrastructure.daemon.runner.LSPClient", FakeLSPClient)
     monkeypatch.setattr(socket, "socket", lambda *args, **kwargs: fake_server)
     monkeypatch.setattr(os, "chmod", lambda *_args, **_kwargs: (_ for _ in ()).throw(OSError("chmod failed")))
 
@@ -122,7 +145,9 @@ def test_daemon_run_returns_error_for_unknown_command(monkeypatch, tmp_path: Pat
     fake_server = FakeServer(socket_path=socket_path, connections=[unknown_conn, shutdown_conn])
 
     monkeypatch.setenv("TRIFECTA_RUNTIME_DIR", str(runtime_dir))
+    monkeypatch.setenv("TRIFECTA_REPO_ROOT", str(tmp_path))
     monkeypatch.setattr(cli_module, "ALLOWED_BASES", [tmp_path])
+    monkeypatch.setattr("src.infrastructure.daemon.runner.LSPClient", FakeLSPClient)
     monkeypatch.setattr(socket, "socket", lambda *args, **kwargs: fake_server)
 
     result = runner.invoke(app, ["daemon", "run"])

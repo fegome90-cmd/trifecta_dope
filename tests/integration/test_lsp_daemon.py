@@ -16,7 +16,7 @@ from src.infrastructure.daemon_paths import (
     get_daemon_socket_path,
     get_daemon_pid_path,
 )
-from src.infrastructure.segment_utils import compute_segment_id
+from src.domain.segment_resolver import get_segment_fingerprint
 
 
 @pytest.fixture
@@ -26,7 +26,7 @@ def clean_daemon_env(tmp_path):
     (tmp_path / "pyproject.toml").touch()
     yield tmp_path
     # Cleanup: kill any daemon that may still be running
-    seg_id = compute_segment_id(tmp_path)
+    seg_id = get_segment_fingerprint(tmp_path)
     pid_file = get_daemon_pid_path(seg_id)
     if pid_file.exists():
         try:
@@ -48,7 +48,7 @@ def test_daemon_spawn_and_connect(clean_daemon_env):
     assert spawned is True
 
     # 3. Wait for daemon to write PID/Socket (using polling, not sleep)
-    seg_id = compute_segment_id(root)
+    seg_id = get_segment_fingerprint(root)
     pid_file = get_daemon_pid_path(seg_id)
     sock_file = get_daemon_socket_path(seg_id)
 
@@ -72,7 +72,7 @@ def test_daemon_singleton_lock(clean_daemon_env):
     client1 = LSPDaemonClient(root)
     client1.connect_or_spawn()
 
-    seg_id = compute_segment_id(root)
+    seg_id = get_segment_fingerprint(root)
     pid_file = get_daemon_pid_path(seg_id)
 
     # Wait for start (polling)
@@ -108,7 +108,7 @@ def test_ttl_shutdown_cleans_files(clean_daemon_env):
     ]
     subprocess.Popen(cmd, start_new_session=True)
 
-    seg_id = compute_segment_id(root)
+    seg_id = get_segment_fingerprint(root)
     pid_file = get_daemon_pid_path(seg_id)
     sock_file = get_daemon_socket_path(seg_id)
 
@@ -138,7 +138,7 @@ def test_no_blocking_on_cold_start(clean_daemon_env):
     assert (t1 - t0) < 1.0
 
     # Verify process spawned (polling)
-    seg_id = compute_segment_id(root)
+    seg_id = get_segment_fingerprint(root)
     pid_file = get_daemon_pid_path(seg_id)
     assert wait_for_file(pid_file, timeout=5.0), "Daemon did not spawn"
 

@@ -59,8 +59,6 @@ from src.infrastructure.templates import TemplateRenderer
 from src.application.obsidian_sync_use_case import create_sync_use_case
 from src.application.linear_sync_use_case import LinearSyncUseCase
 from src.infrastructure.obsidian_config import ObsidianConfigManager
-from src.infrastructure.lsp_client import LSPClient, LSPState
-from src.domain.lsp_contracts import LSPResponse, FallbackReason
 
 # --- CLI Constants ---
 HELP_REPO_PATH = "Repository path"
@@ -232,6 +230,7 @@ def _format_error(e: Exception, title: str = "Error") -> str:
 # Status and Doctor Commands
 # =============================================================================
 
+
 def _print_json_status(status: Any) -> None:
     output = {
         "repo_id": status.segment_ref.id,
@@ -247,6 +246,7 @@ def _print_json_status(status: Any) -> None:
     }
     typer.echo(json.dumps(output, indent=2))
 
+
 def _print_text_status(status: Any) -> None:
     typer.echo(f"Status for {status.segment_ref.slug}")
     typer.echo(f"  Path: {status.segment_ref.root_abs}")
@@ -258,6 +258,7 @@ def _print_text_status(status: Any) -> None:
     typer.echo(f"  prime_*.md: {'✓' if status.has_prime else '✗'}")
     typer.echo(f"  agent*.md: {'✓' if status.has_agent else '✗'}")
     typer.echo(f"  session_*.md: {'✓' if status.has_session else '✗'}")
+
 
 @app.command("status")
 def status_cmd(
@@ -369,7 +370,9 @@ def repo_show(
 # =============================================================================
 
 
-def _handle_segment_resolution_error(e: Exception, segment: str, cmd_name: str, telemetry: Any, start_time: float) -> None:
+def _handle_segment_resolution_error(
+    e: Exception, segment: str, cmd_name: str, telemetry: Any, start_time: float
+) -> None:
     from src.application.exceptions import InvalidConfigScopeError, InvalidSegmentPathError
     from src.cli.error_cards import render_error_card
 
@@ -406,7 +409,9 @@ def _handle_segment_resolution_error(e: Exception, segment: str, cmd_name: str, 
     raise typer.Exit(code=1)
 
 
-def _validate_north_star(state: Any, segment: str, cmd_name: str, telemetry: Any, start_time: float) -> None:
+def _validate_north_star(
+    state: Any, segment: str, cmd_name: str, telemetry: Any, start_time: float
+) -> None:
     from src.cli.error_cards import render_error_card
     from src.infrastructure.validators import validate_segment_structure_with_segment_id
 
@@ -437,7 +442,7 @@ def _validate_north_star(state: Any, segment: str, cmd_name: str, telemetry: Any
             status_obj = {"status": "validation_failed", "error_code": code, "errors": len(errors)}
         else:
             status_obj = {"status": "error", "error_code": code, "errors": len(errors)}
-            
+
         telemetry.event(
             cmd_name,
             {
@@ -456,8 +461,11 @@ def _validate_north_star(state: Any, segment: str, cmd_name: str, telemetry: Any
 
 def _validate_build_specifics(state: Any, segment: str, telemetry: Any, start_time: float) -> None:
     from src.domain.result import Err, Ok
-    from src.infrastructure.validators import detect_legacy_context_files, validate_agents_constitution
-    
+    from src.infrastructure.validators import (
+        detect_legacy_context_files,
+        validate_agents_constitution,
+    )
+
     match validate_agents_constitution(state.segment_root_resolved):
         case Err(errors):
             typer.echo("❌ Constitution Failed (AGENTS.md):")
@@ -489,10 +497,12 @@ def _validate_build_specifics(state: Any, segment: str, telemetry: Any, start_ti
         raise typer.Exit(code=1)
 
 
-def _handle_sync_build_error(e: Exception, segment: str, state: Any, telemetry: Any, start_time: float) -> None:
+def _handle_sync_build_error(
+    e: Exception, segment: str, state: Any, telemetry: Any, start_time: float
+) -> None:
     from src.application.exceptions import PrimeFileNotFoundError
     from src.cli.error_cards import render_error_card
-    
+
     if isinstance(e, PrimeFileNotFoundError):
         error_card = render_error_card(
             error_code="SEGMENT_NOT_INITIALIZED",
@@ -519,6 +529,7 @@ def _handle_sync_build_error(e: Exception, segment: str, state: Any, telemetry: 
         raise typer.Exit(1)
     elif isinstance(e, FileNotFoundError) and "Expected prime file not found" in str(e):
         from src.infrastructure.deprecations import maybe_emit_deprecated
+
         maybe_emit_deprecated("fallback_prime_missing_string_match", telemetry)
         typer.echo("TRIFECTA_DEPRECATED: fallback_prime_missing_string_match_used", err=True)
         error_card = render_error_card(
@@ -2391,22 +2402,6 @@ def query_cmd(
             typer.echo(f"    {r.get('snippet')}")
 
 
-def _cleanup_daemon_runtime_artifacts(socket_path: Path, pid_path: Path) -> None:
-    for path in (socket_path, pid_path):
-        try:
-            path.unlink()
-        except FileNotFoundError:
-            pass
-
-
-def _close_daemon_server(server: object | None) -> None:
-    if server is None:
-        return
-    close_method = getattr(server, "close", None)
-    if callable(close_method):
-        close_method()
-
-
 daemon_app = typer.Typer(help="Daemon management commands")
 app.add_typer(daemon_app, name="daemon")
 
@@ -2422,7 +2417,7 @@ def daemon_start(
     runtime_dir = (
         Path.home() / DIR_LOCAL / "share" / "trifecta" / "repos" / ref.fingerprint / "runtime"
     )
-    use_case = DaemonUseCase(runtime_dir)
+    use_case = DaemonUseCase(runtime_dir, repo_root=ref.root_abs)
     result = use_case.start()
 
     if result.get("running"):
@@ -2443,7 +2438,7 @@ def daemon_stop(
     runtime_dir = (
         Path.home() / DIR_LOCAL / "share" / "trifecta" / "repos" / ref.fingerprint / "runtime"
     )
-    use_case = DaemonUseCase(runtime_dir)
+    use_case = DaemonUseCase(runtime_dir, repo_root=ref.root_abs)
     use_case.stop()
 
     typer.echo("Daemon stopped")
@@ -2461,7 +2456,7 @@ def daemon_status(
     runtime_dir = (
         Path.home() / DIR_LOCAL / "share" / "trifecta" / "repos" / ref.fingerprint / "runtime"
     )
-    use_case = DaemonUseCase(runtime_dir)
+    use_case = DaemonUseCase(runtime_dir, repo_root=ref.root_abs)
     result = use_case.status()
 
     if json_output:
@@ -2484,7 +2479,7 @@ def daemon_restart(
     runtime_dir = (
         Path.home() / DIR_LOCAL / "share" / "trifecta" / "repos" / ref.fingerprint / "runtime"
     )
-    use_case = DaemonUseCase(runtime_dir)
+    use_case = DaemonUseCase(runtime_dir, repo_root=ref.root_abs)
     result = use_case.restart()
 
     if result.get("running"):
@@ -2496,222 +2491,14 @@ def daemon_restart(
 
 @daemon_app.command("run")
 def daemon_run() -> None:
-    import os
-    import signal
-    import socket
-    import stat
-    import sys
-    import time as _time
+    from src.infrastructure.daemon import DaemonRunner
 
-    runtime_dir_env = os.environ.get("TRIFECTA_RUNTIME_DIR")
-    if not runtime_dir_env:
-        typer.echo("Error: TRIFECTA_RUNTIME_DIR not set", err=True)
+    try:
+        runner = DaemonRunner.from_env(ALLOWED_BASES)
+        runner.run()
+    except (ValueError, RuntimeError) as exc:
+        typer.echo(f"Error: {exc}", err=True)
         raise typer.Exit(1)
-
-    runtime_dir = Path(runtime_dir_env).resolve()
-    if not _is_runtime_dir_allowed(runtime_dir, ALLOWED_BASES):
-        typer.echo("Error: Invalid runtime directory", err=True)
-        raise typer.Exit(1)
-
-    socket_path = runtime_dir / "daemon" / "socket"
-    pid_path = runtime_dir / "daemon" / "pid"
-
-    socket_path.parent.mkdir(parents=True, exist_ok=True)
-    server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-
-    try:
-        if socket_path.exists():
-            socket_path.unlink()
-        server.bind(str(socket_path))
-        os.chmod(socket_path, stat.S_IRUSR | stat.S_IWUSR)
-        server.listen(1)
-        server.settimeout(1.0)
-        pid_path.write_text(str(os.getpid()))
-    except Exception as exc:
-        _close_daemon_server(server)
-        _cleanup_daemon_runtime_artifacts(socket_path, pid_path)
-        typer.echo(f"Error: Failed to initialize daemon socket: {exc}", err=True)
-        raise typer.Exit(1)
-
-    running = True
-
-    def shutdown_signal(signum: int, frame: object | None) -> None:
-        nonlocal running
-        del signum, frame
-        running = False
-
-    signal.signal(signal.SIGTERM, shutdown_signal)
-    signal.signal(signal.SIGINT, shutdown_signal)
-
-    start_time = _time.time()
-
-    # Fase 4: TTL support (optional, default infinite)
-    ttl_env = os.environ.get("TRIFECTA_DAEMON_TTL")
-    ttl_seconds = int(ttl_env) if ttl_env else 0  # 0 = infinite
-
-    # Initialize LSPClient (Fase 3: costura de integración LSP)
-    lsp_client = None
-    try:
-        lsp_client = LSPClient(runtime_dir, telemetry=None)
-        lsp_client.start()
-    except Exception:
-        lsp_client = None  # Graceful degradation if LSP fails
-
-    # Emit daemon_status telemetry event
-    try:
-        runtime_dir_env = os.environ.get("TRIFECTA_RUNTIME_DIR", "")
-        _telem = Telemetry(Path(runtime_dir_env).resolve() if runtime_dir_env else Path.cwd())
-        _telem.event(
-            "daemon_status",
-            {},
-            {
-                "state": "running",
-                "pid": os.getpid(),
-                "uptime": 0,
-                "lsp_enabled": lsp_client is not None,
-            },
-            1,
-        )
-        _telem.flush()
-    except Exception:
-        pass  # Telemetry is non-blocking
-
-    try:
-        while running:
-            # Fase 4: Check TTL (only if configured)
-            if ttl_seconds > 0 and (_time.time() - start_time) > ttl_seconds:
-                break
-
-            try:
-                conn, _ = server.accept()
-
-                conn.settimeout(5.0)
-                try:
-                    # Read request with size limit (fix for unreachable guard)
-                    MAX_REQUEST_SIZE = 16384  # 16KB
-                    raw_data = b""
-                    while len(raw_data) < MAX_REQUEST_SIZE:
-                        chunk = conn.recv(4096)
-                        if not chunk:
-                            break
-                        raw_data += chunk
-                        if b"\n" in raw_data:  # framing por newline
-                            break
-
-                    if not raw_data:
-                        conn.close()
-                        continue
-
-                    if len(raw_data) > MAX_REQUEST_SIZE:
-                        conn.sendall(
-                            json.dumps(
-                                {"status": "error", "message": "Request too large (max 16KB)"}
-                            ).encode()
-                            + b"\n"
-                        )
-                        conn.close()
-                        continue
-
-                    data = raw_data.decode("utf-8", errors="replace").strip()
-                except socket.timeout:
-                    conn.sendall(b"ERROR: Timeout\n")
-                    conn.close()
-                    continue
-                except Exception as exc:
-                    conn.sendall(f"ERROR: {str(exc)}\n".encode())
-                    conn.close()
-                    continue
-
-                # Try JSON envelope (Fase 3: LSP requests)
-                try:
-                    req = json.loads(data)
-                    if isinstance(req, dict) and "method" in req:
-                        resp = _handle_daemon_lsp_request(req, lsp_client, start_time)
-                        conn.sendall(json.dumps(resp).encode() + b"\n")
-                        conn.close()
-                        continue
-                except (json.JSONDecodeError, TypeError):
-                    pass  # Not JSON, fall through to text protocol
-
-                # Text protocol (backward compat)
-                if data == "PING":
-                    conn.sendall(b"PONG\n")
-                elif data == "HEALTH":
-                    lsp_state = lsp_client.state.value if lsp_client else "unavailable"
-                    status = {
-                        "status": "ok",
-                        "pid": os.getpid(),
-                        "uptime": int(_time.time() - start_time),
-                        "version": "1.0.0",
-                        "protocol": ["PING", "HEALTH", "SHUTDOWN"],
-                        "lsp": {"state": lsp_state, "enabled": lsp_client is not None},
-                    }
-                    conn.sendall(json.dumps(status).encode() + b"\n")
-                elif data == "SHUTDOWN":
-                    conn.sendall(b"OK\n")
-                    running = False
-                else:
-                    conn.sendall(b"ERROR: Unknown command\n")
-
-                conn.close()
-            except socket.timeout:
-                continue
-            except Exception as exc:
-                sys.stderr.write(f"Daemon error: {exc}\n")
-                break
-    finally:
-        if lsp_client:
-            try:
-                lsp_client.stop()
-            except Exception:
-                pass
-        _close_daemon_server(server)
-        _cleanup_daemon_runtime_artifacts(socket_path, pid_path)
-
-
-def _handle_daemon_lsp_request(req: dict, lsp_client, _start_time: float) -> dict:
-    """Handle JSON envelope LSP requests for daemon run (Fase 3)."""
-    method = req.get("method", "")
-    params = req.get("params", {})
-
-    if not lsp_client:
-        resp = LSPResponse.unavailable_response(
-            fallback_reason=FallbackReason.DAEMON_UNAVAILABLE,
-            message="LSP client not initialized",
-        )
-        return resp.to_dict()
-
-    if not lsp_client.is_ready():
-        resp = LSPResponse.degraded_response(
-            fallback_reason=FallbackReason.LSP_NOT_READY,
-            message=f"LSP state: {lsp_client.state.value}",
-        )
-        return resp.to_dict()
-
-    if lsp_client.state == LSPState.FAILED:
-        resp = LSPResponse.degraded_response(
-            fallback_reason=FallbackReason.LSP_ERROR,
-            message="LSP in FAILED state",
-        )
-        return resp.to_dict()
-
-    try:
-        result = lsp_client.request(method, params)
-        if result:
-            return LSPResponse.full_response(result).to_dict()
-        else:
-            resp = LSPResponse.degraded_response(
-                fallback_reason=FallbackReason.LSP_REQUEST_TIMEOUT,
-                message=f"LSP request '{method}' returned no data",
-            )
-            return resp.to_dict()
-    except Exception as exc:
-        resp = LSPResponse.error_response(
-            error_code="LSP_ERROR",
-            fallback_reason=FallbackReason.LSP_ERROR,
-            message=str(exc),
-        )
-        return resp.to_dict()
 
 
 if __name__ == "__main__":

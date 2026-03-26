@@ -1,3 +1,9 @@
+# REFERENCE IMPLEMENTATION — NOT OPERATIONAL AUTHORITY
+# This module is not the official daemon surface.
+# Official surface: DaemonManager + daemon run (see docs/daemon-lsp-scope/daemon_contract.md)
+# This module is kept for reference and potential future use.
+# Fase 1 closure: 2026-03-22
+
 import os
 import sys
 import socket
@@ -18,7 +24,8 @@ from src.infrastructure.daemon_paths import (
 )
 
 # --- Constants ---
-DEFAULT_TTL = 180
+DEFAULT_TTL = 300
+EVENT_DAEMON_STATUS = "lsp.daemon_status"
 
 
 class LSPDaemonServer:
@@ -69,7 +76,7 @@ class LSPDaemonServer:
         import time
 
         self.telemetry.event(
-            "lsp.daemon_status",
+            EVENT_DAEMON_STATUS,
             {},
             {"state": "running", "uptime": 0, "last_request_ms": 0, "root_ok": True},
             1,
@@ -87,7 +94,7 @@ class LSPDaemonServer:
             try:
                 # Check TTL
                 if time.time() - self.last_activity > self.ttl:
-                    self.telemetry.event("lsp.daemon_status", {}, {"status": "shutdown_ttl"}, 1)
+                    self.telemetry.event(EVENT_DAEMON_STATUS, {}, {"status": "shutdown_ttl"}, 1)
                     break
 
                 try:
@@ -98,7 +105,7 @@ class LSPDaemonServer:
                     continue  # Loop to check activity/TTL
             except Exception as e:
                 self.telemetry.event(
-                    "lsp.daemon_status", {}, {"status": "error", "error": str(e)}, 1
+                    EVENT_DAEMON_STATUS, {}, {"status": "error", "error": str(e)}, 1
                 )
                 break
 
@@ -132,49 +139,58 @@ class LSPDaemonServer:
         params = req.get("params", {})
 
         if method == "status":
-            return {
-                "status": "ok",
-                "data": {"state": self.lsp_client.state.value, "pid": os.getpid()},
-            }
-
+            return self._handle_status_request()
         elif method == "did_open":
-            path_str = params.get("path")
-            content = params.get("content")
-            if path_str and content:
-                self.lsp_client.did_open(Path(path_str), content)
-            return {"status": "ok"}
-
+            return self._handle_did_open_request(params)
         elif method == "request":
-            lsp_method = params.get("method")
-            lsp_params = params.get("params")
-            start_ns = time.perf_counter_ns()
-            result = self.lsp_client.request(lsp_method, lsp_params)
-            duration_ms = (time.perf_counter_ns() - start_ns) // 1_000_000
-
-            # Telemetry for requests
-            if self.telemetry:
-                x_fields = {
-                    "method": lsp_method,
-                    "resolved": bool(result),
-                }
-                # Extract target logic if hover/def
-                if result and "contents" in result:
-                    x_fields["target_file"] = "resolved_content"  # simplified
-
-                self.telemetry.event(
-                    "lsp.request",
-                    {"method": lsp_method},
-                    {"status": "ok" if result else "empty"},
-                    max(1, duration_ms),
-                    **x_fields,
-                )
-
-            if result:
-                return {"status": "ok", "data": result}
-            else:
-                return {"status": "error", "message": "LSP Timeout or Not Ready"}
+            return self._handle_lsp_request(params)
 
         return {"status": "error", "message": "Unknown method"}
+
+    def _handle_status_request(self) -> dict[str, Any]:
+        return {
+            "status": "ok",
+            "data": {"state": self.lsp_client.state.value, "pid": os.getpid()},
+        }
+
+    def _handle_did_open_request(self, params: dict[str, Any]) -> dict[str, Any]:
+        path_str = params.get("path")
+        content = params.get("content")
+        if path_str and content:
+            self.lsp_client.did_open(Path(path_str), content)
+        return {"status": "ok"}
+
+    def _handle_lsp_request(self, params: dict[str, Any]) -> dict[str, Any]:
+        lsp_method = str(params.get("method", ""))
+        lsp_params = params.get("params")
+        if not isinstance(lsp_params, dict):
+            lsp_params = {}
+        start_ns = time.perf_counter_ns()
+        result = self.lsp_client.request(lsp_method, lsp_params)
+        duration_ms = (time.perf_counter_ns() - start_ns) // 1_000_000
+
+        # Telemetry for requests
+        if self.telemetry:
+            x_fields = {
+                "method": lsp_method,
+                "resolved": bool(result),
+            }
+            # Extract target logic if hover/def
+            if result and "contents" in result:
+                x_fields["target_file"] = "resolved_content"  # simplified
+
+            self.telemetry.event(
+                "lsp.request",
+                {"method": lsp_method},
+                {"status": "ok" if result else "empty"},
+                max(1, duration_ms),
+                **x_fields,
+            )
+
+        if result:
+            return {"status": "ok", "data": result}
+        else:
+            return {"status": "error", "message": "LSP Timeout or Not Ready"}
 
     def _shutdown_signal(self, signum, frame):
         self.running = False
@@ -278,8 +294,7 @@ class LSPDaemonClient:
         return None
 
 
-# Define DEFAULT_TTL before its usage in the argument parser
-DEFAULT_TTL = 300  # Default TTL in seconds
+# DEFAULT_TTL defined above (line ~27)
 
 # Entrypoint
 if __name__ == "__main__":

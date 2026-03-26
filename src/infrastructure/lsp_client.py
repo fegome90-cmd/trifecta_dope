@@ -253,8 +253,22 @@ class LSPClient:
             }
             self._send_rpc(req)
 
-            resp = self._read_rpc()
-            if not resp or "result" not in resp:
+            # Read messages until we get the initialize response (id=1, has "result").
+            # Servers may send notifications (e.g. window/logMessage) before the
+            # initialize response; these must be skipped to avoid handshake failure.
+            resp = None
+            for _ in range(50):  # Safety limit to avoid infinite loop
+                msg = self._read_rpc()
+                if not msg:
+                    self._failed_invariants.append(INVARIANT_HANDSHAKE)
+                    self._transition(LSPState.FAILED)
+                    return
+                if "id" in msg and msg["id"] == 1 and "result" in msg:
+                    resp = msg
+                    break
+                # Otherwise it's a notification or unrelated message; skip it
+
+            if not resp:
                 self._failed_invariants.append(INVARIANT_HANDSHAKE)
                 self._transition(LSPState.FAILED)
                 return
