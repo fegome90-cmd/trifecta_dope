@@ -1,3 +1,4 @@
+import os
 import shutil
 import tempfile
 from pathlib import Path
@@ -45,6 +46,8 @@ def test_acquire_singleton_lock_recovers_stale_lock_file(
     manager._socket_path.parent.mkdir(parents=True, exist_ok=True)
     stale_lock_path = Path(str(manager._socket_path) + ".lock")
     stale_lock_path.write_text("stale")
+    old_mtime = daemon_manager_module.time.time() - (manager.DAEMON_START_TIMEOUT + 1)
+    os.utime(stale_lock_path, (old_mtime, old_mtime))
     monkeypatch.setattr(manager, "is_running", lambda: False)
 
     acquired = manager._acquire_singleton_lock()
@@ -53,6 +56,22 @@ def test_acquire_singleton_lock_recovers_stale_lock_file(
     assert stale_lock_path.exists() is True
     manager._release_singleton_lock()
     assert stale_lock_path.exists() is False
+
+
+def test_acquire_singleton_lock_keeps_recent_lock_for_startup_in_progress(
+    allowed_runtime: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    manager = DaemonManager(allowed_runtime)
+    manager._socket_path.parent.mkdir(parents=True, exist_ok=True)
+    recent_lock_path = Path(str(manager._socket_path) + ".lock")
+    recent_lock_path.write_text("recent")
+    monkeypatch.setattr(manager, "is_running", lambda: False)
+
+    acquired = manager._acquire_singleton_lock()
+
+    assert acquired is False
+    assert recent_lock_path.exists() is True
 
 
 def test_start_releases_singleton_lock_after_success(
@@ -237,10 +256,32 @@ def test_stop_keeps_pid_and_socket_when_process_survives_kill(
     monkeypatch.setattr(daemon_manager_module.os, "kill", lambda _pid, _sig: None)
     monkeypatch.setattr(daemon_manager_module.time, "sleep", lambda _value: None)
 
-    calls = iter([True] + [True] * 50 + [True])
+    calls = iter([True] * 62)
     monkeypatch.setattr(manager, "is_running", lambda: next(calls))
 
     assert manager.stop() is False
+    cleanup.assert_not_called()
+
+
+def test_stop_does_not_treat_proxy_not_running_as_real_exit(
+    allowed_runtime: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    manager = DaemonManager(allowed_runtime)
+    manager._pid_path.parent.mkdir(parents=True, exist_ok=True)
+    manager._pid_path.write_text("4321")
+    manager._socket_path.write_text("")
+
+    cleanup = Mock()
+    signals: list[int] = []
+    monkeypatch.setattr(manager, "_cleanup_files", cleanup)
+    monkeypatch.setattr(manager, "is_running", lambda: False)
+    monkeypatch.setattr(manager, "_is_process_alive", lambda _pid: True)
+    monkeypatch.setattr(daemon_manager_module.os, "kill", lambda _pid, sig: signals.append(sig))
+    monkeypatch.setattr(daemon_manager_module.time, "sleep", lambda _value: None)
+
+    assert manager.stop() is False
+    assert signals == [daemon_manager_module.signal.SIGTERM, daemon_manager_module.signal.SIGKILL]
     cleanup.assert_not_called()
 
 
@@ -264,6 +305,27 @@ def test_stop_cleans_files_once_process_is_gone(
 
     calls = iter([True, False])
     monkeypatch.setattr(manager, "is_running", lambda: next(calls))
+
+    assert manager.stop() is True
+    cleanup.assert_called_once_with()
+
+
+def test_stop_retries_post_sigkill_until_process_is_gone(
+    allowed_runtime: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    manager = DaemonManager(allowed_runtime)
+    manager._pid_path.parent.mkdir(parents=True, exist_ok=True)
+    manager._pid_path.write_text("4321")
+    manager._socket_path.write_text("")
+
+    cleanup = Mock()
+    monkeypatch.setattr(manager, "_cleanup_files", cleanup)
+    monkeypatch.setattr(daemon_manager_module.os, "kill", lambda _pid, _sig: None)
+    monkeypatch.setattr(daemon_manager_module.time, "sleep", lambda _value: None)
+    monkeypatch.setattr(manager, "is_running", lambda: True)
+    liveness = iter([True] * 50 + [True, False, False])
+    monkeypatch.setattr(manager, "_is_process_alive", lambda _pid: next(liveness))
 
     assert manager.stop() is True
     cleanup.assert_called_once_with()

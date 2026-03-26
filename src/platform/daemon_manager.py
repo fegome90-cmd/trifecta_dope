@@ -107,18 +107,21 @@ class DaemonManager:
 
     def stop(self) -> bool:
         pid: Optional[int] = None
-        if not self.is_running():
-            return True
         try:
             pid = int(self._pid_path.read_text().strip())
+            if not self._is_process_alive(pid):
+                return True
             os.kill(pid, signal.SIGTERM)
             for _ in range(50):
-                if not self.is_running():
+                if not self._is_process_alive(pid):
                     return True
                 time.sleep(0.1)
             os.kill(pid, signal.SIGKILL)
-            time.sleep(0.1)
-            return not self.is_running()
+            for _ in range(10):
+                if not self._is_process_alive(pid):
+                    return True
+                time.sleep(0.1)
+            return not self._is_process_alive(pid)
         except (FileNotFoundError, ProcessLookupError, ValueError):
             return True
         finally:
@@ -171,6 +174,12 @@ class DaemonManager:
             return True
         except OSError:
             if lock_path.exists() and not self.is_running():
+                try:
+                    lock_age = time.time() - lock_path.stat().st_mtime
+                except OSError:
+                    return False
+                if lock_age < self.DAEMON_START_TIMEOUT:
+                    return False
                 try:
                     lock_path.unlink()
                     self._singleton_lock = _bind_lock()
