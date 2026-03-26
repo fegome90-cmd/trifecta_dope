@@ -64,36 +64,49 @@ class DaemonManager:
         if not self._acquire_singleton_lock():
             return False
 
-        log_file = self._log_path.open("a")
-        python_exe = sys.executable
-        import src.infrastructure.cli as cli_module
-
-        cli_path = Path(cli_module.__file__)
-        env = os.environ.copy()
-        env["TRIFECTA_RUNTIME_DIR"] = str(self._runtime_dir)
-        env["TRIFECTA_REPO_ROOT"] = str(self._repo_root.resolve())
-        # Pass TTL if configured (Fase 4 hardening)
-        if self.DAEMON_TTL_IDLE > 0:
-            env["TRIFECTA_DAEMON_TTL"] = str(self.DAEMON_TTL_IDLE)
-        proc = subprocess.Popen(
-            [python_exe, str(cli_path), "daemon", "run"],
-            cwd=str(self._runtime_dir),
-            stdout=log_file,
-            stderr=subprocess.STDOUT,
-            start_new_session=True,
-            env=env,
-        )
         try:
+            # Clear stale daemon artifacts before spawning so readiness
+            # reflects the freshly started process, not leftovers.
+            self._cleanup_files()
+            log_file = self._log_path.open("a")
+            try:
+                python_exe = sys.executable
+                import src.infrastructure.cli as cli_module
+
+                cli_path = Path(cli_module.__file__)
+                env = os.environ.copy()
+                env["TRIFECTA_RUNTIME_DIR"] = str(self._runtime_dir)
+                env["TRIFECTA_REPO_ROOT"] = str(self._repo_root.resolve())
+                # Pass TTL if configured (Fase 4 hardening)
+                if self.DAEMON_TTL_IDLE > 0:
+                    env["TRIFECTA_DAEMON_TTL"] = str(self.DAEMON_TTL_IDLE)
+                proc = subprocess.Popen(
+                    [python_exe, str(cli_path), "daemon", "run"],
+                    cwd=str(self._runtime_dir),
+                    stdout=log_file,
+                    stderr=subprocess.STDOUT,
+                    start_new_session=True,
+                    env=env,
+                )
+            finally:
+                log_file.close()
+
             for _ in range(self.DAEMON_START_TIMEOUT * 10):
                 if self._socket_path.exists():
+                    if proc.poll() is not None:
+                        self._cleanup_files()
+                        return False
                     self._pid_path.write_text(str(proc.pid))
                     return True
                 time.sleep(0.1)
+            self._terminate_startup_process(proc)
+            self._cleanup_files()
             return False
         finally:
             self._release_singleton_lock()
 
     def stop(self) -> bool:
+        pid: Optional[int] = None
         if not self.is_running():
             return True
         try:
@@ -109,10 +122,12 @@ class DaemonManager:
         except (FileNotFoundError, ProcessLookupError, ValueError):
             return True
         finally:
-            self._cleanup_files()
+            if pid is None or not self._is_process_alive(pid):
+                self._cleanup_files()
 
     def restart(self) -> bool:
-        self.stop()
+        if not self.stop():
+            return False
         return self.start()
 
     def status(self) -> DaemonStatus:
@@ -183,3 +198,31 @@ class DaemonManager:
                 p.unlink()
             except FileNotFoundError:
                 pass
+
+    def _terminate_startup_process(self, proc: subprocess.Popen[bytes]) -> None:
+        if proc.poll() is not None:
+            return
+        try:
+            proc.terminate()
+        except Exception:
+            return
+        try:
+            proc.wait(timeout=0.5)
+        except subprocess.TimeoutExpired:
+            try:
+                proc.kill()
+            except Exception:
+                return
+            try:
+                proc.wait(timeout=0.5)
+            except Exception:
+                pass
+
+    def _is_process_alive(self, pid: int) -> bool:
+        try:
+            os.kill(pid, 0)
+        except ProcessLookupError:
+            return False
+        except PermissionError:
+            return True
+        return True

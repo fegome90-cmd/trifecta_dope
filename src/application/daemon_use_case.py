@@ -16,7 +16,7 @@ class DaemonUseCase:
 
     def stop(self) -> dict[str, Any]:
         ok = self._manager.stop()
-        return {"status": "ok", "running": not ok}
+        return {"status": "ok" if ok else "error", "running": not ok}
 
     def restart(self) -> dict[str, Any]:
         ok = self._manager.restart()

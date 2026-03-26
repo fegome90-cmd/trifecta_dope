@@ -15,12 +15,10 @@ MAX_UNIX_SOCKET_PATH = 100
 
 def _validate_daemon_base_dir(tmp_dir: Path) -> None:
     """
-        Validate that base directory for daemon files is accessible.
+    Validate that base directory for daemon files is accessible.
 
-        Raises:
-            Runtime
-
-    Error: If tmp_dir doesn't exist or isn't writable.
+    Raises:
+        RuntimeError: If tmp_dir doesn't exist or isn't writable.
     """
     if not tmp_dir.exists():
         raise RuntimeError(
