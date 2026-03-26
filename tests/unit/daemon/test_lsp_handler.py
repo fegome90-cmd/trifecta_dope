@@ -46,7 +46,7 @@ def test_handle_lsp_request_failed_state_is_degraded() -> None:
 
     response = handle_lsp_request({"method": "textDocument/definition", "params": {}}, client)
 
-    assert response["fallback_reason"] == "lsp_not_ready"
+    assert response["fallback_reason"] == "lsp_error"
 
 
 def test_handle_lsp_request_success() -> None:

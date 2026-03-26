@@ -228,33 +228,84 @@ def hover(
             _json_output(response.to_dict())
             raise typer.Exit(1)
         else:
-            response = LSPResponse.wip_response(
-                data={"uri": uri, "line": line, "char": character, "note": "LSP unavailable"},
+            response = LSPResponse.unavailable_response(
+                fallback_reason=fallback_reason or FallbackReason.LSP_BINARY_NOT_FOUND,
                 message="LSP unavailable. Install pyright or pylsp for full functionality.",
             )
+            response.data = {"uri": uri, "line": line, "char": character, "note": "LSP unavailable"}
             _json_output(response.to_dict())
             return
 
-    response = LSPResponse.wip_response(
-        data={"uri": uri, "line": line, "char": character, "lsp": "detected"},
-        message="Hover not yet implemented. LSP detected but not connected.",
-    )
-
-    # Fail-closed: --require-lsp with WIP response should error
-    if require_lsp:
+    from src.infrastructure.lsp_daemon import LSPDaemonClient
+    import time
+    
+    daemon = LSPDaemonClient(root)
+    if not daemon.connect_or_spawn():
         response = LSPResponse.error_response(
-            error_code="LSP_NOT_IMPLEMENTED",
-            fallback_reason=FallbackReason.LSP_NOT_IMPLEMENTED,
-            message="LSP hover not yet implemented. --require-lsp specified.",
+            error_code="DAEMON_SPAWN_FAILED",
+            fallback_reason=FallbackReason.DAEMON_UNAVAILABLE,
+            message="Could not connect to or spawn LSP daemon.",
         )
         _json_output(response.to_dict())
         raise typer.Exit(1)
 
+    file_path = root / uri
+    content = file_path.read_text(encoding="utf-8") if file_path.is_file() else ""
+    
+    daemon.send({
+        "method": "did_open",
+        "params": {"path": str(file_path), "content": content}
+    })
+
+    ready = False
+    for _ in range(50):
+        if daemon.is_ready():
+            ready = True
+            break
+        time.sleep(0.1)
+    
+    if not ready:
+        response = LSPResponse.error_response(
+            error_code="LSP_TIMEOUT",
+            fallback_reason=FallbackReason.LSP_REQUEST_TIMEOUT,
+            message="LSP daemon failed to reach READY state.",
+        )
+        _json_output(response.to_dict())
+        raise typer.Exit(1)
+        
+    req_params = {
+        "textDocument": {"uri": f"file://{file_path.absolute()}"},
+        "position": {"line": max(0, line - 1), "character": max(0, character - 1)},
+    }
+
+    
+    result = daemon.request("textDocument/hover", req_params)
+    
+    if result is None:
+        response = LSPResponse.error_response(
+            error_code="LSP_REQUEST_FAILED",
+            fallback_reason=FallbackReason.LSP_ERROR,
+            message="Hover request returned no result or failed.",
+        )
+        _json_output(response.to_dict())
+        raise typer.Exit(1)
+        
+    response = LSPResponse.full_response(
+        data={
+            "uri": uri,
+            "line": line,
+            "char": character,
+            "contents": result.get("contents", {}),
+            "range": result.get("range", {}),
+        },
+        backend=Backend.LSP_PYRIGHT
+    )
+
     if telemetry:
         telemetry.event(
-            "ast.hover.wip",
+            "ast.hover",
             {"segment": str(root), "uri": uri, "line": line, "char": character},
-            {"status": "ok", "backend": Backend.WIP_STUB.value, "lsp_available": True},
+            {"status": "ok", "backend": Backend.LSP_PYRIGHT.value, "lsp_available": True},
             1,
         )
         telemetry.flush()

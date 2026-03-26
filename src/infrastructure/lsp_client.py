@@ -34,6 +34,8 @@ class LSPClient:
         self._stop_lock = threading.Lock()
         self.stopping = threading.Event()
         self._thread: Optional[threading.Thread] = None
+        self._stderr_thread: Optional[threading.Thread] = None
+        self._stderr_lines: List[str] = []  # Last N stderr lines for diagnostics
         self._capabilities: Dict[str, Any] = {}
         self._warmup_file: Optional[Path] = None
         self._failed_invariants: List[str] = []
@@ -92,6 +94,12 @@ class LSPClient:
                     {"status": "ok", "pid": self.process.pid},
                     1,
                 )
+
+                # P0 FIX: drain stderr to prevent pipe buffer deadlock.
+                # Pyright writes logs to stderr; if the 64KB OS buffer fills,
+                # pyright blocks on write and freezes stdout (JSON-RPC) too.
+                self._stderr_thread = threading.Thread(target=self._drain_stderr, daemon=True)
+                self._stderr_thread.start()
 
                 # Start handshake + Read Loop (save thread reference for join)
                 self._thread = threading.Thread(target=self._run_loop, daemon=True)
@@ -156,8 +164,10 @@ class LSPClient:
                 except Exception:
                     pass  # Process might be gone
 
-            # 4. Join background thread BEFORE closing streams
+            # 4. Join background threads BEFORE closing streams
             # Increased timeout for CI stability (was 0.5s)
+            if self._stderr_thread and self._stderr_thread.is_alive():
+                self._stderr_thread.join(timeout=0.5)
             if self._thread and self._thread.is_alive():
                 self._thread.join(timeout=1.0)
 
@@ -180,6 +190,33 @@ class LSPClient:
                         self.process.stderr.close()
                 except Exception:
                     pass  # Already closed
+
+    def _drain_stderr(self) -> None:
+        """Continuously read stderr to prevent pipe buffer deadlock.
+
+        P0 FIX: Pyright writes diagnostic/log output to stderr.
+        If no thread reads it, the OS pipe buffer (~64KB) fills up,
+        causing pyright to block on write() and freeze stdout too.
+
+        Keeps the last 50 lines for diagnostics (accessible via _stderr_lines).
+        """
+        _MAX_STDERR_LINES = 50
+        try:
+            if not self.process or not self.process.stderr:
+                return
+            for raw_line in self.process.stderr:
+                if self.stopping.is_set():
+                    break
+                try:
+                    line = raw_line.decode("utf-8", errors="replace").rstrip()
+                except Exception:
+                    line = repr(raw_line)
+                self._stderr_lines.append(line)
+                # Cap memory: keep only last N lines
+                if len(self._stderr_lines) > _MAX_STDERR_LINES:
+                    self._stderr_lines = self._stderr_lines[-_MAX_STDERR_LINES:]
+        except (OSError, ValueError):
+            pass  # Stream closed during shutdown — expected
 
     def did_open(self, file_path: Path, content: str) -> None:
         """Notify file open to trigger diagnostics."""
@@ -308,11 +345,18 @@ class LSPClient:
                     break
                 saw_post_init_message = True
 
-                if "id" in msg and "result" in msg:
+                if "id" in msg and ("result" in msg or "error" in msg):
                     req_id = msg["id"]
                     with self.lock:
                         if req_id in self._pending_requests:
-                            self._pending_requests[req_id] = msg["result"]
+                            if "result" in msg:
+                                self._pending_requests[req_id] = msg["result"]
+                            else:
+                                # Store error response with sentinel key
+                                self._pending_requests[req_id] = {
+                                    "__lsp_error__": True,
+                                    "error": msg["error"],
+                                }
                             self._request_events[req_id].set()
 
                 method = msg.get("method", "")
@@ -405,9 +449,18 @@ class LSPClient:
         return self._failed_invariants.copy()
 
     def request(
-        self, method: str, params: Dict[str, Any], timeout: float = 2.0
+        self, method: str, params: Dict[str, Any], timeout: float | None = None
     ) -> Optional[Dict[str, Any]]:
         """Send a request and wait for the response."""
+        if timeout is None:
+            env_timeout = os.environ.get("TRIFECTA_LSP_REQUEST_TIMEOUT")
+            if env_timeout:
+                try:
+                    timeout = float(env_timeout)
+                except ValueError:
+                    timeout = 30.0
+            else:
+                timeout = 30.0
         with self.lock:
             if self.state != LSPState.READY:
                 self._emit_fallback(method, f"state_not_ready:{self.state.value}")
@@ -422,18 +475,36 @@ class LSPClient:
         msg = {"jsonrpc": "2.0", "id": req_id, "method": method, "params": params}
         self._send_rpc(msg)
 
+        # DIAGNOSTIC: log request send
+        sys.stderr.write(f"[LSP_REQ] sent id={req_id} method={method} timeout={timeout}\n")
+
         # Wait for response
-        if event.wait(timeout):
+        waited = event.wait(timeout)
+        sys.stderr.write(f"[LSP_REQ] event.wait returned={waited} id={req_id}\n")
+
+        if waited:
             with self.lock:
                 result = self._pending_requests.pop(req_id, None)
                 self._request_events.pop(req_id, None)
+                # Distinguish error response from success
+                if isinstance(result, dict) and result.get("__lsp_error__"):
+                    err_detail = result.get("error", {})
+                    self._emit_fallback(
+                        method,
+                        f"lsp_error:{err_detail.get('code', 'unknown')}:{err_detail.get('message', '')}",
+                    )
+                    return None
                 # Type guard for mypy
+                sys.stderr.write(
+                    f"[LSP_REQ] result type={type(result)} is_dict={isinstance(result, dict)}\n"
+                )
                 return result if isinstance(result, dict) else None
         else:
             with self.lock:
                 self._pending_requests.pop(req_id, None)
                 self._request_events.pop(req_id, None)
                 self._emit_fallback(method, "request_timeout")
+                sys.stderr.write(f"[LSP_REQ] TIMEOUT id={req_id} method={method}\n")
                 return None  # Timeout
 
     def _send_rpc(self, msg: Dict[str, Any]) -> None:
