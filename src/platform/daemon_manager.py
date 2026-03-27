@@ -134,14 +134,9 @@ class DaemonManager:
         return self.start()
 
     def status(self) -> DaemonStatus:
-        pid = None
-        if self._pid_path.exists():
-            try:
-                pid = int(self._pid_path.read_text().strip())
-                os.kill(pid, 0)
-            except (ProcessLookupError, PermissionError, ValueError):
-                pid = None
-        running = pid is not None and self._socket_path.exists()
+        pid = self._read_pid()
+        socket_exists = self._socket_path.exists()
+        running = pid is not None and socket_exists and self._is_process_alive(pid)
         return DaemonStatus(
             running=running,
             pid=pid,
@@ -173,7 +168,11 @@ class DaemonManager:
             self._singleton_lock = _bind_lock()
             return True
         except OSError:
-            if lock_path.exists() and not self.is_running():
+            daemon_status = self.status()
+            if lock_path.exists() and not daemon_status.running:
+                pid = self._read_pid()
+                if pid is not None and self._is_process_alive(pid):
+                    return False
                 try:
                     lock_age = time.time() - lock_path.stat().st_mtime
                 except OSError:
@@ -207,6 +206,14 @@ class DaemonManager:
                 p.unlink()
             except FileNotFoundError:
                 pass
+
+    def _read_pid(self) -> Optional[int]:
+        if not self._pid_path.exists():
+            return None
+        try:
+            return int(self._pid_path.read_text().strip())
+        except ValueError:
+            return None
 
     def _terminate_startup_process(self, proc: subprocess.Popen[bytes]) -> None:
         if proc.poll() is not None:

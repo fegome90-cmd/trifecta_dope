@@ -74,6 +74,25 @@ def test_acquire_singleton_lock_keeps_recent_lock_for_startup_in_progress(
     assert recent_lock_path.exists() is True
 
 
+def test_acquire_singleton_lock_keeps_old_lock_when_live_pid_exists(
+    allowed_runtime: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    manager = DaemonManager(allowed_runtime)
+    manager._socket_path.parent.mkdir(parents=True, exist_ok=True)
+    old_lock_path = Path(str(manager._socket_path) + ".lock")
+    old_lock_path.write_text("old")
+    old_mtime = daemon_manager_module.time.time() - (manager.DAEMON_START_TIMEOUT + 1)
+    os.utime(old_lock_path, (old_mtime, old_mtime))
+    manager._pid_path.write_text("4321")
+    monkeypatch.setattr(manager, "_is_process_alive", lambda _pid: True)
+
+    acquired = manager._acquire_singleton_lock()
+
+    assert acquired is False
+    assert old_lock_path.exists() is True
+
+
 def test_start_releases_singleton_lock_after_success(
     allowed_runtime: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -241,6 +260,23 @@ def test_restart_returns_false_when_stop_fails(
 
     assert manager.restart() is False
     start.assert_not_called()
+
+
+def test_status_requires_live_pid_and_socket_to_report_running(
+    allowed_runtime: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    manager = DaemonManager(allowed_runtime)
+    manager._pid_path.parent.mkdir(parents=True, exist_ok=True)
+    manager._pid_path.write_text("4321")
+    monkeypatch.setattr(manager, "_is_process_alive", lambda _pid: True)
+
+    status = manager.status()
+
+    assert status.running is False
+    assert status.pid == 4321
+    assert status.socket_path is None
+    assert manager.is_running() is False
 
 def test_stop_keeps_pid_and_socket_when_process_survives_kill(
     allowed_runtime: Path,
