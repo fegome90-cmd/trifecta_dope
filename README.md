@@ -10,7 +10,7 @@ Tratamos el **contexto como una herramienta**: el runtime entrega al agente **un
 
 ## A qué apuntamos
 - **Reducir fricción**: que el agente no pierda tiempo explorando árboles de carpetas ni “adivinando” arquitectura/estado.
-- **Operación repetible**: decisiones basadas en artefactos (`prime.md`, `agent.md`, `session.md`, `skill.md`), no en improvisación.
+- **Operación repetible**: decisiones basadas en artefactos (`prime_*.md`, `agent_*.md`, `session_*.md`, `skill.md`), no en improvisación.
 - **Evidencia y auditoría**: cada paso tiene soporte (qué se consultó, por qué y con qué versión).
 - **Control**: presupuesto de contexto, políticas de escalada y límites explícitos.
 
@@ -45,7 +45,7 @@ Solo escala a código cuando es estrictamente necesario y siguiendo rutas/contra
 ## Función de cada markdown (sin mezclar audiencias)
 - `README.md`: onboarding humano del proyecto y quickstart.
 - `CLAUDE.md`: contrato operativo para Claude Code.
-- `agents.md`: contrato operativo para otros runtimes/agentes.
+- `AGENTS.md`: contrato operativo para otros runtimes/agentes.
 - `skill.md`: runbook operativo del segmento (reglas + ciclo Search/Get + gates).
 - `llms.txt`: resumen corto para carga rápida por LLM.
 - `_ctx/agent_trifecta_dope.md`: estado técnico activo (features/gates/stack).
@@ -54,79 +54,65 @@ Solo escala a código cuando es estrictamente necesario y siguiendo rutas/contra
 
 ## Problema
 
-Los agentes de código (Claude, Gemini, Codex) parsean miles de líneas de código innecesariamente, consumen contexto, y terminan con información obsoleta o incompleta.
+Los agentes de código (Claude, Gemini, Codex) todavía pueden perder tiempo recorriendo demasiado código o consumiendo contexto irrelevante cuando no existe un workflow curado de contexto, sesión y verificación.
 
 ## Solución
 
-El sistema **Trifecta** proporciona una estructura estandarizada de **5 archivos** que permite:
+Trifecta mantiene un workflow operativo explícito para que agentes y humanos trabajen con:
 
-- **Comprensión rápida**: <60 segundos para entender un segmento
-- **Contexto eficiente**: Solo carga lo necesario (progressive disclosure)
-- **Mantenimiento simple**: Estructura predecible, sin drift
-- **Onboarding automático**: README con guía para nuevos agentes
+- contexto curado (`skill`, `prime`, `agent`, `session`)
+- contexto recuperable bajo demanda (`ctx search/get`)
+- evidencia de sesión append-only
+- validación fail-closed del context pack
+- superficies técnicas explícitas para daemon / LSP / AST / repo registry
 
 ---
 
-## 🏗️ Arquectura del Generador
+## Estado actual del repo
 
-> **⚠️ IMPORTANTE**: Este generador ya está implementado con Clean Architecture. No recrear desde cero.
+Este repositorio ya no es solo un “generator” mínimo. Hoy agrupa varias superficies activas:
+
+- **CLI principal** (`src/infrastructure/cli.py`)
+- **Context Pack / PCC** (`src/application/*`, `src/domain/*`, `trifecta ctx ...`)
+- **Daemon / LSP** (`src/platform/daemon_manager.py`, `src/application/daemon_use_case.py`, `src/infrastructure/daemon/`, `src/infrastructure/lsp_client.py`)
+- **Repo registry / status / doctor / telemetry**
+- **Artefactos de contexto del segmento** (`skill.md`, `_ctx/agent_trifecta_dope.md`, `_ctx/prime_trifecta_dope.md`, `_ctx/session_trifecta_dope.md`)
+
+## 🏗️ Arquitectura actual (alto nivel)
 
 ```
 trifecta_dope/
 ├── src/
-│   ├── domain/           # Entidades de negocio (Pydantic models)
-│   │   ├── models.py     # TrifectaConfig, TrifectaPack, ValidationResult
-│   │   └── constants.py  # MAX_SKILL_LINES, etc.
-│   │
-│   ├── application/      # Use cases (lógica de negocio)
-│   │   └── use_cases.py  # Create, Validate, RefreshPrime
-│   │
-│   └── infrastructure/   # Implementaciones concretas
-│       ├── cli.py        # Typer CLI (entrypoint)
-│       ├── templates.py  # TemplateRenderer (markdown generation)
-│       └── file_system.py # FileSystemAdapter (disk I/O)
-│
-├── tests/                # Unit tests (pytest)
-├── braindope.md          # Especificación completa
-└── README.md             # Este archivo
+│   ├── domain/           # contratos, modelos, naming, políticas
+│   ├── application/      # use cases y orquestación
+│   ├── infrastructure/   # CLI, adapters, renderers, LSP client, daemon internals
+│   ├── platform/         # daemon manager, health, registry/runtime contracts
+│   └── cli/              # helpers de presentación / tarjetas / errores
+├── tests/                # unit + integration
+├── README.md
+├── skill.md
+└── _ctx/
+    ├── agent_trifecta_dope.md
+    ├── prime_trifecta_dope.md
+    └── session_trifecta_dope.md
 ```
 
-### Capas (Clean Architecture)
+### Capas y responsabilidades
 
-| Capa | Responsabilidad | Archivos clave |
-|------|-----------------|----------------|
-| **Domain** | Modelos de datos, validadores | `models.py`, `constants.py` |
-| **Application** | Casos de uso, orquestación | `use_cases.py` |
-| **Infrastructure** | CLI, templates, I/O | `cli.py`, `templates.py`, `file_system.py` |
+| Capa | Responsabilidad | Ejemplos |
+|------|-----------------|----------|
+| **Domain** | contratos y modelos puros | `segment_resolver.py`, `lsp_contracts.py` |
+| **Application** | casos de uso y coordinación | `daemon_use_case.py`, `status_use_case.py`, `search_get_usecases.py` |
+| **Infrastructure** | CLI, adapters, implementación concreta | `cli.py`, `lsp_client.py`, `daemon/runner.py` |
+| **Platform** | lifecycle shell, runtime/registry, health | `daemon_manager.py`, `health.py`, `registry.py` |
 
-### Flujo de Creación
+### Principios activos
 
-```
-CLI (cli.py)
-    ↓
-CreateTrifectaUseCase (use_cases.py)
-    ↓
-TemplateRenderer.render_{skill,prime,agent,session,readme}
-    ↓
-FileSystemAdapter.save_trifecta
-    ↓
-5 archivos en disco
-```
-
-### Reglas de Diseño
-
-1. **Domain** → sin dependencias externas (solo Pydantic)
-2. **Application** → solo depende de Domain
-3. **Infrastructure** → implementa interfaces de Application/Domain
-4. **Templates** → f-strings, sin Jinja2 (simplicidad)
-
-### Extensiones
-
-Para agregar un nuevo comando:
-
-1. Crear use case en `application/use_cases.py`
-2. Agregar comando en `infrastructure/cli.py`
-3. Agregar tests en `tests/test_use_cases.py`
+1. `uv` es el runner canónico para desarrollo y validación
+2. El context pack se trata como herramienta operativa, no como RAG indiscriminado
+3. `session` es append-only
+4. Los workflows de review (`branch-review`, `reviewctl`) deben ejecutarse desde branch/worktree limpio
+5. Cambios documentales deben reflejar el estado real del repo, no inventar capacidades
 
 ---
 
@@ -134,22 +120,22 @@ Para agregar un nuevo comando:
 
 ```
 <segment-name>/
-├── README.md                              # Guía rápida del segmento
-├── skill.md                               # Reglas (MAX 100 líneas)
+├── README.md                               # Guía rápida del segmento
+├── skill.md                                # Runbook operativo del agente
 └── _ctx/
-    ├── prime_<segment-name>.md            # Lista de lectura
-    ├── agent.md                           # Stack técnico
-    └── session_<segment-name>.md          # Log de handoff (runtime)
+    ├── prime_<segment-name>.md             # Lista de lectura priorizada
+    ├── agent_<segment-name>.md             # Estado técnico activo
+    └── session_<segment-name>.md           # Log de handoff (append-only)
 ```
 
 ### Archivos
 
 | Archivo | Propósito | Líneas aprox |
 |---------|-----------|--------------|
-| `README.md` | Guía rápida + onboarding | ~50-80 |
-| `skill.md` | Reglas, contratos, workflows | ≤100 |
-| `prime_*.md` | Lista de lectura obligatoria | ~50-100 |
-| `agent.md` | Stack técnico, dependencies | ~100-150 |
+| `README.md` | Onboarding humano | ~50-120 |
+| `skill.md` | Reglas, contratos, workflow operativo | ≤100 |
+| `prime_*.md` | Lista de lectura obligatoria | ~20-80 |
+| `agent_*.md` | Stack técnico, gates, notas activas | ~80-180 |
 | `session_*.md` | Bitácora de handoffs | Append-only |
 
 ## Perfiles de Output
@@ -174,63 +160,61 @@ El sistema usa perfiles (nvim-style modeline) para definir contratos de output:
 
 ## Uso
 
-### 1. Alias (Recomendado)
-Para usar `trifecta` desde cualquier carpeta sin instalarlo globalmente:
+### Quickstart actual
+
+```bash
+# Instalar dependencias
+uv sync --all-groups
+
+# Ver comandos disponibles
+uv run trifecta --help
+
+# Sincronizar contexto del repo actual
+uv run trifecta ctx sync --segment .
+uv run trifecta ctx validate --segment .
+
+# Buscar y recuperar contexto
+uv run trifecta ctx search --segment . --query "daemon"
+uv run trifecta ctx get --segment . --ids "<chunk-id>" --mode excerpt
+```
+
+### Alias opcional
+Si prefieres usar `trifecta` sin prefijo `uv run`:
 
 ```fish
-# Agregar a ~/.config/fish/config.fish
 alias trifecta="/Users/felipe_gonzalez/.local/bin/uv --directory /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope run trifecta"
 ```
 
-Luego:
-```bash
-cd ~/Developer/AST
-trifecta ctx build .
-```
-
-### 2. Ejecución Directa (Sin Alias)
-```bash
-# Desde cualquier directorio
-uv --directory ~/Developer/agent_h/trifecta_dope run trifecta load --path ~/Developer/AST --segment ast --task "Fix bug"
-```
-
-### 3. Autocompletado (Fish)
-Para tener autocompletado nativo en todos los comandos:
+### Comandos comunes del repo
 
 ```bash
-mkdir -p ~/.config/fish/completions
-ln -s $(pwd)/completions/trifecta.fish ~/.config/fish/completions/trifecta.fish
-source ~/.config/fish/completions/trifecta.fish
+# Estado general
+uv run trifecta status --help
+uv run trifecta doctor --help
+
+# Contexto
+uv run trifecta ctx --help
+uv run trifecta session --help
+
+# AST / daemon
+uv run trifecta ast --help
+uv run trifecta daemon --help
 ```
 
-### Generar Trifecta (Ejemplos)
-```bash
-# Crear trifecta para un segmento
-trifecta create --segment eval-harness --path eval/eval-harness/ --scan-docs eval/docs/
+### Context Pack (PCC)
 
-# Validar trifecta existente
-trifecta validate --path eval/eval-harness/
-```
-
-### Generar Context Pack (Programming Context Calling)
-
-El **Context Pack** es un índice estructurado que permite al agente:
-1. Descubrir qué chunks existen (`ctx.search`)
-2. Invocar chunks específicos (`ctx.get --ids X`)
-3. Operar con presupuesto estricto (budget-aware)
-
-**Analogía**: Como "Tool Search Tool" de Anthropic, pero para contexto.
+El **Context Pack** permite al agente:
+1. descubrir chunks (`ctx search`)
+2. recuperar evidencia exacta (`ctx get`)
+3. operar con presupuesto y validación explícita
 
 ```bash
-# Comando oficial (recomendado)
-trifecta ctx build --segment /path/to/segment
-
-# Validar integridad
-trifecta ctx validate --segment /path/to/segment
+uv run trifecta ctx build --segment /path/to/segment
+uv run trifecta ctx sync --segment /path/to/segment
+uv run trifecta ctx validate --segment /path/to/segment
 ```
 
-> **DEPRECADO**: `scripts/ingest_trifecta.py` será removido en v2.  
-> Usar solo para debugging interno del CLI.
+> `ctx sync` es el macro recomendado para build + validate en trabajo diario.
 
 **Estructura del Context Pack:**
 
@@ -293,33 +277,34 @@ make minirag-query MINIRAG_QUERY="PCC"
 
 ```bash
 cd trifecta_dope
-uv sync
+uv sync --all-groups
 ```
 
-### Multi-Segment Installation
-
-Para instalar contexto en múltiples segmentos del repositorio, usa el script estable:
+## Verificación recomendada
 
 ```bash
-# Script recomendado (Clean Architecture compliant)
-uv run python scripts/install_FP.py --segment /path/to/segment1 --segment /path/to/segment2
-
-# DEPRECATED: scripts/install_trifecta_context.py (backward compatibility only)
-```
-
-El script `install_FP.py` utiliza validadores desde `src/infrastructure/validators.py` y sigue principios de Clean Architecture.
-
-## Tests
-
-```bash
+# Suite general
 uv run pytest tests/ -v
+
+# Lint / tipos
+uv run ruff check src tests
+uv run mypy src --no-error-summary
+
+# Contexto
+uv run trifecta ctx sync --segment .
+uv run trifecta ctx validate --segment .
 ```
 
 ## Desarrollo
 
 ```bash
-# Ejecutar CLI con Typer
-uv run typer src/infrastructure/cli.py run create --help
+# Ayuda general del CLI
+uv run trifecta --help
+
+# Ayuda de subcomandos
+uv run trifecta ctx --help
+uv run trifecta daemon --help
+uv run trifecta ast --help
 ```
 
 ## 🐛 Debugging Scripts

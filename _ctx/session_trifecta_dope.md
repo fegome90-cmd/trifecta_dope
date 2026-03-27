@@ -244,3 +244,51 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Summary**: Completed: Resolved P1 (didOpen sequencing) by integrating LSPDaemonClient into hover command. Replaced WIP stub in \`cli_ast.py\` with actual implementation that connects to daemon, sends did_open, waits for READY state, and executes textDocument/hover. Verified resolution of P0 (stderr deadlock) and P2 (observability) via actual CLI end-to-end execution. Validated that P3 (CWD mismatch) was not an issue as the daemon already correctly mounts the repo_root. All hover tests passing, explicitly testing unavailable LSP environments via empty PATH.
 - **Pack SHA**: `cf6cbd85f8862092`
 
+## 2026-03-27 11:40 UTC
+- **Summary**: Resume daemon drift audit from checkpoint and load context before deciding revert vs new batch
+- **Files**: _ctx/checkpoints/2026-03-27/checkpoint_083446_daemon-drift-audit-branch-review-pause.md, _ctx/checkpoints/daemon-drift-audit-branch-review-pause-handoff.md, _ctx/checkpoints/daemon-drift-audit-branch-review-pause-next-agent-checklist.md, docs/reports/2026-03-26-daemon-drift-code-audit.md, src/infrastructure/daemon/lsp_handler.py, src/infrastructure/lsp_client.py, src/platform/daemon_manager.py
+- **Commands**: uv run trifecta session append, uv run trifecta ctx sync, uv run trifecta ctx validate, uv run trifecta load
+- **Pack SHA**: `a853977c36032e62`
+
+## 2026-03-27 11:40 UTC
+- **Summary**: Start sync + summary update after daemon drift audit checkpoint
+- **Files**: _ctx/checkpoints/2026-03-27/checkpoint_083446_daemon-drift-audit-branch-review-pause.md, _ctx/checkpoints/daemon-drift-audit-branch-review-pause-handoff.md, _ctx/checkpoints/daemon-drift-audit-branch-review-pause-next-agent-checklist.md, docs/reports/2026-03-26-daemon-drift-code-audit.md
+- **Commands**: skill-hub checkpoint handoff next agent session checkpoint card checklist, python3 checkpoint-card, write handoff, write checklist
+- **Pack SHA**: `30beaa4d17b411c2`
+
+## 2026-03-27 11:40 UTC
+- **Summary**: Completed sync + updated session summary after daemon drift audit handoff; baseline c8da9f3 preserved and branch-review paused pending clean branch/worktree
+- **Files**: docs/reports/2026-03-26-daemon-drift-code-audit.md, _ctx/checkpoints/2026-03-27/checkpoint_083446_daemon-drift-audit-branch-review-pause.md, _ctx/checkpoints/daemon-drift-audit-branch-review-pause-handoff.md, _ctx/checkpoints/daemon-drift-audit-branch-review-pause-next-agent-checklist.md
+- **Commands**: trifecta session append, trifecta ctx sync, trifecta ctx validate, trifecta session append
+- **Pack SHA**: `62e640be00a139fb`
+
+## 2026-03-27 11:53 UTC
+- **Summary**: Promoted daemon/LSP drift to explicit isolated batch on clean worktree after context load
+- **Files**: src/infrastructure/daemon/lsp_handler.py, src/infrastructure/lsp_client.py, src/platform/daemon_manager.py, tests/unit/daemon/test_lsp_handler.py, tests/unit/daemon/test_lsp_handler_didopen_format.py, tests/unit/test_daemon_manager.py, tests/unit/test_lsp_client_strict.py
+- **Commands**: uv run trifecta ctx sync, uv run trifecta ctx validate, uv run trifecta load, git worktree add, uv run pytest, uv run ruff check, uv run mypy, git add <paths>, git commit
+- **Pack SHA**: `62e640be00a139fb`
+
+## 2026-03-27 11:59 UTC
+- **Summary**: Executed reviewctl from clean isolated daemon drift batch worktree
+- **Files**: .worktrees/codex-daemon-drift-new-batch/src/infrastructure/daemon/lsp_handler.py, .worktrees/codex-daemon-drift-new-batch/src/infrastructure/lsp_client.py, .worktrees/codex-daemon-drift-new-batch/src/platform/daemon_manager.py, .worktrees/codex-daemon-drift-new-batch/_ctx/review_runs/run_20260327_08185bb8/plan.md, .worktrees/codex-daemon-drift-new-batch/explore/context.md, .worktrees/codex-daemon-drift-new-batch/explore/diff.md
+- **Commands**: bun reviewctl init --create, bun reviewctl explore context, bun reviewctl explore diff, bun reviewctl plan, bun reviewctl run
+- **Pack SHA**: `62e640be00a139fb`
+
+## 2026-03-27 12:06 UTC
+- **Summary**: Start implementation of context/README update plan after approval with changes
+- **Files**: README.md, skill.md, _ctx/agent_trifecta_dope.md, _ctx/prime_trifecta_dope.md, .pi/plan/trifecta-context-readme-update-plan.md
+- **Commands**: read plan, read docs, edit docs, trifecta ctx sync, trifecta ctx validate
+- **Pack SHA**: `62e640be00a139fb`
+
+## 2026-03-27 12:10 UTC
+- **Summary**: Completed context/README documentation refresh plan: updated README, skill, agent, and prime files; validated with ctx sync/validate
+- **Files**: README.md, skill.md, _ctx/agent_trifecta_dope.md, _ctx/prime_trifecta_dope.md, _ctx/context_pack.json, _ctx/generated/repo_map.md, _ctx/generated/symbols_stub.md
+- **Commands**: edit README.md, edit skill.md, write _ctx/agent_trifecta_dope.md, write _ctx/prime_trifecta_dope.md, trifecta ctx sync, trifecta ctx validate
+- **Pack SHA**: `50894b99c024b45b`
+
+## 2026-03-27 12:15 UTC
+- **Summary**: Ported daemon/LSP drift batch onto current origin/main shape and executed final isolated reviewctl rerun in temp clone
+- **Files**: .worktrees/codex-daemon-drift-rerun-originmain/src/infrastructure/lsp_client.py, .worktrees/codex-daemon-drift-rerun-originmain/src/platform/daemon_manager.py, .worktrees/codex-daemon-drift-rerun-originmain/tests/unit/test_lsp_client_strict.py, .worktrees/codex-daemon-drift-rerun-originmain/tests/integration/daemon/test_daemon_manager.py, .worktrees/codex-daemon-drift-rerun-originmain/docs/plans/2026-03-27-daemon-drift-rerun-originmain-plan.md, /tmp/trifecta-reviewctl-rerun-originmain/_ctx/review_runs/run_20260327_564d579e/plan.md, /tmp/trifecta-reviewctl-rerun-originmain/explore/diff.md
+- **Commands**: skill-hub, git worktree add, git format-patch, git clone, git am, uv run pytest, uv run ruff check, uv run mypy, reviewctl init/explore/plan/run
+- **Pack SHA**: `50894b99c024b45b`
+

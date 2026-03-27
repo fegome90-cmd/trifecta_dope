@@ -5,32 +5,38 @@ profile: load_only
 
 # Prime Trifecta_Dope - Lista de Lectura
 
-> **SEGMENT_ROOT**: `.` (all paths relative to segment root)
-> **REPO_ROOT**: `..` (repo root relative to segment)
+> **SEGMENT_ROOT**: `.`
+> **REPO_ROOT**: `.`
 
-Prime contiene SOLO paths priorizados para carga rapida.
+Prime contiene solo paths priorizados para carga rápida.
 
-## [HIGH] Prioridad ALTA - Fundamentos
+## [HIGH] Prioridad alta - onboarding y operación actual
 
-1. `skill.md`
-2. `CLAUDE.md`
-3. `src/domain/lsp_contracts.py`
-4. `src/domain/ast_models.py`
-5. `src/infrastructure/cli_ast.py`
-6. `src/application/ast_parser.py`
+1. `README.md`
+2. `skill.md`
+3. `CLAUDE.md`
+4. `_ctx/agent_trifecta_dope.md`
+5. `_ctx/session_trifecta_dope.md`
 
-## [MED] Prioridad MEDIA - Implementacion
+## [MED] Prioridad media - daemon / LSP / contexto activo
 
-7. `src/infrastructure/factories.py`
-8. `src/infrastructure/lsp_daemon.py`
-9. `src/application/pr2_context_searcher.py`
+6. `pyproject.toml`
+7. `src/platform/daemon_manager.py`
+8. `src/application/daemon_use_case.py`
+9. `src/infrastructure/daemon/runner.py`
+10. `src/infrastructure/daemon/lsp_handler.py`
+11. `src/infrastructure/lsp_client.py`
 
-## [LOW] Prioridad BAJA - Referencias
+## [LOW] Referencias útiles / soporte de validación
 
-10. `src/cli/invalid_option_handler.py`
+12. `tests/unit/test_daemon_manager.py`
+13. `tests/unit/daemon/test_runner_repo_root.py`
+14. `docs/reports/2026-03-26-daemon-drift-code-audit.md`
+15. `src/infrastructure/cli.py`
+16. `src/infrastructure/cli_ast.py`
 
-## [NOTE] Notas
+## Notes
 
-- **Fecha ultima actualizacion**: 2026-03-15
-- **Mantenedor**: Trifecta Team
-- **Ver tambien**: [skill.md](skill.md) | [_ctx/agent_trifecta_dope.md](_ctx/agent_trifecta_dope.md)
+- **Última actualización**: 2026-03-27
+- **Criterio**: prioriza onboarding humano, runbook operativo y superficies daemon/LSP activas antes de exploración más amplia
+- **Ver también**: `skill.md` | `_ctx/agent_trifecta_dope.md` | `_ctx/session_trifecta_dope.md`
