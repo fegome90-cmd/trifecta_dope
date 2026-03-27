@@ -35,6 +35,17 @@ def _is_path_safe(path: Path) -> bool:
     return is_runtime_dir_allowed(path, ALLOWED_BASES)
 
 
+def _lsp_request_timeout_env(default: str = "30") -> str:
+    raw_value = os.environ.get("TRIFECTA_LSP_REQUEST_TIMEOUT")
+    if raw_value is None:
+        return default
+    try:
+        float(raw_value)
+        return raw_value
+    except ValueError:
+        return default
+
+
 class DaemonManager:
     DAEMON_TTL_IDLE = 300
     DAEMON_START_TIMEOUT = 5
@@ -59,6 +70,7 @@ class DaemonManager:
         cli_path = Path(cli_module.__file__)
         env = os.environ.copy()
         env["TRIFECTA_RUNTIME_DIR"] = str(self._runtime_dir)
+        env["TRIFECTA_LSP_REQUEST_TIMEOUT"] = _lsp_request_timeout_env()
         proc = subprocess.Popen(
             [python_exe, str(cli_path), "daemon", "run"],
             cwd=str(self._runtime_dir),
