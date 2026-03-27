@@ -134,52 +134,43 @@ class LSPClient:
         Idempotent: safe to call multiple times.
         """
         with self._stop_lock:
-            # 1. Signal threads first (defensive: stopping should only be set here)
             if not self.stopping.is_set():
                 self.stopping.set()
 
-            # 2. Check/set state (idempotent)
             with self.lock:
-                if self.state == LSPState.CLOSED:
+                already_closed = self.state == LSPState.CLOSED
+                has_runtime_residue = any(
+                    (
+                        self.process is not None,
+                        self._thread is not None,
+                        bool(self._pending_requests),
+                        bool(self._request_events),
+                        bool(self._capabilities),
+                        self._warmup_file is not None,
+                    )
+                )
+                if already_closed and not has_runtime_residue:
                     return
                 self.state = LSPState.CLOSED
 
-            # 3. Terminate process
-            if self.process:
+            process = self.process
+            if process:
                 try:
-                    self.process.terminate()
+                    process.terminate()
                     try:
-                        self.process.wait(timeout=0.5)
+                        process.wait(timeout=0.5)
                     except subprocess.TimeoutExpired:
-                        self.process.kill()
-                        self.process.wait(timeout=0.2)
+                        process.kill()
+                        process.wait(timeout=0.2)
                 except Exception:
                     pass  # Process might be gone
 
-            # 4. Join background thread BEFORE closing streams
-            # Increased timeout for CI stability (was 0.5s)
             if self._thread and self._thread.is_alive():
                 self._thread.join(timeout=1.0)
-
-                # CRITICAL: If thread still alive after join, DO NOT close streams
-                # This avoids write-to-closed-file race in edge cases (blocked I/O)
-                # Better to leak streams in rare shutdown failure than reintroduce bug
                 if self._thread.is_alive():
-                    # Thread didn't terminate cleanly; leave streams open
-                    # Process is already terminated, thread will eventually exit on EOF
                     return
 
-            # 5. Close streams ONLY after thread exits
-            if self.process:
-                try:
-                    if self.process.stdin:
-                        self.process.stdin.close()
-                    if self.process.stdout:
-                        self.process.stdout.close()
-                    if self.process.stderr:
-                        self.process.stderr.close()
-                except Exception:
-                    pass  # Already closed
+            self._clear_runtime_residue()
 
     def did_open(self, file_path: Path, content: str) -> None:
         """Notify file open to trigger diagnostics."""
@@ -201,6 +192,33 @@ class LSPClient:
             },
         }
         self._send_rpc(msg)
+
+    def _clear_runtime_residue(self) -> None:
+        process = self.process
+        if process:
+            try:
+                if process.stdin:
+                    process.stdin.close()
+                if process.stdout:
+                    process.stdout.close()
+                if process.stderr:
+                    process.stderr.close()
+            except Exception:
+                pass
+
+        for event in self._request_events.values():
+            try:
+                event.set()
+            except Exception:
+                pass
+
+        self.process = None
+        self._thread = None
+        self._pending_requests.clear()
+        self._request_events.clear()
+        self._capabilities.clear()
+        self._capabilities_received = False
+        self._warmup_file = None
 
     def is_ready(self) -> bool:
         return self.state == LSPState.READY
