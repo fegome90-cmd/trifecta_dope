@@ -1,6 +1,10 @@
+from __future__ import annotations
+
 import shutil
 import tempfile
 from pathlib import Path
+from types import SimpleNamespace
+from typing import Any
 
 import pytest
 
@@ -96,3 +100,43 @@ class TestDaemonStatus:
         assert status.running is True
         assert status.pid == 12345
         assert status.socket_path == socket_path
+
+
+@pytest.mark.parametrize(
+    ("env_value", "expected"),
+    [(None, "30"), ("45", "45"), ("2.5", "2.5"), ("invalid", "30")],
+)
+def test_start_exports_lsp_timeout_env(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    env_value: str | None,
+    expected: str,
+) -> None:
+    allowed_base = tmp_path / "trifecta"
+    runtime_dir = allowed_base / "repos" / "safe-segment" / "runtime"
+    manager = DaemonManager(runtime_dir)
+    manager._runtime_dir.mkdir(parents=True, exist_ok=True)
+    manager._socket_path.parent.mkdir(parents=True, exist_ok=True)
+    manager._socket_path.write_text("")
+
+    monkeypatch.setattr(daemon_manager_module, "ALLOWED_BASES", [allowed_base])
+
+    if env_value is None:
+        monkeypatch.delenv("TRIFECTA_LSP_REQUEST_TIMEOUT", raising=False)
+    else:
+        monkeypatch.setenv("TRIFECTA_LSP_REQUEST_TIMEOUT", env_value)
+
+    captured_env: dict[str, str] = {}
+
+    def fake_popen(*args: Any, **kwargs: Any) -> SimpleNamespace:
+        del args
+        captured_env.update(kwargs["env"])
+        return SimpleNamespace(pid=9876)
+
+    monkeypatch.setattr(daemon_manager_module.subprocess, "Popen", fake_popen)
+    monkeypatch.setattr(daemon_manager_module.time, "sleep", lambda _value: None)
+
+    started = manager.start()
+
+    assert started is True
+    assert captured_env["TRIFECTA_LSP_REQUEST_TIMEOUT"] == expected
