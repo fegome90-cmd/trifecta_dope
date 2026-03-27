@@ -35,6 +35,7 @@ class LSPClient:
         self.stopping = threading.Event()
         self._thread: Optional[threading.Thread] = None
         self._capabilities: Dict[str, Any] = {}
+        self._capabilities_received = False
         self._warmup_file: Optional[Path] = None
         self._failed_invariants: List[str] = []
 
@@ -291,7 +292,9 @@ class LSPClient:
                 self._transition(LSPState.FAILED)
                 return
 
-            self._capabilities = resp["result"].get("capabilities", {})
+            result_payload = resp["result"]
+            self._capabilities_received = "capabilities" in result_payload
+            self._capabilities = result_payload.get("capabilities", {})
             self._send_rpc({"jsonrpc": "2.0", "method": "initialized", "params": {}})
 
             if not self._check_invariants():
@@ -392,7 +395,7 @@ class LSPClient:
         return True
 
     def _verify_health_check(self) -> bool:
-        if not self._capabilities:
+        if not self._capabilities_received:
             self._failed_invariants.append(INVARIANT_HEALTH_CHECK)
             return False
         return True

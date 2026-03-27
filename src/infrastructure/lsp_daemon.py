@@ -48,7 +48,7 @@ class LSPDaemonServer:
 
         self._lock_fp: Any = None
 
-    def start(self):
+    def start(self) -> None:
         """Main Daemon Entrypoint"""
         # 1. Acquire Lock
         self._lock_fp = open(self.lock_path, "w")
@@ -111,7 +111,7 @@ class LSPDaemonServer:
 
         self.cleanup()
 
-    def _handle_client(self, conn: socket.socket):
+    def _handle_client(self, conn: socket.socket) -> None:
         self.last_activity = time.time()
         try:
             # Read line-based JSON
@@ -171,31 +171,32 @@ class LSPDaemonServer:
 
         # Telemetry for requests
         if self.telemetry:
+            resolved = result is not None
             x_fields = {
                 "method": lsp_method,
-                "resolved": bool(result),
+                "resolved": resolved,
             }
             # Extract target logic if hover/def
-            if result and "contents" in result:
+            if isinstance(result, dict) and "contents" in result:
                 x_fields["target_file"] = "resolved_content"  # simplified
 
             self.telemetry.event(
                 "lsp.request",
                 {"method": lsp_method},
-                {"status": "ok" if result else "empty"},
+                {"status": "ok" if resolved else "empty"},
                 max(1, duration_ms),
                 **x_fields,
             )
 
-        if result:
+        if result is not None:
             return {"status": "ok", "data": result}
         else:
             return {"status": "error", "message": "LSP Timeout or Not Ready"}
 
-    def _shutdown_signal(self, signum, frame):
+    def _shutdown_signal(self, signum: int, frame: Any) -> None:
         self.running = False
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         """Clean up daemon resources on shutdown."""
         self.lsp_client.stop()
 

@@ -18,7 +18,7 @@ Before transitioning to `READY`, the following invariants MUST all pass:
 ### 1. Handshake Complete (`handshake_complete`)
 - `initialize` request must return a successful response
 - `initialized` notification must be sent
-- At least empty capabilities must be received
+- The initialize response must include a `capabilities` field (it may be empty)
 
 ### 2. Process Alive (`process_alive`)
 - The LSP subprocess must be running (not terminated)
@@ -29,8 +29,9 @@ Before transitioning to `READY`, the following invariants MUST all pass:
 - The path must be accessible for file operations
 
 ### 4. Health Check Responds (`health_check_responds`)
-- The LSP must have returned capabilities from the handshake
-- This indicates the server is capable of processing requests
+- Historical invariant name kept for compatibility
+- In implementation, this passes once the initialize response includes a `capabilities` field, even if it is empty
+- Runtime `health_check()` remains a separate active request path using `$/health`
 
 ## Implementation
 
@@ -69,7 +70,7 @@ def _run_loop(self) -> None:
 
 ```python
 def health_check(self, timeout_ms: int = 500) -> bool:
-    """Verify LSP can respond within timeout."""
+    """Verify runtime health via a best-effort `$/health` request within timeout."""
     if self.state != LSPState.READY:
         return False
 

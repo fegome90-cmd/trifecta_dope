@@ -8,8 +8,9 @@ immediately after a successful 'initialize' handshake, without waiting for
 """
 
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 from src.infrastructure.lsp_client import LSPClient, LSPState
+from src.infrastructure.lsp_daemon import LSPDaemonServer
 
 
 def test_contract_relaxed_ready_immediate():
@@ -48,3 +49,36 @@ def test_contract_relaxed_ready_immediate():
             call for call in mock_send.call_args_list if call[0][0].get("method") == "initialized"
         ]
         assert len(initialized_calls) > 0, "Client must send 'initialized' notification"
+
+
+
+def test_ready_accepts_empty_capabilities_from_initialize_response():
+    client = LSPClient(Path(".").resolve())
+    client.process = MagicMock()
+    client.process.poll.return_value = None
+
+    init_resp = {"id": 1, "result": {"capabilities": {}}}
+    mock_reads = [init_resp, None]
+
+    with (
+        patch.object(client, "_read_rpc", side_effect=mock_reads),
+        patch.object(client, "_send_rpc"),
+    ):
+        client._run_loop()
+
+    assert client.state == LSPState.READY
+
+
+def test_lsp_daemon_request_treats_empty_dict_as_valid_result():
+    server = object.__new__(LSPDaemonServer)
+    server.lsp_client = MagicMock()
+    server.telemetry = MagicMock()
+    server.lsp_client.request.return_value = {}
+
+    resp = server._handle_lsp_request({"method": "$/health", "params": {}})
+
+    assert resp == {"status": "ok", "data": {}}
+    server.telemetry.event.assert_called_once()
+    telemetry_args = server.telemetry.event.call_args.args
+    assert telemetry_args[2]["status"] == "ok"
+    assert server.telemetry.event.call_args.kwargs["resolved"] is True
