@@ -24,6 +24,24 @@ skill-hub "trifecta global install setup"
 skill(name="trifecta-global-usage")
 ```
 
+### runtime-ssot-anchor
+
+**Purpose:** Return to the single Batch 2D runtime SSOT/ancla before trusting derived artifacts or acting on runtime ownership questions.
+
+**Features:**
+- Explicit hierarchy (`ADR-004` > repo context > skill)
+- Re-entry checklist for handoffs, plans, and reports
+- Helper resources under `skills/runtime-ssot-anchor/resources/`
+
+**Usage:**
+```bash
+# Find with skill-hub after repo indexing/sync
+skill-hub "runtime ssot anchor"
+
+# Or load directly
+skill(name="runtime-ssot-anchor")
+```
+
 ## Installation
 
 Skills are automatically indexed by Trifecta's context system. Run:
@@ -50,6 +68,9 @@ trifecta ctx sync --segment .
 ```
 skills/
 ├── README.md (this file)
-└── trifecta-global-usage/
-    └── SKILL.md
+├── trifecta-global-usage/
+│   └── SKILL.md
+└── runtime-ssot-anchor/
+    ├── SKILL.md
+    └── resources/
 ```
