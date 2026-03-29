@@ -51,8 +51,8 @@ class ContextService:
 
     def search(self, query: str, k: int = 5, doc_filter: Optional[str] = None) -> SearchResult:
         """
-        Simple heuristic search for chunks.
-        MVP: Keyword matching in previews/titles.
+        Full-text keyword search for chunks.
+        Searches in chunk text (not truncated preview) for complete keyword coverage.
         """
         pack = self._load_pack()
         hits = []
@@ -61,45 +61,55 @@ class ContextService:
         if not query_words:
             query_words = [query.lower()]
 
-        for entry in pack.index:
+        # Build chunk map for full-text access
+        chunk_map = {c.id: c for c in pack.chunks}
+
+        for chunk in pack.chunks:
             # Apply doc filter if provided
-            if doc_filter and doc_filter not in entry.id:
+            if doc_filter and doc_filter not in chunk.id:
                 continue
 
             score = 0.0
-            title_lower = entry.title_path_norm.lower()
-            preview_lower = entry.preview.lower()
+            title_lower = " ".join(chunk.title_path).lower()
+            text_lower = chunk.text.lower()
 
-            # 1. Direct word matches
+            # 1. Direct word matches in full text
             for word in query_words:
                 if word in title_lower:
                     score += 1.0
-                if word in preview_lower:
+                if word in text_lower:
                     score += 0.5
 
-            # 2. Heuristic boosts (Even if title/preview match failed)
-            if "skill" in entry.id and any(
+            # 2. Heuristic boosts (Even if title/text match failed)
+            if "skill" in chunk.id and any(
                 kw in query_words for kw in ["regla", "comando", "cómo", "rule", "protocol"]
             ):
                 score += 0.5
-            if "agent" in entry.id and any(
+            if "agent" in chunk.id and any(
                 kw in query_words for kw in ["stack", "código", "tech", "implement", "debug", "fix"]
             ):
                 score += 1.0
-            if "session" in entry.id and any(
+            if "session" in chunk.id and any(
                 kw in query_words
                 for kw in ["pasos", "checklist", "runbook", "handoff", "history", "log"]
             ):
                 score += 0.8
 
             if score > 0:
+                # Get preview from index for display
+                preview = ""
+                for entry in pack.index:
+                    if entry.id == chunk.id:
+                        preview = entry.preview
+                        break
+
                 hits.append(
                     SearchHit(
-                        id=entry.id,
-                        title_path=[entry.title_path_norm],
-                        preview=entry.preview,
-                        token_est=entry.token_est,
-                        source_path=entry.title_path_norm,
+                        id=chunk.id,
+                        title_path=chunk.title_path,
+                        preview=preview,
+                        token_est=chunk.token_est,
+                        source_path=chunk.source_path,
                         score=score,
                     )
                 )
