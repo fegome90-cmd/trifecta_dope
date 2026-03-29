@@ -173,9 +173,7 @@ class BuildContextPackUseCase:
         self.file_system = file_system
         self.telemetry = telemetry
 
-    def _extract_references(
-        self, content: str, root: Path
-    ) -> dict[str, Path]:
+    def _extract_references(self, content: str, root: Path) -> dict[str, Path]:
         """Extract referenced files from Prime content with STRICT SECURITY."""
 
         refs: dict[str, Path] = {}
@@ -522,7 +520,11 @@ class BuildContextPackUseCase:
             mtime = file_path.stat().st_mtime
 
             # Extract relative path from source_key (format: "repo:relative/path")
-            source_rel_path = doc_type.split(":", 1)[1] if ":" in doc_type else str(file_path.relative_to(target_path))
+            source_rel_path = (
+                doc_type.split(":", 1)[1]
+                if ":" in doc_type
+                else str(file_path.relative_to(target_path))
+            )
 
             source_files.append(
                 SourceFile(
@@ -552,7 +554,7 @@ class BuildContextPackUseCase:
             chunks.append(chunk)
 
             # Index entry (L0)
-            preview = content[:200].strip() + "..." if len(content) > 200 else content
+            preview = content[:500].strip() + "..." if len(content) > 500 else content
             index.append(
                 ContextIndexEntry(
                     id=chunk_id,

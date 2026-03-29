@@ -80,10 +80,12 @@ class SkillHubIndexingStrategy:
         # 1. Verify policy is skill_hub
         policy = SegmentIndexingPolicy.detect(self.segment_path)
         if policy != SegmentIndexingPolicy.SKILL_HUB:
-            return Err([
-                f"Invalid indexing policy '{policy}' for SkillHubIndexingStrategy. "
-                f"Expected '{SegmentIndexingPolicy.SKILL_HUB}'."
-            ])
+            return Err(
+                [
+                    f"Invalid indexing policy '{policy}' for SkillHubIndexingStrategy. "
+                    f"Expected '{SegmentIndexingPolicy.SKILL_HUB}'."
+                ]
+            )
 
         # 2. Load and validate manifest
         manifest_path = self.ctx_dir / "skills_manifest.json"
@@ -109,9 +111,7 @@ class SkillHubIndexingStrategy:
             # Read skill file
             skill_file_path = self.segment_path / skill_entry.relative_path
             if not skill_file_path.exists():
-                errors.append(
-                    f"Skill file not found: {skill_entry.relative_path}"
-                )
+                errors.append(f"Skill file not found: {skill_entry.relative_path}")
                 continue
 
             content = skill_file_path.read_text(encoding="utf-8")
@@ -145,7 +145,7 @@ class SkillHubIndexingStrategy:
             chunks.append(chunk)
 
             # Build index entry
-            preview = content[:200].strip() + "..." if len(content) > 200 else content
+            preview = content[:500].strip() + "..." if len(content) > 500 else content
             index_entry = ContextIndexEntry(
                 id=chunk_id,
                 title_path_norm=skill_file_path.name,
