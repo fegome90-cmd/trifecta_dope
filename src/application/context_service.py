@@ -61,9 +61,6 @@ class ContextService:
         if not query_words:
             query_words = [query.lower()]
 
-        # Build chunk map for full-text access
-        chunk_map = {c.id: c for c in pack.chunks}
-
         for chunk in pack.chunks:
             # Apply doc filter if provided
             if doc_filter and doc_filter not in chunk.id:
