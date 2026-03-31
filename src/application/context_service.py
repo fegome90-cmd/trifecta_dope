@@ -1,6 +1,7 @@
 """Service for Programmatic Context Calling logic (ContextService)."""
 
 import json
+import re
 from pathlib import Path
 from typing import Any, Literal, Optional
 
@@ -60,6 +61,7 @@ class ContextService:
         if not query_words:
             query_words = [query.lower()]
 
+        search_patterns = {word: re.compile(re.escape(word), re.IGNORECASE) for word in query_words}
         chunk_map = {chunk.id: chunk for chunk in pack.chunks}
 
         for entry in pack.index:
@@ -69,17 +71,20 @@ class ContextService:
 
             chunk = chunk_map.get(entry.id)
             if chunk is None:
-                continue
+                raise RuntimeError(
+                    f"Context pack index refers to missing chunk id '{entry.id}'. "
+                    f"This suggests that {self.pack_path} is corrupted or incomplete."
+                )
 
             score = 0.0
             title_lower = entry.title_path_norm.lower()
-            text_lower = chunk.text.lower()
+            chunk_text = chunk.text
 
             # 1. Direct word matches
             for word in query_words:
                 if word in title_lower:
                     score += 1.0
-                if word in text_lower:
+                if search_patterns[word].search(chunk_text):
                     score += 0.5
 
             # 2. Heuristic boosts (Even if title/text match failed)

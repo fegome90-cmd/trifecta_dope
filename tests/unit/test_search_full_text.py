@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+import pytest
+
 from src.application.context_service import ContextService
 from src.domain.context_models import ContextChunk, ContextIndexEntry, ContextPack
 
@@ -52,6 +54,7 @@ def test_search_matches_chunk_text_not_preview_content(tmp_path: Path) -> None:
     """Search must use chunk.text as authority, not preview text."""
     deep_text = "x" * 260 + f" {SEARCH_TERM} lives only in the chunk body."
     misleading_preview = f"Preview mentions {SEARCH_TERM}, but chunk text does not."
+    preview_only_text = "This chunk body never includes the search term."
     pack = ContextPack(
         segment="test",
         chunks=[
@@ -68,9 +71,9 @@ def test_search_matches_chunk_text_not_preview_content(tmp_path: Path) -> None:
                 id="skill:preview-only",
                 doc="skill",
                 title_path=["preview.md"],
-                text="This chunk body never includes the search term.",
-                char_count=44,
-                token_est=11,
+                text=preview_only_text,
+                char_count=len(preview_only_text),
+                token_est=len(preview_only_text) // 4,
                 source_path="preview.md",
             ),
         ],
@@ -128,3 +131,23 @@ def test_search_keeps_preview_as_display_surface(tmp_path: Path) -> None:
     assert len(result.hits) == 1
     assert result.hits[0].preview == TRUNCATED_PREVIEW
     assert SEARCH_TERM not in result.hits[0].preview
+
+
+def test_search_raises_for_missing_chunk_reference(tmp_path: Path) -> None:
+    """Search should fail closed when index entries reference missing chunks."""
+    pack = ContextPack(
+        segment="test",
+        chunks=[],
+        index=[
+            ContextIndexEntry(
+                id="skill:missing-chunk",
+                title_path_norm="missing.md",
+                preview=TRUNCATED_PREVIEW,
+                token_est=1,
+            )
+        ],
+    )
+    _write_pack(tmp_path, pack)
+
+    with pytest.raises(RuntimeError, match="missing chunk id 'skill:missing-chunk'"):
+        ContextService(tmp_path).search("missing", k=5)
