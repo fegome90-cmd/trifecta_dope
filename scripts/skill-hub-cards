@@ -111,12 +111,14 @@ def run_search(query: str, limit: int) -> list[dict]:
     )
 
     if result.returncode != 0:
+        print(f"skill-hub-cards: search failed (rc={result.returncode}): {result.stderr.strip()}", file=sys.stderr)
         return []
 
     try:
         data = json.loads(result.stdout)
         return data.get("hits", [])
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as e:
+        print(f"skill-hub-cards: search returned invalid JSON: {e}", file=sys.stderr)
         return []
 
 
@@ -145,6 +147,7 @@ def run_get(chunk_ids: list[str]) -> dict[str, str]:
     )
 
     if result.returncode != 0:
+        print(f"skill-hub-cards: get failed (rc={result.returncode}): {result.stderr.strip()}", file=sys.stderr)
         return {}
 
     # Parse output: ## [chunk_id] title\n<content>
