@@ -1,0 +1,23 @@
+{
+  "agent": "benchmark-salvage",
+  "status": "pass",
+  "verdict": "KEEP",
+  "info": {
+    "exists": true,
+    "files": [
+      "run_hn_benchmark.py",
+      "hn_runs.csv",
+      "hn_methodology.md",
+      "run_hn_benchmark.sh",
+      "hn_results.md"
+    ],
+    "file_count": 5,
+    "total_size": 98205,
+    "csv_rows": 51,
+    "csv_cols": 38,
+    "csv_has_gold_data": true
+  },
+  "warnings": [],
+  "errors": [],
+  "duration_ms": 1
+}

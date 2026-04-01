@@ -1,0 +1,23 @@
+{
+  "agent": "arch-deps",
+  "status": "fail",
+  "layers": {
+    "domain": 21,
+    "application": 42,
+    "infrastructure": 33,
+    "platform": 8
+  },
+  "violations": [
+    "src/application/search_get_usecases.py:14: application imports from infrastructure: from src.infrastructure.file_system import FileSystemAdapter",
+    "src/application/search_get_usecases.py:179: application imports from infrastructure: from src.infrastructure.aliases_fs import AliasMerger",
+    "src/application/search_get_usecases.py:182: application imports from infrastructure: from src.infrastructure.segment_utils import resolve_segment_root",
+    "src/application/search_get_usecases.py:183: application imports from infrastructure: from src.infrastructure.config_loader import ConfigLoader",
+    "src/application/pr2_context_searcher.py:12: application imports from infrastructure: from src.infrastructure.telemetry import Telemetry",
+    "src/application/pr2_context_searcher.py:63: application imports from infrastructure: from src.infrastructure.factories import get_ast_cache",
+    "src/application/skill_lint_use_case.py:18: application imports from infrastructure: from src.infrastructure.skills_fs import discover_skills_from_paths",
+    "src/application/daemon_use_case.py:4: application imports from platform: from src.platform.daemon_manager import DaemonManager",
+    "src/application/daemon_use_case.py:5: application imports from platform: from src.platform.health import HealthChecker",
+    "src/application/hookify_extractor.py:9: application imports from infrastructure: - Uses infrastructure from src.infrastructure.hookify_logger"
+  ],
+  "duration_ms": 31
+}

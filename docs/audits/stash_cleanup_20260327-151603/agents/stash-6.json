@@ -1,0 +1,19 @@
+{
+  "stash_index": 6,
+  "stash_ref": "stash@{6}",
+  "stash_line": "stash@{6}: On feat/wo-WO-0015: WO-0015 salvage before cleanup",
+  "branch": "feat/wo-WO-0015",
+  "message": "WO-0015 salvage before cleanup",
+  "file_count": 5,
+  "file_list": "_ctx/index/wo_worktrees.json,_ctx/telemetry/events.jsonl,_ctx/telemetry/last_run.json,my_project/_ctx/telemetry/events.jsonl,my_project/_ctx/telemetry/last_run.json",
+  "diff_vs_main_files": 540,
+  "merge_evidence": "39c7deb2 refactor(search): extract common search pipeline (Steps 1-2/5) (#69);18cb0f42 fix: eliminate FAIL-but-RUNNING scope_lint failure path (WO-0015/WO-0057);d5caf716 [WO-0015] Repair: failed state + cleanup worktree zombie;",
+  "unique_files": "_ctx/jobs/done/WO-0040.yaml,_ctx/jobs/done/WO-0041.yaml,_ctx/jobs/done/WO-0043.yaml,_ctx/jobs/done/WO-0044.yaml,_ctx/jobs/pending/WO-0014.yaml,_ctx/jobs/pending/WO-0015.yaml,_ctx/jobs/pending/WO-0019.yaml,_ctx/jobs/pending/WO-0055.yaml,_ctx/jobs/running/WO-0046.yaml,_ctx/jobs/running/WO-0048.yaml",
+  "verdict": "DROP",
+  "risk": "Bajo",
+  "reason": "WO-0015 completed, salvage no longer needed",
+  "stats": " _ctx/index/wo_worktrees.json            |   28 +-\n _ctx/telemetry/events.jsonl             | 1228 +++++++++++++++++++++++++++++++\n _ctx/telemetry/last_run.json            |   12 +-\n my_project/_ctx/telemetry/events.jsonl  |    3 +\n my_project/_ctx/telemetry/last_run.json |    6 +-\n 5 files changed, 1254 insertions(+), 23 deletions(-)",
+  "phase": "CLARIFY+LAYOUT",
+  "status": "completed",
+  "timestamp": "2026-03-27T18:16:04Z"
+}

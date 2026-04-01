@@ -1,0 +1,17 @@
+{
+  "stash_index": 4,
+  "stash_ref": "stash@{4}",
+  "stash_line": "stash@{4}: On fix/wo-0055-code-review-issues: temp stash for WO-0015 finish",
+  "branch": "fix/wo-0055-code-review-issues",
+  "message": "On fix/wo-0055-code-review-issues: temp stash for WO-0015 finish",
+  "file_count": 16,
+  "file_list": ".claude/commands/wo-start.md,.claude/context_memory/index.json,.coverage,_ctx/agent_trifecta_dope.md,_ctx/context_pack.json,_ctx/handoff/WO-0015/diff.patch,_ctx/handoff/WO-0015/verdict.json,_ctx/index/wo_worktrees.json,_ctx/session_trifecta_dope.md,_ctx/telemetry/events.jsonl,_ctx/telemetry/last_run.json,scripts/ctx_wo_finish.py,skill.md,tests/fixtures/reconcile/running_wo_without_worktree/_ctx/logs/reconcile/reconcile.log,tests/fixtures/reconcile/running_wo_without_worktree/_ctx/logs/reconcile/reconcile.patch,tests/integration/test_ctx_search_linter_ab_controlled.py",
+  "diff_vs_main_files": 0,
+  "verdict": "DROP",
+  "risk": "Bajo",
+  "reason": "Temp stash for WO-0015 finish, branch merged 4x (PRs #56,#60,#61,#64)",
+  "stats": "-\n .../_ctx/logs/reconcile/reconcile.patch            | 6972 +++++++++++++-------\n .../test_ctx_search_linter_ab_controlled.py        |   27 +-\n 16 files changed, 5963 insertions(+), 2639 deletions(-)",
+  "phase": "CLARIFY+LAYOUT",
+  "status": "completed",
+  "timestamp": "2026-03-27T18:19:59.472556+00:00"
+}

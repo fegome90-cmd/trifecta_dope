@@ -1,0 +1,46 @@
+{
+  "agent": "working-tree",
+  "status": "pass",
+  "total_modified": 12,
+  "py_files": 6,
+  "checked": [
+    {
+      "file": "src/application/lsp_manager.py",
+      "functions": 13,
+      "classes": 3,
+      "ok": true
+    },
+    {
+      "file": "src/application/zero_hit_reports.py",
+      "functions": 3,
+      "classes": 0,
+      "ok": true
+    },
+    {
+      "file": "src/infrastructure/daemon/lsp_handler.py",
+      "functions": 1,
+      "classes": 0,
+      "ok": true
+    },
+    {
+      "file": "src/infrastructure/lsp_client.py",
+      "functions": 19,
+      "classes": 2,
+      "ok": true
+    },
+    {
+      "file": "src/platform/daemon_manager.py",
+      "functions": 12,
+      "classes": 2,
+      "ok": true
+    },
+    {
+      "file": "src/platform/runtime_manager.py",
+      "functions": 9,
+      "classes": 3,
+      "ok": true
+    }
+  ],
+  "errors": [],
+  "duration_ms": 37
+}

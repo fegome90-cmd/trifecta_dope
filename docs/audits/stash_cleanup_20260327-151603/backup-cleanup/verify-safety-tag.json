@@ -1,0 +1,18 @@
+{
+  "agent": "safety-tag",
+  "tag": "safety-pre-restore-20260327",
+  "status": "pass",
+  "verdict": "SAFE_DELETE",
+  "info": {
+    "exists": true,
+    "commit": "828621313fe45c6c12fe065908cfd3e83b3ee85e",
+    "same_as_backup_branch": true,
+    "other_tags_with_commit": [],
+    "remote_reachability": [
+      "origin/codex/docs-skillhub-context-refresh-20260327"
+    ]
+  },
+  "warnings": [],
+  "errors": [],
+  "duration_ms": 48
+}

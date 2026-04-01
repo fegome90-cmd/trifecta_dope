@@ -1,0 +1,75 @@
+{
+  "agent": "B",
+  "timestamp": "2026-03-27T16:48:02",
+  "duration_ms": 68,
+  "actions": [
+    {
+      "action": "delete_branch",
+      "target": "backup/main-pre-restore-20260327",
+      "verdict": "SAFE_DELETE",
+      "reason": "Commit 82862131 exists on remote (['origin/codex/docs-skillhub-context-refresh-20260327']). Local branch is redundant.",
+      "commit": "82862131",
+      "remote_branches": [
+        "origin/codex/docs-skillhub-context-refresh-20260327"
+      ],
+      "tags": [
+        "safety-pre-restore-20260327"
+      ],
+      "files_added": 4,
+      "files_modified": 7,
+      "files_deleted": 29,
+      "diff_summary": [
+        "M\t.gitignore",
+        "M\tREADME.md",
+        "M\t_ctx/agent_trifecta_dope.md",
+        "M\t_ctx/context_pack.json",
+        "M\t_ctx/prime_trifecta_dope.md",
+        "M\t_ctx/session_trifecta_dope.md",
+        "D\tdocs/daemon-lsp-scope/batch_closure_report.md",
+        "D\tdocs/daemon-lsp-scope/cloop_daemon_lsp_scope.md",
+        "D\tdocs/daemon-lsp-scope/code_review_implementation.md",
+        "D\tdocs/daemon-lsp-scope/code_review_plan_v2.md"
+      ]
+    },
+    {
+      "action": "delete_tag",
+      "target": "safety-pre-restore-20260327",
+      "verdict": "SAFE_DELETE",
+      "reason": "Tag points to same commit as backup branch (82862131). Deleting both is safe.",
+      "commit": "82862131",
+      "same_as_branch": true,
+      "refs_pointing": [
+        "refs/heads/backup/main-pre-restore-20260327",
+        "refs/heads/codex/docs-skillhub-context-refresh-20260327",
+        "refs/remotes/origin/codex/docs-skillhub-context-refresh-20260327",
+        "refs/tags/safety-pre-restore-20260327"
+      ]
+    },
+    {
+      "action": "delete_tmp",
+      "target": "/tmp/trifecta_*",
+      "verdict": "SAFE_DELETE",
+      "reason": "All 8 backup items found (210.5MB). Working tree verified restored. Backups are redundant.",
+      "items_found": 8,
+      "items_missing": 0,
+      "total_mb": 210.5,
+      "wt_restored": true
+    },
+    {
+      "action": "keep_salvage",
+      "target": "/tmp/hn_benchmark_salvage_20260327",
+      "verdict": "KEEP",
+      "reason": "Benchmark GOLD data: 51 rows, 5 files. Columns include recall_at_k/dataset_mode. Not in main.",
+      "files": [
+        "run_hn_benchmark.py",
+        "hn_runs.csv",
+        "hn_methodology.md",
+        "run_hn_benchmark.sh",
+        "hn_results.md"
+      ],
+      "total_kb": 95.9,
+      "has_gold_columns": true
+    }
+  ],
+  "overall": "ALL_SAFE"
+}

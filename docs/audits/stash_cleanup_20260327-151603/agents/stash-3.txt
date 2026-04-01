@@ -1,0 +1,7 @@
+# Stash@{3} — feat/search-pipeline-refactor
+Message: telemetry files
+Files: 2 | Diff vs main: 289 files
+Verdict: DROP | Risk: Bajo
+Reason: Telemetry/temp metadata, fully regenerable
+Merge evidence: no_pattern_match
+Unique files: 

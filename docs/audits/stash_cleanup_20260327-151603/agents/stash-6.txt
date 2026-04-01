@@ -1,0 +1,7 @@
+# Stash@{6} — feat/wo-WO-0015
+Message: WO-0015 salvage before cleanup
+Files: 5 | Diff vs main: 540 files
+Verdict: DROP | Risk: Bajo
+Reason: WO-0015 completed, salvage no longer needed
+Merge evidence: 39c7deb2 refactor(search): extract common search pipeline (Steps 1-2/5) (#69);18cb0f42 fix: eliminate FAIL-but-RUNNING scope_lint failure path (WO-0015/WO-0057);d5caf716 [WO-0015] Repair: failed state + cleanup worktree zombie;
+Unique files: _ctx/jobs/done/WO-0040.yaml,_ctx/jobs/done/WO-0041.yaml,_ctx/jobs/done/WO-0043.yaml,_ctx/jobs/done/WO-0044.yaml,_ctx/jobs/pending/WO-0014.yaml,_ctx/jobs/pending/WO-0015.yaml,_ctx/jobs/pending/WO-0019.yaml,_ctx/jobs/pending/WO-0055.yaml,_ctx/jobs/running/WO-0046.yaml,_ctx/jobs/running/WO-0048.yaml

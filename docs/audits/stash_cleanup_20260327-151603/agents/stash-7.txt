@@ -1,0 +1,7 @@
+# Stash@{7} — feat/hn-benchmark-truth-mode
+Message: main_branch_cleanup_20260219
+Files: 5 | Diff vs main: 524 files
+Verdict: EXPORT_THEN_DROP | Risk: Medio
+Reason: Branch merged (PR #55) but has improved benchmark data (GOLD queries, recall@k=1.0)
+Merge evidence: 472f3d0d Merge pull request #55 from fegome90-cmd/feat/hn-benchmark-truth-mode;
+Unique files: _ctx/jobs/done/WO-0040.yaml,_ctx/jobs/done/WO-0041.yaml,_ctx/jobs/done/WO-0043.yaml,_ctx/jobs/done/WO-0044.yaml,_ctx/jobs/pending/WO-0014.yaml,_ctx/jobs/pending/WO-0015.yaml,_ctx/jobs/pending/WO-0019.yaml,_ctx/jobs/pending/WO-0055.yaml,_ctx/jobs/running/WO-0046.yaml,_ctx/jobs/running/WO-0048.yaml

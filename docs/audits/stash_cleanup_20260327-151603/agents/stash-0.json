@@ -1,0 +1,19 @@
+{
+  "stash_index": 0,
+  "stash_ref": "stash@{0}",
+  "stash_line": "stash@{0}: On codex/wo-remediation-merge-ready: telemetry changes",
+  "branch": "codex/wo-remediation-merge-ready",
+  "message": "telemetry changes",
+  "file_count": 2,
+  "file_list": "_ctx/telemetry/events.jsonl,_ctx/telemetry/last_run.json",
+  "diff_vs_main_files": 161,
+  "merge_evidence": "e1ed3ff1 Merge pull request #71 from fegome90-cmd/codex/wo-remediation-merge-ready;4ec28fa9 Tighten remediation docs links and normalize WO-0067 metadata (#72);a2fae687 docs(remediation): plan ci baseline review-first lot;",
+  "unique_files": "",
+  "verdict": "DROP",
+  "risk": "Bajo",
+  "reason": "Telemetry/temp metadata, fully regenerable",
+  "stats": " _ctx/telemetry/events.jsonl  |  1 +\n _ctx/telemetry/last_run.json | 14 +++-----------\n 2 files changed, 4 insertions(+), 11 deletions(-)",
+  "phase": "CLARIFY+LAYOUT",
+  "status": "completed",
+  "timestamp": "2026-03-27T18:16:04Z"
+}

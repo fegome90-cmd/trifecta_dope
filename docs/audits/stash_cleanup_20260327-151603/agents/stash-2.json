@@ -1,0 +1,17 @@
+{
+  "stash_index": 2,
+  "stash_ref": "stash@{2}",
+  "stash_line": "stash@{2}: On codex/wo-remediation-plan: remediation-nonmerge-artifacts",
+  "branch": "codex/wo-remediation-plan",
+  "message": "On codex/wo-remediation-plan: remediation-nonmerge-artifacts",
+  "file_count": 4,
+  "file_list": "_ctx/index/wo_worktrees.json,_ctx/session_trifecta_dope.md,_ctx/telemetry/events.jsonl,_ctx/telemetry/last_run.json",
+  "diff_vs_main_files": 0,
+  "verdict": "DROP",
+  "risk": "Bajo",
+  "reason": "Non-merge artifacts from planning branch (4 files)",
+  "stats": ".md | 254 +++++++++++++++++\n _ctx/telemetry/events.jsonl   | 617 ++++++++++++++++++++++++++++++++++++++++++\n _ctx/telemetry/last_run.json  |  14 +-\n 4 files changed, 993 insertions(+), 18 deletions(-)",
+  "phase": "CLARIFY+LAYOUT",
+  "status": "completed",
+  "timestamp": "2026-03-27T18:19:59.371502+00:00"
+}

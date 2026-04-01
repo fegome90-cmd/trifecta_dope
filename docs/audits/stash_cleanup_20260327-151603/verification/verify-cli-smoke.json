@@ -1,0 +1,26 @@
+{
+  "agent": "cli-smoke",
+  "status": "pass",
+  "tests": [
+    {
+      "label": "trifecta --help",
+      "exit_code": 0,
+      "ok": true,
+      "stdout_lines": 34
+    },
+    {
+      "label": "trifecta ctx --help",
+      "exit_code": 0,
+      "ok": true,
+      "stdout_lines": 22
+    },
+    {
+      "label": "trifecta ast --help",
+      "exit_code": 0,
+      "ok": true,
+      "stdout_lines": 17
+    }
+  ],
+  "errors": [],
+  "duration_ms": 709
+}

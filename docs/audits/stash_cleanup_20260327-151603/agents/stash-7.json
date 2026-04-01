@@ -1,0 +1,19 @@
+{
+  "stash_index": 7,
+  "stash_ref": "stash@{7}",
+  "stash_line": "stash@{7}: On feat/hn-benchmark-truth-mode: main_branch_cleanup_20260219",
+  "branch": "feat/hn-benchmark-truth-mode",
+  "message": "main_branch_cleanup_20260219",
+  "file_count": 5,
+  "file_list": "data/hn_runs.csv,docs/hn_methodology.md,docs/hn_results.md,scripts/run_hn_benchmark.py,scripts/run_hn_benchmark.sh",
+  "diff_vs_main_files": 524,
+  "merge_evidence": "472f3d0d Merge pull request #55 from fegome90-cmd/feat/hn-benchmark-truth-mode;",
+  "unique_files": "_ctx/jobs/done/WO-0040.yaml,_ctx/jobs/done/WO-0041.yaml,_ctx/jobs/done/WO-0043.yaml,_ctx/jobs/done/WO-0044.yaml,_ctx/jobs/pending/WO-0014.yaml,_ctx/jobs/pending/WO-0015.yaml,_ctx/jobs/pending/WO-0019.yaml,_ctx/jobs/pending/WO-0055.yaml,_ctx/jobs/running/WO-0046.yaml,_ctx/jobs/running/WO-0048.yaml",
+  "verdict": "EXPORT_THEN_DROP",
+  "risk": "Medio",
+  "reason": "Branch merged (PR #55) but has improved benchmark data (GOLD queries, recall@k=1.0)",
+  "stats": " data/hn_runs.csv            |   56 +-\n docs/hn_methodology.md      |  167 ++---\n docs/hn_results.md          |  153 +++--\n scripts/run_hn_benchmark.py | 1470 ++++++++++++++++++++++++++++++++++++++++---\n scripts/run_hn_benchmark.sh |    6 +-\n 5 files changed, 1601 insertions(+), 251 deletions(-)",
+  "phase": "CLARIFY+LAYOUT",
+  "status": "completed",
+  "timestamp": "2026-03-27T18:16:04Z"
+}
