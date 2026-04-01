@@ -43,8 +43,8 @@ def test_ctx_sync_fails_without_create(mini_repo: Path):
 
     assert result.returncode != 0, "sync should fail without create"
     assert "TRIFECTA_ERROR_CODE:" in result.stderr, "Missing error card structure"
-    assert "NORTH_STAR_MISSING" in result.stderr, (
-        f"Expected NORTH_STAR_MISSING error code, got:\n{result.stderr[:500]}"
+    assert "SEGMENT_NOT_INITIALIZED" in result.stderr, (
+        f"Expected SEGMENT_NOT_INITIALIZED error code, got:\n{result.stderr[:500]}"
     )
 
 
