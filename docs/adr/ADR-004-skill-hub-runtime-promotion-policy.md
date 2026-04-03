@@ -1,9 +1,9 @@
 # ADR: Proposed Canonical Promotion Policy for `skill-hub` Runtime
 
 ## Status
-ACCEPTED
+PROPOSED
 
-> Esta ADR documenta la policy canónica ratificada para SH-003. Con estado `ACCEPTED`, habilita la gobernanza documental del cierre canónico siempre que la evidencia runtime vigente siga verificando el receipt y la cadena runtime gobernada.
+> Este ADR documenta una policy propuesta para SH-003. Mientras permanezca en estado `PROPOSED`, no constituye una decisión ratificada del repo y no habilita cierre canónico de SH-003 por sí solo.
 
 ## Context
 El estado actual verificado muestra drift entre `scripts/skill-hub` y `~/.local/bin/skill-hub`, y no aporta evidencia local verificable de una ruta oficial de promoción. Además, el runtime auditado del wrapper puede depender de archivos adicionales fuera del repo. SH-003 requiere una policy única para gobernar ownership, promoción y verificación de cierre sin asumir que el estado objetivo ya existe.
@@ -39,4 +39,4 @@ SH-003 sólo podrá cerrarse canónicamente cuando se cumplan ambas condiciones:
 1. esta ADR haya sido ratificada y su `Status` sea `ACCEPTED`;
 2. la instalación vigente esté respaldada por receipt válido y el wrapper junto con toda dependencia runtime auditada directamente invocada queden gobernados por esa misma policy.
 
-Con esta ADR en `ACCEPTED`, SH-003 queda documentalmente habilitado para cierre canónico de gobernanza mientras la instalación vigente siga respaldada por receipt válido y por la misma cadena runtime gobernada.
+Mientras esta ADR permanezca en `PROPOSED`, SH-003 debe seguir considerándose abierto aunque el texto de policy ya exista en documentación.
