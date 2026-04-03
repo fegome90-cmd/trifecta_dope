@@ -1,0 +1,220 @@
+#!/usr/bin/env python3
+"""Official promote/verify utility for SH-003 governed skill-hub runtime artifacts."""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import shutil
+import stat
+import subprocess
+import sys
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+
+
+@dataclass(frozen=True)
+class ArtifactSpec:
+    name: str
+    source_rel: str
+    kind: str
+    target_name: str | None = None
+
+
+CANONICAL_ARTIFACTS: tuple[ArtifactSpec, ...] = (
+    ArtifactSpec(
+        name="skill-hub",
+        source_rel="scripts/skill-hub",
+        kind="promoted",
+        target_name="skill-hub",
+    ),
+    ArtifactSpec(
+        name="skill-hub-cards",
+        source_rel="scripts/skill-hub-cards",
+        kind="promoted",
+        target_name="skill-hub-cards",
+    ),
+)
+
+FORBIDDEN_WRAPPER_REFS: tuple[str, ...] = ("skill_hub_info_card.py",)
+REQUIRED_WRAPPER_REFS: tuple[str, ...] = ('python3 "$CARDS_HELPER"', "CARDS_HELPER=")
+
+
+def sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def repo_head(repo_root: Path) -> str:
+    result = subprocess.run(
+        ["git", "-C", str(repo_root), "rev-parse", "HEAD"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"unable to resolve repo HEAD: {result.stderr.strip()}")
+    return result.stdout.strip()
+
+
+def validate_wrapper_contract(repo_root: Path) -> None:
+    wrapper = repo_root / "scripts" / "skill-hub"
+    text = wrapper.read_text()
+
+    forbidden = [ref for ref in FORBIDDEN_WRAPPER_REFS if ref in text]
+    if forbidden:
+        raise RuntimeError(f"wrapper contains forbidden runtime dependency refs: {', '.join(forbidden)}")
+
+    missing = [ref for ref in REQUIRED_WRAPPER_REFS if ref not in text]
+    if missing:
+        raise RuntimeError(f"wrapper missing governed dependency refs: {', '.join(missing)}")
+
+
+def resolve_specs(repo_root: Path, runtime_bin_dir: Path) -> list[dict[str, str]]:
+    resolved: list[dict[str, str]] = []
+    for artifact in CANONICAL_ARTIFACTS:
+        item = {
+            "name": artifact.name,
+            "kind": artifact.kind,
+            "source": str(repo_root / artifact.source_rel),
+        }
+        if artifact.target_name:
+            item["target"] = str(runtime_bin_dir / artifact.target_name)
+        resolved.append(item)
+    return resolved
+
+
+def write_receipt(path: Path, data: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+
+
+def promote(repo_root: Path, runtime_bin_dir: Path, receipt_path: Path) -> int:
+    validate_wrapper_contract(repo_root)
+    resolved = resolve_specs(repo_root, runtime_bin_dir)
+    runtime_bin_dir.mkdir(parents=True, exist_ok=True)
+
+    artifacts: list[dict[str, str]] = []
+    for item in resolved:
+        source = Path(item["source"])
+        artifact_entry = {
+            "name": item["name"],
+            "kind": item["kind"],
+            "source": item["source"],
+            "sha256": sha256(source),
+        }
+        if item["kind"] == "promoted":
+            target = Path(item["target"])
+            shutil.copy2(source, target)
+            current_mode = target.stat().st_mode
+            target.chmod(current_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+            artifact_entry["target"] = str(target)
+        artifacts.append(artifact_entry)
+
+    receipt = {
+        "schema_version": 1,
+        "tool": "skill-hub-runtime",
+        "promoted_at": datetime.now(timezone.utc).isoformat(),
+        "repo_root": str(repo_root),
+        "repo_head": repo_head(repo_root),
+        "artifacts": artifacts,
+    }
+    write_receipt(receipt_path, receipt)
+    print(f"promotion receipt written: {receipt_path}")
+    return 0
+
+
+def verify(repo_root: Path, runtime_bin_dir: Path, receipt_path: Path) -> int:
+    validate_wrapper_contract(repo_root)
+    if not receipt_path.exists():
+        print(f"missing receipt: {receipt_path}", file=sys.stderr)
+        return 1
+
+    data = json.loads(receipt_path.read_text())
+    if data.get("schema_version") != 1:
+        print("schema_version mismatch", file=sys.stderr)
+        return 1
+    if data.get("tool") != "skill-hub-runtime":
+        print("tool mismatch", file=sys.stderr)
+        return 1
+    if data.get("repo_root") != str(repo_root):
+        print("repo_root mismatch", file=sys.stderr)
+        return 1
+    if data.get("repo_head") != repo_head(repo_root):
+        print("repo_head mismatch", file=sys.stderr)
+        return 1
+
+    expected = {item["name"]: item for item in resolve_specs(repo_root, runtime_bin_dir)}
+    recorded = {item["name"]: item for item in data.get("artifacts", [])}
+
+    if set(expected) != set(recorded):
+        print("artifact set mismatch between canonical map and receipt", file=sys.stderr)
+        return 1
+
+    for name, item in expected.items():
+        source = Path(item["source"])
+        current_source_hash = sha256(source)
+        receipt_item = recorded[name]
+
+        if receipt_item.get("kind") != item["kind"]:
+            print(f"kind mismatch for {name}", file=sys.stderr)
+            return 1
+        if receipt_item.get("source") != item["source"]:
+            print(f"source mismatch for {name}", file=sys.stderr)
+            return 1
+        if receipt_item.get("sha256") != current_source_hash:
+            print(f"source hash mismatch for {name}", file=sys.stderr)
+            return 1
+
+        if item["kind"] == "promoted":
+            target = Path(item["target"])
+            if not target.exists():
+                print(f"missing promoted target for {name}: {target}", file=sys.stderr)
+                return 1
+            current_target_hash = sha256(target)
+            if receipt_item.get("target") != item["target"]:
+                print(f"target mismatch for {name}", file=sys.stderr)
+                return 1
+            if current_target_hash != current_source_hash:
+                print(f"hash mismatch for {name}: promoted target drifted from source", file=sys.stderr)
+                return 1
+
+    print(f"verification ok: {receipt_path}")
+    return 0
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Promote or verify governed skill-hub runtime artifacts.")
+    parser.add_argument("command", choices=("promote", "verify"))
+    parser.add_argument(
+        "--repo-root",
+        default=str(Path(__file__).resolve().parent.parent),
+        help="Repository root containing canonical scripts (default: script parent repo root)",
+    )
+    parser.add_argument(
+        "--runtime-bin-dir",
+        default=str(Path.home() / ".local" / "bin"),
+        help="Runtime bin directory for promoted artifacts",
+    )
+    parser.add_argument(
+        "--receipt-path",
+        default=str(Path.home() / ".local" / "share" / "trifecta" / "receipts" / "skill-hub-runtime.json"),
+        help="Persistent receipt path",
+    )
+    return parser
+
+
+def main() -> int:
+    args = build_parser().parse_args()
+    repo_root = Path(args.repo_root).resolve()
+    runtime_bin_dir = Path(args.runtime_bin_dir).expanduser().resolve()
+    receipt_path = Path(args.receipt_path).expanduser().resolve()
+
+    if args.command == "promote":
+        return promote(repo_root, runtime_bin_dir, receipt_path)
+    return verify(repo_root, runtime_bin_dir, receipt_path)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
