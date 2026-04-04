@@ -112,7 +112,7 @@ Esta auditoría sólo podrá considerarse “cerrada” cuando:
 | SH-005 | mitigado / verificado (runtime instalado) | logic / fail-open | alta | wrapper instalado | El wrapper instalado ya preserva el exit status real del search en runtime real, sin seguir colapsándolo a `0` | before: raw `EXIT:2` vs wrapper `EXIT:0`; after: raw `EXIT:2` vs wrapper `EXIT:2`; fix en `~/.local/bin/skill-hub:91-107,215-248` | El runtime instalado dejó de reportar éxito falso ante fallas reales del search | Mantener esta corrección mientras SH-003 siga abierto y converger la superficie instalada a una fuente versionada |
 | SH-006 | nuevo / abierto | UX / presentation | media | cards instaladas / renderer visible | Los hits `repo:` sí renderizan cards hoy, pero la UX visible sigue degradada: nombres no canónicos con sufijo `.md` y fallback opaco para resultados metadata-only | `bash -lc '/Users/felipe_gonzalez/.local/bin/skill-hub --cards checkpoint handoff; echo EXIT:$?'` → `# Skill: checkpoint-card.md` + `EXIT:0`; `bash -lc '/Users/felipe_gonzalez/.local/bin/skill-hub --cards prime; echo EXIT:$?'` → `# No valid skill cards` + `EXIT:1`; idem `session` | No hay evidencia actual de bug funcional frente a hits `repo:`; el problema reproducible vigente es de naming visible y tratamiento UX de metadata-only | Definir naming canónico visible y fallback explícito para metadata-only sin reabrir compatibilidad `repo:` |
 | SH-007 | nuevo / abierto | product / runtime drift | alta | pack vivo / indexación | El pack vivo del segmento no está convergido con la estrategia manifest-driven: tiene `164` chunks `repo:` y solo `1` `skill:` | `context_pack.json` creado `2026-04-02T09:51:18`; prefijos: `{'skill': 1, 'prime': 1, 'agent': 1, 'session': 1, 'repo': 164}`; `BuildContextPackUseCase` delega a `SkillHubIndexingStrategy` | La superficie real de búsqueda no coincide con el contrato arquitectónico esperado | Re-sincronizar / regenerar el segmento con el flujo correcto y verificar prefijos |
-| SH-008 | nuevo / abierto | product / corpus contamination | media | search results / corpus | El corpus vivo sigue mezclando metadata administrativa del hub con skills reales | resultado real `scripts/skill-hub "checkpoint handoff"` incluye `session:97344fc272`; pack incluye `prime`, `agent`, `session`, `skill` metadata | Queries abstractas pueden seguir trayendo metadocs o ruido operacional | Excluir metadocs del espacio principal o degradarlos explícitamente |
+| SH-008 | abierto | product / retrieval quality | media | search results / corpus | La metadata administrativa del hub sigue discoverable en el segmento vivo y entra al top-N —incluso top-1— en queries abstractas/administrativas y en al menos una query ambigua (`agent`), aunque en esta muestra no apareció en queries concretas orientadas a skills reales | medición read-only sobre `~/.trifecta/segments/skills-hub`: metadata en top-N `5/9`, top-1 `4/9`, coexistencia con `repo:*` `2/9`; ejemplos: `administrative segment metadata` → `prime/agent/session`; `checkpoint handoff` → `repo:checkpoint-card.md` + `session:*`; `agent` → `agent:*` por encima de `repo:*`; test real sigue fallando en `TestRealSkillsHubSegment.test_real_segment_metadata_not_discoverable` por `prime:*` | El retrieval mezcla metadocs del hub con skills reales en búsquedas no concretas y puede degradar claridad/ranking percibido, sin evidencia en esta muestra de contaminación uniforme sobre queries concretas de skills | Mantener SH-008 como frente separado y usar esta caracterización para backlog/triage futuro antes de decidir filtros o degradaciones |
 | SH-009 | nuevo / abierto | operational / portability debt | media | wrappers / scripts | Tanto el repo script como el wrapper instalado hardcodean `TRIFECTA_ROOT="$HOME/Developer/agent_h/trifecta_dope"` | `scripts/skill-hub:68-82`; `~/.local/bin/skill-hub:32-34,163-166`; `~/.local/bin/skill_hub_cards.py:23-25` | Mover el repo o clonar en otra ruta rompe la herramienta | Resolver root dinámicamente o usar env/config |
 | SH-010 | nuevo / abierto | logic / ranking drift | media | repo script reranking | El repo script sigue detectando alias canónicos buscando prefijos `skill:` aunque el corpus vivo devuelve `repo:` | `scripts/skill-hub:136-151`; corpus vivo: `repo:` dominante | El reranking “canonical alias match” puede quedar inoperante o degradado | Alinear el reranking con el ID real o forzar convergencia del corpus |
 | SH-011 | nuevo / abierto | operational / robustness | media | telemetry / direct CLI | `ctx search` puede fallar por side-effects de telemetry aun cuando la búsqueda devuelve datos útiles | `src/infrastructure/telemetry.py:95-121,135-190,192-233`; `uv run trifecta ctx search ...` falla por permisos; con `TRIFECTA_NO_TELEMETRY=1` devuelve resultados | En entornos restringidos la búsqueda muere por escritura lateral, no por la búsqueda | Desacoplar éxito funcional de persistencia telemetry o degradar telemetry de forma segura |
@@ -248,20 +248,16 @@ Esta auditoría sólo podrá considerarse “cerrada” cuando:
 - Tipo: `product / retrieval quality`
 - Severidad: media
 - Evidencia:
-  - `scripts/skill-hub "checkpoint handoff"` devolvió:
-    - `repo:checkpoint-card.md:...`
-    - `repo:code-review-agent.md:...`
-    - `session:97344fc272`
-  - el pack vivo incluye entradas `prime`, `agent`, `session` y `skill` metadata
-  - `docs/reports/skill_hub_phase6_recovery_postmortem.md` ya documentaba este patrón
-  - verificación actual:
-    - `uv run pytest -q tests/unit/test_skill_hub_discovery.py tests/unit/test_skill_hub_indexing_strategy.py tests/unit/test_skill_manifest.py tests/unit/test_segment_indexing_policy.py`
-    - resultado: `1 failed, 47 passed`
-    - failure real:
-      - `TestRealSkillsHubSegment.test_real_segment_metadata_not_discoverable`
-      - encontró `prime:efbc132df7`
+  - medición read-only sobre `~/.trifecta/segments/skills-hub` con `TRIFECTA_NO_TELEMETRY=1 uv run trifecta ctx search --segment ~/.trifecta/segments/skills-hub --query <query> --limit 5`
+  - metadata administrativa en top-N `5/9`, top-1 `4/9`, coexistencia con `repo:*` `2/9`
+  - ejemplos directos:
+    - `administrative segment metadata` → `prime:efbc132df7`, `agent:5565645148`, `session:97344fc272`
+    - `checkpoint handoff` → `repo:checkpoint-card.md:3fa52a12a1` + `session:97344fc272`
+    - `agent` → `agent:5565645148` por encima de `repo:code-review-agent.md:9830ce66ec`
+  - en esta muestra no apareció metadata en las 4 queries concretas orientadas a skills reales (`checkpoint card`, `code review agent`, `tmux`, `security`)
+  - test real sigue fallando en `TestRealSkillsHubSegment.test_real_segment_metadata_not_discoverable` por `prime:efbc132df7`
 - Lectura:
-  - el hub sigue compitiendo contra sus propios metadocs en queries abstractas
+  - la contaminación está verificada y pesa sobre queries abstractas/administrativas y al menos una ambigua, sin evidencia en esta muestra de degradación uniforme sobre queries concretas de skills
 
 ### SH-009 — roots hardcodeados
 - Estado: abierto
