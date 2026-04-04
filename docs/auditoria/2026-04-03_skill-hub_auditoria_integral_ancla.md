@@ -110,7 +110,7 @@ Esta auditoría sólo podrá considerarse “cerrada” cuando:
 | SH-003 | cerrado canónico (gobernanza) | operational / governance | alta | wrapper + cadena runtime gobernada | La policy de promoción/verificación quedó ratificada para la cadena runtime directa auditada de `skill-hub` y `skill-hub-cards`, respaldada por freeze técnico `0a3973cf`, receipt schema v2 y verify actual pasando | `scripts/skill-hub-runtime`; freeze `0a3973cf`; receipt `~/.local/share/trifecta/receipts/skill-hub-runtime.json`; `~/.local/bin/skill-hub` y `~/.local/bin/skill-hub-cards`; verify actual `verification ok` | El cierre canónico queda limitado a gobernanza, promoción y verificación de la cadena runtime directa auditada; no certifica corrección funcional total ni cierra findings fuera de alcance como SH-006 o SH-008 | Mantener verificación fail-closed para la instalación vigente y tratar SH-006/SH-008 en sus findings separados |
 | SH-004 | abierto | product / architecture / ssot | media | manifest v1→v2 | El manifest persistido sigue en `schema_version: 1` y se migra solo en memoria a v2 | `~/.trifecta/segments/skills-hub/_ctx/skills_manifest.json` muestra `schema_version 1`; `SkillManifest.load()` carga `schema_version 2` en memoria | Hay dos verdades compitiendo: artefacto persistido v1 vs runtime normalizado v2 | Elegir contrato definitivo y convergerlo de forma persistida |
 | SH-005 | mitigado / verificado (runtime instalado) | logic / fail-open | alta | wrapper instalado | El wrapper instalado ya preserva el exit status real del search en runtime real, sin seguir colapsándolo a `0` | before: raw `EXIT:2` vs wrapper `EXIT:0`; after: raw `EXIT:2` vs wrapper `EXIT:2`; fix en `~/.local/bin/skill-hub:91-107,215-248` | El runtime instalado dejó de reportar éxito falso ante fallas reales del search | Mantener esta corrección mientras SH-003 siga abierto y converger la superficie instalada a una fuente versionada |
-| SH-006 | nuevo / abierto | logic / compatibility | alta | renderer instalado | El renderer instalado parsea solo hits `skill:` pero el corpus vivo entrega principalmente `repo:` | `~/.local/bin/skill_hub_cards.py:46-74`; `context_pack.json` con `repo: 164`; wrapper instalado en `bash` no imprime nada | La UX instalada queda muda aunque haya resultados válidos | Hacer compatible el renderer con IDs reales o converger el corpus |
+| SH-006 | nuevo / abierto | UX / presentation | media | cards instaladas / renderer visible | Los hits `repo:` sí renderizan cards hoy, pero la UX visible sigue degradada: nombres no canónicos con sufijo `.md` y fallback opaco para resultados metadata-only | `bash -lc '/Users/felipe_gonzalez/.local/bin/skill-hub --cards checkpoint handoff; echo EXIT:$?'` → `# Skill: checkpoint-card.md` + `EXIT:0`; `bash -lc '/Users/felipe_gonzalez/.local/bin/skill-hub --cards prime; echo EXIT:$?'` → `# No valid skill cards` + `EXIT:1`; idem `session` | No hay evidencia actual de bug funcional frente a hits `repo:`; el problema reproducible vigente es de naming visible y tratamiento UX de metadata-only | Definir naming canónico visible y fallback explícito para metadata-only sin reabrir compatibilidad `repo:` |
 | SH-007 | nuevo / abierto | product / runtime drift | alta | pack vivo / indexación | El pack vivo del segmento no está convergido con la estrategia manifest-driven: tiene `164` chunks `repo:` y solo `1` `skill:` | `context_pack.json` creado `2026-04-02T09:51:18`; prefijos: `{'skill': 1, 'prime': 1, 'agent': 1, 'session': 1, 'repo': 164}`; `BuildContextPackUseCase` delega a `SkillHubIndexingStrategy` | La superficie real de búsqueda no coincide con el contrato arquitectónico esperado | Re-sincronizar / regenerar el segmento con el flujo correcto y verificar prefijos |
 | SH-008 | nuevo / abierto | product / corpus contamination | media | search results / corpus | El corpus vivo sigue mezclando metadata administrativa del hub con skills reales | resultado real `scripts/skill-hub "checkpoint handoff"` incluye `session:97344fc272`; pack incluye `prime`, `agent`, `session`, `skill` metadata | Queries abstractas pueden seguir trayendo metadocs o ruido operacional | Excluir metadocs del espacio principal o degradarlos explícitamente |
 | SH-009 | nuevo / abierto | operational / portability debt | media | wrappers / scripts | Tanto el repo script como el wrapper instalado hardcodean `TRIFECTA_ROOT="$HOME/Developer/agent_h/trifecta_dope"` | `scripts/skill-hub:68-82`; `~/.local/bin/skill-hub:32-34,163-166`; `~/.local/bin/skill_hub_cards.py:23-25` | Mover el repo o clonar en otra ruta rompe la herramienta | Resolver root dinámicamente o usar env/config |
@@ -135,7 +135,6 @@ Esta auditoría sólo podrá considerarse “cerrada” cuando:
 
 - **SH-003** wrapper drift repo vs instalado
 - **SH-005** wrapper instalado pierde errores reales
-- **SH-006** renderer instalado incompatible con el corpus vivo
 
 **Por qué P0:** son defects user-facing y además distorsionan el diagnóstico porque la herramienta instalada no representa el estado real del repo.
 
@@ -148,10 +147,11 @@ Esta auditoría sólo podrá considerarse “cerrada” cuando:
 
 **Por qué P1:** aunque arregles el wrapper, el runtime seguiría entregando una verdad mezclada o contaminada.
 
-### Prioridad P2 — degrada robustez y portabilidad
+### Prioridad P2 — degrada robustez, portabilidad y UX
 
 - **SH-011** telemetry acoplada a éxito funcional
 - **SH-009** roots hardcodeados
+- **SH-006** UX/presentación de cards instaladas (naming no canónico + metadata-only)
 - **SH-012** nombres `.md` en cards del repo
 
 **Por qué P2:** no son el primer cuello de botella conceptual, pero siguen sumando deuda y falsos síntomas.
@@ -214,16 +214,17 @@ Esta auditoría sólo podrá considerarse “cerrada” cuando:
   - esa construcción pisa el exit status real con el del `true`
   - o sea: el wrapper puede seguir como si nada aunque el search haya fallado
 
-### SH-006 — renderer instalado roto contra el corpus vivo
+### SH-006 — UX/presentación no canónica en cards instaladas
 - Estado: abierto
-- Tipo: `logic / compatibility`
-- Severidad: alta
+- Tipo: `UX / presentation`
+- Severidad: media
 - Evidencia:
-  - `~/.local/bin/skill_hub_cards.py:46-74` parsea solo `\[skill:...`
-  - prueba aislada: alimentado con output real `repo:` devuelve `# No skills found`
-  - el pack vivo contiene `repo: 164` chunks y solo `skill: 1`
+  - `bash -lc '/Users/felipe_gonzalez/.local/bin/skill-hub --cards checkpoint handoff; echo EXIT:$?'` devuelve `# Skill: checkpoint-card.md` y `EXIT:0`
+  - `bash -lc '/Users/felipe_gonzalez/.local/bin/skill-hub --cards prime; echo EXIT:$?'` devuelve `# No valid skill cards` y `EXIT:1`
+  - `bash -lc '/Users/felipe_gonzalez/.local/bin/skill-hub --cards session; echo EXIT:$?'` devuelve `# No valid skill cards` y `EXIT:1`
 - Lectura:
-  - el renderer instalado quedó acoplado a un formato de ids que hoy NO representa al corpus vivo
+  - los hits `repo:` sí renderizan cards hoy; no hay evidencia actual de bug funcional general contra `repo:`
+  - el problema reproducible vigente es de presentación: naming visible no canónico (`.md`) y tratamiento UX poco claro para resultados metadata-only
 
 ### SH-007 — el pack vivo no refleja el contrato manifest-driven esperado
 - Estado: abierto
@@ -356,7 +357,7 @@ Esta auditoría sólo podrá considerarse “cerrada” cuando:
   - verificación focalizada actual: `39 passed`
 - **Lo no cerrado en superficie real sigue vivo**:
   - drift del wrapper instalado
-  - renderer instalado incompatible con el corpus vivo
+  - UX/presentación de cards instaladas (naming no canónico + metadata-only)
   - manifest persistido todavía en v1
   - pack vivo no convergido al contrato manifest-driven esperado
   - contaminación del corpus por metadata del propio hub
@@ -372,16 +373,16 @@ Esta auditoría sólo podrá considerarse “cerrada” cuando:
 
 1. **P0 de distribución/runtime visible**
    - SH-005
-   - SH-006
    - SH-003
 2. **P1 de SSOT/corpus real**
    - SH-007
    - SH-008
    - SH-004
    - SH-010
-3. **P2 de robustez/portabilidad**
+3. **P2 de robustez/portabilidad + UX**
    - SH-011
    - SH-009
+   - SH-006
    - SH-012
 
 ### Justificación
