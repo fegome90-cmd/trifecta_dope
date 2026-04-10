@@ -170,7 +170,9 @@ class DaemonManager:
         self, bind_lock: Callable[[], object], timeout_seconds: float | None = None
     ) -> bool:
         timeout = self.DAEMON_START_TIMEOUT if timeout_seconds is None else timeout_seconds
-        deadline = time.monotonic() + max(timeout, 0)
+        if timeout < 0:
+            timeout = 0
+        deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
             if self.is_running() or self._lock_owner_is_alive():
                 return False
@@ -213,6 +215,7 @@ class DaemonManager:
                 try:
                     lock_path.unlink()
                 except FileNotFoundError:
+                    # Another process may clear the stale path after our last check.
                     pass
                 except OSError:
                     return False

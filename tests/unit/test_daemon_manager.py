@@ -42,15 +42,28 @@ def test_acquire_singleton_lock_recovers_stale_lock_file(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     manager = DaemonManager(allowed_runtime)
-    manager.DAEMON_START_TIMEOUT = 0
+    manager.DAEMON_START_TIMEOUT = 0.2
     manager._socket_path.parent.mkdir(parents=True, exist_ok=True)
     stale_lock_path = Path(str(manager._socket_path) + ".lock")
     stale_lock_path.write_text("stale")
     monkeypatch.setattr(manager, "is_running", lambda: False)
+    monotonic_values = iter([0.0, 0.0, 0.1, 0.2])
+    sleep_calls: list[float] = []
+    monkeypatch.setattr(
+        daemon_manager_module.time,
+        "monotonic",
+        lambda: next(monotonic_values, 0.2),
+    )
+    monkeypatch.setattr(
+        daemon_manager_module.time,
+        "sleep",
+        lambda interval: sleep_calls.append(interval),
+    )
 
     acquired = manager._acquire_singleton_lock()
 
     assert acquired is True
+    assert sleep_calls == [0.1, 0.1]
     assert stale_lock_path.exists() is True
     manager._release_singleton_lock()
     assert stale_lock_path.exists() is False
@@ -81,8 +94,14 @@ def test_acquire_singleton_lock_does_not_unlink_during_startup_backoff(
     manager._socket_path.parent.mkdir(parents=True, exist_ok=True)
     lock_path = Path(str(manager._socket_path) + ".lock")
     lock_path.write_text("busy")
-    states = iter([False, True, True])
-    monkeypatch.setattr(manager, "is_running", lambda: next(states, True))
+    running_states = [False, True, True]
+
+    def fake_is_running() -> bool:
+        if running_states:
+            return running_states.pop(0)
+        return True
+
+    monkeypatch.setattr(manager, "is_running", fake_is_running)
 
     acquired = manager._acquire_singleton_lock()
 
