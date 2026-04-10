@@ -5,7 +5,7 @@ import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 
 @dataclass
@@ -145,6 +145,42 @@ class DaemonManager:
     def is_running(self) -> bool:
         return self.status().running
 
+    def _read_daemon_pid(self) -> Optional[int]:
+        try:
+            return int(self._pid_path.read_text(encoding="utf-8").strip())
+        except (FileNotFoundError, OSError, ValueError):
+            return None
+
+    @staticmethod
+    def _is_pid_alive(pid: int) -> bool:
+        try:
+            os.kill(pid, 0)
+        except ProcessLookupError:
+            return False
+        except PermissionError:
+            return True
+        else:
+            return True
+
+    def _lock_owner_is_alive(self) -> bool:
+        pid = self._read_daemon_pid()
+        return pid is not None and self._is_pid_alive(pid)
+
+    def _wait_for_lock_release(
+        self, bind_lock: Callable[[], object], timeout_seconds: float | None = None
+    ) -> bool:
+        timeout = self.DAEMON_START_TIMEOUT if timeout_seconds is None else timeout_seconds
+        deadline = time.monotonic() + max(timeout, 0)
+        while time.monotonic() < deadline:
+            if self.is_running() or self._lock_owner_is_alive():
+                return False
+            try:
+                self._singleton_lock = bind_lock()
+                return True
+            except OSError:
+                time.sleep(0.1)
+        return False
+
     def _acquire_singleton_lock(self) -> bool:
         """Acquire exclusive lock to prevent concurrent daemon starts.
 
@@ -167,13 +203,24 @@ class DaemonManager:
             self._singleton_lock = _bind_lock()
             return True
         except OSError:
-            if lock_path.exists() and not self.is_running():
+            if self.is_running() or self._lock_owner_is_alive():
+                return False
+            if self._wait_for_lock_release(_bind_lock):
+                return True
+            if self.is_running() or self._lock_owner_is_alive():
+                return False
+            if lock_path.exists():
                 try:
                     lock_path.unlink()
-                    self._singleton_lock = _bind_lock()
-                    return True
-                except OSError:
+                except FileNotFoundError:
                     pass
+                except OSError:
+                    return False
+            try:
+                self._singleton_lock = _bind_lock()
+                return True
+            except OSError:
+                pass
             return False
 
     def _release_singleton_lock(self) -> None:

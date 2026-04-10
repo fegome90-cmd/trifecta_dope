@@ -1,3 +1,4 @@
+import os
 import shutil
 import tempfile
 from pathlib import Path
@@ -41,6 +42,7 @@ def test_acquire_singleton_lock_recovers_stale_lock_file(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     manager = DaemonManager(allowed_runtime)
+    manager.DAEMON_START_TIMEOUT = 0
     manager._socket_path.parent.mkdir(parents=True, exist_ok=True)
     stale_lock_path = Path(str(manager._socket_path) + ".lock")
     stale_lock_path.write_text("stale")
@@ -52,6 +54,40 @@ def test_acquire_singleton_lock_recovers_stale_lock_file(
     assert stale_lock_path.exists() is True
     manager._release_singleton_lock()
     assert stale_lock_path.exists() is False
+
+
+def test_acquire_singleton_lock_keeps_live_owner_lock_file(
+    allowed_runtime: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    manager = DaemonManager(allowed_runtime)
+    manager._socket_path.parent.mkdir(parents=True, exist_ok=True)
+    lock_path = Path(str(manager._socket_path) + ".lock")
+    lock_path.write_text("busy")
+    manager._pid_path.write_text(str(os.getpid()), encoding="utf-8")
+    monkeypatch.setattr(manager, "is_running", lambda: False)
+
+    acquired = manager._acquire_singleton_lock()
+
+    assert acquired is False
+    assert lock_path.exists() is True
+
+
+def test_acquire_singleton_lock_does_not_unlink_during_startup_backoff(
+    allowed_runtime: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    manager = DaemonManager(allowed_runtime)
+    manager._socket_path.parent.mkdir(parents=True, exist_ok=True)
+    lock_path = Path(str(manager._socket_path) + ".lock")
+    lock_path.write_text("busy")
+    states = iter([False, True, True])
+    monkeypatch.setattr(manager, "is_running", lambda: next(states, True))
+
+    acquired = manager._acquire_singleton_lock()
+
+    assert acquired is False
+    assert lock_path.exists() is True
 
 
 def test_start_releases_singleton_lock_after_success(
