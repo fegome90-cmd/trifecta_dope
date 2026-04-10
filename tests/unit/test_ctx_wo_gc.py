@@ -10,7 +10,6 @@ Tests cover:
 """
 
 import json
-import subprocess
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -27,7 +26,6 @@ from ctx_wo_gc import (
     check_worktree_dirty,
     classify_worktrees,
     get_wo_state,
-    get_worktrees,
     remove_worktree,
     run_gc,
 )

@@ -18,7 +18,7 @@ from __future__ import annotations
 import re
 import sys
 from dataclasses import dataclass
-from typing import IO, Literal, Any
+from typing import IO, Literal
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # DESIGN TOKENS (4px grid system)

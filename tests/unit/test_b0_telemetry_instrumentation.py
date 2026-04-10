@@ -5,8 +5,6 @@ Verifies that zero-hit events are properly tagged with source, build_sha, mode, 
 
 import json
 import os
-import subprocess
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 import pytest
 

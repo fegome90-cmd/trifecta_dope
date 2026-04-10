@@ -5,7 +5,7 @@ Implementation will be added in future WOs.
 """
 
 from pathlib import Path
-from typing import Protocol
+from typing import Any, Protocol
 
 
 class RuntimeManager(Protocol):

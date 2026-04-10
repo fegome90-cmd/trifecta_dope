@@ -110,7 +110,6 @@ class TestSkillHubIndexingStrategyBuild:
         """
         RED TEST: Segment metadata files should NOT be indexed.
         """
-        from src.application.skill_hub_indexing_strategy import SkillHubIndexingStrategy
 
         # Check that skill.md is NOT indexed
         skill_md = skill_hub_segment / "skill.md"

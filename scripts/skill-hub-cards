@@ -59,7 +59,7 @@ def parse_skill_from_text(text: str, chunk_id: str) -> SkillCard | None:
     """Parse skill metadata from chunk text."""
     # Extract name from chunk_id (skill:<name>:<fingerprint>)
     parts = chunk_id.split(":")
-    if len(parts) < 2:
+    if len(parts) < 3 or parts[0] != "skill":
         return None
     name = parts[1]
 
@@ -104,13 +104,20 @@ def run_search(query: str, limit: int) -> list[dict]:
     env = os.environ.copy()
     env.update({"TRIFECTA_LINT": "1", "TRIFECTA_NO_TELEMETRY": "1"})
 
-    result = subprocess.run(
-        cmd,
-        cwd=str(TRIFECTA_ROOT),
-        capture_output=True,
-        text=True,
-        env=env,
-    )
+    try:
+        result = subprocess.run(
+            cmd,
+            cwd=str(TRIFECTA_ROOT),
+            capture_output=True,
+            text=True,
+            env=env,
+            timeout=30,
+        )
+    except subprocess.TimeoutExpired as e:
+        stderr = e.stderr.decode() if e.stderr else ""
+        stdout = e.stdout.decode() if e.stdout else ""
+        print(f"skill-hub-cards: search timed out after 30s: stderr={stderr}, stdout={stdout}", file=sys.stderr)
+        return []
 
     if result.returncode != 0:
         print(f"skill-hub-cards: search failed (rc={result.returncode}): {result.stderr.strip()}", file=sys.stderr)
@@ -140,13 +147,20 @@ def run_get(chunk_ids: list[str]) -> dict[str, str]:
     env = os.environ.copy()
     env.update({"TRIFECTA_LINT": "1", "TRIFECTA_NO_TELEMETRY": "1"})
 
-    result = subprocess.run(
-        cmd,
-        cwd=str(TRIFECTA_ROOT),
-        capture_output=True,
-        text=True,
-        env=env,
-    )
+    try:
+        result = subprocess.run(
+            cmd,
+            cwd=str(TRIFECTA_ROOT),
+            capture_output=True,
+            text=True,
+            env=env,
+            timeout=30,
+        )
+    except subprocess.TimeoutExpired as e:
+        stderr = e.stderr.decode() if e.stderr else ""
+        stdout = e.stdout.decode() if e.stdout else ""
+        print(f"skill-hub-cards: get timed out after 30s: stderr={stderr}, stdout={stdout}", file=sys.stderr)
+        return {}
 
     if result.returncode != 0:
         print(f"skill-hub-cards: get failed (rc={result.returncode}): {result.stderr.strip()}", file=sys.stderr)
@@ -178,6 +192,11 @@ def main() -> int:
     parser.add_argument("--limit", "-l", type=int, default=5, help="Max cards (default: 5)")
     parser.add_argument("--json", "-j", action="store_true", help="Output as JSON")
     args = parser.parse_args()
+
+    # Validate limit argument
+    if args.limit < 1:
+        print(f"skill-hub-cards: --limit must be a positive integer (got {args.limit})", file=sys.stderr)
+        return 1
 
     # Search
     hits = run_search(args.query, args.limit)

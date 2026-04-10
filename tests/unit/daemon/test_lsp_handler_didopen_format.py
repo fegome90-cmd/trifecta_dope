@@ -9,7 +9,7 @@ See: docs/daemon-lsp-scope/daemon_lsp_operationalization_plan_v2.md
 """
 
 from pathlib import Path
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock
 
 from src.infrastructure.daemon.lsp_handler import handle_lsp_request
 from src.infrastructure.lsp_client import LSPState

@@ -14,7 +14,7 @@ def test_symlink_equivalence():
         link_dir.symlink_to(repo_dir)
 
         store = RepoStore(tmpdir_path / "test.db")
-        record1 = store.add("repo-001", repo_dir)
+        store.add("repo-001", repo_dir)
 
         with pytest.raises(ValueError, match="repo already registered at"):
             store.add("repo-002", link_dir)
@@ -29,7 +29,7 @@ def test_relative_path_equivalence():
         relative_path = tmpdir_path / ".." / tmpdir_path.name / "my_repo"
 
         store = RepoStore(tmpdir_path / "test.db")
-        record1 = store.add("repo-001", repo_dir)
+        store.add("repo-001", repo_dir)
 
         with pytest.raises(ValueError, match="repo already registered at"):
             store.add("repo-002", relative_path)

@@ -289,6 +289,19 @@ def load_skills_manifest(segment_path: Path) -> list[dict[str, str]]:
                 f"entry {idx} requires non-empty name and relative_path"
             )
 
+        # Validate path for traversal attempts
+        path_check = Path(relative_path)
+        if path_check.is_absolute():
+            raise ValueError(
+                "skills_manifest.json violates canonical manifest contract: "
+                f"entry {idx} 'relative_path' must not be absolute: {relative_path}"
+            )
+        if any(part == ".." for part in path_check.parts):
+            raise ValueError(
+                "skills_manifest.json violates canonical manifest contract: "
+                f"entry {idx} 'relative_path' must not contain parent traversal (..): {relative_path}"
+            )
+
         result.append(
             {
                 "name": name,

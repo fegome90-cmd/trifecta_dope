@@ -60,7 +60,7 @@ class SkillHubIndexingStrategy:
         We check 'segment' first (canonical), then 'segment_id' (legacy compat).
         The returned value is normalized to a segment_id via the naming module.
         """
-        config_path = self.ctx_dir / "trifecta_config.json"
+        config_path = self.segment_path / "trifecta_config.json"
         if config_path.exists():
             try:
                 data = json.loads(config_path.read_text(encoding="utf-8"))
@@ -135,45 +135,49 @@ class SkillHubIndexingStrategy:
                 errors.append(f"Skill file not found: {skill_entry.relative_path}")
                 continue
 
-            content = skill_file_path.read_text(encoding="utf-8")
-            if not content.endswith("\n"):
-                content += "\n"
+            try:
+                content = skill_file_path.read_text(encoding="utf-8")
+                if not content.endswith("\n"):
+                    content += "\n"
 
-            # Build source file metadata
-            sha256 = hashlib.sha256(content.encode()).hexdigest()
-            mtime = skill_file_path.stat().st_mtime
-            source_files.append(
-                SourceFile(
-                    path=skill_entry.relative_path,
-                    sha256=sha256,
-                    mtime=mtime,
-                    chars=len(content),
+                # Build source file metadata
+                sha256 = hashlib.sha256(content.encode()).hexdigest()
+                mtime = skill_file_path.stat().st_mtime
+                source_files.append(
+                    SourceFile(
+                        path=skill_entry.relative_path,
+                        sha256=sha256,
+                        mtime=mtime,
+                        chars=len(content),
+                    )
                 )
-            )
 
-            # Build chunk
-            chunk_id = skill_entry.chunk_id  # Already includes content hash
-            chunk = ContextChunk(
-                id=chunk_id,
-                doc="skill",
-                title_path=[skill_file_path.name],
-                text=content,
-                char_count=len(content),
-                token_est=len(content) // 4,  # Simple token estimation
-                source_path=skill_entry.relative_path,
-                chunking_method="whole_file",
-            )
-            chunks.append(chunk)
+                # Build chunk
+                chunk_id = skill_entry.chunk_id  # Already includes content hash
+                chunk = ContextChunk(
+                    id=chunk_id,
+                    doc="skill",
+                    title_path=[skill_file_path.name],
+                    text=content,
+                    char_count=len(content),
+                    token_est=len(content) // 4,  # Simple token estimation
+                    source_path=skill_entry.relative_path,
+                    chunking_method="whole_file",
+                )
+                chunks.append(chunk)
 
-            # Build index entry
-            preview = content[:200].strip() + "..." if len(content) > 200 else content
-            index_entry = ContextIndexEntry(
-                id=chunk_id,
-                title_path_norm=skill_file_path.name,
-                preview=preview,
-                token_est=chunk.token_est,
-            )
-            index_entries.append(index_entry)
+                # Build index entry
+                preview = content[:200].strip() + "..." if len(content) > 200 else content
+                index_entry = ContextIndexEntry(
+                    id=chunk_id,
+                    title_path_norm=skill_file_path.name,
+                    preview=preview,
+                    token_est=chunk.token_est,
+                )
+                index_entries.append(index_entry)
+            except (OSError, UnicodeDecodeError) as e:
+                errors.append(f"Failed to read skill file {skill_entry.relative_path}: {e}")
+                continue
 
         if errors:
             return Err(errors)

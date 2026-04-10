@@ -15,7 +15,6 @@ Date: 2026-03-19
 import json
 from pathlib import Path
 
-import pytest
 
 
 class TestSegmentIndexingPolicyDetection:

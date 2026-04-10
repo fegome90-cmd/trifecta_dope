@@ -3,7 +3,6 @@ import tempfile
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from src.platform.repo_store import RepoStore
-import pytest
 
 
 def test_concurrent_writers_no_corruption():

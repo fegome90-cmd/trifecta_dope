@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Iterable
 
 from src.application.exceptions import InvalidSegmentPathError
-from src.domain.segment_resolver import resolve_segment_ref
 from src.infrastructure.file_system import FileSystemAdapter
 
 
