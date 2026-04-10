@@ -321,3 +321,48 @@ class TestLoadSkillsManifestNullName:
 
         with pytest.raises(ValueError, match="name.*must not be null"):
             load_skills_manifest(tmp_path)
+
+    def test_null_relative_path_raises_value_error(self, tmp_path: Path) -> None:
+        """Manifest entry with 'relative_path': null should raise ValueError."""
+        ctx_dir = tmp_path / "_ctx"
+        ctx_dir.mkdir()
+        manifest = {
+            "schema_version": 2,
+            "skills": [
+                {
+                    "id": "skill-1",
+                    "name": "valid-name",
+                    "relative_path": None,
+                    "description": "Test skill",
+                    "source": "local",
+                    "canonical": True,
+                }
+            ],
+        }
+        (ctx_dir / "skills_manifest.json").write_text(__import__("json").dumps(manifest))
+
+        with pytest.raises(ValueError, match="relative_path.*must not be null"):
+            load_skills_manifest(tmp_path)
+
+    def test_null_description_defaults_to_empty(self, tmp_path: Path) -> None:
+        """Manifest entry with 'description': null should default to empty string."""
+        ctx_dir = tmp_path / "_ctx"
+        ctx_dir.mkdir()
+        manifest = {
+            "schema_version": 2,
+            "skills": [
+                {
+                    "id": "skill-1",
+                    "name": "valid-name",
+                    "relative_path": "skills/test/SKILL.md",
+                    "description": None,
+                    "source": "local",
+                    "canonical": True,
+                }
+            ],
+        }
+        (ctx_dir / "skills_manifest.json").write_text(__import__("json").dumps(manifest))
+
+        result = load_skills_manifest(tmp_path)
+        assert len(result) == 1
+        assert result[0]["description"] == ""

@@ -276,8 +276,13 @@ def load_skills_manifest(segment_path: Path) -> list[dict[str, str]]:
                 f"entry {idx} 'name' must not be null"
             )
         name = str(raw_skill["name"]).strip()
+        if raw_skill.get("relative_path") is None:
+            raise ValueError(
+                "skills_manifest.json violates canonical manifest contract: "
+                f"entry {idx} 'relative_path' must not be null"
+            )
         relative_path = str(raw_skill["relative_path"]).strip()
-        description = str(raw_skill["description"]).strip()
+        description = str(raw_skill.get("description") or "").strip()
         if not name or not relative_path:
             raise ValueError(
                 "skills_manifest.json violates canonical manifest contract: "

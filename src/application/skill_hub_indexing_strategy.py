@@ -54,11 +54,20 @@ class SkillHubIndexingStrategy:
             self.segment_id = self._read_segment_id_from_config()
 
     def _read_segment_id_from_config(self) -> str:
-        """Read segment_id from trifecta_config.json, fallback to directory name."""
+        """Read segment_id from trifecta_config.json, fallback to directory name.
+
+        The config model (TrifectaConfig) stores the canonical field as 'segment'.
+        We check 'segment' first (canonical), then 'segment_id' (legacy compat).
+        The returned value is normalized to a segment_id via the naming module.
+        """
         config_path = self.ctx_dir / "trifecta_config.json"
         if config_path.exists():
             try:
                 data = json.loads(config_path.read_text(encoding="utf-8"))
+                # Canonical field: 'segment' (TrifectaConfig.segment)
+                if "segment" in data:
+                    return str(data["segment"])
+                # Legacy compat: 'segment_id'
                 if "segment_id" in data:
                     return str(data["segment_id"])
             except (json.JSONDecodeError, OSError):
@@ -78,10 +87,12 @@ class SkillHubIndexingStrategy:
         # 1. Verify policy is skill_hub
         policy = SegmentIndexingPolicy.detect(self.segment_path)
         if policy != SegmentIndexingPolicy.SKILL_HUB:
-            return Err([
-                f"Invalid indexing policy '{policy}' for SkillHubIndexingStrategy. "
-                f"Expected '{SegmentIndexingPolicy.SKILL_HUB}'."
-            ])
+            return Err(
+                [
+                    f"Invalid indexing policy '{policy}' for SkillHubIndexingStrategy. "
+                    f"Expected '{SegmentIndexingPolicy.SKILL_HUB}'."
+                ]
+            )
 
         # 2. Load and validate manifest
         manifest_path = self.ctx_dir / "skills_manifest.json"
@@ -98,10 +109,12 @@ class SkillHubIndexingStrategy:
         # 2.5 Verify policy is still skill_hub (defense in depth)
         policy = SegmentIndexingPolicy.detect(self.segment_path)
         if policy != SegmentIndexingPolicy.SKILL_HUB:
-            return Err([
-                f"Invalid indexing policy '{policy}' for SkillHubIndexingStrategy. "
-                f"Expected '{SegmentIndexingPolicy.SKILL_HUB}'."
-            ])
+            return Err(
+                [
+                    f"Invalid indexing policy '{policy}' for SkillHubIndexingStrategy. "
+                    f"Expected '{SegmentIndexingPolicy.SKILL_HUB}'."
+                ]
+            )
 
         # 3. Build chunks only from manifest entries
         errors: list[str] = []
@@ -119,9 +132,7 @@ class SkillHubIndexingStrategy:
             # Read skill file
             skill_file_path = self.segment_path / skill_entry.relative_path
             if not skill_file_path.exists():
-                errors.append(
-                    f"Skill file not found: {skill_entry.relative_path}"
-                )
+                errors.append(f"Skill file not found: {skill_entry.relative_path}")
                 continue
 
             content = skill_file_path.read_text(encoding="utf-8")

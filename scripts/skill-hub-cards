@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -27,7 +28,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 TRIFECTA_ROOT = Path(__file__).parent.parent
-SEGMENT_PATH = Path.home() / ".trifecta" / "segments" / "skills-hub"
+DEFAULT_SEGMENT_PATH = Path.home() / ".trifecta" / "segments" / "skills-hub"
+SEGMENT_PATH = Path(os.environ.get("SKILL_HUB_SEGMENT", str(DEFAULT_SEGMENT_PATH)))
 
 
 @dataclass(frozen=True)
