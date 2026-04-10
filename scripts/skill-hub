@@ -1,94 +1,52 @@
 #!/usr/bin/env bash
 # skill-hub: Search global skills via trifecta with lightweight alias-aware reranking
-# Usage: skill-hub "query" [--cards] [--limit N]
+# Usage: skill-hub "query"
 # Example: skill-hub "refactor"
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-# Parse args
-USE_CARDS=0
-LIMIT=5
-QUERY=""
-
-while [ $# -gt 0 ]; do
-    case "$1" in
-        --help|-h)
-            cat << 'EOF'
+# Handle help flags before processing query
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
+    cat << 'EOF'
 Usage: skill-hub [OPTIONS] "query"
 
 Search for skills in the global skills hub using natural language queries.
 
 Options:
-  -h, --help      Show this help message and exit
-  -c, --cards     Output skill cards (agent-friendly format)
-  -l, --limit N   Max results (default: 5)
+  -h, --help    Show this help message and exit
 
 Arguments:
-  query           Natural language description of what you need
-                  (e.g., "refactor", "testing", "debug workflow")
+  query         Natural language description of what you need
+                (e.g., "refactor", "testing", "debug workflow")
 
 Examples:
   skill-hub "refactor"
-  skill-hub "workorder" --cards --limit 3
   skill-hub "how to implement TDD"
+  skill-hub "docker best practices"
 
 Environment Variables:
   SKILL_HUB_RERANK    Reranking mode: auto (default), always, never
-
-Card Format (with --cards):
-  # Skill: <name>
-  read <path>
-  Source: <source>
-
-  <description>
 
 Note:
   Multi-word queries may show a "Canonical alias match:" block
   before the normal results for better skill discovery.
 EOF
-            exit 0
-            ;;
-        --cards|-c)
-            USE_CARDS=1
-            shift
-            ;;
-        --limit|-l)
-            LIMIT="$2"
-            shift 2
-            ;;
-        *)
-            QUERY="$QUERY $1"
-            shift
-            ;;
-    esac
-done
+    exit 0
+fi
 
-QUERY="${QUERY# }"  # Remove leading space
-
+QUERY="$*"
 SEGMENT="$HOME/.trifecta/segments/skills-hub"
 TRIFECTA_ROOT="$HOME/Developer/agent_h/trifecta_dope"
-CARDS_HELPER="$SCRIPT_DIR/skill-hub-cards"
 
 if [ -z "$QUERY" ]; then
-    echo "Usage: skill-hub \"query\" [--cards] [--limit N]"
+    echo "Usage: skill-hub \"query\""
     echo "Example: skill-hub \"refactor\""
     echo ""
     echo "Run 'skill-hub --help' for more information."
     exit 1
 fi
 
-SEGMENT="$HOME/.trifecta/segments/skills-hub"
-TRIFECTA_ROOT="$HOME/Developer/agent_h/trifecta_dope"
-
 cd "$TRIFECTA_ROOT"
-
-# Card mode: use skill-hub-cards script
-if [ "$USE_CARDS" -eq 1 ]; then
-    python3 "$CARDS_HELPER" "$QUERY" --limit "$LIMIT"
-    exit $?
-fi
 
 run_search_capture() {
     local output status
@@ -140,10 +98,10 @@ top_ref = hits[0].get("ref", "")
 for term in expanded_terms:
     if not re.fullmatch(r"[a-z0-9-]+", term):
         continue
-    skill_prefix = f"skill:{term}:"
+    repo_prefix = f"repo:{term}.md:"
     for hit in hits:
         ref = hit.get("ref", "")
-        if ref.startswith(skill_prefix):
+        if ref.startswith(repo_prefix):
             if ref != top_ref:
                 print(term)
             else:
@@ -165,3 +123,8 @@ fi
 
 MAIN_OUTPUT="$(run_search_capture --query "$QUERY")"
 printf '%s\n' "$MAIN_OUTPUT"
+
+# Show info card only on interactive terminals (silently skip failures)
+if [ -t 1 ]; then
+    python3 "$HOME/.local/bin/skill_hub_info_card.py" || true
+fi

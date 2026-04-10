@@ -112,8 +112,9 @@ class ValidateTrifectaUseCase:
             if not prime_files:
                 errors.append("Missing: _ctx/prime_*.md")
 
-            agent_path = ctx_dir / "agent.md"
-            if not agent_path.exists():
+            canonical_agent_files = list(ctx_dir.glob("agent_*.md"))
+            legacy_agent_path = ctx_dir / "agent.md"
+            if not canonical_agent_files and not legacy_agent_path.exists():
                 errors.append("Missing: _ctx/agent.md")
 
             session_files = list(ctx_dir.glob("session_*.md"))
@@ -491,8 +492,7 @@ class BuildContextPackUseCase:
         """Scan a Trifecta segment and build a context_pack.json."""
         if self.telemetry:
             self.telemetry.incr("ctx_build_count")
-
-        from src.domain.segment_resolver import get_segment_slug
+        from src.infrastructure.segment_state import resolve_segment_state
 
         # 0. Detect indexing policy and delegate if SKILL_HUB
         policy = SegmentIndexingPolicy.detect(target_path)
@@ -508,12 +508,16 @@ class BuildContextPackUseCase:
                 return manifest_result
             manifest, _ = manifest_result.value
 
-            # Derive segment_id consistently with GENERIC path
+            # Derive segment_id from canonical state when possible, fallback conservatively.
             try:
-                config = self.file_system.load_trifecta_config(target_path)
-                segment_id = config.segment_id if config else target_path.name
-            except (ValueError, OSError):
-                segment_id = target_path.name
+                state = resolve_segment_state(str(target_path), self.file_system)
+                segment_id = state.segment_id
+            except ValueError:
+                try:
+                    config = self.file_system.load_trifecta_config(target_path)
+                    segment_id = config.segment_id if config else target_path.name
+                except (ValueError, OSError):
+                    segment_id = target_path.name
 
             strategy = SkillHubIndexingStrategy(target_path, segment_id=segment_id)
             result = strategy.build_from_manifest(manifest)
@@ -549,20 +553,12 @@ class BuildContextPackUseCase:
                 return promoted
             return Ok(pack)
 
-        # 1. GENERIC policy (default): Standard indexing behavior
-        # 1a. Derive segment_id deterministically
-        # Priority: trifecta_config.json (source of truth) > directory name (fallback)
+        # 1. GENERIC policy (default): derive segment_id from canonical tracked _ctx triplet.
         try:
-            config = self.file_system.load_trifecta_config(target_path)
-            if config:
-                # Source of Truth: Config
-                segment_id = config.segment_id
-            else:
-                # Fallback: Directory Name
-                segment_id = get_segment_slug(target_path)
+            state = resolve_segment_state(str(target_path), self.file_system)
+            segment_id = state.segment_id
         except ValueError:
-            # Deterministic Fail-Closed
-            return Err(["Failed Constitution: trifecta_config.json is invalid"])
+            return Err(["Failed Constitution: segment canon is invalid"])
 
         ctx_dir = target_path / "_ctx"
 
@@ -899,7 +895,11 @@ class MacroLoadUseCase:
 
         # Heuristics
         if any(kw in task_lower for kw in ["implement", "debug", "fix", "code"]):
-            files_to_load.append(ctx_dir / "agent.md")
+            canonical_agent_files = sorted(ctx_dir.glob("agent_*.md"))
+            if canonical_agent_files:
+                files_to_load.append(canonical_agent_files[0])
+            else:
+                files_to_load.append(ctx_dir / "agent.md")
 
         if any(kw in task_lower for kw in ["plan", "design", "doc"]):
             if prime_path:

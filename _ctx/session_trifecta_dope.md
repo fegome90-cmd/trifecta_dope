@@ -90,157 +90,38 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Validation**: Tested --help, -h, empty args, and normal search
 - **Pack SHA**: `c43e6d7780c2a583`
 
-## 2026-03-22 01:03 UTC
-- **Summary**: Completed trifecta graph exploration: skill-hub found trifecta-graph-explorer skill, ctx search found MVP synthesis docs, graph status shows 458 nodes/170 edges indexed. PR #74 MERGED, Phase 0 complete.
-- **Files**: docs/graph-research/06-mvp-launch-synthesis.md, docs/graph-research/07-graph-northstar-roadmap.md, ADR/ADR-007-graph-code.md
-- **Commands**: skill-hub, trifecta ctx search, trifecta ctx get, trifecta graph status
-- **Pack SHA**: `a7ea1b9da1767606`
+## 2026-03-13 17:49 UTC
+- **Summary**: Implemented Graph MVP: new graph CLI namespace, SQLite store keyed by SegmentRef V1 id, AST top-level indexing for src/**/*.py, conservative direct-call edges, search/status/callers/callees, focused tests and manual CLI verification
+- **Files**: src/domain/graph_models.py, src/infrastructure/graph_store.py, src/application/graph_indexer.py, src/application/graph_service.py, src/infrastructure/cli_graph.py, src/infrastructure/cli.py, tests/integration/test_graph_store_schema.py, tests/unit/test_graph_indexer.py, tests/unit/test_graph_service.py, tests/integration/cli/test_graph_cli.py, docs/plans/2026-03-13-graph-mvp-implementation-plan.md
+- **Commands**: make install, uv run pytest, uv run ruff check, uv run trifecta graph
+- **Pack SHA**: `fac5ddcf14590d10`
 
-## 2026-03-22 01:08 UTC
-- **Summary**: Trifecta ctx sync executed: context pack rebuilt and validated. All source files synchronized. Pack size: 5M chars.
-- **Files**: _ctx/context_pack.json, _ctx/generated/repo_map.md, _ctx/generated/symbols_stub.md
-- **Commands**: trifecta ctx sync, trifecta ctx validate
-- **Pack SHA**: `ab5c93036d0724fc`
+## 2026-03-14 00:12 UTC
+- **Summary**: Fixed first Graph MVP review batch: status no longer creates DBs on pristine segments, nested calls no longer leak into top-level edges, and callers/callees now fail closed on ambiguous symbols with structured CLI errors.
+- **Files**: src/application/graph_indexer.py, src/application/graph_service.py, src/infrastructure/graph_store.py, src/infrastructure/cli_graph.py, tests/unit/test_graph_indexer.py, tests/unit/test_graph_service.py, tests/integration/cli/test_graph_cli.py, docs/plans/2026-03-13-graph-mvp-review-fixes-plan.md, _ctx/session_trifecta_dope.md
+- **Commands**: uv run pytest, uv run ruff check, uv run mypy
+- **Pack SHA**: (unchanged)
 
-## 2026-03-22 01:19 UTC
-- **Summary**: Created comprehensive technical report on Trifecta performance: CLI (5.7ms avg latency, 5420 commands/7d), AST (working, top-level only), LSP (daemon not running, health 33%), Graph (458 nodes, 170 edges, PR #74 merged), Telemetry (92.9% search effectiveness). Report includes test plan with real acceptance tests.
-- **Files**: docs/technical_reports/trifecta_performance_report_2026-03-21.md
-- **Commands**: trifecta ast symbols, trifecta graph status, trifecta daemon status, trifecta telemetry report, uv run pytest
-- **Pack SHA**: `ab5c93036d0724fc`
+## 2026-03-15 11:47 UTC
+- **Summary**: Resume graph review-fix batch in codex/graph-mvp; inspect Graph store/service/indexer and add TDD regressions for the 5 pending PR #74 findings
+- **Files**: src/infrastructure/graph_store.py, src/application/graph_service.py, src/application/graph_indexer.py, tests/integration/cli/test_graph_cli.py, tests/unit/test_graph_service.py, tests/unit/test_graph_indexer.py
+- **Commands**: make install, sed, rg, pytest, ruff
+- **Pack SHA**: `005855ec718feceb`
 
-## 2026-03-22 01:42 UTC
-- **Summary**: Daemon started successfully. Updated technical report: Daemon now running (PID 4373, health 66.67% up from 33%). All components tested with daemon active - ctx search working, telemetry health 7.0% zero-hit ratio. Report updated with latest daemon status.
-- **Files**: docs/technical_reports/trifecta_performance_report_2026-03-21.md
-- **Commands**: trifecta daemon start, trifecta daemon status, trifecta ctx search, trifecta telemetry health
-- **Pack SHA**: `ab5c93036d0724fc`
+## 2026-03-15 11:52 UTC
+- **Summary**: Completed Graph review-fix batch: relation queries now stay on calls edges and segment scope, injected-store reads preserve pristine semantics, and indexer covers direct constructor calls without leaking nested call arguments. Verified targeted Graph pytest slice and Ruff.
+- **Files**: src/application/graph_indexer.py, src/application/graph_service.py, src/infrastructure/graph_store.py, tests/integration/test_graph_store_schema.py, tests/unit/test_graph_indexer.py, tests/unit/test_graph_service.py
+- **Commands**: uv run pytest -q tests/integration/test_graph_store_schema.py tests/unit/test_graph_indexer.py tests/unit/test_graph_service.py tests/integration/cli/test_graph_cli.py, uv run ruff check src/application/graph_indexer.py src/application/graph_service.py src/infrastructure/graph_store.py tests/integration/test_graph_store_schema.py tests/unit/test_graph_indexer.py tests/unit/test_graph_service.py tests/integration/cli/test_graph_cli.py
+- **Pack SHA**: `005855ec718feceb`
 
-## 2026-03-22 01:47 UTC
-- **Summary**: Updated technical report with detailed trifecta daemon analysis: daemon is NOT a common LSP - it's designed specifically for Trifecta PCC with UNIX socket IPC, state machine (COLD→WARMING→READY→FAILED), fcntl locking, TTL 180s, and workspace caching. Key capabilities: LSP process reuse, AST symbols (M1 PRODUCTION), hover (WIP). Health improved 33% → 66.67%.
-- **Files**: docs/technical_reports/trifecta_performance_report_2026-03-21.md
-- **Commands**: skill-hub 'trifecta daemon', trifecta ctx search, trifecta ctx get
-- **Pack SHA**: `ab5c93036d0724fc`
+## 2026-03-15 12:15 UTC
+- **Summary**: Tightened GraphService injected-store matching: neighbor DBs in the same cache dir are no longer reused when the canonical segment DB exists. Added regression coverage and reverified the focused Graph slice.
+- **Files**: src/application/graph_service.py, tests/unit/test_graph_service.py
+- **Commands**: uv run pytest -q tests/unit/test_graph_service.py -k neighbor_injected_store, uv run pytest -q tests/integration/test_graph_store_schema.py tests/unit/test_graph_indexer.py tests/unit/test_graph_service.py tests/integration/cli/test_graph_cli.py, uv run ruff check src/application/graph_indexer.py src/application/graph_service.py src/infrastructure/graph_store.py tests/integration/test_graph_store_schema.py tests/unit/test_graph_indexer.py tests/unit/test_graph_service.py tests/integration/cli/test_graph_cli.py
+- **Pack SHA**: `005855ec718feceb`
 
-## 2026-03-22 02:29 UTC
-- **Summary**: Updated technical report with detailed AST analysis: AST is NOT a common AST - designed for Trifecta PCC with progressive disclosure (L0-L3 zoom), fail-closed security (SYMBOL_NOT_FOUND), dual-engine strategy (AST+LSP), and 'dumb/deterministic/predictable' philosophy. Key: L1=skeleton, L2=snippet, L3=full source. AST is the mandatory gate for Code Engine operations.
-- **Files**: docs/technical_reports/trifecta_performance_report_2026-03-21.md
-- **Commands**: skill-hub 'trifecta ast', trifecta ctx search, trifecta ctx get
-- **Pack SHA**: `ab5c93036d0724fc`
-
-## 2026-03-22 02:34 UTC
-- **Summary**: Added integration analysis to technical report: Components are NOT decoupled - they complement each other via Dual-Engine architecture. AST provides symbol location, Graph provides relationships, Daemon provides shared cache. Together they enable complex context calling queries. Key integration: AST→Graph (nodes), AST↔Daemon (cache), Graph↔Context Pack (boundary pending). Opportunities: Graph as ranking signal, symbol↔chunk linking, shared daemon cache.
-- **Files**: docs/technical_reports/trifecta_performance_report_2026-03-21.md
-- **Commands**: trifecta ctx search, trifecta ctx get
-- **Pack SHA**: `ab5c93036d0724fc`
-
-## 2026-03-22 02:39 UTC
-- **Summary**: Diagnosed daemon health score 66.67%: 2/3 checks pass (runtime_exists ✅, daemon_healthy ✅, db_accessible ❌). Root cause: runtime.db file missing in ~/.local/share/trifecta/repos/6f25e381/runtime/. Daemon is functional (PID 4373, responds to PING/HEALTH, uptime 3499s) but health check fails. Recommendation: run 'trifecta index --repo .' to create runtime.db and achieve 100% health score.
-- **Files**: docs/technical_reports/trifecta_performance_report_2026-03-21.md
-- **Commands**: trifecta daemon status, nc -U socket HEALTH, ps -p 4373, ls -la runtime dir
-- **Pack SHA**: `ab5c93036d0724fc`
-
-## 2026-03-22 02:44 UTC
-- **Summary**: Daemon improvement executed successfully: 1) Created runtime.db via sqlite3 (health check expects this file), 2) Health score improved from 66.67% to 100% (healthy: true), 3) All 5 daemon integration tests passed (test_daemon_spawn_and_connect, test_daemon_singleton_lock, test_ttl_shutdown_cleans_files, test_no_blocking_on_cold_start, test_no_long_sleeps_in_lsp_daemon). Root cause: runtime.db was missing, index command creates search.db not runtime.db.
-- **Files**: docs/technical_reports/trifecta_performance_report_2026-03-21.md, _ctx/session_trifecta_dope.md
-- **Commands**: trifecta daemon status, sqlite3 runtime.db, uv run pytest test_lsp_daemon.py
-- **Pack SHA**: `ab5c93036d0724fc`
-
-## 2026-03-25 15:39 UTC
-- **Summary**: Plan FASE 2 daemon extraction before implementation
-- **Files**: .pi/plan/cli-remediation-fase2-implementation-plan.md, _ctx/checkpoints/2026-03-25/checkpoint_122731_cli-remediation-fase2-daemon.md, .pi/plan/cli-remediation.md
-- **Commands**: trifecta session append, trifecta ctx sync, trifecta ctx search, trifecta ctx get
-- **Pack SHA**: `ab5c93036d0724fc`
-
-## 2026-03-25 15:42 UTC
-- **Summary**: Completed planning for FASE 2 daemon extraction; saved implementation plan
-- **Files**: .pi/plan/cli-remediation-fase2-daemon-plan.md
-- **Commands**: trifecta ctx sync, trifecta ctx search, trifecta ctx get, write plan
-- **Pack SHA**: `4c167ed7c9258727`
-
-## 2026-03-25 15:43 UTC
-- **Summary**: Recopilación de contexto para checkpoint Daemon + LSP
-- **Files**: docs/daemon-lsp-scope/project_checkpoint.md, docs/daemon-lsp-scope/daemon_contract.md, docs/daemon-lsp-scope/cloop_daemon_lsp_scope.md, docs/daemon-lsp-scope/validation_results.md, docs/telemetry_event_schema.md
-- **Commands**: trifecta ctx sync, trifecta ctx validate, trifecta ctx search daemon, trifecta ctx search validation LSP envelope pyright, trifecta ctx search telemetry events.jsonl daemon
-- **Pack SHA**: `4c167ed7c9258727`
-
-## 2026-03-25 15:44 UTC
-- **Summary**: Preparación de pendientes con contexto para checkpoint Daemon + LSP
-- **Files**: docs/lsp/problema-03-daemon-ttl-no-renovable.md, src/platform/daemon_manager.py, docs/contracts/LSP_RELAXED_READY.md
-- **Commands**: trifecta ctx search TTL timeout daemon run TRIFECTA_RUNTIME_DIR, trifecta ctx search pyright LSPClient initialize handshake
-- **Pack SHA**: `4c167ed7c9258727`
-
-## 2026-03-25 15:58 UTC
-- **Summary**: Implemented FASE 2 daemon extraction with golden tests and preserved daemon run surface
-- **Files**: src/infrastructure/cli.py, src/infrastructure/daemon/__init__.py, src/infrastructure/daemon/protocol.py, src/infrastructure/daemon/lsp_handler.py, src/infrastructure/daemon/socket_manager.py, src/infrastructure/daemon/runner.py, tests/unit/daemon/test_protocol.py, tests/unit/daemon/test_lsp_handler.py, tests/unit/daemon/test_socket_manager.py, tests/unit/daemon/test_runner.py, tests/unit/test_cli_hardening.py
-- **Commands**: uv run pytest tests/integration/test_lsp_daemon.py tests/integration/test_daemon_paths_constraints.py -v, uv run pytest tests/unit/daemon/ tests/unit/test_cli_hardening.py -v, uv run ruff check src/infrastructure/daemon src/infrastructure/cli.py tests/unit/daemon tests/unit/test_cli_hardening.py, uv run mypy src/infrastructure/daemon --no-error-summary
-- **Pack SHA**: `cf6cbd85f8862092`
-
-## 2026-03-25 16:04 UTC
-- **Summary**: Planning follow-up fixes for daemon review findings
-- **Files**: .pi/plan/daemon-run-fixes-plan.md, src/infrastructure/daemon/protocol.py, src/infrastructure/daemon/runner.py, src/infrastructure/daemon/lsp_handler.py, tests/unit/daemon/test_runner.py
-- **Commands**: trifecta session append, trifecta ctx search, trifecta ctx get
-- **Pack SHA**: `cf6cbd85f8862092`
-
-## 2026-03-25 16:05 UTC
-- **Summary**: Saved plan for daemon follow-up fixes after review
-- **Files**: .pi/plan/daemon-run-fixes-plan.md
-- **Commands**: trifecta ctx search, trifecta ctx get, write plan
-- **Pack SHA**: `cf6cbd85f8862092`
-
-## 2026-03-25 16:08 UTC
-- **Summary**: Starting implementation of approved daemon follow-up fixes
-- **Files**: .pi/plan/daemon-run-fixes-plan.md, src/infrastructure/daemon/protocol.py, src/infrastructure/daemon/runner.py, tests/unit/daemon/test_runner.py, tests/unit/daemon/test_protocol.py, tests/unit/test_cli_hardening.py
-- **Commands**: trifecta session append, trifecta ctx search, trifecta ctx get, pytest, ruff, mypy
-- **Pack SHA**: `cf6cbd85f8862092`
-
-## 2026-03-25 16:12 UTC
-- **Summary**: Completed approved daemon follow-up fixes; oversized detection and connection isolation verified
-- **Files**: src/infrastructure/daemon/protocol.py, src/infrastructure/daemon/runner.py, tests/unit/daemon/test_protocol.py, tests/unit/daemon/test_runner.py, tests/unit/test_cli_hardening.py
-- **Commands**: uv run pytest tests/unit/daemon/test_runner.py tests/unit/daemon/test_protocol.py tests/unit/test_cli_hardening.py -v, uv run pytest tests/integration/test_lsp_daemon.py tests/integration/test_daemon_paths_constraints.py tests/unit/daemon/ tests/unit/test_cli_hardening.py -v, uv run ruff check src/infrastructure/daemon tests/unit/daemon tests/unit/test_cli_hardening.py, uv run mypy src/infrastructure/daemon --no-error-summary
-- **Pack SHA**: `cf6cbd85f8862092`
-
-## 2026-03-25 16:16 UTC
-- **Summary**: Applying post-review corrections for daemon send failure observability
-- **Files**: src/infrastructure/daemon/protocol.py, src/infrastructure/daemon/runner.py, tests/unit/daemon/test_runner.py
-- **Commands**: trifecta session append, edit, pytest, ruff, mypy
-- **Pack SHA**: `cf6cbd85f8862092`
-
-## 2026-03-25 16:16 UTC
-- **Summary**: Applied final review corrections: send failure stderr observability + read_request semantics docs
-- **Files**: src/infrastructure/daemon/protocol.py, src/infrastructure/daemon/runner.py, tests/unit/daemon/test_runner.py
-- **Commands**: uv run pytest tests/unit/daemon/test_runner.py tests/unit/daemon/test_protocol.py -v, uv run ruff check src/infrastructure/daemon tests/unit/daemon, uv run mypy src/infrastructure/daemon --no-error-summary, uv run pytest tests/integration/test_lsp_daemon.py tests/integration/test_daemon_paths_constraints.py tests/unit/daemon/ tests/unit/test_cli_hardening.py -v
-- **Pack SHA**: `cf6cbd85f8862092`
-
-## 2026-03-25 16:18 UTC
-- **Summary**: Final audit smoke validation for daemon run refactor
-- **Files**: src/infrastructure/daemon/runner.py, src/infrastructure/daemon/protocol.py, tests/unit/daemon/test_runner.py, tests/unit/daemon/test_protocol.py
-- **Commands**: skill-hub, trifecta ctx search, trifecta ctx get, uv run trifecta daemon start/status/stop
-- **Pack SHA**: `cf6cbd85f8862092`
-
-## 2026-03-25 16:26 UTC
-- **Summary**: Investigating official daemon start failure and stale lock behavior
-- **Files**: src/platform/daemon_manager.py, tests/integration/test_lsp_daemon.py, .pi/plan/daemon-run-fixes-plan.md
-- **Commands**: skill-hub, trifecta ctx search, trifecta ctx get, pytest
-- **Pack SHA**: `cf6cbd85f8862092`
-
-## 2026-03-25 16:31 UTC
-- **Summary**: Fixed official daemon start lifecycle: parent dirs before lock, stale lock recovery, success-path lock release; official smoke passed in repo and temp repo
-- **Files**: src/platform/daemon_manager.py, tests/unit/test_daemon_manager.py
-- **Commands**: skill-hub, trifecta ctx search, trifecta ctx get, uv run pytest tests/unit/test_daemon_manager.py -v, uv run trifecta daemon start/status/stop, python socket smoke, uv run pytest tests/unit/test_daemon_manager.py tests/integration/test_lsp_daemon.py tests/integration/test_daemon_paths_constraints.py tests/unit/daemon/ tests/unit/test_cli_hardening.py -v, uv run ruff check src/platform/daemon_manager.py tests/unit/test_daemon_manager.py src/infrastructure/daemon tests/unit/daemon tests/unit/test_cli_hardening.py, uv run mypy src/platform/daemon_manager.py src/infrastructure/daemon --no-error-summary
-- **Pack SHA**: `cf6cbd85f8862092`
-
-## 2026-03-25 16:41 UTC
-- **Summary**: Created checkpoint, handoff, and next-agent checklist for daemon official surface follow-up
-- **Files**: _ctx/checkpoints/2026-03-25/checkpoint_134102_daemon-official-surface-fix-complete.md, _ctx/checkpoints/daemon-official-surface-fix-handoff.md, _ctx/checkpoints/daemon-official-surface-fix-next-agent-checklist.md
-- **Commands**: skill-hub checkpoint handoff, next-agent checkpoint card generation
-- **Pack SHA**: `cf6cbd85f8862092`
-
-## 2026-03-26 14:54 UTC
-- **Summary**: mr-comprehensive LSP+Daemon completado
-- **Files**: daemon_manager.py, lsp_client.py, lsp_contracts.py, daemon_paths.py, daemon_use_case.py
-- **Commands**: mr-comprehensive, 7-agent-review
-- **Pack SHA**: `cf6cbd85f8862092`
-
-## 2026-03-26 14:55 UTC
-- **Summary**: Completed: Resolved P1 (didOpen sequencing) by integrating LSPDaemonClient into hover command. Replaced WIP stub in \`cli_ast.py\` with actual implementation that connects to daemon, sends did_open, waits for READY state, and executes textDocument/hover. Verified resolution of P0 (stderr deadlock) and P2 (observability) via actual CLI end-to-end execution. Validated that P3 (CWD mismatch) was not an issue as the daemon already correctly mounts the repo_root. All hover tests passing, explicitly testing unavailable LSP environments via empty PATH.
-- **Pack SHA**: `cf6cbd85f8862092`
-
+## 2026-03-15 12:28 UTC
+- **Summary**: Closed final pre-commit Graph warning: GraphService now canonicalizes injected-store path comparisons so alias/symlink paths still match the intended segment cache. Added regression coverage and reverified the Graph slice.
+- **Files**: src/application/graph_service.py, tests/unit/test_graph_service.py
+- **Commands**: uv run pytest -q tests/unit/test_graph_service.py -k alias_path_for_injected_store, uv run pytest -q tests/integration/test_graph_store_schema.py tests/unit/test_graph_indexer.py tests/unit/test_graph_service.py tests/integration/cli/test_graph_cli.py, uv run ruff check src/application/graph_indexer.py src/application/graph_service.py src/infrastructure/graph_store.py tests/integration/test_graph_store_schema.py tests/unit/test_graph_indexer.py tests/unit/test_graph_service.py tests/integration/cli/test_graph_cli.py
+- **Pack SHA**: `005855ec718feceb`

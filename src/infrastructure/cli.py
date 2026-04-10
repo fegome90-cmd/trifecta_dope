@@ -1,6 +1,7 @@
 """Trifecta CLI with T8 Telemetry."""
 
 import json
+import logging
 import os
 import sys
 import time
@@ -15,6 +16,7 @@ from click.exceptions import UsageError
 
 # AST/LSP Integration (Phase 2a/2b)
 from src.infrastructure.cli_ast import ast_app
+from src.infrastructure.cli_graph import graph_app
 
 # Path Guardrails
 from src.infrastructure.path_utils import (
@@ -95,7 +97,10 @@ app = typer.Typer(
     cls=TrifectaGroup,
 )
 
+logger = logging.getLogger(__name__)
+
 app.add_typer(ast_app, name="ast")
+app.add_typer(graph_app, name="graph")
 
 ctx_app = typer.Typer(
     help="Manage Trifecta Context Packs (ctx.search, ctx.get).",
@@ -1663,7 +1668,7 @@ def create(
     # Segment ID derived from directory name
     target_dir = Path(segment).resolve()
 
-    template_renderer, _, _ = _get_dependencies(str(target_dir))
+    template_renderer, file_system, _ = _get_dependencies(str(target_dir))
     telemetry = _get_telemetry(str(target_dir), "lite", require_ctx=False)
     start_time = time.time()
 
@@ -1694,6 +1699,16 @@ def create(
     }
 
     try:
+        from src.infrastructure.segment_state import resolve_segment_state
+
+        try:
+            resolve_segment_state(str(target_dir), file_system)
+        except ValueError as e:
+            if str(e) != "SEGMENT_CANON_MISSING":
+                raise
+        else:
+            raise ValueError("SEGMENT_ALREADY_INITIALIZED")
+
         for rel_path, content in files.items():
             full_path = target_dir / rel_path
             full_path.parent.mkdir(parents=True, exist_ok=True)
@@ -2409,6 +2424,23 @@ def query_cmd(
             typer.echo(f"    {r.get('snippet')}")
 
 
+def _cleanup_daemon_runtime_artifacts(socket_path: Path, pid_path: Path) -> None:
+    for path in (socket_path, pid_path):
+        try:
+            path.unlink()
+        except PermissionError as exc:
+            logger.warning("Failed to unlink %s: permission denied (%s)", path, exc)
+        except (FileNotFoundError, IsADirectoryError):
+            pass
+
+
+
+def _close_daemon_server(server: object | None) -> None:
+    if server is None:
+        return
+    close_method = getattr(server, "close", None)
+    if callable(close_method):
+        close_method()
 daemon_app = typer.Typer(help="Daemon management commands")
 app.add_typer(daemon_app, name="daemon")
 

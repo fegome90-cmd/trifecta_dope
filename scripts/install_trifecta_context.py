@@ -28,6 +28,12 @@ from pathlib import Path
 from typing import List
 
 
+DEPRECATION_MESSAGE = (
+    "DEPRECATED: scripts/install_trifecta_context.py is no longer supported. "
+    "Use `uv run python scripts/install_FP.py --segment <path>` instead."
+)
+
+
 def run_command(cli_root: Path, cmd_args: List[str]) -> None:
     """Run uv command inside cli_root."""
     cmd = ["uv", "run", "trifecta"] + cmd_args
@@ -60,6 +66,9 @@ def validate_segment(segment_path: Path) -> bool:
 
 
 def main() -> None:
+    print(DEPRECATION_MESSAGE)
+    sys.exit(1)
+
     parser = argparse.ArgumentParser(description="Trifecta Context Installer")
     parser.add_argument("--cli-root", type=str, default=".", help="Path to trifecta_dope repo")
     parser.add_argument(

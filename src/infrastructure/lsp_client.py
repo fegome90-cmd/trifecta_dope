@@ -24,6 +24,26 @@ INVARIANT_WORKSPACE_ROOT = "workspace_root_correct"
 INVARIANT_HEALTH_CHECK = "health_check_responds"
 
 
+def _debug_enabled() -> bool:
+    value = os.environ.get("TRIFECTA_LSP_DEBUG", "")
+    return value.lower() not in {"", "0", "false", "no"}
+
+
+def _debug_log(message: str) -> None:
+    if _debug_enabled():
+        sys.stderr.write(f"{message}\n")
+
+
+def _request_timeout_from_env(default: float = 30.0) -> float:
+    raw_value = os.environ.get("TRIFECTA_LSP_REQUEST_TIMEOUT")
+    if raw_value is None:
+        return default
+    try:
+        return float(raw_value)
+    except ValueError:
+        return default
+
+
 class LSPClient:
     def __init__(self, root_path: Path, telemetry: Any = None):
         self.root_path = root_path
@@ -35,7 +55,7 @@ class LSPClient:
         self.stopping = threading.Event()
         self._thread: Optional[threading.Thread] = None
         self._stderr_thread: Optional[threading.Thread] = None
-        self._stderr_lines: List[str] = []  # Last N stderr lines for diagnostics
+        self._stderr_lines: List[str] = []
         self._capabilities: Dict[str, Any] = {}
         self._warmup_file: Optional[Path] = None
         self._failed_invariants: List[str] = []
@@ -95,9 +115,6 @@ class LSPClient:
                     1,
                 )
 
-                # P0 FIX: drain stderr to prevent pipe buffer deadlock.
-                # Pyright writes logs to stderr; if the 64KB OS buffer fills,
-                # pyright blocks on write and freezes stdout (JSON-RPC) too.
                 self._stderr_thread = threading.Thread(target=self._drain_stderr, daemon=True)
                 self._stderr_thread.start()
 
@@ -119,7 +136,7 @@ class LSPClient:
                             err_out = stderr_data.decode("utf-8")
                     except Exception:
                         pass
-                sys.stderr.write(f"DEBUG: LSP Start Failed: {e}. Stderr: {err_out}\n")
+                _debug_log(f"DEBUG: LSP Start Failed: {e}. Stderr: {err_out}")
 
                 # Sanitize executable path for telemetry
                 exe_name = "unknown"
@@ -192,15 +209,8 @@ class LSPClient:
                     pass  # Already closed
 
     def _drain_stderr(self) -> None:
-        """Continuously read stderr to prevent pipe buffer deadlock.
-
-        P0 FIX: Pyright writes diagnostic/log output to stderr.
-        If no thread reads it, the OS pipe buffer (~64KB) fills up,
-        causing pyright to block on write() and freeze stdout too.
-
-        Keeps the last 50 lines for diagnostics (accessible via _stderr_lines).
-        """
-        _MAX_STDERR_LINES = 50
+        """Drain stderr to avoid child-process pipe backpressure."""
+        max_stderr_lines = 50
         try:
             if not self.process or not self.process.stderr:
                 return
@@ -212,11 +222,10 @@ class LSPClient:
                 except Exception:
                     line = repr(raw_line)
                 self._stderr_lines.append(line)
-                # Cap memory: keep only last N lines
-                if len(self._stderr_lines) > _MAX_STDERR_LINES:
-                    self._stderr_lines = self._stderr_lines[-_MAX_STDERR_LINES:]
+                if len(self._stderr_lines) > max_stderr_lines:
+                    self._stderr_lines = self._stderr_lines[-max_stderr_lines:]
         except (OSError, ValueError):
-            pass  # Stream closed during shutdown — expected
+            pass
 
     def did_open(self, file_path: Path, content: str) -> None:
         """Notify file open to trigger diagnostics."""
@@ -290,22 +299,8 @@ class LSPClient:
             }
             self._send_rpc(req)
 
-            # Read messages until we get the initialize response (id=1, has "result").
-            # Servers may send notifications (e.g. window/logMessage) before the
-            # initialize response; these must be skipped to avoid handshake failure.
-            resp = None
-            for _ in range(50):  # Safety limit to avoid infinite loop
-                msg = self._read_rpc()
-                if not msg:
-                    self._failed_invariants.append(INVARIANT_HANDSHAKE)
-                    self._transition(LSPState.FAILED)
-                    return
-                if "id" in msg and msg["id"] == 1 and "result" in msg:
-                    resp = msg
-                    break
-                # Otherwise it's a notification or unrelated message; skip it
-
-            if not resp:
+            resp = self._read_rpc()
+            if not resp or "result" not in resp:
                 self._failed_invariants.append(INVARIANT_HANDSHAKE)
                 self._transition(LSPState.FAILED)
                 return
@@ -345,22 +340,41 @@ class LSPClient:
                     break
                 saw_post_init_message = True
 
+                msg_id = msg.get("id")
+                msg_method = msg.get("method", "")
+                has_result = "result" in msg
+                has_error = "error" in msg
+
+                if msg_id is not None:
+                    with self.lock:
+                        is_pending = msg_id in self._pending_requests
+                    result_type = type(msg.get("result")).__name__ if has_result else "none"
+                    _debug_log(
+                        f"[LSP_LOOP_MSG] id={msg_id} method={msg_method} "
+                        f"has_result={has_result} has_error={has_error} "
+                        f"is_pending={is_pending} result_type={result_type}"
+                    )
+
                 if "id" in msg and ("result" in msg or "error" in msg):
                     req_id = msg["id"]
                     with self.lock:
                         if req_id in self._pending_requests:
                             if "result" in msg:
                                 self._pending_requests[req_id] = msg["result"]
+                                _debug_log(
+                                    f"[LSP_LOOP_SET] id={req_id} result_type={type(msg['result']).__name__}"
+                                )
                             else:
-                                # Store error response with sentinel key
                                 self._pending_requests[req_id] = {
                                     "__lsp_error__": True,
                                     "error": msg["error"],
                                 }
+                                _debug_log(f"[LSP_LOOP_ERROR] id={req_id} error={msg['error']}")
                             self._request_events[req_id].set()
+                        else:
+                            _debug_log(f"[LSP_LOOP_ORPHAN] id={req_id} not in pending")
 
-                method = msg.get("method", "")
-                if method == "textDocument/publishDiagnostics":
+                if msg_method == "textDocument/publishDiagnostics":
                     pass
 
             # Relaxed READY compatibility:
@@ -382,7 +396,7 @@ class LSPClient:
                         err_out = stderr_data.decode("utf-8")
                 except Exception:
                     pass
-            sys.stderr.write(f"DEBUG: LSP Loop Exception: {e}. Stderr: {err_out}\n")
+            _debug_log(f"DEBUG: LSP Loop Exception: {e}. Stderr: {err_out}")
             self._failed_invariants.append(INVARIANT_HANDSHAKE)
             self._transition(LSPState.FAILED)
 
@@ -453,14 +467,7 @@ class LSPClient:
     ) -> Optional[Dict[str, Any]]:
         """Send a request and wait for the response."""
         if timeout is None:
-            env_timeout = os.environ.get("TRIFECTA_LSP_REQUEST_TIMEOUT")
-            if env_timeout:
-                try:
-                    timeout = float(env_timeout)
-                except ValueError:
-                    timeout = 30.0
-            else:
-                timeout = 30.0
+            timeout = _request_timeout_from_env()
         with self.lock:
             if self.state != LSPState.READY:
                 self._emit_fallback(method, f"state_not_ready:{self.state.value}")
@@ -475,18 +482,16 @@ class LSPClient:
         msg = {"jsonrpc": "2.0", "id": req_id, "method": method, "params": params}
         self._send_rpc(msg)
 
-        # DIAGNOSTIC: log request send
-        sys.stderr.write(f"[LSP_REQ] sent id={req_id} method={method} timeout={timeout}\n")
+        _debug_log(f"[LSP_REQ_SENT] id={req_id} method={method} timeout={timeout}")
 
         # Wait for response
         waited = event.wait(timeout)
-        sys.stderr.write(f"[LSP_REQ] event.wait returned={waited} id={req_id}\n")
+        _debug_log(f"[LSP_REQ_WAIT] id={req_id} waited={waited}")
 
         if waited:
             with self.lock:
                 result = self._pending_requests.pop(req_id, None)
                 self._request_events.pop(req_id, None)
-                # Distinguish error response from success
                 if isinstance(result, dict) and result.get("__lsp_error__"):
                     err_detail = result.get("error", {})
                     self._emit_fallback(
@@ -494,9 +499,10 @@ class LSPClient:
                         f"lsp_error:{err_detail.get('code', 'unknown')}:{err_detail.get('message', '')}",
                     )
                     return None
-                # Type guard for mypy
-                sys.stderr.write(
-                    f"[LSP_REQ] result type={type(result)} is_dict={isinstance(result, dict)}\n"
+                _debug_log(
+                    f"[LSP_REQ_RESULT] id={req_id} type={type(result).__name__} "
+                    f"is_dict={isinstance(result, dict)} "
+                    f"has_contents={bool(result.get('contents')) if isinstance(result, dict) else False}"
                 )
                 return result if isinstance(result, dict) else None
         else:
@@ -504,23 +510,24 @@ class LSPClient:
                 self._pending_requests.pop(req_id, None)
                 self._request_events.pop(req_id, None)
                 self._emit_fallback(method, "request_timeout")
-                sys.stderr.write(f"[LSP_REQ] TIMEOUT id={req_id} method={method}\n")
+                _debug_log(f"[LSP_REQ_TIMEOUT] id={req_id} method={method}")
                 return None  # Timeout
 
-    def _send_rpc(self, msg: Dict[str, Any]) -> None:
+    def _send_rpc(self, msg: Dict[str, Any]) -> bool:
         # Don't attempt writes if stopping
         if self.stopping.is_set():
-            return
+            return False
         if not self.process or not self.process.stdin:
-            return
+            return False
         try:
             content = json.dumps(msg).encode("utf-8")
             header = f"Content-Length: {len(content)}\r\n\r\n".encode("ascii")
             self.process.stdin.write(header + content)
             self.process.stdin.flush()
+            return True
         except (OSError, ValueError, BrokenPipeError):
             # Silently ignore write errors during shutdown
-            pass
+            return False
 
     def _read_rpc(self) -> Optional[Dict[str, Any]]:
         if not self.process or not self.process.stdout:

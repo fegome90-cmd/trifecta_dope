@@ -7,6 +7,7 @@ Ensures CLI generates files with correct normalized segment IDs.
 UPDATED: Use correct CLI flags (-s for segment path).
 """
 
+import json
 from pathlib import Path
 
 from typer.testing import CliRunner
@@ -14,6 +15,57 @@ from typer.testing import CliRunner
 from src.infrastructure.cli import app
 
 runner = CliRunner()
+
+
+def _current_create_surface_paths(segment_root: Path) -> dict[str, Path]:
+    segment_id = segment_root.name
+    ctx = segment_root / "_ctx"
+    return {
+        "AGENTS.md": segment_root / "AGENTS.md",
+        "skill.md": segment_root / "skill.md",
+        "readme_tf.md": segment_root / "readme_tf.md",
+        "_ctx/trifecta_config.json": ctx / "trifecta_config.json",
+        f"_ctx/agent_{segment_id}.md": ctx / f"agent_{segment_id}.md",
+        f"_ctx/prime_{segment_id}.md": ctx / f"prime_{segment_id}.md",
+        f"_ctx/session_{segment_id}.md": ctx / f"session_{segment_id}.md",
+    }
+
+
+def _snapshot_current_create_surfaces(segment_root: Path) -> dict[str, str | None]:
+    snapshot: dict[str, str | None] = {}
+    for label, path in _current_create_surface_paths(segment_root).items():
+        snapshot[label] = path.read_text() if path.exists() else None
+    return snapshot
+
+
+def _write_current_create_surfaces(segment_root: Path, *, token: str) -> None:
+    segment_id = segment_root.name
+    for label, path in _current_create_surface_paths(segment_root).items():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        if label == "_ctx/trifecta_config.json":
+            path.write_text(
+                json.dumps(
+                    {
+                        "segment": segment_id,
+                        "scope": "tests",
+                        "repo_root": str(segment_root),
+                        "default_profile": "impl_patch",
+                        "last_verified": "2026-03-19",
+                    }
+                )
+                + "\n"
+            )
+        elif label == "skill.md":
+            path.write_text(
+                """---
+name: test
+description: Test segment
+---
+# Test
+"""
+            )
+        else:
+            path.write_text(f"{label}::{token}\n")
 
 
 def _setup_minimal_segment(path: Path) -> None:
@@ -93,3 +145,101 @@ class TestCLICreateNaming:
         assert (tmp_path / "_ctx" / "trifecta_config.json").exists(), (
             "trifecta_config.json missing after create"
         )
+
+    def test_create_allows_true_bootstrap_when_directory_is_uninitialized(
+        self, tmp_path: Path
+    ) -> None:
+        """True bootstrap is allowed when no canon exists and the dir is blank."""
+        result = runner.invoke(app, ["create", "-s", str(tmp_path)])
+
+        assert result.exit_code == 0, f"Create failed: {result.output}"
+        for label, path in _current_create_surface_paths(tmp_path).items():
+            assert path.exists(), f"{label} missing after bootstrap"
+
+    def test_create_returns_already_initialized_without_writing(
+        self, tmp_path: Path
+    ) -> None:
+        """Already-initialized segments must fail closed and write nothing."""
+        _write_current_create_surfaces(tmp_path, token="initialized")
+        before = _snapshot_current_create_surfaces(tmp_path)
+
+        result = runner.invoke(app, ["create", "-s", str(tmp_path)])
+
+        assert result.exit_code != 0, "create should fail closed for already initialized"
+        assert "SEGMENT_ALREADY_INITIALIZED" in result.output
+        assert _snapshot_current_create_surfaces(tmp_path) == before
+
+    def test_create_fails_when_canonical_candidate_is_incomplete(
+        self, tmp_path: Path
+    ) -> None:
+        """Incomplete canonical state must fail closed and preserve current files."""
+        ctx = tmp_path / "_ctx"
+        ctx.mkdir(parents=True, exist_ok=True)
+        (ctx / f"agent_{tmp_path.name}.md").write_text("agent\n")
+        (ctx / f"prime_{tmp_path.name}.md").write_text("prime\n")
+        before = _snapshot_current_create_surfaces(tmp_path)
+
+        result = runner.invoke(app, ["create", "-s", str(tmp_path)])
+
+        assert result.exit_code != 0, "create should fail closed for incomplete canon"
+        assert "SEGMENT_CANON_INCOMPLETE" in result.output
+        assert _snapshot_current_create_surfaces(tmp_path) == before
+
+    def test_create_fails_when_canonical_candidate_is_ambiguous(
+        self, tmp_path: Path
+    ) -> None:
+        """Ambiguous canonical state must fail closed and preserve current files."""
+        ctx = tmp_path / "_ctx"
+        ctx.mkdir(parents=True, exist_ok=True)
+        for suffix in ("alpha", "beta"):
+            (ctx / f"agent_{suffix}.md").write_text("agent\n")
+            (ctx / f"prime_{suffix}.md").write_text("prime\n")
+            (ctx / f"session_{suffix}.md").write_text("session\n")
+        before = _snapshot_current_create_surfaces(tmp_path)
+
+        result = runner.invoke(app, ["create", "-s", str(tmp_path)])
+
+        assert result.exit_code != 0, "create should fail closed for ambiguous canon"
+        assert "SEGMENT_CANON_AMBIGUOUS" in result.output
+        assert _snapshot_current_create_surfaces(tmp_path) == before
+
+    def test_create_fails_when_canonical_candidate_is_contaminated(
+        self, tmp_path: Path
+    ) -> None:
+        """Contaminated canonical state must fail closed and preserve current files."""
+        ctx = tmp_path / "_ctx"
+        ctx.mkdir(parents=True, exist_ok=True)
+        _write_current_create_surfaces(tmp_path, token="contaminated")
+        (ctx / "agent_shadow.md").write_text("shadow\n")
+        before = _snapshot_current_create_surfaces(tmp_path)
+
+        result = runner.invoke(app, ["create", "-s", str(tmp_path)])
+
+        assert result.exit_code != 0, "create should fail closed for contaminated canon"
+        assert "SEGMENT_CANON_CONTAMINATED" in result.output
+        assert _snapshot_current_create_surfaces(tmp_path) == before
+
+    def test_create_fails_when_local_config_contradicts_canonical_candidate(
+        self, tmp_path: Path
+    ) -> None:
+        """Contradictory local config must fail closed and preserve current files."""
+        ctx = tmp_path / "_ctx"
+        ctx.mkdir(parents=True, exist_ok=True)
+        _write_current_create_surfaces(tmp_path, token="contradiction")
+        (ctx / "trifecta_config.json").write_text(
+            """{
+  "segment": "different-segment",
+  "scope": "tests",
+  "repo_root": "/tmp/elsewhere",
+  "default_profile": "impl_patch",
+  "last_verified": "2026-03-19"
+}
+"""
+        )
+        before = _snapshot_current_create_surfaces(tmp_path)
+
+        result = runner.invoke(app, ["create", "-s", str(tmp_path)])
+
+        assert result.exit_code != 0, "create should fail closed for contradictory config"
+        assert "SEGMENT_CANON_CONTRADICTED_BY_LOCAL_CONFIG" in result.output
+        assert _snapshot_current_create_surfaces(tmp_path) == before
