@@ -89,22 +89,31 @@ class TestExtractKeywordsCLI:
 
         # Create skills_manifest.json
         manifest = {
-            "schema_version": 1,
+            "schema_version": 2,
             "skills": [
                 {
+                    "id": "skill:tdd-workflow",
                     "name": "tdd-workflow",
-                    "source_path": str(tdd_dir / "SKILL.md"),
+                    "relative_path": "tdd-workflow.md",
+                    "source": "test-skills",
                     "description": "Test-driven development workflow with pytest and coverage",
+                    "canonical": True,
                 },
                 {
+                    "id": "skill:code-review",
                     "name": "code-review",
-                    "source_path": str(review_dir / "SKILL.md"),
+                    "relative_path": "code-review.md",
+                    "source": "test-skills",
                     "description": "Code review patterns and best practices for quality",
+                    "canonical": True,
                 },
                 {
+                    "id": "skill:sqlite-query-plans",
                     "name": "sqlite-query-plans",
-                    "source_path": str(sqlite_dir / "SKILL.md"),
+                    "relative_path": "sqlite-query-plans.md",
+                    "source": "test-skills",
                     "description": "SQLite query optimization and indexing strategies",
+                    "canonical": True,
                 },
             ],
         }
@@ -413,7 +422,7 @@ class TestExtractKeywordsCLI:
         # Create segment with empty manifest
         ctx_dir = tmp_path / "_ctx"
         ctx_dir.mkdir()
-        manifest = {"schema_version": 1, "skills": []}
+        manifest = {"schema_version": 2, "skills": []}
         (ctx_dir / "skills_manifest.json").write_text(json.dumps(manifest))
 
         result = runner.invoke(

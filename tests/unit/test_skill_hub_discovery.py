@@ -114,10 +114,6 @@ Use this skill for testing purposes.
 
         # Segment metadata should NOT have skill: type
         skill_chunks = [c for c in pack.chunks if c.id.startswith("skill:")]
-        prime_chunks = [c for c in pack.chunks if c.id.startswith("prime:")]
-        agent_chunks = [c for c in pack.chunks if c.id.startswith("agent:")]
-        session_chunks = [c for c in pack.chunks if c.id.startswith("session:")]
-
         # RED: Currently these exist but shouldn't be discoverable as skills
         # After fix: only test-skill should be skill: type
         skill_names = [c.title_path[0] for c in skill_chunks]
@@ -204,14 +200,15 @@ class TestSkillsManifestContract:
 
     def test_manifest_has_required_fields(self, tmp_path: Path) -> None:
         """
-        GREEN TEST: Manifest entries should have required fields.
+        GREEN TEST: Canonical manifest entries should be accepted.
 
         Required fields:
+        - id: canonical stable id (skill:*)
         - name: skill name (matches filename without .md)
-        - source_path: original path to SKILL.md
+        - relative_path: canonical path relative to segment
         - source: source collection name
         - description: skill description
-        - canonical: True if this is a discoverable skill
+        - canonical: explicit discoverability flag
         """
         from src.infrastructure.aliases_fs import load_skills_manifest
 
@@ -219,11 +216,12 @@ class TestSkillsManifestContract:
         manifest_path.parent.mkdir(parents=True, exist_ok=True)
 
         manifest = {
-            "schema_version": 1,
+            "schema_version": 2,
             "skills": [
                 {
+                    "id": "skill:valid-skill",
                     "name": "valid-skill",
-                    "source_path": "/path/to/valid-skill/SKILL.md",
+                    "relative_path": "valid-skill.md",
                     "source": "test-source",
                     "description": "A valid skill",
                     "canonical": True,
@@ -239,14 +237,13 @@ class TestSkillsManifestContract:
 
         # Required fields
         assert "name" in skill, "Skill must have 'name' field"
-        assert "source_path" in skill, "Skill must have 'source_path' field"
+        assert "source_path" in skill, "Skill must expose source_path compatibility field"
+        assert skill["source_path"] == "valid-skill.md"
         assert "description" in skill, "Skill must have 'description' field"
 
-    def test_manifest_invalid_entry_excluded(self, tmp_path: Path) -> None:
+    def test_manifest_rejects_legacy_source_path_shape(self, tmp_path: Path) -> None:
         """
-        GREEN TEST: Invalid manifest entries should be excluded, not crash.
-
-        Entries without 'name' should be silently skipped.
+        GREEN TEST: Legacy-only source_path manifests are rejected for canonical consumers.
         """
         from src.infrastructure.aliases_fs import load_skills_manifest
 
@@ -262,27 +259,12 @@ class TestSkillsManifestContract:
                     "source": "test-source",
                     "description": "A valid skill",
                 },
-                {
-                    # Invalid: no name
-                    "source_path": "/path/to/invalid/SKILL.md",
-                    "description": "Invalid skill",
-                },
-                {
-                    "name": "another-valid",
-                    "source_path": "/path/to/another/SKILL.md",
-                    "description": "Another valid skill",
-                },
             ]
         }
         manifest_path.write_text(json.dumps(manifest, indent=2))
 
-        skills = load_skills_manifest(tmp_path)
-
-        # Should have 2 valid skills, not 3
-        assert len(skills) == 2
-        names = [s["name"] for s in skills]
-        assert "valid-skill" in names
-        assert "another-valid" in names
+        with pytest.raises(ValueError, match="canonical manifest contract"):
+            load_skills_manifest(tmp_path)
 
 
 class TestAliasResolutionContract:
@@ -419,7 +401,6 @@ class TestRealSkillsHubSegment:
         if result.hits:
             # At least some results should be skill: type (after fix)
             # Before fix: all are repo: type
-            skill_hits = [h for h in result.hits if h.id.startswith("skill:")]
             # This will be RED until fix is applied
             # After fix: assert len(skill_hits) > 0
             # For now, just document current state

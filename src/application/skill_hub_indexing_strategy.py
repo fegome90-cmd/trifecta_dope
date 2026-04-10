@@ -75,8 +75,6 @@ class SkillHubIndexingStrategy:
 
         Fail-closed: Any validation error returns Err.
         """
-        errors: list[str] = []
-
         # 1. Verify policy is skill_hub
         policy = SegmentIndexingPolicy.detect(self.segment_path)
         if policy != SegmentIndexingPolicy.SKILL_HUB:
@@ -93,8 +91,20 @@ class SkillHubIndexingStrategy:
             return manifest_result
 
         manifest = manifest_result.value
+        return self.build_from_manifest(manifest)
+
+    def build_from_manifest(self, manifest: SkillManifest) -> Result[ContextPack, list[str]]:
+        """Build context pack from an already-admitted manifest."""
+        # 2.5 Verify policy is still skill_hub (defense in depth)
+        policy = SegmentIndexingPolicy.detect(self.segment_path)
+        if policy != SegmentIndexingPolicy.SKILL_HUB:
+            return Err([
+                f"Invalid indexing policy '{policy}' for SkillHubIndexingStrategy. "
+                f"Expected '{SegmentIndexingPolicy.SKILL_HUB}'."
+            ])
 
         # 3. Build chunks only from manifest entries
+        errors: list[str] = []
         chunks: list[ContextChunk] = []
         index_entries: list[ContextIndexEntry] = []
         source_files: list[SourceFile] = []

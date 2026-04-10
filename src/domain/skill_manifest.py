@@ -200,6 +200,203 @@ class SkillManifest:
             )
         )
 
+    @classmethod
+    def admit_and_persist(
+        cls,
+        manifest_path: Path,
+        segment_path: Path,
+        declared_policy: str,
+    ) -> Result["SkillManifest", list[str]]:
+        """Admission boundary for skill_hub manifests (normalize -> validate -> persist)."""
+        admitted = cls.admit(
+            manifest_path,
+            segment_path,
+            declared_policy=declared_policy,
+        )
+        if isinstance(admitted, Err):
+            return admitted
+
+        manifest, canonical_doc = admitted.value
+        try:
+            manifest_path.write_text(
+                json.dumps(canonical_doc, indent=2, ensure_ascii=False) + "\n",
+                encoding="utf-8",
+            )
+        except OSError as e:
+            return Err([f"[Provenance] Failed to persist canonical manifest: {e}"])
+
+        return Ok(manifest)
+
+    @classmethod
+    def admit(
+        cls,
+        manifest_path: Path,
+        segment_path: Path,
+        declared_policy: str,
+    ) -> Result[tuple["SkillManifest", dict[str, object]], list[str]]:
+        """Admission boundary for skill_hub manifests (normalize + validate, no persistence)."""
+        errors: list[str] = []
+
+        if declared_policy != "skill_hub":
+            return Err([
+                "[Policy consistency] Admission requires declared policy 'skill_hub'"
+            ])
+
+        if not manifest_path.exists():
+            return Err([f"[Shape] Manifest not found: {manifest_path}"])
+
+        try:
+            raw_data = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as e:
+            return Err([f"[Shape] Failed to parse manifest JSON: {e}"])
+        except OSError as e:
+            return Err([f"[Shape] Failed to read manifest: {e}"])
+
+        if not isinstance(raw_data, dict):
+            return Err([f"[Shape] Manifest must be a JSON object, got {type(raw_data).__name__}"])
+
+        input_schema = raw_data.get("schema_version", 1)
+
+        if input_schema == 1:
+            migrated = cls._migrate_v1_to_v2(raw_data, segment_path)
+            if isinstance(migrated, Err):
+                return Err([f"[Shape] {e}" for e in migrated.error])
+            canonical_data = migrated.value
+        elif input_schema == 2:
+            canonical_data = raw_data
+        else:
+            return Err([f"[Shape] Unsupported schema_version: {input_schema}"])
+
+        skills_data = canonical_data.get("skills", [])
+        if not isinstance(skills_data, list):
+            return Err([f"[Shape] 'skills' must be a list, got {type(skills_data).__name__}"])
+
+        canonical_skills: list[dict[str, object]] = []
+        seen_ids: set[str] = set()
+        seen_paths: set[str] = set()
+
+        for i, raw_skill in enumerate(skills_data):
+            if not isinstance(raw_skill, dict):
+                errors.append(f"[Shape] Entry {i}: must be an object")
+                continue
+
+            if "canonical" not in raw_skill:
+                errors.append(f"[Shape] Entry {i}: missing required field 'canonical'")
+                continue
+
+            skill_id = str(raw_skill.get("id", "")).strip()
+            name = str(raw_skill.get("name", "")).strip()
+            relative_path = str(raw_skill.get("relative_path", "")).strip()
+            description = str(raw_skill.get("description", "")).strip()
+            source = str(raw_skill.get("source", "")).strip()
+            canonical = raw_skill.get("canonical")
+            tags = raw_skill.get("tags", [])
+
+            if not skill_id.startswith("skill:"):
+                errors.append(f"[Shape] Entry {i}: id must start with 'skill:'")
+            if not name:
+                errors.append(f"[Shape] Entry {i}: missing required field 'name'")
+            if not relative_path:
+                errors.append(f"[Shape] Entry {i}: missing required field 'relative_path'")
+            if not description:
+                errors.append(f"[Shape] Entry {i}: missing required field 'description'")
+            if not source:
+                errors.append(f"[Shape] Entry {i}: missing required field 'source'")
+            if not isinstance(canonical, bool):
+                errors.append(f"[Shape] Entry {i}: 'canonical' must be boolean")
+
+            if not relative_path or Path(relative_path).is_absolute() or ".." in Path(relative_path).parts:
+                errors.append(f"[Shape] Entry {i}: invalid relative_path '{relative_path}'")
+                continue
+
+            if skill_id in seen_ids:
+                errors.append(f"[Closure] Entry {i}: duplicate id '{skill_id}'")
+            else:
+                seen_ids.add(skill_id)
+
+            if relative_path in seen_paths:
+                errors.append(f"[Closure] Entry {i}: duplicate relative_path '{relative_path}'")
+            else:
+                seen_paths.add(relative_path)
+
+            file_path = segment_path / relative_path
+            if canonical is True and not file_path.exists():
+                errors.append(f"[Closure] Entry {i}: canonical file not found: {relative_path}")
+
+            canonical_skills.append(
+                {
+                    "id": skill_id,
+                    "name": name,
+                    "relative_path": relative_path,
+                    "description": description,
+                    "source": source,
+                    "canonical": canonical,
+                    "tags": tags if isinstance(tags, list) else [],
+                }
+            )
+
+        if errors:
+            return Err(errors)
+
+        canonical_doc = {
+            "schema_version": 2,
+            "skills": canonical_skills,
+        }
+
+        canonical_entries: list[SkillManifestEntry] = []
+        for skill_data in canonical_skills:
+            relative_path = str(skill_data["relative_path"])
+            file_path = segment_path / relative_path
+            content_hash = cls._compute_content_hash(file_path)
+            canonical_entries.append(
+                SkillManifestEntry.from_dict(skill_data, content_hash)
+            )
+
+        return Ok(
+            (
+                cls(schema_version=2, skills=tuple(canonical_entries)),
+                canonical_doc,
+            )
+        )
+
+    @staticmethod
+    def validate_pack_admission(
+        manifest: "SkillManifest",
+        *,
+        declared_policy: str,
+        pack_chunk_ids: list[str],
+        pack_docs: list[str],
+        pack_source_paths: list[str],
+    ) -> Result[None, list[str]]:
+        """Validate skill_hub pack admission checks at the policy boundary."""
+        errors: list[str] = []
+
+        if declared_policy != "skill_hub":
+            errors.append("[Policy consistency] Promotion request must declare 'skill_hub'")
+
+        if any(not chunk_id.startswith("skill:") for chunk_id in pack_chunk_ids):
+            errors.append("[Shape] Pack contains non skill:* chunk IDs")
+
+        if any(doc != "skill" for doc in pack_docs):
+            errors.append("[Shape] Pack contains non-skill docs")
+
+        manifest_paths = {
+            skill.relative_path for skill in manifest.skills if skill.canonical
+        }
+        pack_paths = set(pack_source_paths)
+
+        if pack_paths != manifest_paths:
+            missing = sorted(manifest_paths - pack_paths)
+            extra = sorted(pack_paths - manifest_paths)
+            if missing:
+                errors.append(f"[Closure] Missing pack entries for canonical manifest paths: {missing}")
+            if extra:
+                errors.append(f"[Closure] Pack contains non-canonical paths: {extra}")
+
+        if errors:
+            return Err(errors)
+        return Ok(None)
+
     @staticmethod
     def _compute_content_hash(file_path: Path) -> str:
         """Compute SHA256 hash of file content."""

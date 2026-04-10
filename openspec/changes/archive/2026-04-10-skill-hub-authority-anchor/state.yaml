@@ -1,0 +1,25 @@
+change: skill-hub-authority-anchor
+status: archived
+artifact_store: hybrid
+updated_at: 2026-04-10
+artifacts:
+  exploration: exploration.md
+  proposal: proposal.md
+  design: design.md
+  tasks: tasks.md
+  archive_report: archive-report.md
+  specs:
+    - specs/skill-hub-authority/spec.md
+notes:
+  - Phase B / Epic 3 applied: atomic promoted artifact set publication implemented with sealed promotion receipt.
+  - Last valid promoted set preservation is now enforced via governed rollback/restore path on publication failure.
+  - Phase C / Epic 4 applied: ContextService runtime now accepts only valid promoted sets (live or sealed last_valid) and fails closed otherwise.
+  - Initial inadmissible live runtime is handled automatically by consuming sealed last_valid promoted set when available; otherwise skill_hub is unavailable by design.
+  - Phase D / Epic 5 applied: aliases_fs now admits only canonical schema_version=2 manifest semantics and rejects legacy source_path manifests for runtime-critical consumers.
+  - Phase D / Epic 5 applied: cli_skills extract-keywords fails closed on non-canonical manifest input and keeps aliases as derived convenience output (no semantic authority).
+  - Phase E / Epic 6 applied: scripts/ingest_trifecta.py now fail-closes for indexing_policy=skill_hub and directs users to the governed ctx sync promotion path.
+  - Phase E / Epic 6 applied: regression coverage proves external manifest input through the legacy writer cannot publish runtime context_pack state for skill_hub.
+next_recommended: none
+risks:
+  - Current live skill-hub state is structurally misaligned with the intended SSOT branch.
+archived_at: 2026-04-10

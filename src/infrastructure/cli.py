@@ -1362,7 +1362,14 @@ def sync(
     try:
         typer.echo("🔄 Running build...")
         build_uc = BuildContextPackUseCase(file_system, telemetry)
-        build_uc.execute(state.segment_root_resolved)
+        from src.domain.result import Err
+
+        build_result = build_uc.execute(state.segment_root_resolved)
+        if isinstance(build_result, Err):
+            typer.echo("❌ Build Failed:")
+            for err in build_result.error:
+                typer.echo(f"   - {err}")
+            raise typer.Exit(code=1)
 
         typer.echo("✅ Build complete. Validating...")
         validate_uc = ValidateContextPackUseCase(file_system, telemetry)
