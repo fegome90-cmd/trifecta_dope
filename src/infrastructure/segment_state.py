@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
-from src.application.exceptions import InvalidSegmentPathError
+from src.application.exceptions import InvalidConfigScopeError, InvalidSegmentPathError
 from src.infrastructure.file_system import FileSystemAdapter
 
 
@@ -94,6 +94,11 @@ def resolve_segment_state(segment_input: str, file_system: FileSystemAdapter) ->
     if not ctx_dir.exists():
         _raise_canon_error("SEGMENT_CANON_MISSING")
 
+    if config is not None:
+        config_repo_root = Path(config.repo_root).expanduser().resolve()
+        if config_repo_root != resolved_root:
+            raise InvalidConfigScopeError(config_repo_root=config_repo_root, resolved_segment_root=resolved_root)
+
     legacy_singletons = _legacy_singletons_present(ctx_dir)
     suffixes = set().union(*(_suffixes_for(ctx_dir, prefix) for prefix in CANONICAL_PREFIXES))
     complete_suffixes, partial_suffixes = _suffix_presence(ctx_dir, suffixes)
@@ -106,7 +111,18 @@ def resolve_segment_state(segment_input: str, file_system: FileSystemAdapter) ->
             _raise_canon_error("SEGMENT_CANON_INCOMPLETE")
         if len(partial_suffixes) > 1:
             _raise_canon_error("SEGMENT_CANON_AMBIGUOUS")
-        _raise_canon_error("SEGMENT_CANON_MISSING")
+        if config is None:
+            _raise_canon_error("SEGMENT_CANON_MISSING")
+        segment_id = config.segment_id
+        return SegmentState(
+            segment_input=segment_input,
+            segment_input_normalized=str(resolved_root),
+            segment_root_resolved=resolved_root,
+            segment_id=segment_id,
+            source_of_truth="config",
+            config_path_used=config_path,
+            expected_files=_files_for_suffix(ctx_dir, segment_id),
+        )
 
     segment_id = next(iter(complete_suffixes))
 

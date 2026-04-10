@@ -169,7 +169,9 @@ class ContextService:
     def search(self, query: str, k: int = 5, doc_filter: Optional[str] = None) -> SearchResult:
         """
         Simple heuristic search for chunks.
-        MVP: Keyword matching in previews/titles.
+
+        Search authority is the full chunk body (`chunk.text`), while the
+        returned display surface remains the truncated preview from the index.
         """
         pack = self._load_pack()
         hits = []
@@ -178,20 +180,26 @@ class ContextService:
         if not query_words:
             query_words = [query.lower()]
 
+        chunk_map = {chunk.id: chunk for chunk in pack.chunks}
+
         for entry in pack.index:
+            chunk = chunk_map.get(entry.id)
+            if chunk is None:
+                raise RuntimeError(f"missing chunk id '{entry.id}' referenced by context index")
+
             # Apply doc filter if provided
-            if doc_filter and doc_filter not in entry.id:
+            if doc_filter and doc_filter not in entry.id and doc_filter != chunk.doc:
                 continue
 
             score = 0.0
             title_lower = entry.title_path_norm.lower()
-            preview_lower = entry.preview.lower()
+            body_lower = chunk.text.lower()
 
             # 1. Direct word matches
             for word in query_words:
                 if word in title_lower:
                     score += 1.0
-                if word in preview_lower:
+                if word in body_lower:
                     score += 0.5
 
             # 2. Heuristic boosts (Even if title/preview match failed)

@@ -393,6 +393,20 @@ def _handle_segment_resolution_error(
             "Fix _ctx/trifecta_config.json repo_root to match segment root",
             "Or remove config and re-run create/sync",
         ]
+    elif isinstance(e, ValueError):
+        canon_code = str(e)
+        if canon_code == "SEGMENT_CANON_AMBIGUOUS":
+            error_code = "NORTH_STAR_AMBIGUOUS"
+            next_steps = [
+                "Keep exactly one complete agent_*.md, prime_*.md, session_*.md family in _ctx",
+                "Remove extra or conflicting canonical context files",
+            ]
+        else:
+            error_code = "NORTH_STAR_MISSING"
+            next_steps = [
+                "Ensure skill.md exists in the segment root",
+                "Ensure _ctx contains exactly one complete agent_*.md, prime_*.md, session_*.md family",
+            ]
     else:
         raise e
 
@@ -594,7 +608,7 @@ def build(
 
     try:
         state = resolve_segment_state(segment, file_system)
-    except (InvalidSegmentPathError, InvalidConfigScopeError) as e:
+    except (InvalidSegmentPathError, InvalidConfigScopeError, ValueError) as e:
         _handle_segment_resolution_error(e, segment, CMD_CTX_BUILD, telemetry, start_time)
 
     _validate_north_star(state, segment, CMD_CTX_BUILD, telemetry, start_time)
@@ -1358,7 +1372,7 @@ def sync(
 
     try:
         state = resolve_segment_state(segment, file_system)
-    except (InvalidSegmentPathError, InvalidConfigScopeError) as e:
+    except (InvalidSegmentPathError, InvalidConfigScopeError, ValueError) as e:
         _handle_segment_resolution_error(e, segment, CMD_CTX_SYNC, telemetry, start_time)
 
     _validate_north_star(state, segment, CMD_CTX_SYNC, telemetry, start_time)
