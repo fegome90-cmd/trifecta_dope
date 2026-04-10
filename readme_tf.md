@@ -1,6 +1,6 @@
 # Trifecta_Dope - Trifecta Documentation
 
-> **Trifecta System**: Este segmento usa el sistema Trifecta para comprension rapida por agentes de codigo.
+> **Trifecta System**: Este segmento usa el sistema Trifecta para comprensión rápida por agentes de código.
 
 ## [FILE] Estructura
 

@@ -102,7 +102,7 @@ class ResetContextUseCase:
                 try:
                     # Ensure parent directory exists
                     file_path.parent.mkdir(parents=True, exist_ok=True)
-                    file_path.write_text(content)
+                    file_path.write_text(content, encoding="utf-8")
                     files_written.append(str(file_path))
                 except Exception as e:
                     errors.append(f"Failed to write {file_path}: {e}")

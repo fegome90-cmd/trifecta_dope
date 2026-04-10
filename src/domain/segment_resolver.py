@@ -14,7 +14,7 @@ Date: 2026-02-15
 import hashlib
 import warnings
 from pathlib import Path
-from typing import Optional, cast
+from typing import Optional
 
 from src.domain.naming import normalize_segment_id
 
@@ -40,19 +40,19 @@ class SegmentRef:
 
     @property
     def root_abs(self) -> Path:
-        return cast(Path, self._root_abs)  # type: ignore[attr-defined]
+        return self._root_abs  # type: ignore[attr-defined,no-any-return]
 
     @property
     def slug(self) -> str:
-        return cast(str, self._slug)  # type: ignore[attr-defined]
+        return self._slug  # type: ignore[attr-defined,no-any-return]
 
     @property
     def fingerprint(self) -> str:
-        return cast(str, self._fingerprint)  # type: ignore[attr-defined]
+        return self._fingerprint  # type: ignore[attr-defined,no-any-return]
 
     @property
     def id(self) -> str:
-        return cast(str, self._id)  # type: ignore[attr-defined]
+        return self._id  # type: ignore[attr-defined,no-any-return]
 
     def __repr__(self) -> str:
         return f"SegmentRef(slug={self.slug}, fingerprint={self.fingerprint}, root={self.root_abs})"

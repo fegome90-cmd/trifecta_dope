@@ -53,6 +53,8 @@ class SegmentIndexingPolicy(str, Enum):
 
         try:
             data = json.loads(config_path.read_text(encoding="utf-8"))
+            if not isinstance(data, dict):
+                return cls.GENERIC
             policy_value = data.get("indexing_policy", cls.GENERIC.value)
 
             if policy_value == cls.SKILL_HUB.value:

@@ -57,7 +57,7 @@ class TestSegmentIndexingPolicyDetection:
         config = {
             "segment_id": "skills-hub",
             "repo_root": str(tmp_path),
-            "indexing_policy": "skill_hub"
+            "indexing_policy": "skill_hub",
         }
         (ctx_dir / "trifecta_config.json").write_text(json.dumps(config))
 
@@ -76,9 +76,24 @@ class TestSegmentIndexingPolicyDetection:
         config = {
             "segment_id": "test",
             "repo_root": str(tmp_path),
-            "indexing_policy": "invalid_value"
+            "indexing_policy": "invalid_value",
         }
         (ctx_dir / "trifecta_config.json").write_text(json.dumps(config))
+
+        policy = SegmentIndexingPolicy.detect(tmp_path)
+
+        assert policy == SegmentIndexingPolicy.GENERIC
+
+    def test_non_dict_json_falls_back_to_generic(self, tmp_path: Path) -> None:
+        """
+        P0 fix: Valid JSON array (non-dict) should not crash with AttributeError.
+        Should fall back to GENERIC instead.
+        """
+        from src.domain.segment_indexing_policy import SegmentIndexingPolicy
+
+        ctx_dir = tmp_path / "_ctx"
+        ctx_dir.mkdir()
+        (ctx_dir / "trifecta_config.json").write_text("[]")
 
         policy = SegmentIndexingPolicy.detect(tmp_path)
 
@@ -135,18 +150,11 @@ class TestSegmentIndexingPolicyNoConflict:
         ctx_dir.mkdir()
 
         # Config says GENERIC
-        config = {
-            "segment_id": "test",
-            "repo_root": str(tmp_path),
-            "indexing_policy": "generic"
-        }
+        config = {"segment_id": "test", "repo_root": str(tmp_path), "indexing_policy": "generic"}
         (ctx_dir / "trifecta_config.json").write_text(json.dumps(config))
 
         # Manifest exists but should NOT influence policy
-        manifest = {
-            "schema_version": 2,
-            "skills": []
-        }
+        manifest = {"schema_version": 2, "skills": []}
         (ctx_dir / "skills_manifest.json").write_text(json.dumps(manifest))
 
         policy = SegmentIndexingPolicy.detect(tmp_path)

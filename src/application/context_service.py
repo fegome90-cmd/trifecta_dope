@@ -56,7 +56,7 @@ class ContextService:
         if not self.pack_path.exists():
             raise FileNotFoundError(f"Context pack not found at {self.pack_path}")
 
-        with open(self.pack_path, "r") as f:
+        with open(self.pack_path, "r", encoding="utf-8") as f:
             data = json.load(f)
             return ContextPack(**data)
 
@@ -72,7 +72,9 @@ class ContextService:
             self.ctx_dir / "context_pack.json",
             self.ctx_dir / SKILL_HUB_PROMOTION_RECEIPT,
         )
-        promoted_pack = self._validate_and_load_promoted_set(*live_paths, source="live", errors=errors)
+        promoted_pack = self._validate_and_load_promoted_set(
+            *live_paths, source="live", errors=errors
+        )
         if promoted_pack is not None:
             return promoted_pack
 
@@ -89,9 +91,7 @@ class ContextService:
             return promoted_pack
 
         detail = "; ".join(errors) if errors else "runtime artifacts are missing"
-        raise RuntimeError(
-            f"No valid promoted set for skill_hub at {self.target_path}. {detail}"
-        )
+        raise RuntimeError(f"No valid promoted set for skill_hub at {self.target_path}. {detail}")
 
     def _validate_and_load_promoted_set(
         self,
@@ -141,7 +141,9 @@ class ContextService:
 
         manifest_result = SkillManifest.load(manifest_path, self.target_path)
         if isinstance(manifest_result, Err):
-            errors.append(f"[{source}] invalid manifest admission: {'; '.join(manifest_result.error)}")
+            errors.append(
+                f"[{source}] invalid manifest admission: {'; '.join(manifest_result.error)}"
+            )
             return None
         manifest = manifest_result.value
 

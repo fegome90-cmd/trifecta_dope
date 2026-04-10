@@ -35,8 +35,9 @@ EOF
 fi
 
 QUERY="$*"
-SEGMENT="$HOME/.trifecta/segments/skills-hub"
-TRIFECTA_ROOT="$HOME/Developer/agent_h/trifecta_dope"
+SEGMENT="${SKILL_HUB_SEGMENT:-$HOME/.trifecta/segments/skills-hub}"
+TRIFECTA_ROOT="$(dirname "$SCRIPT_DIR")"
+CARDS_HELPER="$SCRIPT_DIR/skill-hub-cards"
 
 if [ -z "$QUERY" ]; then
     echo "Usage: skill-hub \"query\""

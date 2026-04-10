@@ -77,3 +77,4 @@ _ctx/trifecta_config.json
 
 # Claude agent runtime state (session memory, counters)
 .claude/context_memory/
+.atl/

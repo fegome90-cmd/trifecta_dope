@@ -223,9 +223,7 @@ def load_skills_manifest(segment_path: Path) -> list[dict[str, str]]:
         with open(manifest_path, "r", encoding="utf-8") as f:
             data: object = json.load(f)
     except (json.JSONDecodeError, OSError, ValueError) as e:
-        raise ValueError(
-            f"skills_manifest.json violates canonical manifest contract: {e}"
-        ) from e
+        raise ValueError(f"skills_manifest.json violates canonical manifest contract: {e}") from e
 
     if not isinstance(data, dict):
         raise ValueError(
@@ -243,8 +241,7 @@ def load_skills_manifest(segment_path: Path) -> list[dict[str, str]]:
     skills = data.get("skills", [])
     if not isinstance(skills, list):
         raise ValueError(
-            "skills_manifest.json violates canonical manifest contract: "
-            "'skills' must be a list"
+            "skills_manifest.json violates canonical manifest contract: 'skills' must be a list"
         )
 
     result: list[dict[str, str]] = []
@@ -272,6 +269,12 @@ def load_skills_manifest(segment_path: Path) -> list[dict[str, str]]:
         if not canonical_flag:
             continue
 
+        # Validate name is not null/None before str() conversion
+        if raw_skill["name"] is None:
+            raise ValueError(
+                "skills_manifest.json violates canonical manifest contract: "
+                f"entry {idx} 'name' must not be null"
+            )
         name = str(raw_skill["name"]).strip()
         relative_path = str(raw_skill["relative_path"]).strip()
         description = str(raw_skill["description"]).strip()
