@@ -1,4 +1,3 @@
-import os
 import shutil
 import tempfile
 from pathlib import Path
@@ -49,6 +48,8 @@ def test_acquire_singleton_lock_recovers_stale_lock_file(
     monkeypatch.setattr(manager, "is_running", lambda: False)
     # deadline=0.2: initial deadline calc, first loop entry, one completed sleep,
     # then the timeout boundary that ends the backoff loop before stale cleanup.
+    # This guards the reported race by proving we wait briefly before unlinking
+    # an ownerless stale path, instead of deleting it immediately on first bind failure.
     monotonic_values = iter([0.0, 0.0, 0.1, 0.2])
     sleep_calls: list[float] = []
     monkeypatch.setattr(
@@ -75,6 +76,8 @@ def test_acquire_singleton_lock_keeps_live_owner_lock_file(
     allowed_runtime: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    import os
+
     manager = DaemonManager(allowed_runtime)
     manager._socket_path.parent.mkdir(parents=True, exist_ok=True)
     lock_path = Path(str(manager._socket_path) + ".lock")

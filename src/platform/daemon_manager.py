@@ -173,9 +173,7 @@ class DaemonManager:
         self, bind_lock: Callable[[], object], timeout_seconds: float | None = None
     ) -> bool:
         """Poll for lock release up to timeout_seconds and acquire it if it becomes free."""
-        timeout = self.DAEMON_START_TIMEOUT if timeout_seconds is None else timeout_seconds
-        if timeout < 0:
-            timeout = 0
+        timeout = max(0, self.DAEMON_START_TIMEOUT if timeout_seconds is None else timeout_seconds)
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
             if self.is_running() or self._lock_owner_is_alive():
@@ -220,6 +218,7 @@ class DaemonManager:
                     lock_path.unlink()
                 except FileNotFoundError:
                     # Another process may clear the stale path after our last check.
+                    # Fall through to retry lock acquisition below.
                     pass
                 except OSError:
                     return False
