@@ -59,7 +59,7 @@ def parse_skill_from_text(text: str, chunk_id: str) -> SkillCard | None:
     """Parse skill metadata from chunk text."""
     # Extract name from chunk_id (skill:<name>:<fingerprint>)
     parts = chunk_id.split(":")
-    if len(parts) < 3 or parts[0] != "skill":
+    if len(parts) < 3 or parts[0] != "skill" or not parts[1]:
         return None
     name = parts[1]
 
@@ -192,6 +192,9 @@ def main() -> int:
     parser.add_argument("--limit", "-l", type=int, default=5, help="Max cards (default: 5)")
     parser.add_argument("--json", "-j", action="store_true", help="Output as JSON")
     args = parser.parse_args()
+    if args.limit < 1:
+        print("skill-hub-cards: --limit must be >= 1", file=sys.stderr)
+        return 2
 
     # Validate limit argument
     if args.limit < 1:
