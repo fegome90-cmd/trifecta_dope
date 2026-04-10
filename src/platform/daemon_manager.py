@@ -146,6 +146,7 @@ class DaemonManager:
         return self.status().running
 
     def _read_daemon_pid(self) -> Optional[int]:
+        """Read the daemon PID file, returning None when it is missing or invalid."""
         try:
             return int(self._pid_path.read_text(encoding="utf-8").strip())
         except (FileNotFoundError, OSError, ValueError):
@@ -153,6 +154,7 @@ class DaemonManager:
 
     @staticmethod
     def _is_pid_alive(pid: int) -> bool:
+        """Check process liveness with signal 0, treating permission errors as alive."""
         try:
             os.kill(pid, 0)
         except ProcessLookupError:
@@ -163,12 +165,14 @@ class DaemonManager:
             return True
 
     def _lock_owner_is_alive(self) -> bool:
+        """Return whether the PID recorded for the daemon still points to a live process."""
         pid = self._read_daemon_pid()
         return pid is not None and self._is_pid_alive(pid)
 
     def _wait_for_lock_release(
         self, bind_lock: Callable[[], object], timeout_seconds: float | None = None
     ) -> bool:
+        """Poll for lock release up to timeout_seconds and acquire it if it becomes free."""
         timeout = self.DAEMON_START_TIMEOUT if timeout_seconds is None else timeout_seconds
         if timeout < 0:
             timeout = 0

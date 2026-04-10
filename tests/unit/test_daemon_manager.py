@@ -47,6 +47,8 @@ def test_acquire_singleton_lock_recovers_stale_lock_file(
     stale_lock_path = Path(str(manager._socket_path) + ".lock")
     stale_lock_path.write_text("stale")
     monkeypatch.setattr(manager, "is_running", lambda: False)
+    # deadline=0.2: initial deadline calc, first loop entry, one completed sleep,
+    # then the timeout boundary that ends the backoff loop before stale cleanup.
     monotonic_values = iter([0.0, 0.0, 0.1, 0.2])
     sleep_calls: list[float] = []
     monkeypatch.setattr(
