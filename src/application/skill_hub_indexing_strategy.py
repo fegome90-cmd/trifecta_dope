@@ -60,7 +60,7 @@ class SkillHubIndexingStrategy:
         We check 'segment' first (canonical), then 'segment_id' (legacy compat).
         The returned value is normalized to a segment_id via the naming module.
         """
-        config_path = self.segment_path / "trifecta_config.json"
+        config_path = self.ctx_dir / "trifecta_config.json"
         if config_path.exists():
             try:
                 data = json.loads(config_path.read_text(encoding="utf-8"))
