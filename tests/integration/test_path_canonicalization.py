@@ -42,7 +42,7 @@ def test_duplicate_rejection():
         repo_dir.mkdir(parents=True, exist_ok=True)
 
         store = RepoStore(tmpdir_path / "test.db")
-        record1 = store.add("repo-001", repo_dir)
+        store.add("repo-001", repo_dir)
 
         with pytest.raises(ValueError, match="repo already registered at"):
             store.add("repo-002", repo_dir)

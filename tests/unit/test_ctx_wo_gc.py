@@ -318,7 +318,7 @@ class TestRunGc:
         json_path = tmp_path / "report.json"
 
         with patch("ctx_wo_gc.get_worktrees", return_value=[]):
-            report = run_gc(tmp_path, dry_run=True, force=False, json_path=str(json_path))
+            run_gc(tmp_path, dry_run=True, force=False, json_path=str(json_path))
 
         assert json_path.exists()
         data = json.loads(json_path.read_text())
