@@ -10,7 +10,6 @@ from scripts.metadata_inference import (
     is_lock_process_alive,
     check_lock_validity,
     InferenceResult,
-    infer_metadata_from_system,
     verify_metadata_completeness,
     validate_inferred_metadata,
 )
@@ -131,7 +130,6 @@ no proper format
 def test_is_lock_stale():
     """Test lock staleness detection."""
     import tempfile
-    import time
 
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.lock') as f:
         f.write("test")
@@ -266,7 +264,6 @@ def test_verify_metadata_completeness_incomplete():
 def test_validate_inferred_metadata_valid():
     """Test validation of valid inferred metadata."""
     import tempfile
-    from scripts.paths import get_lock_path
 
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir) / "repo"

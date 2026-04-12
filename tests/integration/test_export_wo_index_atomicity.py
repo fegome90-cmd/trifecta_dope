@@ -39,7 +39,6 @@ def test_export_wo_index_atomicity(tmp_path: Path, monkeypatch: pytest.MonkeyPat
     assert current_content == initial_content, "Original index was corrupted or overwritten"
 
     # 2. No .tmp files should be left over alongside the destination file
-    tmp_files = list(ctx_dir.glob("wo_worktrees.json.tmp*"))
     # In mkstemp, it uses a random suffix but mkstemp is handled by context manager and might be left behind if not cleaned up.
     # Actually wait, our export_wo_index.py was just using mkstemp, so it doesn't leave .tmp* it leaves random files,
     # but the invariant is that the main file is safe.

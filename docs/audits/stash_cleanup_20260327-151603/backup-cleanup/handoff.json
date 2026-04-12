@@ -1,0 +1,195 @@
+{
+  "schema": "backup-cleanup-v1",
+  "results": {
+    "backup-branch": {
+      "agent": "backup-branch",
+      "branch": "backup/main-pre-restore-20260327",
+      "status": "pass",
+      "verdict": "REVIEW",
+      "info": {
+        "exists": true,
+        "commit": "828621313fe45c6c12fe065908cfd3e83b3ee85e",
+        "reachable_from": [
+          "codex/docs-skillhub-context-refresh-20260327",
+          "remotes/origin/codex/docs-skillhub-context-refresh-20260327"
+        ],
+        "reachable_tags": [
+          "safety-pre-restore-20260327"
+        ],
+        "main_commit": "68c6a24ae048ebdd538fd32d5b8b07914233141f",
+        "backup_ahead_of_main": [
+          "82862131 feat(skill-hub): add cards helper and discovery fix reports",
+          "41bd4f7e docs(trifecta): refresh context files and readme"
+        ],
+        "main_ahead_of_backup": [
+          "68c6a24a chore: normalize git state - track daemon docs, add test, ignore runtime artifacts"
+        ],
+        "files_different": 40,
+        "diff_files_sample": [
+          ".gitignore",
+          "README.md",
+          "_ctx/agent_trifecta_dope.md",
+          "_ctx/context_pack.json",
+          "_ctx/prime_trifecta_dope.md",
+          "_ctx/session_trifecta_dope.md",
+          "docs/daemon-lsp-scope/batch_closure_report.md",
+          "docs/daemon-lsp-scope/cloop_daemon_lsp_scope.md",
+          "docs/daemon-lsp-scope/code_review_implementation.md",
+          "docs/daemon-lsp-scope/code_review_plan_v2.md"
+        ]
+      },
+      "warnings": [
+        "Backup branch has 2 commits NOT in main: ['82862131 feat(skill-hub): add cards helper and discovery fix reports', '41bd4f7e docs(trifecta): refresh context files and readme']"
+      ],
+      "errors": [],
+      "duration_ms": 85
+    },
+    "safety-tag": {
+      "agent": "safety-tag",
+      "tag": "safety-pre-restore-20260327",
+      "status": "pass",
+      "verdict": "SAFE_DELETE",
+      "info": {
+        "exists": true,
+        "commit": "828621313fe45c6c12fe065908cfd3e83b3ee85e",
+        "same_as_backup_branch": true,
+        "other_tags_with_commit": [],
+        "remote_reachability": [
+          "origin/codex/docs-skillhub-context-refresh-20260327"
+        ]
+      },
+      "warnings": [],
+      "errors": [],
+      "duration_ms": 48
+    },
+    "tmp-files": {
+      "agent": "tmp-files",
+      "status": "pass",
+      "verdict": "SAFE_DELETE",
+      "info": {
+        "items": [
+          {
+            "path": "/tmp/trifecta_category_a_20260327.patch",
+            "type": "file",
+            "size": 18561,
+            "exists": true
+          },
+          {
+            "path": "/tmp/trifecta_ctx_sync_lsp_audit.log",
+            "type": "file",
+            "size": 437,
+            "exists": true
+          },
+          {
+            "path": "/tmp/trifecta_daemon_smoke_real.json",
+            "type": "file",
+            "size": 972,
+            "exists": true
+          },
+          {
+            "path": "/tmp/trifecta_dirty_state_20260327.txt",
+            "type": "file",
+            "size": 1104,
+            "exists": true
+          },
+          {
+            "path": "/tmp/trifecta_pr_body_33561.md",
+            "type": "file",
+            "size": 768,
+            "exists": true
+          },
+          {
+            "path": "/tmp/trifecta_pre_pr_status_33561.txt",
+            "type": "file",
+            "size": 1104,
+            "exists": true
+          },
+          {
+            "path": "/tmp/trifecta_reconcile_fixture_20260327.patch",
+            "type": "file",
+            "size": 217729636,
+            "exists": true
+          },
+          {
+            "path": "/tmp/trifecta_session_append_pre.log",
+            "type": "file",
+            "size": 139,
+            "exists": true
+          },
+          {
+            "path": "/tmp/trifecta_stash_list_20260327.txt",
+            "type": "file",
+            "size": 685,
+            "exists": true
+          },
+          {
+            "path": "/tmp/trifecta_working_changes_20260327.patch",
+            "type": "file",
+            "size": 2988902,
+            "exists": true
+          },
+          {
+            "path": "/tmp/trifecta_worktree_list_20260327.txt",
+            "type": "file",
+            "size": 3570,
+            "exists": true
+          },
+          {
+            "path": "/tmp/trifecta_cat_a_backup_20260327",
+            "type": "dir",
+            "size_str": "5.6M",
+            "files": 13,
+            "exists": true
+          },
+          {
+            "path": "/tmp/trifecta_untracked_backup_20260327",
+            "type": "dir",
+            "size_str": "300K",
+            "files": 33,
+            "exists": true
+          }
+        ],
+        "total_items": 13,
+        "existing_items": 13,
+        "total_file_size_bytes": 220745878
+      },
+      "warnings": [
+        "reconcile fixture is 208MB — biggest cleanup win"
+      ],
+      "errors": [],
+      "duration_ms": 12
+    },
+    "benchmark-salvage": {
+      "agent": "benchmark-salvage",
+      "status": "pass",
+      "verdict": "KEEP",
+      "info": {
+        "exists": true,
+        "files": [
+          "run_hn_benchmark.py",
+          "hn_runs.csv",
+          "hn_methodology.md",
+          "run_hn_benchmark.sh",
+          "hn_results.md"
+        ],
+        "file_count": 5,
+        "total_size": 98205,
+        "csv_rows": 51,
+        "csv_cols": 38,
+        "csv_has_gold_data": true
+      },
+      "warnings": [],
+      "errors": [],
+      "duration_ms": 1
+    }
+  },
+  "deletable": [
+    "backup-branch",
+    "safety-tag",
+    "tmp-files"
+  ],
+  "keep": [
+    "benchmark-salvage"
+  ],
+  "blocked": []
+}

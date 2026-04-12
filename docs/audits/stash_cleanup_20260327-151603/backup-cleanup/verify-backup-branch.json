@@ -1,0 +1,43 @@
+{
+  "agent": "backup-branch",
+  "branch": "backup/main-pre-restore-20260327",
+  "status": "pass",
+  "verdict": "REVIEW",
+  "info": {
+    "exists": true,
+    "commit": "828621313fe45c6c12fe065908cfd3e83b3ee85e",
+    "reachable_from": [
+      "codex/docs-skillhub-context-refresh-20260327",
+      "remotes/origin/codex/docs-skillhub-context-refresh-20260327"
+    ],
+    "reachable_tags": [
+      "safety-pre-restore-20260327"
+    ],
+    "main_commit": "68c6a24ae048ebdd538fd32d5b8b07914233141f",
+    "backup_ahead_of_main": [
+      "82862131 feat(skill-hub): add cards helper and discovery fix reports",
+      "41bd4f7e docs(trifecta): refresh context files and readme"
+    ],
+    "main_ahead_of_backup": [
+      "68c6a24a chore: normalize git state - track daemon docs, add test, ignore runtime artifacts"
+    ],
+    "files_different": 40,
+    "diff_files_sample": [
+      ".gitignore",
+      "README.md",
+      "_ctx/agent_trifecta_dope.md",
+      "_ctx/context_pack.json",
+      "_ctx/prime_trifecta_dope.md",
+      "_ctx/session_trifecta_dope.md",
+      "docs/daemon-lsp-scope/batch_closure_report.md",
+      "docs/daemon-lsp-scope/cloop_daemon_lsp_scope.md",
+      "docs/daemon-lsp-scope/code_review_implementation.md",
+      "docs/daemon-lsp-scope/code_review_plan_v2.md"
+    ]
+  },
+  "warnings": [
+    "Backup branch has 2 commits NOT in main: ['82862131 feat(skill-hub): add cards helper and discovery fix reports', '41bd4f7e docs(trifecta): refresh context files and readme']"
+  ],
+  "errors": [],
+  "duration_ms": 85
+}

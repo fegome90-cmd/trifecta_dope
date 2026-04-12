@@ -40,19 +40,19 @@ class SegmentRef:
 
     @property
     def root_abs(self) -> Path:
-        return self._root_abs
+        return self._root_abs  # type: ignore[attr-defined,no-any-return]
 
     @property
     def slug(self) -> str:
-        return self._slug
+        return self._slug  # type: ignore[attr-defined,no-any-return]
 
     @property
     def fingerprint(self) -> str:
-        return self._fingerprint
+        return self._fingerprint  # type: ignore[attr-defined,no-any-return]
 
     @property
     def id(self) -> str:
-        return self._id
+        return self._id  # type: ignore[attr-defined,no-any-return]
 
     def __repr__(self) -> str:
         return f"SegmentRef(slug={self.slug}, fingerprint={self.fingerprint}, root={self.root_abs})"

@@ -21,8 +21,8 @@ def test_contract_relaxed_ready_immediate():
     client = LSPClient(Path(".").resolve())
 
     # Mock the RPC read sequence for a minimal successful handshake:
-    # 1. Response to 'initialize' request
-    init_resp = {"result": {"capabilities": {}}}
+    # 1. Response to 'initialize' request (must include id=1 to match)
+    init_resp = {"id": 1, "result": {"capabilities": {}}}
     # 2. Some other notification (optional, but realistic)
     other_notif = {"method": "telemetry/event", "params": {}}
     # 3. None to break the read loop

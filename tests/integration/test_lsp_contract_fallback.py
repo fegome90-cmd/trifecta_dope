@@ -110,6 +110,7 @@ class TestHoverExplicitFallback:
         - response_state: partial or degraded
         - NO silent "status: ok" without capability_state
         """
+        import os
         # Create minimal segment
         (tmp_path / "skill.md").write_text("# Test")
         ctx_dir = tmp_path / "_ctx"
@@ -121,6 +122,10 @@ class TestHoverExplicitFallback:
         # Create test file
         test_file = tmp_path / "test.py"
         test_file.write_text("def foo(): pass")
+
+        # Use empty PATH to simulate missing pyright/pylsp
+        custom_env = os.environ.copy()
+        custom_env["PATH"] = ""
 
         result = subprocess.run(
             [
@@ -140,6 +145,7 @@ class TestHoverExplicitFallback:
             capture_output=True,
             text=True,
             cwd=str(tmp_path),
+            env=custom_env,
         )
 
         # Should succeed (exit 0) but with explicit fallback

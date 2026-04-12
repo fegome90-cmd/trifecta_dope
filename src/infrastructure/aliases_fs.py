@@ -208,8 +208,11 @@ def load_skills_manifest(segment_path: Path) -> list[dict[str, str]]:
         segment_path: Path to the segment root.
 
     Returns:
-        List of skill dicts with name, source_path, description.
-        Empty list if manifest doesn't exist or is invalid.
+        List of canonical skill dicts with name, source_path, description.
+        Empty list if manifest doesn't exist.
+
+    Raises:
+        ValueError: If the on-disk manifest exists but is not canonical schema v2.
     """
     manifest_path = segment_path / "_ctx" / "skills_manifest.json"
 
@@ -219,30 +222,100 @@ def load_skills_manifest(segment_path: Path) -> list[dict[str, str]]:
     try:
         with open(manifest_path, "r", encoding="utf-8") as f:
             data: object = json.load(f)
-
-        if not isinstance(data, dict):
-            return []
-
-        skills = data.get("skills", [])
-        if not isinstance(skills, list):
-            return []
-
-        # Validate each skill has required fields
-        result: list[dict[str, str]] = []
-        for skill in skills:
-            if isinstance(skill, dict):
-                name = skill.get("name", "")
-                source_path = skill.get("source_path", "")
-                description = skill.get("description", "")
-                if name:
-                    result.append({
-                        "name": name,
-                        "source_path": source_path,
-                        "description": description,
-                    })
-
-        return result
-
     except (json.JSONDecodeError, OSError, ValueError) as e:
-        logger.debug(f"Failed to load skills manifest from {manifest_path}: {e}")
-        return []
+        raise ValueError(f"skills_manifest.json violates canonical manifest contract: {e}") from e
+
+    if not isinstance(data, dict):
+        raise ValueError(
+            "skills_manifest.json violates canonical manifest contract: "
+            "manifest must be a JSON object"
+        )
+
+    schema_version = data.get("schema_version")
+    if schema_version != 2:
+        raise ValueError(
+            "skills_manifest.json violates canonical manifest contract: "
+            "schema_version=2 is required for alias consumers"
+        )
+
+    skills = data.get("skills", [])
+    if not isinstance(skills, list):
+        raise ValueError(
+            "skills_manifest.json violates canonical manifest contract: 'skills' must be a list"
+        )
+
+    result: list[dict[str, str]] = []
+    required_fields = ("id", "name", "relative_path", "description", "source", "canonical")
+    for idx, raw_skill in enumerate(skills):
+        if not isinstance(raw_skill, dict):
+            raise ValueError(
+                "skills_manifest.json violates canonical manifest contract: "
+                f"entry {idx} must be an object"
+            )
+
+        missing = [field for field in required_fields if field not in raw_skill]
+        if missing:
+            raise ValueError(
+                "skills_manifest.json violates canonical manifest contract: "
+                f"entry {idx} missing required fields: {', '.join(missing)}"
+            )
+
+        canonical_flag = raw_skill["canonical"]
+        if not isinstance(canonical_flag, bool):
+            raise ValueError(
+                "skills_manifest.json violates canonical manifest contract: "
+                f"entry {idx} 'canonical' must be boolean"
+            )
+        if not canonical_flag:
+            continue
+
+        # Validate name is not null/None before str() conversion
+        if raw_skill["name"] is None:
+            raise ValueError(
+                "skills_manifest.json violates canonical manifest contract: "
+                f"entry {idx} 'name' must not be null"
+            )
+        name = str(raw_skill["name"]).strip()
+        if raw_skill.get("relative_path") is None:
+            raise ValueError(
+                "skills_manifest.json violates canonical manifest contract: "
+                f"entry {idx} 'relative_path' must not be null"
+            )
+        relative_path = str(raw_skill["relative_path"]).strip()
+        description = str(raw_skill.get("description") or "").strip()
+        if not name or not relative_path:
+            raise ValueError(
+                "skills_manifest.json violates canonical manifest contract: "
+                f"entry {idx} requires non-empty name and relative_path"
+            )
+        # Reject unsafe relative_path (absolute or traversal)
+        rel = Path(relative_path)
+        if rel.is_absolute() or ".." in rel.parts:
+            raise ValueError(
+                "skills_manifest.json violates canonical manifest contract: "
+                f"entry {idx} relative_path must not be absolute or contain '..'"
+            )
+
+        # Validate path for traversal attempts
+        path_check = Path(relative_path)
+        if path_check.is_absolute():
+            raise ValueError(
+                "skills_manifest.json violates canonical manifest contract: "
+                f"entry {idx} 'relative_path' must not be absolute: {relative_path}"
+            )
+        if any(part == ".." for part in path_check.parts):
+            raise ValueError(
+                "skills_manifest.json violates canonical manifest contract: "
+                f"entry {idx} 'relative_path' must not contain parent traversal (..): {relative_path}"
+            )
+
+        result.append(
+            {
+                "name": name,
+                # Compatibility key expected by KeywordExtractor.
+                "source_path": relative_path,
+                "description": description,
+            }
+        )
+
+    return result

@@ -13,7 +13,6 @@ Ensures that when wo_verify.sh fails a WO:
 import subprocess
 from pathlib import Path
 import yaml
-import pytest
 
 
 # Extract transition_to_failed function from wo_verify.sh as a standalone script

@@ -13,6 +13,7 @@ from src.infrastructure.aliases_fs import (
     AliasMerger,
     GeneratedAliasWriter,
     load_aliases_yaml,
+    load_skills_manifest,
     merge_aliases,
     save_generated_aliases,
 )
@@ -67,9 +68,7 @@ class TestLoadAliasesYaml:
     def test_load_normalizes_keys_to_lowercase(self, tmp_path: Path) -> None:
         """Keys should be normalized to lowercase."""
         aliases_file = tmp_path / "aliases.yaml"
-        aliases_file.write_text(
-            yaml.dump({"schema_version": 1, "aliases": {"TEST": ["skill1"]}})
-        )
+        aliases_file.write_text(yaml.dump({"schema_version": 1, "aliases": {"TEST": ["skill1"]}}))
 
         result = load_aliases_yaml(aliases_file)
 
@@ -159,9 +158,7 @@ class TestAliasMerger:
 
         assert manual == {"manual": ["skill1"]}
 
-    def test_load_generated_aliases(
-        self, merger: AliasMerger, tmp_path: Path
-    ) -> None:
+    def test_load_generated_aliases(self, merger: AliasMerger, tmp_path: Path) -> None:
         """Should load generated aliases from _ctx/aliases.generated.yaml."""
         ctx_dir = tmp_path / "_ctx"
         ctx_dir.mkdir()
@@ -173,9 +170,7 @@ class TestAliasMerger:
 
         assert generated == {"generated": ["skill2"]}
 
-    def test_merge_returns_combined(
-        self, merger: AliasMerger, tmp_path: Path
-    ) -> None:
+    def test_merge_returns_combined(self, merger: AliasMerger, tmp_path: Path) -> None:
         """Merge should return combined aliases with manual precedence."""
         ctx_dir = tmp_path / "_ctx"
         ctx_dir.mkdir()
@@ -262,9 +257,7 @@ class TestGeneratedAliasWriter:
 
         assert output_path.exists()
 
-    def test_write_returns_output_path(
-        self, writer: GeneratedAliasWriter, tmp_path: Path
-    ) -> None:
+    def test_write_returns_output_path(self, writer: GeneratedAliasWriter, tmp_path: Path) -> None:
         """Should return the output path."""
         aliases = {"test": ["skill1"]}
 
@@ -283,9 +276,7 @@ class TestGeneratedAliasWriter:
         assert result == custom_path
         assert custom_path.exists()
 
-    def test_dry_run_does_not_write(
-        self, writer: GeneratedAliasWriter, tmp_path: Path
-    ) -> None:
+    def test_dry_run_does_not_write(self, writer: GeneratedAliasWriter, tmp_path: Path) -> None:
         """Dry run should not write file."""
         writer_dry = GeneratedAliasWriter(segment_path=tmp_path, dry_run=True)
         aliases = {"test": ["skill1"]}
@@ -304,3 +295,118 @@ class TestGeneratedAliasWriter:
         output_path = writer_dry.write(aliases)
 
         assert output_path == tmp_path / "_ctx" / "aliases.generated.yaml"
+
+
+class TestLoadSkillsManifestNullName:
+    """P0 fix: 'name': null in manifest must raise ValueError, not produce 'None' string."""
+
+    def test_null_name_raises_value_error(self, tmp_path: Path) -> None:
+        """Manifest entry with 'name': null should raise ValueError."""
+        ctx_dir = tmp_path / "_ctx"
+        ctx_dir.mkdir()
+        manifest = {
+            "schema_version": 2,
+            "skills": [
+                {
+                    "id": "skill-1",
+                    "name": None,
+                    "relative_path": "skills/test/SKILL.md",
+                    "description": "Test skill",
+                    "source": "local",
+                    "canonical": True,
+                }
+            ],
+        }
+        (ctx_dir / "skills_manifest.json").write_text(__import__("json").dumps(manifest))
+
+        with pytest.raises(ValueError, match="name.*must not be null"):
+            load_skills_manifest(tmp_path)
+
+    def test_null_relative_path_raises_value_error(self, tmp_path: Path) -> None:
+        """Manifest entry with 'relative_path': null should raise ValueError."""
+        ctx_dir = tmp_path / "_ctx"
+        ctx_dir.mkdir()
+        manifest = {
+            "schema_version": 2,
+            "skills": [
+                {
+                    "id": "skill-1",
+                    "name": "valid-name",
+                    "relative_path": None,
+                    "description": "Test skill",
+                    "source": "local",
+                    "canonical": True,
+                }
+            ],
+        }
+        (ctx_dir / "skills_manifest.json").write_text(__import__("json").dumps(manifest))
+
+        with pytest.raises(ValueError, match="relative_path.*must not be null"):
+            load_skills_manifest(tmp_path)
+
+    def test_null_description_defaults_to_empty(self, tmp_path: Path) -> None:
+        """Manifest entry with 'description': null should default to empty string."""
+        ctx_dir = tmp_path / "_ctx"
+        ctx_dir.mkdir()
+        manifest = {
+            "schema_version": 2,
+            "skills": [
+                {
+                    "id": "skill-1",
+                    "name": "valid-name",
+                    "relative_path": "skills/test/SKILL.md",
+                    "description": None,
+                    "source": "local",
+                    "canonical": True,
+                }
+            ],
+        }
+        (ctx_dir / "skills_manifest.json").write_text(__import__("json").dumps(manifest))
+
+        result = load_skills_manifest(tmp_path)
+        assert len(result) == 1
+        assert result[0]["description"] == ""
+
+    def test_absolute_relative_path_raises_value_error(self, tmp_path: Path) -> None:
+        """Manifest entry with absolute relative_path should raise ValueError."""
+        ctx_dir = tmp_path / "_ctx"
+        ctx_dir.mkdir()
+        manifest = {
+            "schema_version": 2,
+            "skills": [
+                {
+                    "id": "skill-1",
+                    "name": "valid-name",
+                    "relative_path": "/etc/passwd",
+                    "description": "Test skill",
+                    "source": "local",
+                    "canonical": True,
+                }
+            ],
+        }
+        (ctx_dir / "skills_manifest.json").write_text(__import__("json").dumps(manifest))
+
+        with pytest.raises(ValueError, match="absolute or contain"):
+            load_skills_manifest(tmp_path)
+
+    def test_traversal_relative_path_raises_value_error(self, tmp_path: Path) -> None:
+        """Manifest entry with '..' in relative_path should raise ValueError."""
+        ctx_dir = tmp_path / "_ctx"
+        ctx_dir.mkdir()
+        manifest = {
+            "schema_version": 2,
+            "skills": [
+                {
+                    "id": "skill-1",
+                    "name": "valid-name",
+                    "relative_path": "../../etc/passwd",
+                    "description": "Test skill",
+                    "source": "local",
+                    "canonical": True,
+                }
+            ],
+        }
+        (ctx_dir / "skills_manifest.json").write_text(__import__("json").dumps(manifest))
+
+        with pytest.raises(ValueError, match="absolute or contain"):
+            load_skills_manifest(tmp_path)

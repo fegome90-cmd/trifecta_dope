@@ -1,14 +1,17 @@
+import hashlib
 import json
+import logging
 import re
 import subprocess
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 import yaml
 
 from src.application.context_service import ContextService
+from src.application.skill_hub_indexing_strategy import SkillHubIndexingStrategy
 from src.domain.constants import MAX_SKILL_LINES
 from src.domain.context_models import (
     ContextChunk,
@@ -18,9 +21,16 @@ from src.domain.context_models import (
 )
 from src.domain.models import TrifectaConfig, TrifectaPack, ValidationResult
 from src.domain.result import Err, Ok
+from src.domain.segment_indexing_policy import SegmentIndexingPolicy
+from src.domain.skill_manifest import SkillManifest
 from src.infrastructure.file_system import FileSystemAdapter
 from src.infrastructure.file_system_utils import AtomicWriter, file_lock
 from src.infrastructure.templates import TemplateRenderer
+
+logger = logging.getLogger(__name__)
+
+SKILL_HUB_PROMOTION_RECEIPT = "skill_hub_promotion_receipt.json"
+SKILL_HUB_LAST_VALID_DIR = ".skill_hub_last_valid"
 
 
 class CreateTrifectaUseCase:
@@ -286,14 +296,264 @@ class BuildContextPackUseCase:
         p = root / path_str
         return p if p.exists() and p.is_file() else None
 
+    def _save_pack(self, target_path: Path, pack: ContextPack) -> None:
+        """Save context pack atomically with lock.
+
+        Args:
+            target_path: Path to segment root directory
+            pack: ContextPack to save
+        """
+        ctx_dir = target_path / "_ctx"
+        pack_path = ctx_dir / "context_pack.json"
+        lock_path = ctx_dir / ".autopilot.lock"
+        with file_lock(lock_path):
+            AtomicWriter.write(pack_path, pack.model_dump_json(indent=2))
+
+    def _skill_hub_paths(self, target_path: Path) -> tuple[Path, Path, Path]:
+        ctx_dir = target_path / "_ctx"
+        manifest_path = ctx_dir / "skills_manifest.json"
+        pack_path = ctx_dir / "context_pack.json"
+        receipt_path = ctx_dir / SKILL_HUB_PROMOTION_RECEIPT
+        return manifest_path, pack_path, receipt_path
+
+    def _serialize_canonical_manifest(self, manifest: SkillManifest) -> str:
+        payload = {
+            "schema_version": manifest.schema_version,
+            "skills": [
+                {
+                    "id": skill.id,
+                    "name": skill.name,
+                    "relative_path": skill.relative_path,
+                    "description": skill.description,
+                    "source": skill.source,
+                    "canonical": skill.canonical,
+                    "tags": list(skill.tags),
+                }
+                for skill in manifest.skills
+            ],
+        }
+        return json.dumps(payload, indent=2, ensure_ascii=False) + "\n"
+
+    @staticmethod
+    def _normalize_persisted_payload(payload: str) -> str:
+        return payload if payload.endswith("\n") else payload + "\n"
+
+    def _capture_promoted_snapshot(self, paths: tuple[Path, Path, Path]) -> dict[str, str | None]:
+        manifest_path, pack_path, receipt_path = paths
+        snapshot: dict[str, str | None] = {}
+        for key, path in (
+            ("manifest", manifest_path),
+            ("pack", pack_path),
+            ("receipt", receipt_path),
+        ):
+            snapshot[key] = path.read_text(encoding="utf-8") if path.exists() else None
+        return snapshot
+
+    def _restore_promoted_snapshot(
+        self,
+        paths: tuple[Path, Path, Path],
+        snapshot: dict[str, str | None],
+    ) -> None:
+        manifest_path, pack_path, receipt_path = paths
+        for key, path in (
+            ("manifest", manifest_path),
+            ("pack", pack_path),
+            ("receipt", receipt_path),
+        ):
+            payload = snapshot.get(key)
+            if payload is None:
+                if path.exists():
+                    path.unlink()
+                continue
+            AtomicWriter.write(path, payload)
+
+    def _build_skill_hub_receipt(
+        self,
+        *,
+        segment_id: str,
+        declared_policy: str,
+        manifest_payload: str,
+        pack_payload: str,
+    ) -> str:
+        manifest_payload = self._normalize_persisted_payload(manifest_payload)
+        pack_payload = self._normalize_persisted_payload(pack_payload)
+        manifest_fingerprint = hashlib.sha256(
+            manifest_payload.encode("utf-8")
+        ).hexdigest()
+        pack_fingerprint = hashlib.sha256(pack_payload.encode("utf-8")).hexdigest()
+        receipt = {
+            "schema_version": 1,
+            "promoted_at": datetime.now(timezone.utc).isoformat(),
+            "segment_id": segment_id,
+            "policy": declared_policy,
+            "manifest_fingerprint": manifest_fingerprint,
+            "pack_fingerprint": pack_fingerprint,
+            "artifacts": {
+                "manifest": "_ctx/skills_manifest.json",
+                "pack": "_ctx/context_pack.json",
+                "receipt": f"_ctx/{SKILL_HUB_PROMOTION_RECEIPT}",
+            },
+        }
+        return json.dumps(receipt, indent=2, ensure_ascii=False) + "\n"
+
+    def _last_valid_promoted_paths(self, target_path: Path) -> tuple[Path, Path, Path]:
+        ctx_dir = target_path / "_ctx" / SKILL_HUB_LAST_VALID_DIR
+        return (
+            ctx_dir / "skills_manifest.json",
+            ctx_dir / "context_pack.json",
+            ctx_dir / SKILL_HUB_PROMOTION_RECEIPT,
+        )
+
+    def _seal_last_valid_promoted_set(self, target_path: Path, paths: tuple[Path, Path, Path]) -> None:
+        manifest_path, pack_path, receipt_path = paths
+        backup_manifest_path, backup_pack_path, backup_receipt_path = (
+            self._last_valid_promoted_paths(target_path)
+        )
+        AtomicWriter.write(
+            backup_manifest_path,
+            manifest_path.read_text(encoding="utf-8"),
+        )
+        AtomicWriter.write(
+            backup_pack_path,
+            pack_path.read_text(encoding="utf-8"),
+        )
+        AtomicWriter.write(
+            backup_receipt_path,
+            receipt_path.read_text(encoding="utf-8"),
+        )
+
+    def _restore_last_valid_promoted_set(
+        self,
+        target_path: Path,
+        paths: tuple[Path, Path, Path],
+        snapshot: dict[str, str | None],
+    ) -> None:
+        backup_manifest_path, backup_pack_path, backup_receipt_path = (
+            self._last_valid_promoted_paths(target_path)
+        )
+        backups_exist = (
+            backup_manifest_path.exists()
+            and backup_pack_path.exists()
+            and backup_receipt_path.exists()
+        )
+        if backups_exist:
+            AtomicWriter.write(
+                paths[0],
+                backup_manifest_path.read_text(encoding="utf-8"),
+            )
+            AtomicWriter.write(
+                paths[1],
+                backup_pack_path.read_text(encoding="utf-8"),
+            )
+            AtomicWriter.write(
+                paths[2],
+                backup_receipt_path.read_text(encoding="utf-8"),
+            )
+            return
+        self._restore_promoted_snapshot(paths, snapshot)
+
+    def _publish_skill_hub_promoted_set(
+        self,
+        target_path: Path,
+        *,
+        manifest_payload: str,
+        pack_payload: str,
+        receipt_payload: str,
+    ) -> "Ok[None] | Err[list[str]]":
+        paths = self._skill_hub_paths(target_path)
+        ctx_dir = target_path / "_ctx"
+        lock_path = ctx_dir / ".autopilot.lock"
+        manifest_payload = self._normalize_persisted_payload(manifest_payload)
+        pack_payload = self._normalize_persisted_payload(pack_payload)
+        receipt_payload = self._normalize_persisted_payload(receipt_payload)
+
+        with file_lock(lock_path):
+            snapshot = self._capture_promoted_snapshot(paths)
+            manifest_path, pack_path, receipt_path = paths
+            try:
+                AtomicWriter.write(manifest_path, manifest_payload)
+                AtomicWriter.write(pack_path, pack_payload)
+                AtomicWriter.write(receipt_path, receipt_payload)
+                self._seal_last_valid_promoted_set(target_path, paths)
+            except Exception as exc:
+                try:
+                    self._restore_last_valid_promoted_set(target_path, paths, snapshot)
+                except Exception as restore_exc:
+                    return Err(
+                        [
+                            f"[Promotion] Atomic publication failed: {exc}",
+                            f"[Promotion] Rollback failed: {restore_exc}",
+                        ]
+                    )
+                return Err([f"[Promotion] Atomic publication failed: {exc}"])
+        return Ok(None)
+
     def execute(self, target_path: Path) -> "Ok[ContextPack] | Err[list[str]]":
+        """Scan a Trifecta segment and build a context_pack.json."""
         if self.telemetry:
             self.telemetry.incr("ctx_build_count")
-        """Scan a Trifecta segment and build a context_pack.json."""
-        from src.domain.result import Err, Ok
         from src.infrastructure.segment_state import resolve_segment_state
 
-        # 1. Derive segment_id from the canonical tracked _ctx triplet.
+        # 0. Detect indexing policy and delegate if SKILL_HUB
+        policy = SegmentIndexingPolicy.detect(target_path)
+        if policy == SegmentIndexingPolicy.SKILL_HUB:
+            logger.info(f"Detected SKILL_HUB policy for {target_path}, delegating to strategy")
+            manifest_path = target_path / "_ctx" / "skills_manifest.json"
+            manifest_result = SkillManifest.admit(
+                manifest_path,
+                target_path,
+                declared_policy=policy.value,
+            )
+            if isinstance(manifest_result, Err):
+                return manifest_result
+            manifest, _ = manifest_result.value
+
+            # Derive segment_id from canonical state when possible, fallback conservatively.
+            try:
+                state = resolve_segment_state(str(target_path), self.file_system)
+                segment_id = state.segment_id
+            except ValueError:
+                try:
+                    config = self.file_system.load_trifecta_config(target_path)
+                    segment_id = config.segment_id if config else target_path.name
+                except (ValueError, OSError):
+                    segment_id = target_path.name
+
+            strategy = SkillHubIndexingStrategy(target_path, segment_id=segment_id)
+            result = strategy.build_from_manifest(manifest)
+            if isinstance(result, Err):
+                return result
+            pack = result.value
+
+            pack_admission = SkillManifest.validate_pack_admission(
+                manifest,
+                declared_policy=policy.value,
+                pack_chunk_ids=[chunk.id for chunk in pack.chunks],
+                pack_docs=[chunk.doc for chunk in pack.chunks],
+                pack_source_paths=[chunk.source_path for chunk in pack.chunks],
+            )
+            if isinstance(pack_admission, Err):
+                return pack_admission
+
+            manifest_payload = self._serialize_canonical_manifest(manifest)
+            pack_payload = pack.model_dump_json(indent=2)
+            receipt_payload = self._build_skill_hub_receipt(
+                segment_id=segment_id,
+                declared_policy=policy.value,
+                manifest_payload=manifest_payload,
+                pack_payload=pack_payload,
+            )
+            promoted = self._publish_skill_hub_promoted_set(
+                target_path,
+                manifest_payload=manifest_payload,
+                pack_payload=pack_payload,
+                receipt_payload=receipt_payload,
+            )
+            if isinstance(promoted, Err):
+                return promoted
+            return Ok(pack)
+
+        # 1. GENERIC policy (default): derive segment_id from canonical tracked _ctx triplet.
         try:
             state = resolve_segment_state(str(target_path), self.file_system)
             segment_id = state.segment_id
@@ -321,16 +581,8 @@ class BuildContextPackUseCase:
 
         prime_path = expected_prime
 
-        # Try to parse REPO_ROOT from prime header
-        repo_root = None
+        # Read prime content for reference extraction
         prime_content = prime_path.read_text()
-
-        rr_match = re.search(r">\s*\*\*REPO_ROOT\*\*:\s*`?([^`\n]+)`?", prime_content)
-        if rr_match:
-            try:
-                repo_root = Path(rr_match.group(1).strip())
-            except Exception:
-                pass
 
         # 4. Identify source files with STRICT VALIDATION
         sources = {
@@ -530,11 +782,7 @@ class BuildContextPackUseCase:
         )
 
         # 4. Save to disk atomically with lock
-        pack_path = ctx_dir / "context_pack.json"
-        lock_path = ctx_dir / ".autopilot.lock"
-
-        with file_lock(lock_path):
-            AtomicWriter.write(pack_path, pack.model_dump_json(indent=2))
+        self._save_pack(target_path, pack)
 
         return Ok(pack)
 

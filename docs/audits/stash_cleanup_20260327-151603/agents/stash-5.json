@@ -1,0 +1,17 @@
+{
+  "stash_index": 5,
+  "stash_ref": "stash@{5}",
+  "stash_line": "stash@{5}: WIP on fix/wo-0055-code-review-issues: 034a376 fix(wo): canonicalize transition_to_failed cleanup + status (WO-0059)",
+  "branch": "fix/wo-0055-code-review-issues",
+  "message": "WIP on fix/wo-0055-code-review-issues: 034a376 fix(wo): canonicalize transition_to_failed cleanup + status (WO-0059)",
+  "file_count": 105,
+  "file_list": ".gemini/skills/brainstorming/SKILL.md,.gemini/skills/claude-md-optimizer/README.md,.gemini/skills/claude-md-optimizer/SKILL.md,.gemini/skills/claude-md-optimizer/resources/anti-patterns.md,.gemini/skills/claude-md-optimizer/resources/best-practices.md,.gemini/skills/claude-md-optimizer/resources/templates/python-fp.md,.gemini/skills/claude-md-optimizer/resources/templates/typescript-clean.md,.gemini/skills/dispatching-parallel-agents/SKILL.md,.gemini/skills/documentation/IMPLEMENTATION_PLAN.md,.gemini/skills/documentation/SKILL.md,.gemini/skills/documentation/resources/CLAUDE_md_template.md,.gemini/skills/documentation/resources/README.md,.gemini/skills/documentation/resources/agents_md_template.md,.gemini/skills/documentation/resources/checklist.md,.gemini/skills/documentation/resources/examples/CLAUDE_md_good_vs_bad.md,.gemini/skills/documentation/resources/guides/ADVANCED.md,.gemini/skills/documentation/resources/guides/QUICKSTART.md,.gemini/skills/documentation/resources/skill_md_template.md,.gemini/skills/documentation/resources/verify_documentation.sh,.gemini/skills/executing-plans/SKILL.md",
+  "diff_vs_main_files": 0,
+  "verdict": "DROP_WITH_REVIEW",
+  "risk": "Medio-bajo",
+  "reason": "WIP 105 files, branch merged 4x. Large snapshot, verify key tests",
+  "stats": "       |   104 +\n tests/unit/test_ssot_session_marker.py             |    45 +\n uv.lock                                            |    49 +\n 105 files changed, 13147 insertions(+), 12786 deletions(-)",
+  "phase": "CLARIFY+LAYOUT",
+  "status": "completed",
+  "timestamp": "2026-03-27T18:19:59.550263+00:00"
+}

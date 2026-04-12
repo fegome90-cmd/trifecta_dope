@@ -1,0 +1,325 @@
+#!/usr/bin/env python3
+"""Official promote/verify utility for SH-003 governed skill-hub runtime artifacts."""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import re
+import shutil
+import stat
+import sys
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+
+
+@dataclass(frozen=True)
+class ArtifactSpec:
+    name: str
+    source_rel: str
+    kind: str
+    target_name: str | None = None
+
+
+SCHEMA_VERSION = 2
+TOOL_NAME = "skill-hub-runtime"
+RECEIPT_TOP_LEVEL_KEYS = frozenset({"schema_version", "tool", "promoted_at", "artifacts"})
+WRAPPER_ARTIFACT_NAME = "skill-hub"
+
+
+CANONICAL_ARTIFACTS: tuple[ArtifactSpec, ...] = (
+    ArtifactSpec(
+        name="skill-hub",
+        source_rel="scripts/skill-hub",
+        kind="promoted",
+        target_name="skill-hub",
+    ),
+    ArtifactSpec(
+        name="skill-hub-cards",
+        source_rel="scripts/skill-hub-cards",
+        kind="promoted",
+        target_name="skill-hub-cards",
+    ),
+)
+
+
+class ContractError(RuntimeError):
+    """Controlled contract violation for fail-closed CLI exits."""
+
+
+def sha256(path: Path) -> str:
+    """Return the SHA-256 of the governed source bytes that runtime targets must match exactly."""
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def read_text_or_contract_error(path: Path, *, label: str) -> str:
+    if not path.exists():
+        raise ContractError(f"missing {label}: {path}")
+    try:
+        return path.read_text()
+    except OSError as exc:
+        raise ContractError(f"unable to read {label}: {path}") from exc
+
+
+def source_path(repo_root: Path, artifact: ArtifactSpec) -> Path:
+    return repo_root / artifact.source_rel
+
+
+def target_path(runtime_bin_dir: Path, artifact: ArtifactSpec) -> Path | None:
+    if artifact.target_name is None:
+        return None
+    return runtime_bin_dir / artifact.target_name
+
+
+def governed_runtime_dependencies() -> tuple[ArtifactSpec, ...]:
+    return tuple(artifact for artifact in CANONICAL_ARTIFACTS if artifact.name != WRAPPER_ARTIFACT_NAME)
+
+
+def resolve_shell_token(token: str, variables: dict[str, str]) -> str:
+    stripped = token.strip().strip('"').strip("'")
+    if stripped.startswith("$") and stripped[1:] in variables:
+        return variables[stripped[1:]]
+    return stripped
+
+
+def extract_wrapper_runtime_dependencies(text: str) -> dict[str, str]:
+    variables: dict[str, str] = {}
+    assignments = re.findall(r'^([A-Z_][A-Z0-9_]*)="([^"\n]+)"$', text, re.MULTILINE)
+    for name, value in assignments:
+        variables[name] = value
+
+    observed: dict[str, str] = {}
+    invocation_pattern = re.compile(r'python3\s+(?:"([^"\n]+)"|(\$[A-Z_][A-Z0-9_]*))')
+    for direct, variable in invocation_pattern.findall(text):
+        token = direct or variable
+        resolved = resolve_shell_token(token, variables)
+        if resolved == "-" or resolved.startswith("-"):
+            continue
+        dependency_name = Path(resolved).name
+        observed[dependency_name] = resolved
+    return observed
+
+
+def validate_wrapper_contract(repo_root: Path) -> None:
+    wrapper_artifact = canonical_artifact_map()[WRAPPER_ARTIFACT_NAME]
+    wrapper = source_path(repo_root, wrapper_artifact)
+    text = read_text_or_contract_error(wrapper, label="governed wrapper")
+
+    observed_dependencies = extract_wrapper_runtime_dependencies(text)
+    expected_dependencies = {
+        artifact.target_name: f"$SCRIPT_DIR/{artifact.target_name}"
+        for artifact in governed_runtime_dependencies()
+        if artifact.target_name is not None
+    }
+
+    if set(observed_dependencies) != set(expected_dependencies):
+        raise ContractError(
+            "wrapper direct runtime dependency set mismatch: "
+            f"expected {sorted(expected_dependencies)} got {sorted(observed_dependencies)}"
+        )
+
+    for dependency_name, expected_expr in expected_dependencies.items():
+        observed_expr = observed_dependencies[dependency_name]
+        if observed_expr != expected_expr:
+            raise ContractError(
+                f"wrapper runtime dependency invariant mismatch for {dependency_name}: "
+                f"expected {expected_expr} got {observed_expr}"
+            )
+
+
+def receipt_entry_keys(artifact: ArtifactSpec) -> set[str]:
+    keys = {"name", "kind", "source_rel", "sha256"}
+    if artifact.target_name is not None:
+        keys.add("target_name")
+    return keys
+
+
+def canonical_receipt_entry(repo_root: Path, artifact: ArtifactSpec) -> dict[str, str]:
+    source = source_path(repo_root, artifact)
+    entry = {
+        "name": artifact.name,
+        "kind": artifact.kind,
+        "source_rel": artifact.source_rel,
+        "sha256": sha256_of_governed_source(source, artifact.name),
+    }
+    if artifact.target_name is not None:
+        entry["target_name"] = artifact.target_name
+    return entry
+
+
+def canonical_artifact_map() -> dict[str, ArtifactSpec]:
+    return {artifact.name: artifact for artifact in CANONICAL_ARTIFACTS}
+
+
+def sha256_of_governed_source(path: Path, artifact_name: str) -> str:
+    try:
+        return sha256(path)
+    except FileNotFoundError as exc:
+        raise ContractError(f"missing governed source for {artifact_name}: {path}") from exc
+    except OSError as exc:
+        raise ContractError(f"unable to hash governed source for {artifact_name}: {path}") from exc
+
+
+def load_receipt(receipt_path: Path) -> dict:
+    try:
+        return json.loads(receipt_path.read_text())
+    except json.JSONDecodeError as exc:
+        raise ContractError(f"invalid receipt json: {receipt_path}") from exc
+    except OSError as exc:
+        raise ContractError(f"unable to read receipt: {receipt_path}") from exc
+
+
+def parse_receipt_artifacts(data: dict) -> dict[str, dict[str, str]]:
+    artifacts = data.get("artifacts")
+    if not isinstance(artifacts, list):
+        raise ContractError("artifacts payload mismatch")
+
+    parsed: dict[str, dict[str, str]] = {}
+    for index, item in enumerate(artifacts):
+        if not isinstance(item, dict):
+            raise ContractError(f"receipt artifact entry malformed at index {index}")
+        name = item.get("name")
+        if not isinstance(name, str) or not name:
+            raise ContractError(f"receipt artifact entry missing name at index {index}")
+        parsed[name] = item
+    return parsed
+
+
+def write_receipt(path: Path, data: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+
+
+def promote(repo_root: Path, runtime_bin_dir: Path, receipt_path: Path) -> int:
+    validate_wrapper_contract(repo_root)
+    runtime_bin_dir.mkdir(parents=True, exist_ok=True)
+
+    artifacts: list[dict[str, str]] = []
+    for artifact in CANONICAL_ARTIFACTS:
+        source = source_path(repo_root, artifact)
+        artifact_entry = canonical_receipt_entry(repo_root, artifact)
+        if artifact.kind == "promoted":
+            target = target_path(runtime_bin_dir, artifact)
+            if target is None:
+                raise ContractError(f"promoted artifact missing target_name: {artifact.name}")
+            shutil.copy2(source, target)
+            current_mode = target.stat().st_mode
+            target.chmod(current_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+        artifacts.append(artifact_entry)
+
+    receipt = {
+        "schema_version": SCHEMA_VERSION,
+        "tool": TOOL_NAME,
+        "promoted_at": datetime.now(timezone.utc).isoformat(),
+        "artifacts": artifacts,
+    }
+    write_receipt(receipt_path, receipt)
+    print(f"promotion receipt written: {receipt_path}")
+    return 0
+
+
+def verify(repo_root: Path, runtime_bin_dir: Path, receipt_path: Path) -> int:
+    validate_wrapper_contract(repo_root)
+    if not receipt_path.exists():
+        print(f"missing receipt: {receipt_path}", file=sys.stderr)
+        return 1
+
+    data = load_receipt(receipt_path)
+    if set(data) != RECEIPT_TOP_LEVEL_KEYS:
+        print("receipt top-level shape mismatch", file=sys.stderr)
+        return 1
+    if data.get("schema_version") != SCHEMA_VERSION:
+        print("schema_version mismatch", file=sys.stderr)
+        return 1
+    if data.get("tool") != TOOL_NAME:
+        print("tool mismatch", file=sys.stderr)
+        return 1
+
+    expected = canonical_artifact_map()
+    recorded = parse_receipt_artifacts(data)
+
+    if set(expected) != set(recorded):
+        print("artifact set mismatch between canonical map and receipt", file=sys.stderr)
+        return 1
+
+    for name, artifact in expected.items():
+        source = source_path(repo_root, artifact)
+        current_source_hash = sha256_of_governed_source(source, name)
+        receipt_item = recorded[name]
+
+        if set(receipt_item) != receipt_entry_keys(artifact):
+            print(f"receipt entry shape mismatch for {name}", file=sys.stderr)
+            return 1
+        if receipt_item.get("kind") != artifact.kind:
+            print(f"kind mismatch for {name}", file=sys.stderr)
+            return 1
+        if receipt_item.get("source_rel") != artifact.source_rel:
+            print(f"source_rel mismatch for {name}", file=sys.stderr)
+            return 1
+        if receipt_item.get("sha256") != current_source_hash:
+            print(f"source hash mismatch for {name}", file=sys.stderr)
+            return 1
+
+        if artifact.kind == "promoted":
+            target = target_path(runtime_bin_dir, artifact)
+            if target is None:
+                print(f"missing target_name for promoted artifact {name}", file=sys.stderr)
+                return 1
+            if not target.exists():
+                print(f"missing promoted target for {name}: {target}", file=sys.stderr)
+                return 1
+            try:
+                current_target_hash = sha256(target)
+            except OSError as exc:
+                raise ContractError(f"unable to hash promoted target for {name}: {target}") from exc
+            if receipt_item.get("target_name") != artifact.target_name:
+                print(f"target_name mismatch for {name}", file=sys.stderr)
+                return 1
+            if current_target_hash != current_source_hash:
+                print(f"hash mismatch for {name}: promoted target drifted from source", file=sys.stderr)
+                return 1
+
+    print(f"verification ok: {receipt_path}")
+    return 0
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Promote or verify governed skill-hub runtime artifacts.")
+    parser.add_argument("command", choices=("promote", "verify"))
+    parser.add_argument(
+        "--repo-root",
+        default=str(Path(__file__).resolve().parent.parent),
+        help="Repository root containing canonical scripts (default: script parent repo root)",
+    )
+    parser.add_argument(
+        "--runtime-bin-dir",
+        default=str(Path.home() / ".local" / "bin"),
+        help="Runtime bin directory for promoted artifacts",
+    )
+    parser.add_argument(
+        "--receipt-path",
+        default=str(Path.home() / ".local" / "share" / "trifecta" / "receipts" / "skill-hub-runtime.json"),
+        help="Persistent receipt path",
+    )
+    return parser
+
+
+def main() -> int:
+    try:
+        args = build_parser().parse_args()
+        repo_root = Path(args.repo_root).resolve()
+        runtime_bin_dir = Path(args.runtime_bin_dir).expanduser().resolve()
+        receipt_path = Path(args.receipt_path).expanduser().resolve()
+
+        if args.command == "promote":
+            return promote(repo_root, runtime_bin_dir, receipt_path)
+        return verify(repo_root, runtime_bin_dir, receipt_path)
+    except ContractError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

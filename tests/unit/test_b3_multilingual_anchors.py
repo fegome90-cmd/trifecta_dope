@@ -3,7 +3,6 @@
 Verifies that Spanish queries are properly translated and matched.
 """
 
-import pytest
 from src.domain.anchor_extractor import extract_anchors
 
 

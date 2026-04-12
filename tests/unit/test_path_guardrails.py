@@ -8,7 +8,6 @@ Tests cover:
 - symlink escape prevention
 """
 
-import os
 import tempfile
 from pathlib import Path
 

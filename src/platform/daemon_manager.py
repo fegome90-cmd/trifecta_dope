@@ -5,7 +5,7 @@ import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 
 @dataclass
@@ -50,19 +50,31 @@ class DaemonManager:
     DAEMON_TTL_IDLE = 300
     DAEMON_START_TIMEOUT = 5
 
-    def __init__(self, runtime_dir: Path) -> None:
+    def __init__(self, runtime_dir: Path, repo_root: Optional[Path] = None) -> None:
         self._runtime_dir = runtime_dir
+        self._repo_root = repo_root if repo_root is not None else runtime_dir
         self._socket_path = runtime_dir / "daemon" / "socket"
         self._pid_path = runtime_dir / "daemon" / "pid"
         self._log_path = runtime_dir / "daemon" / "log"
 
     def start(self) -> bool:
+        """Start daemon. Returns True if daemon is running after call.
+
+        Note: Returns True both if daemon was already running and if
+        it was just started. Use is_running() before start() to distinguish.
+        """
         if self.is_running():
             return True
         if not _is_path_safe(self._runtime_dir):
             return False
+
         self._runtime_dir.mkdir(parents=True, exist_ok=True)
         self._socket_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Fase 4: singleton lock to prevent concurrent starts
+        if not self._acquire_singleton_lock():
+            return False
+
         log_file = self._log_path.open("a")
         python_exe = sys.executable
         import src.infrastructure.cli as cli_module
@@ -70,6 +82,10 @@ class DaemonManager:
         cli_path = Path(cli_module.__file__)
         env = os.environ.copy()
         env["TRIFECTA_RUNTIME_DIR"] = str(self._runtime_dir)
+        env["TRIFECTA_REPO_ROOT"] = str(self._repo_root.resolve())
+        # Pass TTL if configured (Fase 4 hardening)
+        if self.DAEMON_TTL_IDLE > 0:
+            env["TRIFECTA_DAEMON_TTL"] = str(self.DAEMON_TTL_IDLE)
         env["TRIFECTA_LSP_REQUEST_TIMEOUT"] = _lsp_request_timeout_env()
         proc = subprocess.Popen(
             [python_exe, str(cli_path), "daemon", "run"],
@@ -79,12 +95,15 @@ class DaemonManager:
             start_new_session=True,
             env=env,
         )
-        for _ in range(self.DAEMON_START_TIMEOUT * 10):
-            if self._socket_path.exists():
-                self._pid_path.write_text(str(proc.pid))
-                return True
-            time.sleep(0.1)
-        return False
+        try:
+            for _ in range(self.DAEMON_START_TIMEOUT * 10):
+                if self._socket_path.exists():
+                    self._pid_path.write_text(str(proc.pid))
+                    return True
+                time.sleep(0.1)
+            return False
+        finally:
+            self._release_singleton_lock()
 
     def stop(self) -> bool:
         if not self.is_running():
@@ -97,7 +116,8 @@ class DaemonManager:
                     return True
                 time.sleep(0.1)
             os.kill(pid, signal.SIGKILL)
-            return True
+            time.sleep(0.1)
+            return not self.is_running()
         except (FileNotFoundError, ProcessLookupError, ValueError):
             return True
         finally:
@@ -124,6 +144,103 @@ class DaemonManager:
 
     def is_running(self) -> bool:
         return self.status().running
+
+    def _read_daemon_pid(self) -> Optional[int]:
+        """Read the daemon PID file, returning None when it is missing or invalid."""
+        try:
+            return int(self._pid_path.read_text(encoding="utf-8").strip())
+        except (FileNotFoundError, OSError, ValueError):
+            return None
+
+    @staticmethod
+    def _is_pid_alive(pid: int) -> bool:
+        """Check process liveness with signal 0, treating permission errors as alive."""
+        try:
+            os.kill(pid, 0)
+        except ProcessLookupError:
+            return False
+        except PermissionError:
+            return True
+        else:
+            return True
+
+    def _lock_owner_is_alive(self) -> bool:
+        """Return whether the PID recorded for the daemon still points to a live process."""
+        pid = self._read_daemon_pid()
+        return pid is not None and self._is_pid_alive(pid)
+
+    def _wait_for_lock_release(
+        self, bind_lock: Callable[[], object], timeout_seconds: float | None = None
+    ) -> bool:
+        """Poll for lock release up to timeout_seconds and acquire it if it becomes free."""
+        timeout = max(0, self.DAEMON_START_TIMEOUT if timeout_seconds is None else timeout_seconds)
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            if self.is_running() or self._lock_owner_is_alive():
+                return False
+            try:
+                self._singleton_lock = bind_lock()
+                return True
+            except OSError:
+                time.sleep(0.1)
+        return False
+
+    def _acquire_singleton_lock(self) -> bool:
+        """Acquire exclusive lock to prevent concurrent daemon starts.
+
+        Uses socket bind as atomic singleton check. If bind fails,
+        another instance is already running, or a stale lock path exists.
+
+        Returns:
+            True if lock acquired, False if another instance holds it.
+        """
+        import socket as _socket
+
+        lock_path = Path(str(self._socket_path) + ".lock")
+
+        def _bind_lock() -> _socket.socket:
+            lock_socket = _socket.socket(_socket.AF_UNIX, _socket.SOCK_DGRAM)
+            lock_socket.bind(str(lock_path))
+            return lock_socket
+
+        try:
+            self._singleton_lock = _bind_lock()
+            return True
+        except OSError:
+            if self.is_running() or self._lock_owner_is_alive():
+                return False
+            if self._wait_for_lock_release(_bind_lock):
+                return True
+            if self.is_running() or self._lock_owner_is_alive():
+                return False
+            if lock_path.exists():
+                try:
+                    lock_path.unlink()
+                except FileNotFoundError:
+                    # Another process may clear the stale path after our last check.
+                    # Fall through to retry lock acquisition below.
+                    pass
+                except OSError:
+                    return False
+            try:
+                self._singleton_lock = _bind_lock()
+                return True
+            except OSError:
+                pass
+            return False
+
+    def _release_singleton_lock(self) -> None:
+        """Release singleton lock."""
+        if hasattr(self, "_singleton_lock") and self._singleton_lock:
+            try:
+                self._singleton_lock.close()
+            except Exception:
+                pass
+            lock_path = str(self._socket_path) + ".lock"
+            try:
+                Path(lock_path).unlink()
+            except FileNotFoundError:
+                pass
 
     def _cleanup_files(self) -> None:
         for p in [self._pid_path, self._socket_path]:

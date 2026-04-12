@@ -1,0 +1,20 @@
+{
+  "agent": "unit-tests",
+  "status": "pass",
+  "exit_code": 0,
+  "summary": "1145 passed, 3 skipped, 3 warnings in 102.56s (0:01:42)",
+  "output_tail": [
+    "  /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/tests/unit/test_ctx_wo_gc.py:353: PytestUnknownMarkWarning: Unknown pytest.mark.integration - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html",
+    "    @pytest.mark.integration",
+    "",
+    "tests/unit/test_search_usecase_linter.py::test_linter_expands_vague_query",
+    "tests/unit/test_search_usecase_linter.py::test_guided_query_not_expanded",
+    "  /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/src/application/search_get_usecases.py:220: DeprecationWarning: resolve_segment_root() is deprecated. Use get_segment_root() from src.domain.segment_resolver instead.",
+    "    repo_root = resolve_segment_root(target_path)",
+    "",
+    "-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html",
+    "1145 passed, 3 skipped, 3 warnings in 102.56s (0:01:42)"
+  ],
+  "errors": [],
+  "duration_ms": 102899
+}

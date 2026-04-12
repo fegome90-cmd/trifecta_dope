@@ -22,16 +22,18 @@ def test_ast_snippet_is_explicitly_not_implemented() -> None:
     assert payload["context"]["uri"] == "sym://python/mod/src.domain.result"
 
 
-def test_ast_hover_exposes_wip_stub_contract() -> None:
-    result = runner.invoke(
-        app,
-        ["ast", "hover", "src/infrastructure/cli.py", "--line", "10", "--char", "1"],
-    )
-    assert result.exit_code == 0, result.stdout
+def test_ast_hover_exposes_unavailable_contract() -> None:
+    from unittest import mock
+    with mock.patch.dict("os.environ", {"PATH": ""}):
+        result = runner.invoke(
+            app,
+            ["ast", "hover", "src/infrastructure/cli.py", "--line", "10", "--char", "1"],
+        )
+        assert result.exit_code == 0, result.stdout
 
-    payload = json.loads(result.stdout)
-    assert payload["status"] == "ok"
-    assert payload["backend"] == "wip_stub"
-    assert payload["capability_state"] == "WIP"
-    assert payload["response_state"] == "partial"
-    assert "fallback_reason" in payload
+        payload = json.loads(result.stdout)
+        assert payload["status"] == "ok"
+        assert payload["backend"] == "unavailable"
+        assert payload["capability_state"] == "UNAVAILABLE"
+        assert payload["response_state"] == "degraded"
+        assert "fallback_reason" in payload

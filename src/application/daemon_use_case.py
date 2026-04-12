@@ -1,13 +1,13 @@
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from src.platform.daemon_manager import DaemonManager
 from src.platform.health import HealthChecker
 
 
 class DaemonUseCase:
-    def __init__(self, runtime_dir: Path) -> None:
-        self._manager = DaemonManager(runtime_dir)
+    def __init__(self, runtime_dir: Path, repo_root: Optional[Path] = None) -> None:
+        self._manager = DaemonManager(runtime_dir, repo_root=repo_root)
         self._health = HealthChecker(runtime_dir)
 
     def start(self) -> dict[str, Any]:

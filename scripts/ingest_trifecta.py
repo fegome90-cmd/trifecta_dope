@@ -70,6 +70,21 @@ def sha256_text(s: str) -> str:
     return hashlib.sha256(s.encode("utf-8")).hexdigest()
 
 
+def detect_segment_policy(segment_path: Path) -> str:
+    """Detect indexing policy from _ctx/trifecta_config.json (default: generic)."""
+    config_path = segment_path / "_ctx" / "trifecta_config.json"
+    if not config_path.exists():
+        return "generic"
+
+    try:
+        data = json.loads(config_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return "generic"
+
+    policy = data.get("indexing_policy", "generic")
+    return policy if isinstance(policy, str) else "generic"
+
+
 def generate_chunk_id(doc: str, title_path: list[str], text: str) -> str:
     """
     Generate stable chunk ID from normalized components.
@@ -558,6 +573,14 @@ def main():
                 f"Segment path is outside repository root:\n"
                 f"  Segment: {builder.segment_path}\n"
                 f"  Repo root: {args.repo_root}"
+            )
+
+        policy = detect_segment_policy(builder.segment_path)
+        if policy == "skill_hub":
+            raise ValueError(
+                "ingest_trifecta.py is not allowed for skill_hub segments. "
+                "Use 'trifecta ctx sync --segment <segment>' so runtime publication "
+                "remains on the governed promotion path."
             )
 
         if args.verbose:

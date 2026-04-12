@@ -1,0 +1,7 @@
+# Stash@{0} — codex/wo-remediation-merge-ready
+Message: telemetry changes
+Files: 2 | Diff vs main: 161 files
+Verdict: DROP | Risk: Bajo
+Reason: Telemetry/temp metadata, fully regenerable
+Merge evidence: e1ed3ff1 Merge pull request #71 from fegome90-cmd/codex/wo-remediation-merge-ready;4ec28fa9 Tighten remediation docs links and normalize WO-0067 metadata (#72);a2fae687 docs(remediation): plan ci baseline review-first lot;
+Unique files: 

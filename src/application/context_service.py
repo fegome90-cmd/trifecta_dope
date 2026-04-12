@@ -1,11 +1,17 @@
 """Service for Programmatic Context Calling logic (ContextService)."""
 
+import hashlib
 import json
-import re
 from pathlib import Path
 from typing import Any, Literal, Optional
 
-from src.domain.context_models import ContextPack, GetResult, SearchHit, SearchResult
+from src.domain.context_models import ContextChunk, ContextPack, GetResult, SearchHit, SearchResult
+from src.domain.result import Err
+from src.domain.segment_indexing_policy import SegmentIndexingPolicy
+from src.domain.skill_manifest import SkillManifest
+
+SKILL_HUB_PROMOTION_RECEIPT = "skill_hub_promotion_receipt.json"
+SKILL_HUB_LAST_VALID_DIR = ".skill_hub_last_valid"
 
 
 def parse_chunk_id(chunk_id: str) -> tuple[str, str]:
@@ -40,19 +46,132 @@ class ContextService:
         self.target_path = target_path
         self.ctx_dir = target_path / "_ctx"
         self.pack_path = self.ctx_dir / "context_pack.json"
+        self.policy = SegmentIndexingPolicy.detect(target_path)
 
     def _load_pack(self) -> ContextPack:
         """Load the context pack from disk."""
+        if self.policy == SegmentIndexingPolicy.SKILL_HUB:
+            return self._load_skill_hub_promoted_pack()
+
         if not self.pack_path.exists():
             raise FileNotFoundError(f"Context pack not found at {self.pack_path}")
 
-        with open(self.pack_path, "r") as f:
+        with open(self.pack_path, "r", encoding="utf-8") as f:
             data = json.load(f)
             return ContextPack(**data)
 
+    @staticmethod
+    def _sha256(path: Path) -> str:
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+
+    def _load_skill_hub_promoted_pack(self) -> ContextPack:
+        errors: list[str] = []
+
+        live_paths = (
+            self.ctx_dir / "skills_manifest.json",
+            self.ctx_dir / "context_pack.json",
+            self.ctx_dir / SKILL_HUB_PROMOTION_RECEIPT,
+        )
+        promoted_pack = self._validate_and_load_promoted_set(
+            *live_paths, source="live", errors=errors
+        )
+        if promoted_pack is not None:
+            return promoted_pack
+
+        backup_dir = self.ctx_dir / SKILL_HUB_LAST_VALID_DIR
+        backup_paths = (
+            backup_dir / "skills_manifest.json",
+            backup_dir / "context_pack.json",
+            backup_dir / SKILL_HUB_PROMOTION_RECEIPT,
+        )
+        promoted_pack = self._validate_and_load_promoted_set(
+            *backup_paths, source="last_valid", errors=errors
+        )
+        if promoted_pack is not None:
+            return promoted_pack
+
+        detail = "; ".join(errors) if errors else "runtime artifacts are missing"
+        raise RuntimeError(f"No valid promoted set for skill_hub at {self.target_path}. {detail}")
+
+    def _validate_and_load_promoted_set(
+        self,
+        manifest_path: Path,
+        pack_path: Path,
+        receipt_path: Path,
+        *,
+        source: str,
+        errors: list[str],
+    ) -> ContextPack | None:
+        missing_paths = [str(p) for p in (manifest_path, pack_path, receipt_path) if not p.exists()]
+        if missing_paths:
+            errors.append(f"[{source}] missing artifacts: {', '.join(missing_paths)}")
+            return None
+
+        try:
+            receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            errors.append(f"[{source}] invalid receipt: {exc}")
+            return None
+
+        if not isinstance(receipt, dict):
+            errors.append(f"[{source}] invalid receipt shape: expected object")
+            return None
+
+        if receipt.get("policy") != SegmentIndexingPolicy.SKILL_HUB.value:
+            errors.append(f"[{source}] invalid receipt policy: {receipt.get('policy')!r}")
+            return None
+
+        manifest_fingerprint = receipt.get("manifest_fingerprint")
+        pack_fingerprint = receipt.get("pack_fingerprint")
+        if manifest_fingerprint != self._sha256(manifest_path):
+            errors.append(f"[{source}] manifest fingerprint mismatch")
+            return None
+        if pack_fingerprint != self._sha256(pack_path):
+            errors.append(f"[{source}] pack fingerprint mismatch")
+            return None
+
+        try:
+            raw_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            errors.append(f"[{source}] invalid manifest JSON: {exc}")
+            return None
+        if not isinstance(raw_manifest, dict) or raw_manifest.get("schema_version") != 2:
+            errors.append(f"[{source}] manifest must be canonical schema_version=2")
+            return None
+
+        manifest_result = SkillManifest.load(manifest_path, self.target_path)
+        if isinstance(manifest_result, Err):
+            errors.append(
+                f"[{source}] invalid manifest admission: {'; '.join(manifest_result.error)}"
+            )
+            return None
+        manifest = manifest_result.value
+
+        try:
+            pack = ContextPack(**json.loads(pack_path.read_text(encoding="utf-8")))
+        except (OSError, json.JSONDecodeError, TypeError, ValueError) as exc:
+            errors.append(f"[{source}] invalid context pack JSON: {exc}")
+            return None
+
+        pack_admission = SkillManifest.validate_pack_admission(
+            manifest,
+            declared_policy=SegmentIndexingPolicy.SKILL_HUB.value,
+            pack_chunk_ids=[chunk.id for chunk in pack.chunks],
+            pack_docs=[chunk.doc for chunk in pack.chunks],
+            pack_source_paths=[chunk.source_path for chunk in pack.chunks],
+        )
+        if isinstance(pack_admission, Err):
+            errors.append(f"[{source}] invalid pack admission: {'; '.join(pack_admission.error)}")
+            return None
+
+        return pack
+
     def search(self, query: str, k: int = 5, doc_filter: Optional[str] = None) -> SearchResult:
         """
-        Search chunks using full chunk text while keeping preview as display-only surface.
+        Simple heuristic search for chunks.
+
+        Search authority is the full chunk body (`chunk.text`), while the
+        returned display surface remains the truncated preview from the index.
         """
         pack = self._load_pack()
         hits = []
@@ -61,33 +180,29 @@ class ContextService:
         if not query_words:
             query_words = [query.lower()]
 
-        search_patterns = {word: re.compile(re.escape(word), re.IGNORECASE) for word in query_words}
         chunk_map = {chunk.id: chunk for chunk in pack.chunks}
 
         for entry in pack.index:
-            # Apply doc filter if provided
-            if doc_filter and doc_filter not in entry.id:
-                continue
-
             chunk = chunk_map.get(entry.id)
             if chunk is None:
-                raise RuntimeError(
-                    f"Context pack index refers to missing chunk id '{entry.id}'. "
-                    f"This suggests that {self.pack_path} is corrupted or incomplete."
-                )
+                raise RuntimeError(f"missing chunk id '{entry.id}' referenced by context index")
+
+            # Apply doc filter if provided
+            if doc_filter and doc_filter not in entry.id and doc_filter != chunk.doc:
+                continue
 
             score = 0.0
             title_lower = entry.title_path_norm.lower()
-            chunk_text = chunk.text
+            body_lower = chunk.text.lower()
 
             # 1. Direct word matches
             for word in query_words:
                 if word in title_lower:
                     score += 1.0
-                if search_patterns[word].search(chunk_text):
+                if word in body_lower:
                     score += 0.5
 
-            # 2. Heuristic boosts (Even if title/text match failed)
+            # 2. Heuristic boosts (Even if title/preview match failed)
             if "skill" in entry.id and any(
                 kw in query_words for kw in ["regla", "comando", "cómo", "rule", "protocol"]
             ):
@@ -232,7 +347,7 @@ class ContextService:
             evidence_metadata=evidence_metadata,
         )
 
-    def _check_evidence(self, chunk, query: str) -> dict[str, Any]:
+    def _check_evidence(self, chunk: ContextChunk, query: str) -> dict[str, Any]:
         """
         Check for deterministic evidence signals.
 

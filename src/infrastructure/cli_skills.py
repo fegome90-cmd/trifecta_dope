@@ -84,8 +84,12 @@ def run_extract_keywords(
     else:
         output_path = segment_path / "_ctx" / GENERATED_ALIASES_FILENAME
 
-    # Load skills from manifest
-    skills = load_skills_manifest(segment_path)
+    # Load skills from manifest (canonical contract only)
+    try:
+        skills = load_skills_manifest(segment_path)
+    except ValueError as exc:
+        typer.echo(f"Error: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
 
     # Initialize metrics
     extracted_count = 0

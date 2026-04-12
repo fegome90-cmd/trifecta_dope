@@ -1,0 +1,17 @@
+{
+  "stash_index": 1,
+  "stash_ref": "stash@{1}",
+  "stash_line": "stash@{1}: On codex/wo-remediation-merge-ready: ci-baseline-lint-exploration",
+  "branch": "codex/wo-remediation-merge-ready",
+  "message": "On codex/wo-remediation-merge-ready: ci-baseline-lint-exploration",
+  "file_count": 54,
+  "file_list": "src/application/exceptions.py,src/application/keyword_extractor.py,src/application/linear_journal.py,src/application/linear_mapper.py,src/application/linear_sync_use_case.py,src/application/query_normalizer.py,src/domain/skill_contracts.py,src/infrastructure/aliases_fs.py,src/infrastructure/cli.py,src/infrastructure/cli_skills.py,src/infrastructure/linear_mcp_client.py,src/infrastructure/telemetry.py,tests/fixtures/linear_mcp_fake.py,tests/integration/test_export_wo_index_atomicity.py,tests/integration/test_extract_keywords_cli.py,tests/integration/test_linear_bootstrap_capabilities.py,tests/integration/test_linear_exit_codes.py,tests/integration/test_linear_push_idempotent.py,tests/integration/test_linear_sync_skips_fatal.py,tests/integration/test_path_canonicalization.py",
+  "diff_vs_main_files": 0,
+  "verdict": "DROP",
+  "risk": "Bajo",
+  "reason": "Lint cosmetics (54 files), branch merged via PR #71",
+  "stats": "nsition.py       |   5 +-\n tests/unit/test_zero_hit_suite_script.py           |   1 -\n tests/unit/test_zero_hit_tracker.py                |   2 -\n 54 files changed, 825 insertions(+), 488 deletions(-)",
+  "phase": "CLARIFY+LAYOUT",
+  "status": "completed",
+  "timestamp": "2026-03-27T18:19:59.343332+00:00"
+}

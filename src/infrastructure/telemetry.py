@@ -7,7 +7,7 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-from src.domain.segment_resolver import resolve_segment_ref, get_segment_fingerprint
+from src.domain.segment_resolver import resolve_segment_ref
 
 
 def _relpath(root: Path, target: Path) -> str:
@@ -108,6 +108,15 @@ class Telemetry:
 
         # Default mode: use _ctx/telemetry in segment
         self._ctx_dir = self.root / "_ctx" / "telemetry"
+
+        # Only create telemetry dir if segment root exists
+        # Do NOT create segment root - that would be a hidden side effect
+        if not self.root.exists():
+            # Segment doesn't exist - disable telemetry (no-op mode)
+            # This prevents writing to wrong worktree/repo
+            self.level = "off"
+            return
+
         self._ctx_dir.mkdir(parents=True, exist_ok=True)
         self._normalize_events_file()
 

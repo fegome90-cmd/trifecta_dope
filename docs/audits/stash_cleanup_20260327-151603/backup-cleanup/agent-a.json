@@ -1,0 +1,60 @@
+{
+  "agent": "A",
+  "timestamp": "2026-03-27T16:33:05",
+  "duration_ms": 86,
+  "actions": [
+    {
+      "action": "delete_branch",
+      "target": "backup/main-pre-restore-20260327",
+      "exists": true,
+      "commit": "82862131",
+      "commits_ahead_of_main": [
+        "82862131 feat(skill-hub): add cards helper and discovery fix reports",
+        "41bd4f7e docs(trifecta): refresh context files and readme"
+      ],
+      "refs_containing": [
+        "refs/heads/backup/main-pre-restore-20260327",
+        "refs/heads/codex/docs-skillhub-context-refresh-20260327",
+        "refs/remotes/origin/codex/docs-skillhub-context-refresh-20260327",
+        "refs/tags/safety-pre-restore-20260327"
+      ],
+      "is_pr80": true,
+      "verdict": "SAFE_DELETE",
+      "reason": "Branch has 2 commits from PR #80 (intentionally reverted during restoration). Commits: ['82862131 feat(skill-hub): add cards helper and discovery fix reports', '41bd4f7e docs(trifecta): refresh context files and readme']"
+    },
+    {
+      "action": "delete_tag",
+      "target": "safety-pre-restore-20260327",
+      "exists": true,
+      "commit": "82862131",
+      "same_commit_as_branch": true,
+      "remote_reachable": [
+        "origin/codex/docs-skillhub-context-refresh-20260327"
+      ],
+      "verdict": "SAFE_DELETE",
+      "reason": "Tag points to 82862131 (same as backup branch). Commit preserved in git reflog for 90 days."
+    },
+    {
+      "action": "delete_tmp",
+      "target": "/tmp/trifecta_*",
+      "items": 13,
+      "total_bytes": 226811975,
+      "total_mb": 216.3,
+      "cat_a_backup_matches_wt": true,
+      "working_tree_modified": 13,
+      "verdict": "SAFE_DELETE",
+      "reason": "13 items, 216.3MB. Category A backup matches working tree: True. All 13 modified files intact in working tree."
+    },
+    {
+      "action": "keep_salvage",
+      "target": "/tmp/hn_benchmark_salvage_20260327",
+      "csv_rows": 51,
+      "csv_cols": 38,
+      "script_size": 73800,
+      "has_gold_cols": true,
+      "verdict": "KEEP",
+      "reason": "Benchmark GOLD data: 51 rows, 38 cols. Script 73800 bytes."
+    }
+  ],
+  "overall": "ALL_SAFE"
+}

@@ -1,0 +1,97 @@
+{
+  "agent": "tmp-files",
+  "status": "pass",
+  "verdict": "SAFE_DELETE",
+  "info": {
+    "items": [
+      {
+        "path": "/tmp/trifecta_category_a_20260327.patch",
+        "type": "file",
+        "size": 18561,
+        "exists": true
+      },
+      {
+        "path": "/tmp/trifecta_ctx_sync_lsp_audit.log",
+        "type": "file",
+        "size": 437,
+        "exists": true
+      },
+      {
+        "path": "/tmp/trifecta_daemon_smoke_real.json",
+        "type": "file",
+        "size": 972,
+        "exists": true
+      },
+      {
+        "path": "/tmp/trifecta_dirty_state_20260327.txt",
+        "type": "file",
+        "size": 1104,
+        "exists": true
+      },
+      {
+        "path": "/tmp/trifecta_pr_body_33561.md",
+        "type": "file",
+        "size": 768,
+        "exists": true
+      },
+      {
+        "path": "/tmp/trifecta_pre_pr_status_33561.txt",
+        "type": "file",
+        "size": 1104,
+        "exists": true
+      },
+      {
+        "path": "/tmp/trifecta_reconcile_fixture_20260327.patch",
+        "type": "file",
+        "size": 217729636,
+        "exists": true
+      },
+      {
+        "path": "/tmp/trifecta_session_append_pre.log",
+        "type": "file",
+        "size": 139,
+        "exists": true
+      },
+      {
+        "path": "/tmp/trifecta_stash_list_20260327.txt",
+        "type": "file",
+        "size": 685,
+        "exists": true
+      },
+      {
+        "path": "/tmp/trifecta_working_changes_20260327.patch",
+        "type": "file",
+        "size": 2988902,
+        "exists": true
+      },
+      {
+        "path": "/tmp/trifecta_worktree_list_20260327.txt",
+        "type": "file",
+        "size": 3570,
+        "exists": true
+      },
+      {
+        "path": "/tmp/trifecta_cat_a_backup_20260327",
+        "type": "dir",
+        "size_str": "5.6M",
+        "files": 13,
+        "exists": true
+      },
+      {
+        "path": "/tmp/trifecta_untracked_backup_20260327",
+        "type": "dir",
+        "size_str": "300K",
+        "files": 33,
+        "exists": true
+      }
+    ],
+    "total_items": 13,
+    "existing_items": 13,
+    "total_file_size_bytes": 220745878
+  },
+  "warnings": [
+    "reconcile fixture is 208MB — biggest cleanup win"
+  ],
+  "errors": [],
+  "duration_ms": 12
+}

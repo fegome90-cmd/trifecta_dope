@@ -1,0 +1,19 @@
+{
+  "stash_index": 3,
+  "stash_ref": "stash@{3}",
+  "stash_line": "stash@{3}: On feat/search-pipeline-refactor: telemetry files",
+  "branch": "feat/search-pipeline-refactor",
+  "message": "telemetry files",
+  "file_count": 2,
+  "file_list": "_ctx/telemetry/events.jsonl,_ctx/telemetry/last_run.json",
+  "diff_vs_main_files": 289,
+  "merge_evidence": "no_pattern_match",
+  "unique_files": "",
+  "verdict": "DROP",
+  "risk": "Bajo",
+  "reason": "Telemetry/temp metadata, fully regenerable",
+  "stats": " _ctx/telemetry/events.jsonl  | 3 +++\n _ctx/telemetry/last_run.json | 4 ++--\n 2 files changed, 5 insertions(+), 2 deletions(-)",
+  "phase": "CLARIFY+LAYOUT",
+  "status": "completed",
+  "timestamp": "2026-03-27T18:16:04Z"
+}
