@@ -26,7 +26,7 @@ dev = [
     "bandit[toml]>=1.7.0",  # Security scanner with TOML config support
     "safety>=2.0.0",  # Dependency vulnerability scanner
     # Type stubs for mypy
-    "types-PyYAML>=6.0",
+    "types-PyYAML>=6.0.12.20260408",
     # Analysis tools (kept in dev for convenience during development)
     "jupyter>=1.0.0",
     "plotly>=5.18.0",
