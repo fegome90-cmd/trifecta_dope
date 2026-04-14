@@ -1,0 +1,324 @@
+diff --git a/src/application/use_cases.py b/src/application/use_cases.py
+index 2b0d3790..7e731d14 100644
+--- a/src/application/use_cases.py
++++ b/src/application/use_cases.py
+@@ -492,6 +492,7 @@ class BuildContextPackUseCase:
+         """Scan a Trifecta segment and build a context_pack.json."""
+         if self.telemetry:
+             self.telemetry.incr("ctx_build_count")
++        from src.domain.segment_resolver import get_segment_slug
+         from src.infrastructure.segment_state import resolve_segment_state
+ 
+         # 0. Detect indexing policy and delegate if SKILL_HUB
+@@ -553,12 +554,21 @@ class BuildContextPackUseCase:
+                 return promoted
+             return Ok(pack)
+ 
+-        # 1. GENERIC policy (default): derive segment_id from canonical tracked _ctx triplet.
++        # 1. GENERIC policy (default): prefer canonical tracked state, but preserve
++        # historical generic-build behavior for segments that have not materialized
++        # the full tracked triplet yet.
+         try:
+             state = resolve_segment_state(str(target_path), self.file_system)
+             segment_id = state.segment_id
+         except ValueError:
+-            return Err(["Failed Constitution: segment canon is invalid"])
++            try:
++                config = self.file_system.load_trifecta_config(target_path)
++                if config:
++                    segment_id = config.segment_id
++                else:
++                    segment_id = get_segment_slug(target_path)
++            except ValueError:
++                return Err(["Failed Constitution: trifecta_config.json is invalid"])
+ 
+         ctx_dir = target_path / "_ctx"
+ 
+diff --git a/src/infrastructure/daemon/lsp_handler.py b/src/infrastructure/daemon/lsp_handler.py
+index f83d3a6c..874451f0 100644
+--- a/src/infrastructure/daemon/lsp_handler.py
++++ b/src/infrastructure/daemon/lsp_handler.py
+@@ -4,6 +4,51 @@ from src.domain.lsp_contracts import FallbackReason, LSPResponse
+ from src.infrastructure.lsp_client import LSPState
+ 
+ 
++def _language_id_for(path: str) -> str:
++    suffix = path.rsplit(".", 1)[-1].lower() if "." in path else ""
++    return {
++        "py": "python",
++        "js": "javascript",
++        "ts": "typescript",
++    }.get(suffix, "plaintext")
++
++
++def _handle_did_open(params: dict[str, Any], lsp_client: Any) -> dict[str, Any]:
++    from pathlib import Path
++
++    path_str = params.get("path")
++    content = params.get("content", "")
++    if not isinstance(path_str, str) or not path_str:
++        return LSPResponse.error_response(
++            error_code="LSP_ERROR",
++            fallback_reason=FallbackReason.LSP_ERROR,
++            message="didOpen requires a file path",
++        ).to_dict()
++
++    path = Path(path_str).resolve()
++    payload = {"status": "notification_sent"}
++
++    if path.suffix.lower() == ".md":
++        payload["note"] = "ignored_extension=.md"
++        return LSPResponse.full_response(payload).to_dict()
++
++    lsp_client._send_rpc(
++        {
++            "jsonrpc": "2.0",
++            "method": "textDocument/didOpen",
++            "params": {
++                "textDocument": {
++                    "uri": path.as_uri(),
++                    "languageId": _language_id_for(path.name),
++                    "version": 1,
++                    "text": content,
++                }
++            },
++        }
++    )
++    return LSPResponse.full_response(payload).to_dict()
++
++
+ def handle_lsp_request(req: dict[str, Any], lsp_client: Any) -> dict[str, Any]:
+     """Handle JSON envelope LSP requests for daemon run."""
+     method = req.get("method", "")
+@@ -15,17 +60,20 @@ def handle_lsp_request(req: dict[str, Any], lsp_client: Any) -> dict[str, Any]:
+             message="LSP client not initialized",
+         ).to_dict()
+ 
++    if lsp_client.state == LSPState.FAILED:
++        return LSPResponse.degraded_response(
++            fallback_reason=FallbackReason.LSP_ERROR,
++            message="LSP in FAILED state",
++        ).to_dict()
++
+     if not lsp_client.is_ready():
+         return LSPResponse.degraded_response(
+             fallback_reason=FallbackReason.LSP_NOT_READY,
+             message=f"LSP state: {lsp_client.state.value}",
+         ).to_dict()
+ 
+-    if lsp_client.state == LSPState.FAILED:
+-        return LSPResponse.degraded_response(
+-            fallback_reason=FallbackReason.LSP_ERROR,
+-            message="LSP in FAILED state",
+-        ).to_dict()
++    if method == "textDocument/didOpen":
++        return _handle_did_open(params, lsp_client)
+ 
+     try:
+         result = lsp_client.request(method, params)
+diff --git a/src/platform/daemon_manager.py b/src/platform/daemon_manager.py
+index 96b5550b..e9af0bb8 100644
+--- a/src/platform/daemon_manager.py
++++ b/src/platform/daemon_manager.py
+@@ -148,29 +148,27 @@ class DaemonManager:
+     def _acquire_singleton_lock(self) -> bool:
+         """Acquire exclusive lock to prevent concurrent daemon starts.
+ 
+-        Uses socket bind as atomic singleton check. If bind fails,
+-        another instance is already running, or a stale lock path exists.
++        Uses an exclusive lock file create as the atomic singleton check.
++        If creation fails, another instance is already running or a stale
++        lock path exists.
+ 
+         Returns:
+             True if lock acquired, False if another instance holds it.
+         """
+-        import socket as _socket
+-
+         lock_path = Path(str(self._socket_path) + ".lock")
++        lock_path.parent.mkdir(parents=True, exist_ok=True)
+ 
+-        def _bind_lock() -> _socket.socket:
+-            lock_socket = _socket.socket(_socket.AF_UNIX, _socket.SOCK_DGRAM)
+-            lock_socket.bind(str(lock_path))
+-            return lock_socket
++        def _create_lock() -> int:
++            return os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+ 
+         try:
+-            self._singleton_lock = _bind_lock()
++            self._singleton_lock_fd = _create_lock()
+             return True
+-        except OSError:
++        except FileExistsError:
+             if lock_path.exists() and not self.is_running():
+                 try:
+                     lock_path.unlink()
+-                    self._singleton_lock = _bind_lock()
++                    self._singleton_lock_fd = _create_lock()
+                     return True
+                 except OSError:
+                     pass
+@@ -178,11 +176,12 @@ class DaemonManager:
+ 
+     def _release_singleton_lock(self) -> None:
+         """Release singleton lock."""
+-        if hasattr(self, "_singleton_lock") and self._singleton_lock:
++        if hasattr(self, "_singleton_lock_fd") and self._singleton_lock_fd is not None:
+             try:
+-                self._singleton_lock.close()
++                os.close(self._singleton_lock_fd)
+             except Exception:
+                 pass
++            self._singleton_lock_fd = None
+             lock_path = str(self._socket_path) + ".lock"
+             try:
+                 Path(lock_path).unlink()
+diff --git a/tests/integration/daemon/test_daemon_manager.py b/tests/integration/daemon/test_daemon_manager.py
+deleted file mode 100644
+index 590fca67..00000000
+--- a/tests/integration/daemon/test_daemon_manager.py
++++ /dev/null
+@@ -1,142 +0,0 @@
+-from __future__ import annotations
+-
+-import shutil
+-import tempfile
+-from pathlib import Path
+-from types import SimpleNamespace
+-from typing import Any
+-
+-import pytest
+-
+-import src.platform.daemon_manager as daemon_manager_module
+-from src.platform.daemon_manager import DaemonManager, DaemonStatus, is_runtime_dir_allowed
+-
+-
+-class TestDaemonManagerLifecycle:
+-    @pytest.fixture
+-    def temp_dir(self) -> Path:
+-        tmp = Path(tempfile.mkdtemp())
+-        yield tmp
+-        shutil.rmtree(tmp)
+-
+-    @pytest.fixture
+-    def manager(self, temp_dir: Path) -> DaemonManager:
+-        runtime_dir = temp_dir / "runtime"
+-        runtime_dir.mkdir(parents=True, exist_ok=True)
+-        return DaemonManager(runtime_dir)
+-
+-    def test_initial_status_not_running(self, manager: DaemonManager) -> None:
+-        status = manager.status()
+-        assert status.running is False
+-        assert status.pid is None
+-        assert status.socket_path is None
+-
+-    def test_status_after_stop(self, manager: DaemonManager) -> None:
+-        manager.stop()
+-        status = manager.status()
+-        assert status.running is False
+-
+-    def test_restart_when_not_running(self, manager: DaemonManager) -> None:
+-        result = manager.restart()
+-        assert isinstance(result, bool)
+-
+-    def test_stop_idempotent(self, manager: DaemonManager) -> None:
+-        result1 = manager.stop()
+-        assert result1 is True
+-
+-        result2 = manager.stop()
+-        assert result2 is True
+-
+-
+-class TestDaemonManagerSecurity:
+-    def test_runtime_dir_guard_accepts_descendant_of_allowed_base(self, tmp_path: Path) -> None:
+-        allowed_base = tmp_path / "trifecta"
+-        runtime_dir = allowed_base / "repos" / "safe-segment" / "runtime"
+-
+-        assert is_runtime_dir_allowed(runtime_dir, [allowed_base]) is True
+-
+-    def test_runtime_dir_guard_rejects_prefixed_sibling_path(self, tmp_path: Path) -> None:
+-        allowed_base = tmp_path / "trifecta"
+-        runtime_dir = Path(str(allowed_base) + "-evil/runtime")
+-
+-        assert is_runtime_dir_allowed(runtime_dir, [allowed_base]) is False
+-
+-    def test_start_rejects_prefixed_sibling_path_before_creating_dirs(
+-        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+-    ) -> None:
+-        allowed_base = tmp_path / "trifecta"
+-        runtime_dir = Path(str(allowed_base) + "-evil/runtime")
+-        manager = DaemonManager(runtime_dir)
+-
+-        monkeypatch.setattr(daemon_manager_module, "ALLOWED_BASES", [allowed_base])
+-
+-        result = manager.start()
+-
+-        assert result is False
+-        assert runtime_dir.exists() is False
+-
+-    def test_start_with_invalid_path(self) -> None:
+-        invalid_path = Path("/tmp/completely/invalid/path/that/explodes")
+-        manager = DaemonManager(invalid_path)
+-        result = manager.start()
+-        assert result is False
+-
+-    def test_status_with_nonexistent_runtime(self) -> None:
+-        runtime_dir = Path("/tmp/nonexistent/runtime/xyz123")
+-        manager = DaemonManager(runtime_dir)
+-        status = manager.status()
+-        assert status.running is False
+-
+-
+-class TestDaemonStatus:
+-    def test_daemon_status_dataclass(self) -> None:
+-        status = DaemonStatus(running=False, pid=None, socket_path=None)
+-        assert status.running is False
+-        assert status.pid is None
+-
+-    def test_daemon_status_with_pid(self, tmp_path: Path) -> None:
+-        socket_path = tmp_path / "socket"
+-        status = DaemonStatus(running=True, pid=12345, socket_path=socket_path)
+-        assert status.running is True
+-        assert status.pid == 12345
+-        assert status.socket_path == socket_path
+-
+-
+-@pytest.mark.parametrize(
+-    ("env_value", "expected"),
+-    [(None, "30"), ("45", "45"), ("2.5", "2.5"), ("invalid", "30")],
+-)
+-def test_start_exports_lsp_timeout_env(
+-    tmp_path: Path,
+-    monkeypatch: pytest.MonkeyPatch,
+-    env_value: str | None,
+-    expected: str,
+-) -> None:
+-    allowed_base = tmp_path / "trifecta"
+-    runtime_dir = allowed_base / "repos" / "safe-segment" / "runtime"
+-    manager = DaemonManager(runtime_dir)
+-    manager._runtime_dir.mkdir(parents=True, exist_ok=True)
+-    manager._socket_path.parent.mkdir(parents=True, exist_ok=True)
+-    manager._socket_path.write_text("")
+-
+-    monkeypatch.setattr(daemon_manager_module, "ALLOWED_BASES", [allowed_base])
+-
+-    if env_value is None:
+-        monkeypatch.delenv("TRIFECTA_LSP_REQUEST_TIMEOUT", raising=False)
+-    else:
+-        monkeypatch.setenv("TRIFECTA_LSP_REQUEST_TIMEOUT", env_value)
+-
+-    captured_env: dict[str, str] = {}
+-
+-    def fake_popen(*args: Any, **kwargs: Any) -> SimpleNamespace:
+-        del args
+-        captured_env.update(kwargs["env"])
+-        return SimpleNamespace(pid=9876)
+-
+-    monkeypatch.setattr(daemon_manager_module.subprocess, "Popen", fake_popen)
+-    monkeypatch.setattr(daemon_manager_module.time, "sleep", lambda _value: None)
+-
+-    started = manager.start()
+-
+-    assert started is True
+-    assert captured_env["TRIFECTA_LSP_REQUEST_TIMEOUT"] == expected

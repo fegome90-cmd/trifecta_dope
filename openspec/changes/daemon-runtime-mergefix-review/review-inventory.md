@@ -32,3 +32,7 @@
 - Treat this as a separate daemon/runtime review campaign.
 - Do not discard it together with skill-hub cleanup.
 - Do not apply it blindly either; it needs its own owner, test plan, and scope decision.
+
+## Preserved evidence
+- `bundle-tracked.patch` captures the tracked diff for the rescued daemon/runtime files.
+- `bundle-untracked.patch` captures the untracked replacement test file from the mergefix worktree.
