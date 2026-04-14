@@ -19,3 +19,8 @@ This split preserves a single operational path for cards mode, keeps the public 
 ## Verification
 - Wrapper contract tests prove stdout/stderr/exit propagation.
 - Governed runtime tests prove metadata-only and unsupported hits fail closed while renderable skills succeed.
+
+## Closeout and cleanup model
+- The rebuilt worktree is the only active authority surface for this cards slice.
+- Prior forensic surfaces are treated as evidence to review, not implementation to trust.
+- Cleanup must happen file-by-file: discard failed SDD narrative from `skill-hub-authority-anchor-closeout`, discard generated/runtime noise from `skill-hub-authority-anchor-mergefix`, and isolate unrelated daemon/runtime edits into a separate review bundle before deleting that worktree.

@@ -13,4 +13,7 @@
 
 ## Phase 3 — Closeout discipline
 - [x] Re-audit this rebuilt slice against the canonical SSOT and anchor before archive.
-- [ ] Clean up transient forensic worktrees/branches/stash once the rebuilt surface is the accepted authority.
+- [x] Review every dirty file from the old forensic surfaces and record a disposition.
+- [ ] Remove the failed `skill-hub-authority-anchor-closeout` surface after preserving the cleanup review.
+- [ ] Split unrelated daemon/runtime edits out of `skill-hub-authority-anchor-mergefix` before deleting that worktree.
+- [ ] Remove transient forensic worktrees/branches/stash once the rebuilt surface is the accepted authority and no unreviewed edits remain.

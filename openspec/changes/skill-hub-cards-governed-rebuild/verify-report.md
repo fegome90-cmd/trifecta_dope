@@ -18,3 +18,9 @@ PASS with scoped warnings.
 - This rebuild does **not** implement or claim the broader admission/promotion requirements from `openspec/specs/skill-hub-authority/spec.md`; those remain outside this slice.
 - No marker-based `skill_manifest.py` migration logic was verified, so it is intentionally excluded from this change.
 - Transient forensic surfaces still exist and must be cleaned up during closeout per the re-anchor pack.
+
+## Archive readiness
+- **Not ready yet** for archive.
+- Blocker 1: the failed `skill-hub-authority-anchor-closeout` worktree still exists and should be retired after preserving the cleanup review.
+- Blocker 2: `skill-hub-authority-anchor-mergefix` still contains unrelated daemon/runtime edits that require a separate decision before that surface can be removed.
+- Blocker 3: the rebuild worktree currently has post-commit generated/telemetry dirt from hooks and an unstaged cleanup review artifact that must be resolved before final closeout.
