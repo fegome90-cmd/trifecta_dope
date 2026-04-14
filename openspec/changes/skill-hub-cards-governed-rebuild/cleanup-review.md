@@ -114,3 +114,10 @@ Review each dirty file from the old forensic surfaces before deleting any branch
 - Delete Surface A now: already reviewed and fully superseded.
 - Keep Surface B only until Bundle 2 receives an explicit separate decision.
 - Do not drop `stash@{0}` until Surface B is resolved, because it remains part of the reconstruction evidence chain.
+
+## Rescue status
+- Bundle 2 has now been rescued into a separate review change:
+  - `openspec/changes/daemon-runtime-mergefix-review/proposal.md`
+  - `openspec/changes/daemon-runtime-mergefix-review/design.md`
+  - `openspec/changes/daemon-runtime-mergefix-review/tasks.md`
+  - `openspec/changes/daemon-runtime-mergefix-review/review-inventory.md`

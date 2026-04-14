@@ -22,6 +22,6 @@ PASS with scoped warnings.
 ## Archive readiness
 - **Not ready yet** for archive.
 - Resolved: the failed `skill-hub-authority-anchor-closeout` worktree and local branch were retired after preserving the cleanup review.
-- Blocker 1: `skill-hub-authority-anchor-mergefix` still contains unrelated daemon/runtime edits that require a separate decision before that surface can be removed.
+- Resolved: Bundle 2 from `skill-hub-authority-anchor-mergefix` has been rescued into the separate review change `daemon-runtime-mergefix-review`.
+- Blocker 1: `skill-hub-authority-anchor-mergefix` still physically exists until the rescued review bundle receives its own accept/discard decision.
 - Blocker 2: `stash@{0}` still exists as imported forensic residue and should only be dropped after the remaining mergefix cleanup path is settled.
-- Blocker 3: the mergefix review now identifies three bundles, but Bundle 2 (daemon/runtime code and its paired tests) has not yet been accepted, migrated, or discarded.
