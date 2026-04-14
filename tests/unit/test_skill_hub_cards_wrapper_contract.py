@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import json
 import shutil
 import subprocess
 from pathlib import Path
@@ -18,7 +19,11 @@ def build_wrapper_sandbox(tmp_path: Path) -> Path:
     helper.write_text(
         "#!/usr/bin/env python3\n"
         "from __future__ import annotations\n"
-        "import os, sys\n"
+        "import json, os, sys\n"
+        "arg_log = os.environ.get('MOCK_ARG_LOG')\n"
+        "if arg_log:\n"
+        "    with open(arg_log, 'w', encoding='utf-8') as fh:\n"
+        "        json.dump(sys.argv[1:], fh)\n"
         "sys.stdout.write(os.environ.get('MOCK_STDOUT', ''))\n"
         "sys.stderr.write(os.environ.get('MOCK_STDERR', ''))\n"
         "raise SystemExit(int(os.environ.get('MOCK_EXIT', '0')))\n"
@@ -41,6 +46,35 @@ def run_wrapper(wrapper: Path, *, query: str, exit_code: int, stdout: str, stder
         check=False,
         env=env,
     )
+
+
+def test_wrapper_passes_resolved_segment_to_governed_helper(tmp_path: Path) -> None:
+    wrapper = build_wrapper_sandbox(tmp_path)
+    arg_log = tmp_path / "helper-args.json"
+    segment = tmp_path / "custom-segment"
+    segment.mkdir()
+
+    env = os.environ.copy()
+    env.update({
+        "MOCK_EXIT": "0",
+        "MOCK_STDOUT": "",
+        "MOCK_STDERR": "",
+        "MOCK_ARG_LOG": str(arg_log),
+        "SKILL_HUB_SEGMENT": str(segment),
+    })
+
+    result = subprocess.run(
+        ["bash", str(wrapper), "--cards", "checkpoint handoff", "--limit", "2"],
+        text=True,
+        capture_output=True,
+        check=False,
+        env=env,
+    )
+
+    assert result.returncode == 0
+    helper_args = json.loads(arg_log.read_text())
+    assert "--segment" in helper_args
+    assert helper_args[helper_args.index("--segment") + 1] == str(segment)
 
 
 def test_wrapper_propagates_renderable_success_exit_and_streams(tmp_path: Path) -> None:

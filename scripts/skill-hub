@@ -109,7 +109,7 @@ fi
 cd "$TRIFECTA_ROOT"
 
 if [ "$CARDS_MODE" -eq 1 ]; then
-    exec python3 "$CARDS_HELPER" "$QUERY" --limit "$LIMIT"
+    exec python3 "$CARDS_HELPER" "$QUERY" --limit "$LIMIT" --segment "$SEGMENT"
 fi
 
 run_search_capture() {
