@@ -17,4 +17,4 @@
 - [x] Remove the failed `skill-hub-authority-anchor-closeout` surface after preserving the cleanup review.
 - [x] Classify the remaining `skill-hub-authority-anchor-mergefix` dirt into discard noise, daemon/runtime review bundle, and minor unrelated test hygiene.
 - [x] Split unrelated daemon/runtime edits out of `skill-hub-authority-anchor-mergefix` into a separate review change.
-- [ ] Remove transient forensic worktrees/branches/stash once the rebuilt surface is the accepted authority and no unreviewed edits remain.
+- [x] Remove transient forensic worktrees/branches/stash once the rebuilt surface is the accepted authority and no unreviewed edits remain.

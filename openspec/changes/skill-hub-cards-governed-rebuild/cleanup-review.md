@@ -121,3 +121,9 @@ Review each dirty file from the old forensic surfaces before deleting any branch
   - `openspec/changes/daemon-runtime-mergefix-review/design.md`
   - `openspec/changes/daemon-runtime-mergefix-review/tasks.md`
   - `openspec/changes/daemon-runtime-mergefix-review/review-inventory.md`
+
+## Final cleanup result
+- `skill-hub-authority-anchor-closeout` has been removed.
+- `skill-hub-authority-anchor-mergefix` has been removed after preserving the rescued daemon/runtime bundle and explicitly discarding Bundles 1 and 3.
+- The imported `stash@{0}` residue from the old closeout surface has been dropped.
+- The only remaining skill-hub implementation surface is `codex/skill-hub-ssot-rebuild`.

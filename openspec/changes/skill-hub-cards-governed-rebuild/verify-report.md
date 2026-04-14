@@ -20,8 +20,8 @@ PASS with scoped warnings.
 - Transient forensic surfaces still exist and must be cleaned up during closeout per the re-anchor pack.
 
 ## Archive readiness
-- **Not ready yet** for archive.
+- **Ready for archive.**
 - Resolved: the failed `skill-hub-authority-anchor-closeout` worktree and local branch were retired after preserving the cleanup review.
 - Resolved: Bundle 2 from `skill-hub-authority-anchor-mergefix` has been rescued into the separate review change `daemon-runtime-mergefix-review`.
-- Blocker 1: `skill-hub-authority-anchor-mergefix` still physically exists until the rescued review bundle receives its own accept/discard decision.
-- Blocker 2: `stash@{0}` still exists as imported forensic residue and should only be dropped after the remaining mergefix cleanup path is settled.
+- Resolved: `skill-hub-authority-anchor-mergefix` was removed after its rescued review bundle and patch evidence were committed separately.
+- Resolved: the imported forensic `stash@{0}` residue was dropped after cleanup completion.
