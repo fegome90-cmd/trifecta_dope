@@ -86,3 +86,31 @@ Review each dirty file from the old forensic surfaces before deleting any branch
 ## Cleanup rule
 - Only Surface A narrative files and Surface B generated/runtime noise are candidates for immediate deletion.
 - Surface B daemon/code changes must be handled as a separate review bundle before deleting that worktree.
+
+## Proposed split for `skill-hub-authority-anchor-mergefix`
+
+### Bundle 1 — discard immediately as non-authoritative noise
+- `_ctx/generated/repo_map.md`
+- `_ctx/generated/symbols_stub.md`
+- `_ctx/telemetry/events.jsonl`
+- `_ctx/telemetry/last_run.json`
+- `tests/fixtures/reconcile/running_wo_without_worktree/_ctx/logs/reconcile/reconcile.log`
+- `tests/fixtures/reconcile/running_wo_without_worktree/_ctx/logs/reconcile/reconcile.patch`
+- `scripts/skill-hub`
+
+### Bundle 2 — daemon/runtime review bundle (real work, unrelated to skill-hub)
+- `src/application/use_cases.py`
+- `src/infrastructure/daemon/lsp_handler.py`
+- `src/platform/daemon_manager.py`
+- `tests/integration/daemon/test_daemon_manager.py`
+- `tests/integration/daemon/test_daemon_manager_integration.py`
+
+### Bundle 3 — minor unrelated test hygiene
+- `tests/integration/test_path_canonicalization.py`
+- `tests/integration/test_schema_version.py`
+- `tests/unit/test_ctx_wo_gc.py`
+
+## Current recommendation
+- Delete Surface A now: already reviewed and fully superseded.
+- Keep Surface B only until Bundle 2 receives an explicit separate decision.
+- Do not drop `stash@{0}` until Surface B is resolved, because it remains part of the reconstruction evidence chain.
