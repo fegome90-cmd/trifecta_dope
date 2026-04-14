@@ -20,8 +20,11 @@ def main() -> int:
         file=sys.stderr,
     )
     argv = [sys.executable, str(HELPER), "--stdin-search-output", *sys.argv[1:]]
-    os.execv(sys.executable, argv)
-    return 127
+    try:
+        os.execv(sys.executable, argv)
+    except OSError as exc:
+        print(f"skill_hub_cards.py failed to exec delegated helper: {exc}", file=sys.stderr)
+        raise SystemExit(127) from exc
 
 
 if __name__ == "__main__":

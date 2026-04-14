@@ -1,8 +1,8 @@
-diff --git a/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-authority-anchor-mergefix/tests/integration/daemon/test_daemon_manager_integration.py b/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-authority-anchor-mergefix/tests/integration/daemon/test_daemon_manager_integration.py
+diff --git a/tests/integration/daemon/test_daemon_manager_integration.py b/tests/integration/daemon/test_daemon_manager_integration.py
 new file mode 100644
 index 00000000..590fca67
 --- /dev/null
-+++ b/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-authority-anchor-mergefix/tests/integration/daemon/test_daemon_manager_integration.py
++++ b/tests/integration/daemon/test_daemon_manager_integration.py
 @@ -0,0 +1,142 @@
 +from __future__ import annotations
 +

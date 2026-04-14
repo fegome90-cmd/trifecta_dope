@@ -18,6 +18,6 @@ Closed successfully. The evidence-backed `skill_hub` cards slice was rebuilt on 
 - Dropped the imported forensic stash residue.
 
 ## Remaining live authority
-- Branch/worktree: `codex/skill-hub-ssot-rebuild`
+- Branch/worktree: `codex/skill-hub-ssot-rebuild @ 2c7c4098`
 - Semantic SSOT: `openspec/specs/skill-hub-authority/spec.md`
 - Review change for non-skill-hub leftover work: `openspec/changes/daemon-runtime-mergefix-review/`

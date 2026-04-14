@@ -18,4 +18,4 @@ anchor.md → SKILL.md → resources/
 
 - resources/agents.md — roles y límites de decisión
 - resources/prime.md — pre-flight gates para re-anchor
-- ../../../../../../openspec/specs/skill-hub-authority/spec.md — contrato soberano
+- openspec/specs/skill-hub-authority/spec.md — contrato soberano

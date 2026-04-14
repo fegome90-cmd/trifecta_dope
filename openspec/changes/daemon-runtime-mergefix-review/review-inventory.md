@@ -1,7 +1,7 @@
 # Review Inventory: daemon-runtime mergefix bundle
 
 ## Source surface
-- Worktree: `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-authority-anchor-mergefix`
+- Worktree: `<repo>/.worktrees/skill-hub-authority-anchor-mergefix`
 - Branch: `codex/skill-hub-authority-anchor-mergefix`
 
 ## Files rescued into this review
@@ -36,3 +36,8 @@
 ## Preserved evidence
 - `bundle-tracked.patch` captures the tracked diff for the rescued daemon/runtime files.
 - `bundle-untracked.patch` captures the untracked replacement test file from the mergefix worktree.
+
+## Review findings to verify before any future apply
+- Narrow the `resolve_segment_state()` fallback so only the true “not materialized” path falls back to config/slug derivation.
+- Ensure daemon singleton stale-lock recovery does not unlink a live owner's lock during startup.
+- Ensure `didOpen` send paths degrade cleanly instead of leaking transport exceptions.

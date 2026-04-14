@@ -126,4 +126,5 @@ Review each dirty file from the old forensic surfaces before deleting any branch
 - `skill-hub-authority-anchor-closeout` has been removed.
 - `skill-hub-authority-anchor-mergefix` has been removed after preserving the rescued daemon/runtime bundle and explicitly discarding Bundles 1 and 3.
 - The imported `stash@{0}` residue from the old closeout surface has been dropped.
+- Stash drop authorization: approved by the repository owner in this Codex thread on 2026-04-14T14:43:12Z; context included `skill-hub-authority-anchor-closeout`, `skill-hub-authority-anchor-mergefix`, and `codex/skill-hub-ssot-rebuild`.
 - The only remaining skill-hub implementation surface is `codex/skill-hub-ssot-rebuild`.

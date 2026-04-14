@@ -8,6 +8,7 @@ import re
 import subprocess
 import sys
 from dataclasses import dataclass
+from enum import StrEnum
 from pathlib import Path
 from typing import Iterable
 
@@ -29,6 +30,13 @@ _DESCRIPTION_PATTERNS = (
     r"^description:\s*(.+)$",
 )
 _ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-9;]*m")
+
+
+class OutcomeKind(StrEnum):
+    RENDERABLE_SKILL = "renderable_skill"
+    METADATA_ONLY = "metadata_only"
+    UNSUPPORTED = "unsupported"
+    EMPTY = "empty"
 
 
 @dataclass(frozen=True)
@@ -56,7 +64,7 @@ class NormalizedResult:
 
 @dataclass(frozen=True)
 class ClassifiedResult:
-    kind: str
+    kind: OutcomeKind
     normalized: NormalizedResult
     reason: str
 
@@ -73,7 +81,7 @@ class SkillCard:
 
 @dataclass(frozen=True)
 class RenderPlan:
-    outcome_kind: str
+    outcome_kind: OutcomeKind
     exit_code: int
     cards: list[SkillCard]
     message: str
@@ -112,6 +120,11 @@ def parse_search_output(raw_output: str, *, strict_json: bool = False) -> list[R
             raise SearchParseError("parse error: invalid JSON search payload") from exc
         return _parse_plain_search_output(text)
 
+    if not isinstance(payload, dict):
+        if strict_json or looks_like_json:
+            raise SearchParseError("parse error: search payload must be a JSON object")
+        return _parse_plain_search_output(text)
+
     hits = payload.get("hits", [])
     if not isinstance(hits, list):
         raise SearchParseError("invalid hits list in search JSON payload")
@@ -124,12 +137,16 @@ def parse_search_output(raw_output: str, *, strict_json: bool = False) -> list[R
         if not ref:
             continue
         raw_type = ref.split(":", 1)[0]
+        try:
+            score = float(hit.get("score", 0.0) or 0.0)
+        except (TypeError, ValueError):
+            score = 0.0
         parsed.append(
             RawSearchHit(
                 ref=ref,
                 raw_type=raw_type,
                 title=_title_from_ref(ref),
-                score=float(hit.get("score", 0.0) or 0.0),
+                score=score,
             )
         )
     return parsed
@@ -146,7 +163,10 @@ def _parse_plain_search_output(text: str) -> list[RawSearchHit]:
         end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
         block = text[start:end]
         score_match = re.search(r"Score:\s*([\d.]+)", block)
-        score = float(score_match.group(1)) if score_match else 0.0
+        try:
+            score = float(score_match.group(1)) if score_match else 0.0
+        except ValueError:
+            score = 0.0
         results.append(RawSearchHit(ref=ref, raw_type=raw_type, title=title, score=score))
     return results
 
@@ -170,10 +190,9 @@ def normalize_result(hit: RawSearchHit, chunk_text: str) -> NormalizedResult:
 
     path = _extract_path(clean_chunk)
     explicit_title = _extract_skill_title(clean_chunk)
-    visible_title = (
-        explicit_title or _title_from_path(path) or _title_from_ref(hit.ref) or hit.title
-    )
-    stable_id = slugify(explicit_title or _title_from_path(path) or hit.title)
+    preferred_title = explicit_title or _title_from_ref(hit.ref) or _title_from_path(path) or hit.title
+    visible_title = preferred_title
+    stable_id = slugify(preferred_title)
     source = _extract_source(clean_chunk) or _infer_source_from_path(path)
     description = _extract_useful_description(clean_chunk)
 
@@ -195,7 +214,7 @@ def normalize_result(hit: RawSearchHit, chunk_text: str) -> NormalizedResult:
 def classify_result(normalized: NormalizedResult) -> ClassifiedResult:
     if normalized.raw_type in _METADATA_RAW_TYPES or normalized.metadata_message:
         return ClassifiedResult(
-            kind="metadata_only",
+            kind=OutcomeKind.METADATA_ONLY,
             normalized=normalized,
             reason=normalized.metadata_reason
             or "administrative metadata is not renderable as a skill card",
@@ -203,7 +222,7 @@ def classify_result(normalized: NormalizedResult) -> ClassifiedResult:
 
     if normalized.raw_type not in _RENDERABLE_RAW_TYPES:
         return ClassifiedResult(
-            kind="unsupported",
+            kind=OutcomeKind.UNSUPPORTED,
             normalized=normalized,
             reason=f"raw type '{normalized.raw_type}' is not supported for skill card rendering",
         )
@@ -219,13 +238,13 @@ def classify_result(normalized: NormalizedResult) -> ClassifiedResult:
     )
     if has_confident_repo_promotion:
         return ClassifiedResult(
-            kind="renderable_skill",
+            kind=OutcomeKind.RENDERABLE_SKILL,
             normalized=normalized,
             reason="sufficient trusted fields available for skill card rendering",
         )
 
     return ClassifiedResult(
-        kind="unsupported",
+        kind=OutcomeKind.UNSUPPORTED,
         normalized=normalized,
         reason="result could not be promoted safely to a skill card",
     )
@@ -238,10 +257,11 @@ def build_render_plan(
     *,
     strict_json: bool = False,
 ) -> RenderPlan:
+    validated_limit = _validate_positive_limit(limit)
     hits = parse_search_output(raw_search_output, strict_json=strict_json)
     if not hits:
         return RenderPlan(
-            outcome_kind="empty",
+            outcome_kind=OutcomeKind.EMPTY,
             exit_code=EXIT_EMPTY,
             cards=[],
             message="No search hits found.",
@@ -249,27 +269,28 @@ def build_render_plan(
         )
 
     classified_results = [
-        classify_result(normalize_result(hit, chunk_texts.get(hit.ref, ""))) for hit in hits[:limit]
+        classify_result(normalize_result(hit, chunk_texts.get(hit.ref, "")))
+        for hit in hits[:validated_limit]
     ]
     cards: list[SkillCard] = [
         card
         for result in classified_results
-        if result.kind == "renderable_skill"
+        if result.kind == OutcomeKind.RENDERABLE_SKILL
         if (card := _to_card(result)) is not None
     ]
 
     if cards:
         return RenderPlan(
-            outcome_kind="renderable_skill",
+            outcome_kind=OutcomeKind.RENDERABLE_SKILL,
             exit_code=EXIT_RENDERABLE,
             cards=cards,
             message="",
             classified_results=classified_results,
         )
 
-    if classified_results and all(result.kind == "metadata_only" for result in classified_results):
+    if classified_results and all(result.kind == OutcomeKind.METADATA_ONLY for result in classified_results):
         return RenderPlan(
-            outcome_kind="metadata_only",
+            outcome_kind=OutcomeKind.METADATA_ONLY,
             exit_code=EXIT_NON_RENDERABLE,
             cards=[],
             message="Administrative metadata found, but it is not renderable as a skill card.",
@@ -277,7 +298,7 @@ def build_render_plan(
         )
 
     return RenderPlan(
-        outcome_kind="unsupported",
+        outcome_kind=OutcomeKind.UNSUPPORTED,
         exit_code=EXIT_NON_RENDERABLE,
         cards=[],
         message="Search returned hits, but they could not be promoted safely to a skill card.",
@@ -286,7 +307,7 @@ def build_render_plan(
 
 
 def render_plain(plan: RenderPlan) -> str:
-    if plan.outcome_kind == "renderable_skill":
+    if plan.outcome_kind == OutcomeKind.RENDERABLE_SKILL:
         return "\n\n---\n\n".join(_render_plain_card(card) for card in plan.cards)
     return _render_non_renderable_message(plan)
 
@@ -303,7 +324,7 @@ def render_rich(plan: RenderPlan) -> str:
     buffer = io.StringIO()
     console = Console(file=buffer, force_terminal=True, width=100)
 
-    if plan.outcome_kind == "renderable_skill":
+    if plan.outcome_kind == OutcomeKind.RENDERABLE_SKILL:
         for index, card in enumerate(plan.cards):
             header = Text()
             header.append(card.title, style="bold")
@@ -331,8 +352,8 @@ def render_rich(plan: RenderPlan) -> str:
                 console.print()
         return buffer.getvalue().strip()
 
-    style = "yellow" if plan.outcome_kind == "metadata_only" else "red"
-    title = "Metadata only" if plan.outcome_kind == "metadata_only" else "Non-renderable result"
+    style = "yellow" if plan.outcome_kind == OutcomeKind.METADATA_ONLY else "red"
+    title = "Metadata only" if plan.outcome_kind == OutcomeKind.METADATA_ONLY else "Non-renderable result"
     console.print(Panel(plan.message, title=title, border_style=style, box=box.ROUNDED))
     return buffer.getvalue().strip()
 
@@ -404,13 +425,13 @@ def run_get(chunk_ids: Iterable[str], *, segment_path: Path | None = None) -> di
 
 def output_json(plan: RenderPlan) -> str:
     payload = {
-        "outcome_kind": plan.outcome_kind,
+        "outcome_kind": plan.outcome_kind.value,
         "exit_code": plan.exit_code,
         "message": plan.message,
         "cards": [card.__dict__ for card in plan.cards],
         "classified_results": [
             {
-                "kind": item.kind,
+                "kind": item.kind.value,
                 "ref": item.normalized.ref,
                 "raw_type": item.normalized.raw_type,
                 "reason": item.reason,
@@ -425,7 +446,7 @@ def cli(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Governed skill card renderer.")
     parser.add_argument("query", nargs="?", help="Search query for governed card rendering")
     parser.add_argument(
-        "--limit", "-l", type=int, default=5, help="Max cards / hits to evaluate (default: 5)"
+        "--limit", "-l", type=_positive_int, default=5, help="Max cards / hits to evaluate (default: 5)"
     )
     parser.add_argument(
         "--segment",
@@ -446,21 +467,22 @@ def cli(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
     segment_path = args.segment
+    validated_limit = _validate_positive_limit(args.limit)
 
     try:
         raw_search_output = _load_search_payload(args, segment_path=segment_path)
         strict_json = args.stdin_search_output and _looks_like_json_payload(raw_search_output)
         hits = parse_search_output(raw_search_output, strict_json=strict_json)
-        chunk_texts = run_get((hit.ref for hit in hits), segment_path=segment_path)
+        chunk_texts = run_get((hit.ref for hit in hits[:validated_limit]), segment_path=segment_path)
         plan = build_render_plan(
-            raw_search_output, chunk_texts, limit=args.limit, strict_json=strict_json
+            raw_search_output, chunk_texts, limit=validated_limit, strict_json=strict_json
         )
     except (SearchRuntimeError, GetRuntimeError, SearchParseError) as exc:
         print(f"skill-hub-cards: {exc}", file=sys.stderr)
         return EXIT_ERROR
 
     rendered = _select_renderer(plan, use_json=args.json, style=args.style)
-    stream = sys.stdout if plan.outcome_kind == "renderable_skill" else sys.stderr
+    stream = sys.stdout if plan.outcome_kind == OutcomeKind.RENDERABLE_SKILL else sys.stderr
     if rendered:
         print(rendered, file=stream)
     return plan.exit_code
@@ -516,16 +538,16 @@ def _render_plain_card(card: SkillCard) -> str:
 
 def _render_non_renderable_message(plan: RenderPlan) -> str:
     title_map = {
-        "metadata_only": "# Administrative metadata only",
-        "unsupported": "# Non-renderable result",
-        "empty": "# No search hits found",
+        OutcomeKind.METADATA_ONLY: "# Administrative metadata only",
+        OutcomeKind.UNSUPPORTED: "# Non-renderable result",
+        OutcomeKind.EMPTY: "# No search hits found",
     }
     title = title_map.get(plan.outcome_kind, "# skill-hub-cards")
     return f"{title}\n{plan.message}".strip()
 
 
 def _to_card(result: ClassifiedResult) -> SkillCard | None:
-    if result.kind != "renderable_skill":
+    if result.kind != OutcomeKind.RENDERABLE_SKILL:
         return None
     normalized = result.normalized
     assert normalized.stable_id is not None
@@ -553,7 +575,23 @@ def _title_from_ref(ref: str) -> str:
 def _title_from_path(path: str | None) -> str | None:
     if not path:
         return None
-    return Path(path).stem
+    stem = Path(path).stem
+    if stem.upper() == "SKILL":
+        return None
+    return stem
+
+
+def _positive_int(value: str) -> int:
+    parsed = int(value)
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError("limit must be a positive integer")
+    return parsed
+
+
+def _validate_positive_limit(limit: int) -> int:
+    if limit <= 0:
+        raise ValueError("limit must be a positive integer")
+    return limit
 
 
 def _extract_path(chunk: str) -> str | None:

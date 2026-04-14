@@ -7,8 +7,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Handle help flags before processing query
-if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
+print_help() {
     cat << 'EOF'
 Usage: skill-hub [OPTIONS] "query"
 
@@ -35,10 +34,13 @@ Note:
   Multi-word queries may show a "Canonical alias match:" block
   before the normal results for better skill discovery.
 EOF
+}
+
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
+    print_help
     exit 0
 fi
 
-QUERY="$*"
 SEGMENT="${SKILL_HUB_SEGMENT:-$HOME/.trifecta/segments/skills-hub}"
 TRIFECTA_ROOT="$(dirname "$SCRIPT_DIR")"
 CARDS_HELPER="$SCRIPT_DIR/skill-hub-cards"
@@ -49,20 +51,7 @@ QUERY_PARTS=()
 while [ $# -gt 0 ]; do
     case "$1" in
         -h|--help)
-            cat << 'EOF'
-Usage: skill-hub [OPTIONS] "query"
-
-Search for skills in the global skills hub using natural language queries.
-
-Options:
-  -h, --help    Show this help message and exit
-  -c, --cards   Render governed agent-friendly skill cards
-  -l, --limit   Max results (default: 5)
-
-Arguments:
-  query         Natural language description of what you need
-                (e.g., "refactor", "testing", "debug workflow")
-EOF
+            print_help
             exit 0
             ;;
         -c|--cards)
