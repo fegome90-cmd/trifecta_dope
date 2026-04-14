@@ -16,6 +16,8 @@ Search for skills in the global skills hub using natural language queries.
 
 Options:
   -h, --help    Show this help message and exit
+  -c, --cards   Render governed agent-friendly skill cards
+  -l, --limit   Max results (default: 5)
 
 Arguments:
   query         Natural language description of what you need
@@ -40,6 +42,61 @@ QUERY="$*"
 SEGMENT="${SKILL_HUB_SEGMENT:-$HOME/.trifecta/segments/skills-hub}"
 TRIFECTA_ROOT="$(dirname "$SCRIPT_DIR")"
 CARDS_HELPER="$SCRIPT_DIR/skill-hub-cards"
+CARDS_MODE=0
+LIMIT=5
+QUERY_PARTS=()
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -h|--help)
+            cat << 'EOF'
+Usage: skill-hub [OPTIONS] "query"
+
+Search for skills in the global skills hub using natural language queries.
+
+Options:
+  -h, --help    Show this help message and exit
+  -c, --cards   Render governed agent-friendly skill cards
+  -l, --limit   Max results (default: 5)
+
+Arguments:
+  query         Natural language description of what you need
+                (e.g., "refactor", "testing", "debug workflow")
+EOF
+            exit 0
+            ;;
+        -c|--cards)
+            CARDS_MODE=1
+            shift
+            ;;
+        -l|--limit)
+            if [ $# -lt 2 ]; then
+                echo "skill-hub: --limit requires a value" >&2
+                exit 2
+            fi
+            LIMIT="$2"
+            shift 2
+            ;;
+        --)
+            shift
+            while [ $# -gt 0 ]; do
+                QUERY_PARTS+=("$1")
+                shift
+            done
+            ;;
+        *)
+            QUERY_PARTS+=("$1")
+            shift
+            ;;
+    esac
+done
+
+if ! [[ "$LIMIT" =~ ^[1-9][0-9]*$ ]]; then
+    echo "skill-hub: --limit must be a positive integer (got $LIMIT)" >&2
+    exit 2
+fi
+
+QUERY="${QUERY_PARTS[*]}"
 
 if [ -z "$QUERY" ]; then
     echo "Usage: skill-hub \"query\""
@@ -50,6 +107,10 @@ if [ -z "$QUERY" ]; then
 fi
 
 cd "$TRIFECTA_ROOT"
+
+if [ "$CARDS_MODE" -eq 1 ]; then
+    exec python3 "$CARDS_HELPER" "$QUERY" --limit "$LIMIT"
+fi
 
 run_search_capture() {
     local output status
@@ -124,10 +185,5 @@ if [ "$SHOULD_RERANK" -eq 1 ] && [ -n "$CANONICAL_ALIAS_MATCH" ]; then
     echo "Additional results for: $QUERY"
 fi
 
-MAIN_OUTPUT="$(run_search_capture --query "$QUERY")"
+MAIN_OUTPUT="$(run_search_capture --query "$QUERY" --limit "$LIMIT")"
 printf '%s\n' "$MAIN_OUTPUT"
-
-# Show info card only on interactive terminals (silently skip failures)
-if [ -t 1 ]; then
-    python3 "$HOME/.local/bin/skill_hub_info_card.py" || true
-fi
