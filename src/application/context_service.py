@@ -48,8 +48,13 @@ class ContextService:
         self.pack_path = self.ctx_dir / "context_pack.json"
         self.policy = SegmentIndexingPolicy.detect(target_path)
 
-    def _load_pack(self) -> ContextPack:
-        """Load the context pack from disk."""
+    def _load_pack(self) -> tuple[ContextPack, str]:
+        """Load the context pack from disk.
+
+        Returns a ``(pack, authority_state)`` tuple.
+        ``authority_state`` is the ``publication_state`` from the promoted set's
+        receipt for skill_hub segments, or ``"healthy"`` for other policies.
+        """
         if self.policy == SegmentIndexingPolicy.SKILL_HUB:
             return self._load_skill_hub_promoted_pack()
 
@@ -58,13 +63,13 @@ class ContextService:
 
         with open(self.pack_path, "r", encoding="utf-8") as f:
             data = json.load(f)
-            return ContextPack(**data)
+            return ContextPack(**data), "healthy"
 
     @staticmethod
     def _sha256(path: Path) -> str:
         return hashlib.sha256(path.read_bytes()).hexdigest()
 
-    def _load_skill_hub_promoted_pack(self) -> ContextPack:
+    def _load_skill_hub_promoted_pack(self) -> tuple[ContextPack, str]:
         errors: list[str] = []
 
         live_paths = (
@@ -72,11 +77,12 @@ class ContextService:
             self.ctx_dir / "context_pack.json",
             self.ctx_dir / SKILL_HUB_PROMOTION_RECEIPT,
         )
-        promoted_pack = self._validate_and_load_promoted_set(
+        live_result = self._validate_and_load_promoted_set(
             *live_paths, source="live", errors=errors
         )
-        if promoted_pack is not None:
-            return promoted_pack
+        if live_result is not None:
+            pack, state = live_result
+            return pack, state
 
         backup_dir = self.ctx_dir / SKILL_HUB_LAST_VALID_DIR
         backup_paths = (
@@ -84,11 +90,12 @@ class ContextService:
             backup_dir / "context_pack.json",
             backup_dir / SKILL_HUB_PROMOTION_RECEIPT,
         )
-        promoted_pack = self._validate_and_load_promoted_set(
+        backup_result = self._validate_and_load_promoted_set(
             *backup_paths, source="last_valid", errors=errors
         )
-        if promoted_pack is not None:
-            return promoted_pack
+        if backup_result is not None:
+            pack, state = backup_result
+            return pack, state
 
         detail = "; ".join(errors) if errors else "runtime artifacts are missing"
         raise RuntimeError(f"No valid promoted set for skill_hub at {self.target_path}. {detail}")
@@ -101,7 +108,7 @@ class ContextService:
         *,
         source: str,
         errors: list[str],
-    ) -> ContextPack | None:
+    ) -> tuple[ContextPack, str] | None:
         missing_paths = [str(p) for p in (manifest_path, pack_path, receipt_path) if not p.exists()]
         if missing_paths:
             errors.append(f"[{source}] missing artifacts: {', '.join(missing_paths)}")
@@ -128,6 +135,21 @@ class ContextService:
             return None
         if pack_fingerprint != self._sha256(pack_path):
             errors.append(f"[{source}] pack fingerprint mismatch")
+            return None
+
+        # Extract publication_state from receipt — the authority signal for the read path.
+        # Legacy receipts without this field default to "healthy" (backward compatibility).
+        publication_state: str = receipt.get("publication_state", "healthy")
+
+        # "blocked" is not a valid runtime publication state.  A healthy or degraded
+        # promoted set may exist on disk; a blocked one never should (the Batch-2 guard
+        # prevents it).  If we encounter "blocked" anyway, treat the artifact as
+        # inadmissible rather than normalising it to degraded/healthy.
+        if publication_state == "blocked":
+            errors.append(
+                f"[{source}] inadmissible receipt: publication_state='blocked' "
+                "is not a valid runtime state — the artifact should not exist"
+            )
             return None
 
         try:
@@ -164,7 +186,7 @@ class ContextService:
             errors.append(f"[{source}] invalid pack admission: {'; '.join(pack_admission.error)}")
             return None
 
-        return pack
+        return pack, publication_state
 
     def search(self, query: str, k: int = 5, doc_filter: Optional[str] = None) -> SearchResult:
         """
@@ -173,7 +195,7 @@ class ContextService:
         Search authority is the full chunk body (`chunk.text`), while the
         returned display surface remains the truncated preview from the index.
         """
-        pack = self._load_pack()
+        pack, authority_state = self._load_pack()
         hits = []
         query_words = [w.lower() for w in query.split() if len(w) > 2]  # Skip short words
 
@@ -231,7 +253,7 @@ class ContextService:
 
         # Sort by score and take top k
         hits = sorted(hits, key=lambda x: x.score, reverse=True)[:k]
-        return SearchResult(hits=hits)
+        return SearchResult(hits=hits, authority_state=authority_state)
 
     def get(
         self,
@@ -243,7 +265,7 @@ class ContextService:
         query: Optional[str] = None,
     ) -> GetResult:
         """Retrieve chunks by ID with backpressure and progressive disclosure."""
-        pack = self._load_pack()
+        pack, _authority_state = self._load_pack()
         selected_chunks = []
         total_tokens = 0
         chars_returned_total = 0

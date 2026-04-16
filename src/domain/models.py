@@ -1,7 +1,33 @@
 """Domain Models for Trifecta."""
 
 from dataclasses import dataclass
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
+
+
+class SkillHubIntegrityConfig(BaseModel):
+    """Corpus-integrity policy for skill_hub promotion.
+
+    Governs which source families must be present in a promoted candidate and
+    whether a corpus that fails that requirement can still be published in an
+    explicit degraded state (vs. being fully blocked).
+
+    Fields
+    ------
+    required_sources:
+        Source-family names that MUST appear in the promoted candidate.
+        An empty tuple disables the guard (default: no requirements).
+    min_skills_per_source:
+        Minimum number of skills that must come from each required source for
+        that source to be considered "present".  Defaults to 1 (any presence).
+    allow_degraded:
+        If True, a corpus that is missing required sources is published with
+        ``publication_state = "degraded"`` instead of being blocked.
+        Defaults to False (fail-closed).
+    """
+
+    required_sources: tuple[str, ...] = ()
+    min_skills_per_source: int = Field(default=1, ge=1)
+    allow_degraded: bool = False
 
 
 class TrifectaConfig(BaseModel):
@@ -12,6 +38,9 @@ class TrifectaConfig(BaseModel):
     repo_root: str
     default_profile: str = "impl_patch"
     last_verified: str = ""
+    skill_hub_integrity: SkillHubIntegrityConfig = Field(
+        default_factory=SkillHubIntegrityConfig
+    )
 
     @field_validator("segment")
     @classmethod

@@ -60,9 +60,21 @@ class SearchHit(BaseModel):
 
 
 class SearchResult(BaseModel):
-    """Result from ctx.search."""
+    """Result from ctx.search.
+
+    ``authority_state`` carries the ``publication_state`` from the promoted
+    set's receipt when the segment uses the ``skill_hub`` indexing policy.
+    It is segment metadata by convenience — callers can use it to decide
+    whether to trust the corpus or show a warning, but search result
+    relevance scoring does not depend on it.
+
+    Values:
+        ``"healthy"``  — corpus passed integrity evaluation (or non-skill-hub segment)
+        ``"degraded"`` — corpus published with missing required sources
+    """
 
     hits: List[SearchHit]
+    authority_state: str = "healthy"
 
 
 class GetResult(BaseModel):

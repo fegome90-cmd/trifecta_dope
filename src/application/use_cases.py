@@ -19,9 +19,10 @@ from src.domain.context_models import (
     ContextPack,
     SourceFile,
 )
-from src.domain.models import TrifectaConfig, TrifectaPack, ValidationResult
+from src.domain.models import SkillHubIntegrityConfig, TrifectaConfig, TrifectaPack, ValidationResult
 from src.domain.result import Err, Ok
 from src.domain.segment_indexing_policy import SegmentIndexingPolicy
+from src.domain.skill_hub_corpus_integrity import SkillHubIntegrityVerdict, evaluate_corpus_integrity
 from src.domain.skill_manifest import SkillManifest
 from src.infrastructure.file_system import FileSystemAdapter
 from src.infrastructure.file_system_utils import AtomicWriter, file_lock
@@ -374,6 +375,7 @@ class BuildContextPackUseCase:
         declared_policy: str,
         manifest_payload: str,
         pack_payload: str,
+        verdict: "SkillHubIntegrityVerdict | None" = None,
     ) -> str:
         manifest_payload = self._normalize_persisted_payload(manifest_payload)
         pack_payload = self._normalize_persisted_payload(pack_payload)
@@ -381,7 +383,7 @@ class BuildContextPackUseCase:
             manifest_payload.encode("utf-8")
         ).hexdigest()
         pack_fingerprint = hashlib.sha256(pack_payload.encode("utf-8")).hexdigest()
-        receipt = {
+        receipt: dict[str, Any] = {
             "schema_version": 1,
             "promoted_at": datetime.now(timezone.utc).isoformat(),
             "segment_id": segment_id,
@@ -394,6 +396,9 @@ class BuildContextPackUseCase:
                 "receipt": f"_ctx/{SKILL_HUB_PROMOTION_RECEIPT}",
             },
         }
+        if verdict is not None:
+            receipt["publication_state"] = verdict.publication_state
+            receipt["integrity"] = verdict.as_receipt_block()
         return json.dumps(receipt, indent=2, ensure_ascii=False) + "\n"
 
     def _last_valid_promoted_paths(self, target_path: Path) -> tuple[Path, Path, Path]:
@@ -459,7 +464,19 @@ class BuildContextPackUseCase:
         manifest_payload: str,
         pack_payload: str,
         receipt_payload: str,
+        publication_state: str = "healthy",
     ) -> "Ok[None] | Err[list[str]]":
+        """Write live promoted set to disk.
+
+        Publication-state contract:
+            - ``"healthy"``  → write manifest/pack/receipt + seal ``.skill_hub_last_valid``
+            - ``"degraded"`` → write manifest/pack/receipt, but do NOT seal ``.skill_hub_last_valid``
+            - ``"blocked"``  → must NOT be called (caller guards this); fails loudly if reached
+        """
+        if publication_state == "blocked":
+            # Defensive: callers must never pass blocked here.
+            return Err(["[Promotion] Internal error: _publish called with blocked verdict"])
+
         paths = self._skill_hub_paths(target_path)
         ctx_dir = target_path / "_ctx"
         lock_path = ctx_dir / ".autopilot.lock"
@@ -474,7 +491,9 @@ class BuildContextPackUseCase:
                 AtomicWriter.write(manifest_path, manifest_payload)
                 AtomicWriter.write(pack_path, pack_payload)
                 AtomicWriter.write(receipt_path, receipt_payload)
-                self._seal_last_valid_promoted_set(target_path, paths)
+                # Seal last_valid ONLY for healthy sets — degraded must never become the fallback
+                if publication_state == "healthy":
+                    self._seal_last_valid_promoted_set(target_path, paths)
             except Exception as exc:
                 try:
                     self._restore_last_valid_promoted_set(target_path, paths, snapshot)
@@ -537,17 +556,61 @@ class BuildContextPackUseCase:
 
             manifest_payload = self._serialize_canonical_manifest(manifest)
             pack_payload = pack.model_dump_json(indent=2)
+
+            # --- Corpus-integrity guard (skill-hub-corpus-integrity-guard) ---
+            # Load integrity policy from config; fall back to no-guard defaults
+            # if config is unavailable (safe: empty required_sources = no guard).
+            integrity_config: SkillHubIntegrityConfig
+            try:
+                trifecta_config = self.file_system.load_trifecta_config(target_path)
+                integrity_config = (
+                    trifecta_config.skill_hub_integrity
+                    if trifecta_config is not None
+                    else SkillHubIntegrityConfig()
+                )
+            except (ValueError, OSError) as exc:
+                # Config load failure is a hard block — we cannot safely evaluate
+                # integrity without knowing the policy.  "healthy" must ONLY mean
+                # "integrity was evaluated and approved", never "we skipped the check".
+                return Err(
+                    [
+                        f"[skill-hub] Cannot load config for integrity evaluation: {exc}",
+                        "[skill-hub] Promotion blocked — config unreadable",
+                    ]
+                )
+
+            verdict = evaluate_corpus_integrity(
+                manifest.skills,
+                integrity_config,
+                manifest_fingerprint=hashlib.sha256(
+                    manifest_payload.encode("utf-8")
+                ).hexdigest(),
+            )
+
+            if verdict.publication_state == "blocked":
+                # Hard gate: do not write any promoted artifact.
+                missing = list(verdict.missing_sources)
+                return Err(
+                    [
+                        f"[skill-hub] Corpus integrity blocked: missing required sources {missing}",
+                        f"[skill-hub] reason_code={verdict.reason_code}",
+                    ]
+                )
+
+            # degraded or healthy — proceed to publish
             receipt_payload = self._build_skill_hub_receipt(
                 segment_id=segment_id,
                 declared_policy=policy.value,
                 manifest_payload=manifest_payload,
                 pack_payload=pack_payload,
+                verdict=verdict,
             )
             promoted = self._publish_skill_hub_promoted_set(
                 target_path,
                 manifest_payload=manifest_payload,
                 pack_payload=pack_payload,
                 receipt_payload=receipt_payload,
+                publication_state=verdict.publication_state,
             )
             if isinstance(promoted, Err):
                 return promoted
@@ -731,7 +794,6 @@ class BuildContextPackUseCase:
             token_est = len(content) // 4
 
             # Source metadata
-            import hashlib
 
             sha256 = hashlib.sha256(content.encode()).hexdigest()
             mtime = file_path.stat().st_mtime
@@ -841,7 +903,7 @@ class MacroLoadUseCase:
         # 2. Get L0 Skeletons (Initial navigation)
         l0_ids = []
         for cid in ["skill", "agent"]:
-            match = [c.id for c in service._load_pack().chunks if c.id.startswith(f"{cid}:")]
+            match = [c.id for c in service._load_pack()[0].chunks if c.id.startswith(f"{cid}:")]
             if match:
                 l0_ids.append(match[0])
 
