@@ -99,6 +99,10 @@ def validate_segment_structure(path: Path) -> ValidationResult:
         f"agent_{segment_id}.md",
         f"prime_{segment_id}.md",
         f"session_{segment_id}.md",
+        ".ai/settings.json",
+        "scripts/trifecta_manager.sh",
+        "Makefile",
+        "llms.txt",
     ]
 
     for filename in expected_files:
@@ -222,6 +226,8 @@ def validate_agents_constitution(path: Path) -> "Ok[ValidationResult] | Err[List
         content = agents_path.read_text().strip()
         if not content:
             return Err(["Failed Constitution: AGENTS.md is empty"])
+        if "https://github.com/fegome90-cmd/constitucion-ai" not in content:
+            return Err(["Failed Constitution: AGENTS.md is missing reference to Source of Truth"])
     except Exception:
         # Deterministic error output (no dynamic exception details)
         return Err(["Failed Constitution: AGENTS.md cannot be read"])
