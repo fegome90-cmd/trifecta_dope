@@ -6,6 +6,101 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TRIFECTA_ROOT="$(dirname "$SCRIPT_DIR")"
+CARDS_HELPER="$SCRIPT_DIR/skill-hub-cards"
+
+has_cards_flag() {
+    local arg
+    for arg in "$@"; do
+        if [ "$arg" = "--cards" ]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+extract_query_hint() {
+    local skip_next=0
+    local arg
+    for arg in "$@"; do
+        if [ "$skip_next" -eq 1 ]; then
+            skip_next=0
+            continue
+        fi
+        case "$arg" in
+            --limit|-l|--segment|--style)
+                skip_next=1
+                continue
+                ;;
+            --json|--stdin-search-output)
+                continue
+                ;;
+            -*)
+                continue
+                ;;
+            *)
+                printf '%s' "$arg"
+                return 0
+                ;;
+        esac
+    done
+    printf ''
+}
+
+emit_intro() {
+    local query_hint="${1:-}"
+    if ! python3 - "$SCRIPT_DIR" "$query_hint" <<'PY'; then
+import os
+import sys
+
+script_dir = sys.argv[1]
+query_hint = sys.argv[2] if len(sys.argv) > 2 else None
+sys.path.insert(0, script_dir)
+cwd_scripts = os.path.join(os.getcwd(), "scripts")
+if cwd_scripts not in sys.path:
+    sys.path.insert(0, cwd_scripts)
+
+from skill_hub_runtime_ux import emit_intro
+
+emit_intro(query_hint=query_hint)
+PY
+        return 1
+    fi
+}
+
+emit_error_card() {
+    local error_code="$1"
+    local error_class="$2"
+    local cause="$3"
+    shift 3
+    local verify_cmd="$1"
+    shift
+    python3 - "$SCRIPT_DIR" "$error_code" "$error_class" "$cause" "$verify_cmd" "$@" <<'PY'
+import os
+import sys
+
+script_dir = sys.argv[1]
+error_code = sys.argv[2]
+error_class = sys.argv[3]
+cause = sys.argv[4]
+verify_cmd = sys.argv[5]
+steps = sys.argv[6:] or ["Retry with a valid sentence query."]
+
+sys.path.insert(0, script_dir)
+cwd_scripts = os.path.join(os.getcwd(), "scripts")
+if cwd_scripts not in sys.path:
+    sys.path.insert(0, cwd_scripts)
+from skill_hub_runtime_ux import emit_error_card
+
+emit_error_card(
+    error_code=error_code,
+    error_class=error_class,
+    cause=cause,
+    next_steps=steps,
+    verify_cmd=verify_cmd,
+)
+PY
+}
 
 # Handle help flags before processing query
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
@@ -36,18 +131,48 @@ EOF
     exit 0
 fi
 
+if has_cards_flag "$@"; then
+    filtered_args=()
+    for arg in "$@"; do
+        if [ "$arg" = "--cards" ]; then
+            continue
+        fi
+        filtered_args+=("$arg")
+    done
+
+    QUERY_HINT="$(extract_query_hint "${filtered_args[@]}")"
+    if [ -z "$QUERY_HINT" ]; then
+        emit_error_card \
+            "SKILL_HUB_EMPTY_QUERY" \
+            "validation" \
+            "query required in --cards mode" \
+            "skill-hub --cards \"help me with testing strategy\" --limit 1" \
+            "Provide a non-empty sentence query."
+        exit 1
+    fi
+
+    emit_intro "$QUERY_HINT"
+    set +e
+    python3 "$CARDS_HELPER" "${filtered_args[@]}"
+    status=$?
+    set -e
+    exit "$status"
+fi
+
 QUERY="$*"
 SEGMENT="${SKILL_HUB_SEGMENT:-$HOME/.trifecta/segments/skills-hub}"
-TRIFECTA_ROOT="$(dirname "$SCRIPT_DIR")"
-CARDS_HELPER="$SCRIPT_DIR/skill-hub-cards"
 
 if [ -z "$QUERY" ]; then
-    echo "Usage: skill-hub \"query\""
-    echo "Example: skill-hub \"refactor\""
-    echo ""
-    echo "Run 'skill-hub --help' for more information."
+    emit_error_card \
+        "SKILL_HUB_EMPTY_QUERY" \
+        "validation" \
+        "query required" \
+        "skill-hub \"help me with refactoring\"" \
+        "Pass a non-empty sentence query."
     exit 1
 fi
+
+emit_intro "$QUERY"
 
 cd "$TRIFECTA_ROOT"
 
@@ -126,8 +251,3 @@ fi
 
 MAIN_OUTPUT="$(run_search_capture --query "$QUERY")"
 printf '%s\n' "$MAIN_OUTPUT"
-
-# Show info card only on interactive terminals (silently skip failures)
-if [ -t 1 ]; then
-    python3 "$HOME/.local/bin/skill_hub_info_card.py" || true
-fi

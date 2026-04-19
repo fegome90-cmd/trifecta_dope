@@ -1,7 +1,7 @@
 """Domain Models for Trifecta Context."""
 
 from datetime import datetime
-from typing import Any, List
+from typing import Any, List, Optional
 from pydantic import BaseModel, Field
 
 
@@ -57,6 +57,7 @@ class SearchHit(BaseModel):
     token_est: int
     source_path: str
     score: float
+    score_details: Optional[dict[str, float]] = Field(default=None)
 
 
 class SearchResult(BaseModel):

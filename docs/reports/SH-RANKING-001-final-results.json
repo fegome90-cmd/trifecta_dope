@@ -1,0 +1,94 @@
+{
+  "summary": {
+    "top1": 1,
+    "top3": 5,
+    "total": 5
+  },
+  "results": [
+    {
+      "query": "code review",
+      "top1": "skill:requesting-code-review",
+      "top3": [
+        "skill:requesting-code-review",
+        "skill:code-review-agent",
+        "skill:receiving-code-review"
+      ],
+      "pass_top1": false,
+      "pass_top3": true,
+      "expected_top1": "skill:code-review-agent",
+      "acceptable_top3": [
+        "skill:receiving-code-review",
+        "skill:driving-claude-code-sessions",
+        "skill:code-review-guide"
+      ]
+    },
+    {
+      "query": "git workflow",
+      "top1": "skill:git-workflow",
+      "top3": [
+        "skill:git-workflow",
+        "skill:skill-workflow",
+        "skill:code-workflow"
+      ],
+      "pass_top1": true,
+      "pass_top3": true,
+      "expected_top1": "skill:git-workflow",
+      "acceptable_top3": [
+        "skill:branch-review",
+        "skill:skill-workflow",
+        "skill:automation-workflows"
+      ]
+    },
+    {
+      "query": "refactor",
+      "top1": "skill:springboot-tdd",
+      "top3": [
+        "skill:springboot-tdd",
+        "skill:tdd-workflow",
+        "skill:cpp-coding-standards"
+      ],
+      "pass_top1": false,
+      "pass_top3": true,
+      "expected_top1": "skill:legacy-modernizer",
+      "acceptable_top3": [
+        "skill:python-idioms",
+        "skill:cpp-coding-standards",
+        "skill:skill-workflow"
+      ]
+    },
+    {
+      "query": "security",
+      "top1": "skill:django-security",
+      "top3": [
+        "skill:django-security",
+        "skill:springboot-security",
+        "skill:api-security-hardening"
+      ],
+      "pass_top1": false,
+      "pass_top3": true,
+      "expected_top1": "skill:security-auditor",
+      "acceptable_top3": [
+        "skill:api-security-hardening",
+        "skill:vibe-sec",
+        "skill:iterative-security-review"
+      ]
+    },
+    {
+      "query": "tdd",
+      "top1": "skill:django-tdd",
+      "top3": [
+        "skill:django-tdd",
+        "skill:springboot-tdd",
+        "skill:tdd-workflow"
+      ],
+      "pass_top1": false,
+      "pass_top3": true,
+      "expected_top1": "skill:tdd-coach",
+      "acceptable_top3": [
+        "skill:django-tdd",
+        "skill:golang-testing",
+        "skill:tdd-workflow"
+      ]
+    }
+  ]
+}

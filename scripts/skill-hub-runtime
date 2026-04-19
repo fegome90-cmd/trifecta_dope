@@ -21,12 +21,15 @@ class ArtifactSpec:
     source_rel: str
     kind: str
     target_name: str | None = None
+    wrapper_direct_dependency: bool = False
 
 
 SCHEMA_VERSION = 2
 TOOL_NAME = "skill-hub-runtime"
 RECEIPT_TOP_LEVEL_KEYS = frozenset({"schema_version", "tool", "promoted_at", "artifacts"})
 WRAPPER_ARTIFACT_NAME = "skill-hub"
+RUNTIME_UX_ARTIFACT_NAME = "skill-hub-runtime-ux"
+CARDS_CORE_ARTIFACT_NAME = "skill-hub-cards-core"
 
 
 CANONICAL_ARTIFACTS: tuple[ArtifactSpec, ...] = (
@@ -41,6 +44,19 @@ CANONICAL_ARTIFACTS: tuple[ArtifactSpec, ...] = (
         source_rel="scripts/skill-hub-cards",
         kind="promoted",
         target_name="skill-hub-cards",
+        wrapper_direct_dependency=True,
+    ),
+    ArtifactSpec(
+        name=RUNTIME_UX_ARTIFACT_NAME,
+        source_rel="scripts/skill_hub_runtime_ux.py",
+        kind="promoted",
+        target_name="skill_hub_runtime_ux.py",
+    ),
+    ArtifactSpec(
+        name=CARDS_CORE_ARTIFACT_NAME,
+        source_rel="scripts/skill_hub_cards_core.py",
+        kind="promoted",
+        target_name="skill_hub_cards_core.py",
     ),
 )
 
@@ -74,7 +90,7 @@ def target_path(runtime_bin_dir: Path, artifact: ArtifactSpec) -> Path | None:
 
 
 def governed_runtime_dependencies() -> tuple[ArtifactSpec, ...]:
-    return tuple(artifact for artifact in CANONICAL_ARTIFACTS if artifact.name != WRAPPER_ARTIFACT_NAME)
+    return tuple(artifact for artifact in CANONICAL_ARTIFACTS if artifact.wrapper_direct_dependency)
 
 
 def resolve_shell_token(token: str, variables: dict[str, str]) -> str:

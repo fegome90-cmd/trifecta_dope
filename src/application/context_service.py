@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import math
 from pathlib import Path
 from typing import Any, Literal, Optional
 
@@ -213,33 +214,40 @@ class ContextService:
             if doc_filter and doc_filter not in entry.id and doc_filter != chunk.doc:
                 continue
 
-            score = 0.0
+            # --- Dimensions of Scoring ---
+            # 1. Identity Score (Dimension of Confidence)
+            identity_score = 0.0
             title_lower = entry.title_path_norm.lower()
-            body_lower = chunk.text.lower()
-
-            # 1. Direct word matches
+            
+            # Identity matches (Title and ID slug)
             for word in query_words:
                 if word in title_lower:
-                    score += 1.0
-                if word in body_lower:
-                    score += 0.5
+                    identity_score += 4.0  # Dominant identity signal
+                if word in entry.id.lower():
+                    identity_score += 1.0  # Supporting match (ID)
 
-            # 2. Heuristic boosts (Even if title/preview match failed)
+            # 2. Information Score (Dimension of Support)
+            body_raw_score = 0.0
+            body_lower = chunk.text.lower()
+            for word in query_words:
+                if word in body_lower:
+                    body_raw_score += 0.5
+
+            # 3. Apply Length Normalization (Log10 suavizada)
+            # C=50 ensures Factor >= 1.7. Factor for 1000 tokens ~ 3.02.
+            norm_factor = math.log10(entry.token_est + 50)
+            body_score = body_raw_score / norm_factor
+
+            # 4. Final Score Assembly
+            total_score = identity_score + body_score
+
+            # 5. Legacy Heuristic Boosts (Minimal impact)
             if "skill" in entry.id and any(
                 kw in query_words for kw in ["regla", "comando", "cómo", "rule", "protocol"]
             ):
-                score += 0.5
-            if "agent" in entry.id and any(
-                kw in query_words for kw in ["stack", "código", "tech", "implement", "debug", "fix"]
-            ):
-                score += 1.0
-            if "session" in entry.id and any(
-                kw in query_words
-                for kw in ["pasos", "checklist", "runbook", "handoff", "history", "log"]
-            ):
-                score += 0.8
-
-            if score > 0:
+                total_score += 0.2
+            
+            if total_score > 0:
                 hits.append(
                     SearchHit(
                         id=entry.id,
@@ -247,7 +255,13 @@ class ContextService:
                         preview=entry.preview,
                         token_est=entry.token_est,
                         source_path=entry.title_path_norm,
-                        score=score,
+                        score=round(total_score, 4),
+                        score_details={
+                            "identity_score": round(identity_score, 4),
+                            "body_raw_score": round(body_raw_score, 4),
+                            "length_penalty": round(norm_factor, 4),
+                            "final_score": round(total_score, 4)
+                        }
                     )
                 )
 

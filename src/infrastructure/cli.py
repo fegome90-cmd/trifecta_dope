@@ -721,6 +721,13 @@ def search(
     use_case = SearchUseCase(file_system, telemetry)
 
     try:
+        from src.application.context_service import ContextService
+        svc = ContextService(Path(segment).resolve())
+        _, auth_state = svc._load_pack()
+        if auth_state == "degraded":
+            from rich.console import Console
+            Console(stderr=True).print("[yellow]⚠️ WARNING: Using degraded skill_hub corpus. Some required sources are missing.[/yellow]")
+
         # Determine if linting should be enabled (conservative default)
         enable_lint = _get_lint_enabled(no_lint)
 
@@ -794,31 +801,35 @@ def get(
     start_time = time.time()
     _, file_system, _ = _get_dependencies(segment, telemetry)
 
-    use_case = GetChunkUseCase(file_system, telemetry)
-
-    id_list = [x.strip() for x in ids.split(",") if x.strip()]
-
-    # Agent-safe defaults: Check env vars if CLI flags not provided
-    effective_max_chunks = max_chunks
-    if effective_max_chunks is None:
-        import os
-
-        env_max_chunks = os.environ.get("TRIFECTA_PD_MAX_CHUNKS")
-        if env_max_chunks:
-            try:
-                effective_max_chunks = int(env_max_chunks)
-            except ValueError:
-                pass  # Ignore invalid env var, use None
-
-    effective_stop_on_evidence = stop_on_evidence
-    if not effective_stop_on_evidence:
-        import os
-
-        env_stop_on_evidence = os.environ.get("TRIFECTA_PD_STOP_ON_EVIDENCE")
-        if env_stop_on_evidence and env_stop_on_evidence == "1":
-            effective_stop_on_evidence = True
-
     try:
+        from src.application.context_service import ContextService
+        svc = ContextService(Path(segment).resolve())
+        _, auth_state = svc._load_pack()
+        if auth_state == "degraded":
+            from rich.console import Console
+            Console(stderr=True).print("[yellow]⚠️ WARNING: Using degraded skill_hub corpus. Some required sources are missing.[/yellow]")
+
+        id_list = [x.strip() for x in ids.split(",") if x.strip()]
+        use_case = GetChunkUseCase(file_system, telemetry)
+
+        # Agent-safe defaults: Check env vars if CLI flags not provided
+        effective_max_chunks = max_chunks
+        if effective_max_chunks is None:
+            import os
+            env_max_chunks = os.environ.get("TRIFECTA_PD_MAX_CHUNKS")
+            if env_max_chunks:
+                try:
+                    effective_max_chunks = int(env_max_chunks)
+                except ValueError:
+                    pass  # Ignore invalid env var, use None
+
+        effective_stop_on_evidence = stop_on_evidence
+        if not effective_stop_on_evidence:
+            import os
+            env_stop_on_evidence = os.environ.get("TRIFECTA_PD_STOP_ON_EVIDENCE")
+            if env_stop_on_evidence and env_stop_on_evidence == "1":
+                effective_stop_on_evidence = True
+
         # Use execute_with_result when --pd-report is active for access to GetResult
         if pd_report:
             output, result = use_case.execute_with_result(

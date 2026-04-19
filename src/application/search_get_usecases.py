@@ -540,6 +540,7 @@ class SearchUseCase:
                 "signals": {
                     "matched_terms": result.matched_terms.get(hit.id, []),
                 },
+                "score_details": hit.score_details,  # New: expose internal breakdown
             }
             for hit, score in result.sorted_hits
         ]

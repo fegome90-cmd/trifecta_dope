@@ -1,0 +1,62 @@
+schema: spec-driven
+
+context: |
+  Tech stack: Python 3.12 CLI with Typer, Pydantic, YAML/JSON tooling.
+  Architecture: Clean Architecture (domain/application/infrastructure) with Result types.
+  Testing: pytest with unit/integration/acceptance layers and pytest-cov.
+  Style: ruff + mypy, fail-closed operational patterns, evidence-first audits.
+
+strict_tdd: true
+
+testing:
+  strict_tdd: true
+  test_runner:
+    framework: pytest
+    command: uv run pytest
+  layers:
+    unit:
+      available: true
+      tool: pytest
+    integration:
+      available: true
+      tool: pytest
+    e2e:
+      available: true
+      tool: pytest acceptance black-box flows
+  coverage:
+    available: true
+    command: uv run pytest --cov
+  quality_tools:
+    linter:
+      available: true
+      command: uv run ruff check src/ tests/
+    type_checker:
+      available: true
+      command: uv run mypy src/
+    formatter:
+      available: true
+      command: uv run ruff format src/ tests/
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes.
+    - Name a single owner and single writer per authority surface.
+  specs:
+    - Use Given/When/Then format for scenarios.
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY).
+    - Evidence != authority; compatibility input != shared authority.
+  design:
+    - Prefer one SSOT per surface and scoped fail-closed boundaries.
+    - Do not introduce parallel systems or manual state surgery.
+  tasks:
+    - Group by phase and preserve single-authority cutovers.
+    - Keep changes small enough to validate without rebuilding unrelated runtime state.
+  apply:
+    - Follow existing Clean Architecture boundaries.
+    - Never let skill_hub silently degrade to generic behavior.
+  verify:
+    test_command: uv run pytest -m "not slow"
+    build_command: ""
+    coverage_threshold: 80
+  archive:
+    - Preserve authority decisions and invariants in the main spec.

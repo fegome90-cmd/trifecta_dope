@@ -1,8 +1,12 @@
 """
-Skill Card rendering with Rich - 100% design system compliance.
+Reference skill card renderers for repo-side CLI usage.
 
 Generates cards with full skill information for agent and human consumption.
 Supports 3 output styles: rich (Panel), compact (Table), plain (text).
+
+Important:
+- Promoted runtime authority lives under /scripts.
+- This module is intentionally reference-only for repo-side callers.
 
 Design System:
 - 4px grid spacing
@@ -18,6 +22,8 @@ from __future__ import annotations
 import re
 import sys
 from dataclasses import dataclass
+from src.application.skill_card_view_model import SkillCardViewModel
+
 from typing import IO, Literal
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -51,18 +57,26 @@ BORDER_SUBTLE = "dim blue"
 
 OutputStyle = Literal["rich", "compact", "plain"]
 
+_SKILL_HUB_INTRO_BANNER = "=== Skill Hub ==="
+_SKILL_HUB_SENTENCE_GUIDANCE = (
+    "Tip: write your query as a sentence query so the search intent is explicit."
+)
 
-@dataclass(frozen=True)
-class SkillCard:
-    """Immutable skill card data with design tokens."""
 
-    name: str
-    path: str
-    source: str
-    description: str
-    search_hints: str | None = None
-    triggers: tuple[str, ...] = ()
-    relevance: float = 0.0  # 0.0 - 1.0
+def render_skill_hub_intro(
+    *,
+    query_hint: str | None = None,
+    file: IO[str] | None = None,
+) -> None:
+    """Reference intro renderer for repo-side callers (non-runtime authority)."""
+    output = file or sys.stdout
+    lines = [
+        _SKILL_HUB_INTRO_BANNER,
+        _SKILL_HUB_SENTENCE_GUIDANCE,
+    ]
+    if query_hint:
+        lines.append(f"Query: {query_hint}")
+    print("\n".join(lines), file=output)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -70,7 +84,7 @@ class SkillCard:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def render_card(
-    card: SkillCard,
+    card: SkillCardViewModel,
     style: OutputStyle = "plain",
     file: IO[str] | None = None,
 ) -> None:
@@ -97,7 +111,7 @@ def render_card(
         _render_plain(card, file)
 
 
-def _render_rich(card: SkillCard, file: IO[str] | None = None) -> None:
+def _render_rich(card: SkillCardViewModel, file: IO[str] | None = None) -> None:
     """
     Rich Panel card with full visual hierarchy.
 
@@ -128,6 +142,10 @@ def _render_rich(card: SkillCard, file: IO[str] | None = None) -> None:
     header.append(card.name, style=f"{WEIGHT_HEADLINE} {COLOR_SECONDARY}")
     header.append("  ", style="reset")
     header.append(card.source, style=COLOR_MUTED)
+
+    if card.authority_state == "degraded":
+        header.append("  ", style="reset")
+        header.append("[DEGRADED]", style="bold red")
 
     if card.relevance > 0:
         header.append("  ", style="reset")
@@ -170,7 +188,7 @@ def _render_rich(card: SkillCard, file: IO[str] | None = None) -> None:
     console.print(panel)
 
 
-def _render_compact(card: SkillCard, file: IO[str] | None = None) -> None:
+def _render_compact(card: SkillCardViewModel, file: IO[str] | None = None) -> None:
     """
     Compact table row for dense listings.
 
@@ -197,11 +215,15 @@ def _render_compact(card: SkillCard, file: IO[str] | None = None) -> None:
 
     rel = f"{int(card.relevance * 100)}%" if card.relevance > 0 else "-"
 
-    table.add_row(card.name[:24], card.source[:12], rel, desc)
+    name_display = card.name[:24]
+    if card.authority_state == "degraded":
+        name_display = f"{card.name[:13]} [DEGRADED]"
+
+    table.add_row(name_display, card.source[:12], rel, desc)
     console.print(table)
 
 
-def _render_plain(card: SkillCard, file: IO[str] | None = None) -> None:
+def _render_plain(card: SkillCardViewModel, file: IO[str] | None = None) -> None:
     """
     Plain text format for agent parsing.
 
@@ -223,9 +245,13 @@ def _render_plain(card: SkillCard, file: IO[str] | None = None) -> None:
         f"# Skill: {card.name}",
         f"read {card.path}",
         f"Source: {card.source}",
-        "",
-        card.description,
     ]
+
+    if card.authority_state == "degraded":
+        lines.append("Status: DEGRADED")
+
+    lines.append("")
+    lines.append(card.description)
 
     if card.triggers:
         lines.append("")
@@ -242,7 +268,7 @@ def _render_plain(card: SkillCard, file: IO[str] | None = None) -> None:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def render_cards(
-    cards: list[SkillCard],
+    cards: list[SkillCardViewModel],
     style: OutputStyle = "plain",
     title: str | None = None,
     file: IO[str] | None = None,
@@ -250,7 +276,7 @@ def render_cards(
     """Render multiple cards with optional header."""
     output = file or sys.stdout
 
-    if title and style == "rich" and sys.stdout.isatty():
+    if title and style == "rich":
         try:
             from rich.console import Console
             console = Console(file=output, force_terminal=True)
@@ -275,8 +301,14 @@ def render_cards(
 # PARSING UTILITIES
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def parse_skill_from_chunk(chunk_text: str, chunk_id: str) -> SkillCard | None:
+def parse_skill_from_chunk(chunk_text: str, chunk_id: str) -> SkillCardViewModel | None:
     """Parse skill metadata from a context chunk.
+
+    .. deprecated::
+        Transitional shim — will be removed in a future cleanup phase.
+        Relies on regex over chunk_text as secondary authority, which is prohibited as
+        primary source of truth. Use ``build_view_model(ClassifiedResult)`` in
+        ``scripts/skill_hub_cards_core.py`` as the canonical path instead.
 
     Supports multiple formats:
     - New: "read /path/to/SKILL.md" on first line
@@ -288,7 +320,7 @@ def parse_skill_from_chunk(chunk_text: str, chunk_id: str) -> SkillCard | None:
         chunk_id: Chunk ID (e.g., "skill:workorder-execution-base:abc123")
 
     Returns:
-        SkillCard if parseable, None otherwise
+        SkillCardViewModel if parseable, None otherwise
     """
     # Extract name from chunk_id
     # Format: skill:<name>:<fingerprint> or skill:<name>
@@ -330,12 +362,14 @@ def parse_skill_from_chunk(chunk_text: str, chunk_id: str) -> SkillCard | None:
     hints_match = re.search(r"^\*\*Search Hints\*\*:\s*(.+)$", chunk_text, re.MULTILINE)
     search_hints = hints_match.group(1).strip() if hints_match else None
 
-    return SkillCard(
+    return SkillCardViewModel(
+        id=name,
         name=name,
         path=path,
         source=source,
         description=description,
         search_hints=search_hints,
+        authority_state="healthy"
     )
 
 
@@ -346,29 +380,35 @@ def parse_skill_from_chunk(chunk_text: str, chunk_id: str) -> SkillCard | None:
 def main() -> None:
     """Demo: skill cards rendering."""
     sample_cards = [
-        SkillCard(
+        SkillCardViewModel(
+            id="workorder-execution-base",
             name="workorder-execution-base",
             path="/Users/felipe/.pi/agent/skills/workorder-execution-base/SKILL.md",
             source="pi-agent",
             description="Use when executing multi-phase remediation or refactor plans split into WorkOrders, especially with isolated git worktrees, strict verification gates.",
             triggers=("git-worktree", "verification", "gates"),
             relevance=0.92,
+            authority_state="healthy"
         ),
-        SkillCard(
+        SkillCardViewModel(
+            id="git-worktree-curated",
             name="git-worktree-curated",
             path="/Users/felipe/.pi/agent/skills/git-worktree-curated/SKILL.md",
             source="pi-agent",
             description="Use when parallel branch work, isolated environments, or Work Order execution require creating, listing, cleaning, or repairing git worktrees safely.",
             triggers=("parallel", "isolation", "worktree"),
             relevance=0.85,
+            authority_state="degraded"
         ),
-        SkillCard(
+        SkillCardViewModel(
+            id="python-cli-patterns",
             name="python-cli-patterns",
             path="/Users/felipe/.pi/agent/skills/python-cli-patterns/SKILL.md",
             source="pi-agent",
             description="Use for Python CLI apps: Typer, Click, argparse, Rich, terminal UX. Do NOT use for pytest or general Python idioms.",
             triggers=("cli", "typer", "rich"),
             relevance=0.78,
+            authority_state="healthy"
         ),
     ]
 
