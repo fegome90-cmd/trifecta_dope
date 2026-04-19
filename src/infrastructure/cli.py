@@ -1714,14 +1714,29 @@ def create(
     )
 
     files = {
-        "AGENTS.md": "# AGENTS\n\nRead skill.md and _ctx files before running commands.\n",
+        "AGENTS.md": template_renderer.render_agents_md(config),
         FILE_SKILL_MD: template_renderer.render_skill(config),
         "readme_tf.md": template_renderer.render_readme(config),
         f"_ctx/prime_{segment_id}.md": template_renderer.render_prime(config, []),
         f"_ctx/agent_{segment_id}.md": template_renderer.render_agent(config),
         f"_ctx/session_{segment_id}.md": template_renderer.render_session(config),
         "_ctx/trifecta_config.json": json.dumps(config.model_dump(), indent=2) + "\n",
+        ".ai/settings.json": template_renderer.render_ai_settings(),
+        ".ai/hooks/session-end-hook.sh": template_renderer.render_session_end_hook(),
+        "configs/anchors.yaml": template_renderer.render_anchors_yaml(),
+        "configs/aliases.yaml": template_renderer.render_aliases_yaml(),
+        "Makefile": template_renderer.render_makefile(config),
+        "biome.json": template_renderer.render_biome_json(),
+        "pyrefly.toml": template_renderer.render_pyrefly_toml(),
+        "llms.txt": template_renderer.render_llms_txt(config),
+        "ADR/TEMPLATE.md": template_renderer.render_adr_template(),
+        ".gitignore": template_renderer.render_gitignore(),
     }
+
+    # Add empty directories for the agential layout
+    ai_dirs = ["commands", "hooks", "plans", "traces"]
+    target_configs_dir = target_dir / "configs"
+    target_configs_dir.mkdir(parents=True, exist_ok=True)
 
     try:
         from src.infrastructure.segment_state import resolve_segment_state
@@ -1734,13 +1749,35 @@ def create(
         else:
             raise ValueError("SEGMENT_ALREADY_INITIALIZED")
 
-        for rel_path, content in files.items():
+        # Create base files
+        for rel_path, content_file in files.items():
             full_path = target_dir / rel_path
             full_path.parent.mkdir(parents=True, exist_ok=True)
-            if (
-                not full_path.exists()
-            ):  # Don't overwrite unless force? Removed overwrite flag previously.
-                full_path.write_text(content)
+            if not full_path.exists():
+                full_path.write_text(content_file)
+
+        # Create empty .ai subdirectories
+        for d in ai_dirs:
+            (target_dir / ".ai" / d).mkdir(parents=True, exist_ok=True)
+        (target_dir / ".ai" / "hooks").mkdir(parents=True, exist_ok=True)
+            
+        # Create ADR directory
+        (target_dir / "ADR").mkdir(parents=True, exist_ok=True)
+
+        # Create scripts directory and F1 Daemon Manager
+        from src.domain.segment_resolver import resolve_segment_ref
+        ref = resolve_segment_ref(str(target_dir))
+        scripts_dir = target_dir / "scripts"
+        scripts_dir.mkdir(parents=True, exist_ok=True)
+        manager_sh_path = scripts_dir / "trifecta_manager.sh"
+        if not manager_sh_path.exists():
+            manager_sh_path.write_text(template_renderer.render_daemon_manager_sh(config, ref.fingerprint))
+            manager_sh_path.chmod(0o755)
+
+        # Set permissions for hook
+        hook_path = target_dir / ".ai" / "hooks" / "session-end-hook.sh"
+        if hook_path.exists():
+            hook_path.chmod(0o755)
 
         required_bootstrap = [
             target_dir / "AGENTS.md",
@@ -1749,6 +1786,15 @@ def create(
             target_dir / "_ctx" / f"agent_{segment_id}.md",
             target_dir / "_ctx" / f"prime_{segment_id}.md",
             target_dir / "_ctx" / f"session_{segment_id}.md",
+            target_dir / ".ai" / "settings.json",
+            target_dir / ".ai" / "hooks" / "session-end-hook.sh",
+            target_dir / "scripts" / "trifecta_manager.sh",
+            target_dir / "configs" / "anchors.yaml",
+            target_dir / "configs" / "aliases.yaml",
+            target_dir / "Makefile",
+            target_dir / "biome.json",
+            target_dir / "pyrefly.toml",
+            target_dir / "llms.txt",
         ]
         missing_bootstrap = [
             str(p.relative_to(target_dir)) for p in required_bootstrap if not p.exists()
@@ -1759,9 +1805,26 @@ def create(
         if skill_lines > 100:
             raise ValueError(f"skill.md exceeds 100 lines ({skill_lines})")
 
-        typer.echo(f"✅ Trifecta created at {target_dir}")
+        typer.secho(f"✅ Trifecta created at {target_dir}", fg=typer.colors.GREEN, bold=True)
         for f in files:
             typer.echo(f"   ├── {f}")
+        
+        # Capability check for final guidance
+        import subprocess
+        has_graph = False
+        try:
+            res = subprocess.run(["trifecta", "graph", "--help"], capture_output=True, text=True)
+            if res.returncode == 0:
+                has_graph = True
+        except:
+            pass
+
+        typer.echo("\n--- 🏁 F1 ENGINE READY ---")
+        if not has_graph:
+            typer.secho("⚠️ WARNING: Global 'trifecta' binary is outdated (missing Graph support).", fg=typer.colors.YELLOW)
+            typer.echo("To activate Deep Intelligence, use a local build or update global.")
+        else:
+            typer.echo("Run: 'make warmup' to activate Deep Intelligence.")
 
         # Show quick commands from session
         typer.echo(
