@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 import importlib.util
-import io
 import json
+import os
 import re
 import subprocess
 import sys
+import shutil
 from pathlib import Path
 from typing import Any
+
+import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CORE_PATH = REPO_ROOT / "scripts" / "skill_hub_cards_core.py"
@@ -179,14 +182,78 @@ def test_governed_helper_accepts_style_plain_and_rich_flags() -> None:
 
 def test_deprecated_python_entrypoint_is_only_a_shim() -> None:
     assert SHIM_PATH.exists(), f"missing deprecated shim: {SHIM_PATH}"
-    text = SHIM_PATH.read_text()
+    sandbox = Path.cwd() / ".tmp-shim-test"
+    if sandbox.exists():
+        shutil.rmtree(sandbox)
+    sandbox.mkdir()
+    try:
+        shim = sandbox / "skill_hub_cards.py"
+        helper = sandbox / "skill-hub-cards"
+        shutil.copy2(SHIM_PATH, shim)
+        helper.write_text(
+            "#!/usr/bin/env python3\n"
+            "from __future__ import annotations\n"
+            "import sys\n"
+            "print('delegated-sentinel')\n"
+            "raise SystemExit(7)\n"
+        )
+        helper.chmod(0o755)
 
-    assert "deprecated" in text.lower()
-    assert "skill-hub-cards" in text
-    assert "parse_search_output" not in text
-    assert "normalize_result" not in text
-    assert "classify_result" not in text
-    assert "Panel(" not in text
+        result = subprocess.run(
+            [sys.executable, str(shim), "query"],
+            text=True,
+            capture_output=True,
+            check=False,
+            env=os.environ.copy(),
+        )
+
+        assert result.returncode == 7
+        assert "delegated-sentinel" in result.stdout
+        assert "deprecated" in result.stderr.lower()
+        assert "parse_search_output" not in result.stdout
+        assert "normalize_result" not in result.stdout
+    finally:
+        shutil.rmtree(sandbox, ignore_errors=True)
+
+
+def test_parse_search_output_handles_invalid_json_shapes_and_scores() -> None:
+    mod = load_module()
+
+    with pytest.raises(mod.SearchParseError):
+        mod.parse_search_output('["not-a-dict"]', strict_json=True)
+
+    parsed = mod.parse_search_output(
+        json.dumps({"hits": [{"ref": "skill:test-driven-development:abc123", "score": "oops"}]}),
+        strict_json=True,
+    )
+
+    assert len(parsed) == 1
+    assert parsed[0].score == 0.0
+
+
+def test_repo_title_prefers_ref_over_generic_skill_filename() -> None:
+    mod = load_module()
+    payload = search_payload({"ref": "repo:checkpoint-card.md:3fa52a12a1", "score": 1.5})
+    chunks = {
+        "repo:checkpoint-card.md:3fa52a12a1": (
+            "## [repo:checkpoint-card.md:3fa52a12a1] checkpoint-card.md\n"
+            "read /tmp/checkpoint-card/SKILL.md\n"
+            "**Source**: test-source\n"
+            "Use for checkpoint handoff.\n"
+        )
+    }
+
+    plan = mod.build_render_plan(payload, chunks, limit=5)
+
+    assert plan.cards[0].title == "checkpoint-card"
+    assert plan.cards[0].id == "checkpoint-card"
+
+
+def test_build_render_plan_rejects_non_positive_limit() -> None:
+    mod = load_module()
+
+    with pytest.raises(ValueError, match="positive integer"):
+        mod.build_render_plan(search_payload(), {}, limit=0)
 
 
 def test_mixed_renderable_and_metadata_only_batch_is_success() -> None:
@@ -319,24 +386,3 @@ def test_plain_and_rich_keep_same_batch_semantics_for_metadata_only() -> None:
     assert plan.exit_code == 3
     assert "administrative metadata" in plain.lower()
     assert "administrative metadata" in rich.lower()
-
-
-def test_skill_cards_module_exposes_governed_intro_renderer() -> None:
-    from src.cli import skill_cards
-
-    assert hasattr(skill_cards, "render_skill_hub_intro")
-
-
-def test_governed_intro_renderer_emits_sentence_query_guidance() -> None:
-    from src.cli import skill_cards
-
-    buffer = io.StringIO()
-    skill_cards.render_skill_hub_intro(
-        query_hint="i need help choosing the right testing strategy",
-        file=buffer,
-    )
-    rendered = buffer.getvalue().lower()
-
-    assert "skill hub" in rendered
-    assert "sentence" in rendered and "query" in rendered
-    assert "i need help choosing the right testing strategy" in rendered

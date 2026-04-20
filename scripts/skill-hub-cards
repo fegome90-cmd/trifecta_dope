@@ -1,35 +1,17 @@
 #!/usr/bin/env python3
-"""Runtime adapter for governed skill card rendering.
+"""Governed public entrypoint for skill card rendering.
 
-Semantic authority lives in scripts/skill_hub_cards_core.py.
-This file bootstraps import paths and delegates execution.
+This script intentionally stays thin and delegates all parsing, classification,
+and rendering behavior to ``skill_hub_cards_core.py``.
 """
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
-
-def _bootstrap_runtime_paths() -> None:
-    script_dir = Path(__file__).resolve().parent
-    candidates = [script_dir, Path.cwd() / "scripts"]
-    for candidate in candidates:
-        if not candidate.exists():
-            continue
-        candidate_str = str(candidate)
-        if candidate_str not in sys.path:
-            sys.path.insert(0, candidate_str)
+from skill_hub_cards_core import cli
 
 
 def main() -> int:
-    _bootstrap_runtime_paths()
-    try:
-        from skill_hub_cards_core import cli as core_cli
-    except Exception as exc:  # fail closed
-        print(f"skill-hub-cards: runtime bootstrap failure: {exc}", file=sys.stderr)
-        return 1
-    return int(core_cli())
+    return cli()
 
 
 if __name__ == "__main__":

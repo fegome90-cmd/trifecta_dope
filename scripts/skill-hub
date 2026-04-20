@@ -6,104 +6,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TRIFECTA_ROOT="$(dirname "$SCRIPT_DIR")"
-CARDS_HELPER="$SCRIPT_DIR/skill-hub-cards"
 
-has_cards_flag() {
-    local arg
-    for arg in "$@"; do
-        if [ "$arg" = "--cards" ]; then
-            return 0
-        fi
-    done
-    return 1
-}
-
-extract_query_hint() {
-    local skip_next=0
-    local arg
-    for arg in "$@"; do
-        if [ "$skip_next" -eq 1 ]; then
-            skip_next=0
-            continue
-        fi
-        case "$arg" in
-            --limit|-l|--segment|--style)
-                skip_next=1
-                continue
-                ;;
-            --json|--stdin-search-output)
-                continue
-                ;;
-            -*)
-                continue
-                ;;
-            *)
-                printf '%s' "$arg"
-                return 0
-                ;;
-        esac
-    done
-    printf ''
-}
-
-emit_intro() {
-    local query_hint="${1:-}"
-    if ! python3 - "$SCRIPT_DIR" "$query_hint" <<'PY'; then
-import os
-import sys
-
-script_dir = sys.argv[1]
-query_hint = sys.argv[2] if len(sys.argv) > 2 else None
-sys.path.insert(0, script_dir)
-cwd_scripts = os.path.join(os.getcwd(), "scripts")
-if cwd_scripts not in sys.path:
-    sys.path.insert(0, cwd_scripts)
-
-from skill_hub_runtime_ux import emit_intro
-
-emit_intro(query_hint=query_hint)
-PY
-        return 1
-    fi
-}
-
-emit_error_card() {
-    local error_code="$1"
-    local error_class="$2"
-    local cause="$3"
-    shift 3
-    local verify_cmd="$1"
-    shift
-    python3 - "$SCRIPT_DIR" "$error_code" "$error_class" "$cause" "$verify_cmd" "$@" <<'PY'
-import os
-import sys
-
-script_dir = sys.argv[1]
-error_code = sys.argv[2]
-error_class = sys.argv[3]
-cause = sys.argv[4]
-verify_cmd = sys.argv[5]
-steps = sys.argv[6:] or ["Retry with a valid sentence query."]
-
-sys.path.insert(0, script_dir)
-cwd_scripts = os.path.join(os.getcwd(), "scripts")
-if cwd_scripts not in sys.path:
-    sys.path.insert(0, cwd_scripts)
-from skill_hub_runtime_ux import emit_error_card
-
-emit_error_card(
-    error_code=error_code,
-    error_class=error_class,
-    cause=cause,
-    next_steps=steps,
-    verify_cmd=verify_cmd,
-)
-PY
-}
-
-# Handle help flags before processing query
-if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
+print_help() {
     cat << 'EOF'
 Usage: skill-hub [OPTIONS] "query"
 
@@ -111,6 +15,8 @@ Search for skills in the global skills hub using natural language queries.
 
 Options:
   -h, --help    Show this help message and exit
+  -c, --cards   Render governed agent-friendly skill cards
+  -l, --limit   Max results (default: 5)
 
 Arguments:
   query         Natural language description of what you need
@@ -128,53 +34,72 @@ Note:
   Multi-word queries may show a "Canonical alias match:" block
   before the normal results for better skill discovery.
 EOF
+}
+
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
+    print_help
     exit 0
 fi
 
-if has_cards_flag "$@"; then
-    filtered_args=()
-    for arg in "$@"; do
-        if [ "$arg" = "--cards" ]; then
-            continue
-        fi
-        filtered_args+=("$arg")
-    done
+SEGMENT="${SKILL_HUB_SEGMENT:-$HOME/.trifecta/segments/skills-hub}"
+TRIFECTA_ROOT="$(dirname "$SCRIPT_DIR")"
+CARDS_HELPER="$SCRIPT_DIR/skill-hub-cards"
+CARDS_MODE=0
+LIMIT=5
+QUERY_PARTS=()
 
-    QUERY_HINT="$(extract_query_hint "${filtered_args[@]}")"
-    if [ -z "$QUERY_HINT" ]; then
-        emit_error_card \
-            "SKILL_HUB_EMPTY_QUERY" \
-            "validation" \
-            "query required in --cards mode" \
-            "skill-hub --cards \"help me with testing strategy\" --limit 1" \
-            "Provide a non-empty sentence query."
-        exit 1
-    fi
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -h|--help)
+            print_help
+            exit 0
+            ;;
+        -c|--cards)
+            CARDS_MODE=1
+            shift
+            ;;
+        -l|--limit)
+            if [ $# -lt 2 ]; then
+                echo "skill-hub: --limit requires a value" >&2
+                exit 2
+            fi
+            LIMIT="$2"
+            shift 2
+            ;;
+        --)
+            shift
+            while [ $# -gt 0 ]; do
+                QUERY_PARTS+=("$1")
+                shift
+            done
+            ;;
+        *)
+            QUERY_PARTS+=("$1")
+            shift
+            ;;
+    esac
+done
 
-    emit_intro "$QUERY_HINT"
-    set +e
-    python3 "$CARDS_HELPER" "${filtered_args[@]}"
-    status=$?
-    set -e
-    exit "$status"
+if ! [[ "$LIMIT" =~ ^[1-9][0-9]*$ ]]; then
+    echo "skill-hub: --limit must be a positive integer (got $LIMIT)" >&2
+    exit 2
 fi
 
-QUERY="$*"
-SEGMENT="${SKILL_HUB_SEGMENT:-$HOME/.trifecta/segments/skills-hub}"
+QUERY="${QUERY_PARTS[*]}"
 
 if [ -z "$QUERY" ]; then
-    emit_error_card \
-        "SKILL_HUB_EMPTY_QUERY" \
-        "validation" \
-        "query required" \
-        "skill-hub \"help me with refactoring\"" \
-        "Pass a non-empty sentence query."
+    echo "Usage: skill-hub \"query\""
+    echo "Example: skill-hub \"refactor\""
+    echo ""
+    echo "Run 'skill-hub --help' for more information."
     exit 1
 fi
 
-emit_intro "$QUERY"
-
 cd "$TRIFECTA_ROOT"
+
+if [ "$CARDS_MODE" -eq 1 ]; then
+    exec python3 "$CARDS_HELPER" "$QUERY" --limit "$LIMIT" --segment "$SEGMENT"
+fi
 
 run_search_capture() {
     local output status
@@ -249,5 +174,5 @@ if [ "$SHOULD_RERANK" -eq 1 ] && [ -n "$CANONICAL_ALIAS_MATCH" ]; then
     echo "Additional results for: $QUERY"
 fi
 
-MAIN_OUTPUT="$(run_search_capture --query "$QUERY")"
+MAIN_OUTPUT="$(run_search_capture --query "$QUERY" --limit "$LIMIT")"
 printf '%s\n' "$MAIN_OUTPUT"
