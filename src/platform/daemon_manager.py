@@ -79,7 +79,7 @@ class DaemonManager:
             return False, "Invalid runtime directory"
 
         self._runtime_dir.mkdir(parents=True, exist_ok=True)
-        self._socket_path.parent.mkdir(parents=True, exist_ok=True)
+        self._log_path.parent.mkdir(parents=True, exist_ok=True)
 
         # Fase 4: singleton lock to prevent concurrent starts
         if not self._acquire_singleton_lock():
