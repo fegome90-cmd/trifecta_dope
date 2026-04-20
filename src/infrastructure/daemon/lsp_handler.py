@@ -27,6 +27,16 @@ def handle_lsp_request(req: dict[str, Any], lsp_client: Any) -> dict[str, Any]:
             message="LSP in FAILED state",
         ).to_dict()
 
+    # Auto-didOpen: pyright needs document open before hover/definition
+    if method in ("textDocument/hover", "textDocument/definition",
+                  "textDocument/references", "textDocument/completion"):
+        uri = params.get("textDocument", {}).get("uri", "")
+        if uri:
+            from pathlib import Path as _Path
+            doc_path = _Path(uri.replace("file://", ""))
+            if doc_path.exists():
+                lsp_client.did_open(doc_path, doc_path.read_text())
+
     try:
         result = lsp_client.request(method, params)
         if result:
