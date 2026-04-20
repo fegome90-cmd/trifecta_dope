@@ -62,11 +62,24 @@ class DaemonRunner:
 
     @property
     def socket_path(self) -> Path:
-        return self.runtime_dir / "daemon" / "socket"
+        from src.infrastructure.daemon_paths import get_daemon_socket_path
+        fp = self._fingerprint
+        return get_daemon_socket_path(fp) if fp else self.runtime_dir / "daemon" / "socket"
 
     @property
     def pid_path(self) -> Path:
-        return self.runtime_dir / "daemon" / "pid"
+        from src.infrastructure.daemon_paths import get_daemon_pid_path
+        fp = self._fingerprint
+        return get_daemon_pid_path(fp) if fp else self.runtime_dir / "daemon" / "pid"
+
+    @property
+    def _fingerprint(self) -> str | None:
+        """Resolve repo fingerprint for daemon_paths SSOT."""
+        try:
+            from src.domain.segment_resolver import resolve_segment_ref
+            return resolve_segment_ref(str(self.repo_root)).fingerprint
+        except Exception:
+            return None
 
     def run(self) -> None:
         try:
