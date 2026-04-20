@@ -13,6 +13,7 @@ class DaemonStatus:
     running: bool
     pid: Optional[int] = None
     socket_path: Optional[Path] = None
+    error_message: Optional[str] = None
 
 
 ALLOWED_BASES = [
@@ -53,20 +54,29 @@ class DaemonManager:
     def __init__(self, runtime_dir: Path, repo_root: Optional[Path] = None) -> None:
         self._runtime_dir = runtime_dir
         self._repo_root = repo_root if repo_root is not None else runtime_dir
-        self._socket_path = runtime_dir / "daemon" / "socket"
-        self._pid_path = runtime_dir / "daemon" / "pid"
         self._log_path = runtime_dir / "daemon" / "log"
+        # Resolve fingerprint to match DaemonRunner paths (daemon_paths as SSOT)
+        from src.domain.segment_resolver import resolve_segment_ref
+        from src.infrastructure.daemon_paths import (
+            get_daemon_socket_path,
+            get_daemon_pid_path,
+            get_daemon_lock_path,
+        )
+        fp = resolve_segment_ref(str(self._repo_root)).fingerprint
+        self._socket_path = get_daemon_socket_path(fp)
+        self._pid_path = get_daemon_pid_path(fp)
+        self._lock_path = get_daemon_lock_path(fp)
 
-    def start(self) -> bool:
+    def start(self) -> tuple[bool, Optional[str]]:
         """Start daemon. Returns True if daemon is running after call.
 
         Note: Returns True both if daemon was already running and if
         it was just started. Use is_running() before start() to distinguish.
         """
         if self.is_running():
-            return True
+            return True, None
         if not _is_path_safe(self._runtime_dir):
-            return False
+            return False, "Invalid runtime directory"
 
         self._runtime_dir.mkdir(parents=True, exist_ok=True)
         self._socket_path.parent.mkdir(parents=True, exist_ok=True)
@@ -83,6 +93,8 @@ class DaemonManager:
         env = os.environ.copy()
         env["TRIFECTA_RUNTIME_DIR"] = str(self._runtime_dir)
         env["TRIFECTA_REPO_ROOT"] = str(self._repo_root.resolve())
+        trifecta_root = Path(__file__).parent.parent.parent.resolve()
+        env["PYTHONPATH"] = f"{trifecta_root}:{self._repo_root.resolve()}:{env.get('PYTHONPATH', '')}"
         # Pass TTL if configured (Fase 4 hardening)
         if self.DAEMON_TTL_IDLE > 0:
             env["TRIFECTA_DAEMON_TTL"] = str(self.DAEMON_TTL_IDLE)
@@ -97,11 +109,30 @@ class DaemonManager:
         )
         try:
             for _ in range(self.DAEMON_START_TIMEOUT * 10):
+                # Check if process is still alive
+                if proc.poll() is not None:
+                    # Process died, try to get error from log
+                    error_info = "Daemon process exited prematurely"
+                    try:
+                        if self._log_path.exists():
+                            lines = self._log_path.read_text().splitlines()
+                            if lines:
+                                error_info = f"{error_info}: {lines[-1]}"
+                    except Exception:
+                        pass
+                    return False, error_info
+
                 if self._socket_path.exists():
                     self._pid_path.write_text(str(proc.pid))
-                    return True
+                    return True, None
                 time.sleep(0.1)
-            return False
+            # Timeout — kill orphaned subprocess
+            try:
+                proc.kill()
+                proc.wait(timeout=2)
+            except (ProcessLookupError, OSError):
+                pass
+            return False, "Startup timed out"
         finally:
             self._release_singleton_lock()
 
@@ -196,11 +227,9 @@ class DaemonManager:
         """
         import socket as _socket
 
-        lock_path = Path(str(self._socket_path) + ".lock")
-
         def _bind_lock() -> _socket.socket:
             lock_socket = _socket.socket(_socket.AF_UNIX, _socket.SOCK_DGRAM)
-            lock_socket.bind(str(lock_path))
+            lock_socket.bind(str(self._lock_path))
             return lock_socket
 
         try:
@@ -213,9 +242,9 @@ class DaemonManager:
                 return True
             if self.is_running() or self._lock_owner_is_alive():
                 return False
-            if lock_path.exists():
+            if self._lock_path.exists():
                 try:
-                    lock_path.unlink()
+                    self._lock_path.unlink()
                 except FileNotFoundError:
                     # Another process may clear the stale path after our last check.
                     # Fall through to retry lock acquisition below.
@@ -236,14 +265,13 @@ class DaemonManager:
                 self._singleton_lock.close()
             except Exception:
                 pass
-            lock_path = str(self._socket_path) + ".lock"
             try:
-                Path(lock_path).unlink()
+                self._lock_path.unlink()
             except FileNotFoundError:
                 pass
 
     def _cleanup_files(self) -> None:
-        for p in [self._pid_path, self._socket_path]:
+        for p in [self._pid_path, self._socket_path, self._lock_path]:
             try:
                 p.unlink()
             except FileNotFoundError:
