@@ -77,13 +77,16 @@ class DaemonManager:
             return True, None
         if not _is_path_safe(self._runtime_dir):
             return False, "Invalid runtime directory"
+        # Check for directory blocking socket path
+        if self._socket_path.exists() and not self._socket_path.is_socket():
+            return False, f"Socket path blocked by non-socket file: {self._socket_path}"
 
         self._runtime_dir.mkdir(parents=True, exist_ok=True)
         self._log_path.parent.mkdir(parents=True, exist_ok=True)
 
         # Fase 4: singleton lock to prevent concurrent starts
         if not self._acquire_singleton_lock():
-            return False
+            return False, "Failed to acquire singleton lock"
 
         log_file = self._log_path.open("a")
         python_exe = sys.executable
