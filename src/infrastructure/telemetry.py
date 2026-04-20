@@ -10,6 +10,29 @@ from typing import Any
 from src.domain.segment_resolver import resolve_segment_ref
 
 
+_SURROGATE_RE = re.compile(r"[\ud800-\udfff]")
+
+
+def _strip_surrogates(obj: Any) -> Any:
+    """Recursively remove lone surrogate code points from a JSON-serializable object.
+
+    Surrogates (U+D800-U+DFFF) are illegal in UTF-8 and cannot be written to
+    files opened with default encoding. They appear when Python reads files
+    with error handlers like ``surrogateescape`` or when binary data is
+    decoded lossily.
+
+    Returns a new object with all surrogate characters replaced by the Unicode
+    replacement character U+FFFD.
+    """
+    if isinstance(obj, str):
+        return _SURROGATE_RE.sub("\ufffd", obj)
+    if isinstance(obj, dict):
+        return {k: _strip_surrogates(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_strip_surrogates(item) for item in obj]
+    return obj
+
+
 def _relpath(root: Path, target: Path) -> str:
     """Convert target path to relative path for telemetry.
 
@@ -184,7 +207,7 @@ class Telemetry:
 
         # Write to events.jsonl
         with open(self._ctx_dir / "events.jsonl", "a") as f:
-            content = json.dumps(payload)
+            content = json.dumps(_strip_surrogates(payload))
             if not content.endswith("\n"):
                 content += "\n"
             f.write(content)
@@ -226,7 +249,7 @@ class Telemetry:
         if hasattr(self, "pack_state") and self.pack_state:
             summary["pack_state"] = self.pack_state
 
-        content = json.dumps(summary, indent=2)
+        content = json.dumps(_strip_surrogates(summary), indent=2)
         if not content.endswith("\n"):
             content += "\n"
         with open(self._ctx_dir / "last_run.json", "w") as f:
@@ -305,7 +328,7 @@ class Telemetry:
                 row["x"] = {}
                 changed = True
 
-            normalized_lines.append(json.dumps(row))
+            normalized_lines.append(json.dumps(_strip_surrogates(row)))
 
         if changed:
             try:
