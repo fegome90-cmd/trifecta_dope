@@ -30,7 +30,7 @@ def test_debug_scripts_can_import_src():
     # Import the same modules that debug scripts use
     try:
         import src.infrastructure.lsp_client  # noqa: F401
-        import src.infrastructure.lsp_daemon  # noqa: F401
+        import src.infrastructure.daemon.client  # noqa: F401
         import src.infrastructure.segment_utils  # noqa: F401
     except ImportError as e:
         raise AssertionError(f"Failed to import from src.*: {e}")

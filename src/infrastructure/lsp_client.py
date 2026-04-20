@@ -95,6 +95,7 @@ class LSPClient:
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=False,
+                    cwd=str(self.root_path),
                 )
 
                 if self.telemetry:
@@ -299,7 +300,17 @@ class LSPClient:
             }
             self._send_rpc(req)
 
-            resp = self._read_rpc()
+            resp = None
+            for _ in range(50):
+                msg = self._read_rpc()
+                if not msg:
+                    break
+                if msg.get("id") == 1 and ("result" in msg or "error" in msg):
+                    resp = msg
+                    break
+                _debug_log(
+                    f"[LSP_HANDSHAKE_SKIP] id={msg.get('id')} method={msg.get('method', '')}"
+                )
             if not resp or "result" not in resp:
                 self._failed_invariants.append(INVARIANT_HANDSHAKE)
                 self._transition(LSPState.FAILED)

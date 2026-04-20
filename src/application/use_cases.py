@@ -8,6 +8,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from src.infrastructure.telemetry import _strip_surrogates
+
 import yaml
 
 from src.application.context_service import ContextService
@@ -1286,16 +1288,16 @@ class StatsUseCase:
 
         # Top zero-hit queries
         zero_hit_queries = [
-            (e.get("args", {}).get("query", ""), e.get("args", {}).get("query", ""))
+            (_strip_surrogates(e.get("args", {}).get("query", "")), _strip_surrogates(e.get("args", {}).get("query", "")))
             for e in searches
             if e.get("result", {}).get("hits", 0) == 0
         ]
-        query_counts = Counter(q for q, _ in zero_hit_queries)
+        query_counts = Counter(_strip_surrogates(q) for q, _ in zero_hit_queries)
 
         # Breakdown por query_type
         query_type_counts: Counter[str] = Counter()
         for e in searches:
-            query = e.get("args", {}).get("query", "")
+            query = _strip_surrogates(e.get("args", {}).get("query", ""))
             qtype = self._classify_query_type(query)
             query_type_counts[qtype] += 1
 
