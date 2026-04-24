@@ -298,3 +298,91 @@ def test_graph_signal_disambiguation_prefers_first_fuzzy_match():
     r = result_obj.unwrap()
     assert r.metadata.get("graph_signal") == "used"
     assert r.graph_data["target"] == "my_func"
+
+
+# ── Scenario 10: Duplicate symbol in multiple files, disambiguation fails ──────
+
+
+def test_graph_signal_ambiguous_target_all_paths_fail():
+    """When symbol in multiple files and both callers() and node_id query fail,
+    signal should be 'ambiguous_target'."""
+    from src.infrastructure.graph_store import AmbiguousGraphTargetError
+
+    gs = _mock_graph_service(
+        status_response=_fresh_status(),
+        search_response={
+            "nodes": [
+                _node_dict(symbol_name="dup_func", file_rel="src/a.py"),
+                _node_dict(symbol_name="dup_func", file_rel="src/b.py"),
+            ]
+        },
+    )
+    gs.callers.side_effect = AmbiguousGraphTargetError("seg", "dup_func", [])
+    # _query_related_for_node_id will also fail (no real store)
+    gs.callees.return_value = {"nodes": []}
+
+    oracle = _make_oracle(graph_service=gs)
+    with patch("src.application.oracle_use_case.ContextService") as MockCS:
+        MockCS.return_value.search.return_value = MagicMock(hits=[])
+        result_obj = oracle.execute(Path("/tmp/repo"), "who calls dup_func")
+    r = result_obj.unwrap()
+    assert r.graph_data is None
+    assert r.metadata.get("graph_signal") == "ambiguous_target"
+
+
+# ── Scenario 11: Fuzzy match found but zero callers ────────────────────────────
+
+
+def test_graph_signal_fuzzy_match_zero_callers():
+    """When fuzzy search finds the target but callers returns empty,
+    signal should be 'used' with empty nodes list."""
+    gs = _mock_graph_service(
+        status_response=_fresh_status(),
+        search_response={"nodes": [_node_dict(symbol_name="isolated_func")]},
+        callers_response={"nodes": []},
+    )
+    oracle = _make_oracle(graph_service=gs)
+    with patch("src.application.oracle_use_case.ContextService") as MockCS:
+        MockCS.return_value.search.return_value = MagicMock(hits=[])
+        result_obj = oracle.execute(Path("/tmp/repo"), "who calls isolated_func")
+    r = result_obj.unwrap()
+    assert r.metadata.get("graph_signal") == "used"
+    assert r.graph_data is not None
+    assert r.graph_data["nodes"] == []
+
+
+# ── Scenario 12: Degradation preserves PRIME+AST when ambiguous ────────────────
+
+
+def test_graph_signal_degradation_preserves_prime_ast():
+    """When graph degrades due to ambiguous target, PRIME chunks and AST symbols
+    must remain intact in the result."""
+    from src.infrastructure.graph_store import AmbiguousGraphTargetError
+
+    gs = _mock_graph_service(
+        status_response=_fresh_status(),
+        search_response={
+            "nodes": [
+                _node_dict(symbol_name="dup_func", file_rel="src/a.py"),
+                _node_dict(symbol_name="dup_func", file_rel="src/b.py"),
+            ]
+        },
+    )
+    gs.callers.side_effect = AmbiguousGraphTargetError("seg", "dup_func", [])
+    gs.callees.return_value = {"nodes": []}
+
+    oracle = _make_oracle(graph_service=gs)
+    with patch("src.application.oracle_use_case.ContextService") as MockCS:
+        from src.domain.context_models import SearchHit
+        real_hit = SearchHit(
+            id="test", title_path=["main"], preview="test",
+            token_est=10, source_path="src/main.py", score=1.0,
+        )
+        MockCS.return_value.search.return_value = MagicMock(hits=[real_hit])
+        result_obj = oracle.execute(Path("/tmp/repo"), "who calls dup_func")
+    r = result_obj.unwrap()
+    # Graph degraded but PRIME+AST pipeline intact
+    assert r.graph_data is None
+    assert r.metadata.get("graph_signal") == "ambiguous_target"
+    assert len(r.prime_chunks) == 1
+    assert r.fidelity in ("degraded", "fallback")
