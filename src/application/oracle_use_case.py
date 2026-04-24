@@ -15,6 +15,7 @@ from src.application.ast_parser import SkeletonMapBuilder
 from src.application.context_service import ContextService
 from src.domain.context_models import OracleResult, SearchHit
 from src.domain.query_classifier import classify_query
+from src.domain.segment_resolver import resolve_segment_ref
 from src.domain.result import Ok, Err, Result
 
 _GRAPH_STALE_DAYS = 7
@@ -200,8 +201,10 @@ class SearchOracleUseCase:
             timings["graph_signal_ms"] = int(_elapsed())
             return "target_not_found"
 
-        # Use best match as resolved target
-        best_match = search_nodes[0].get("symbol_name", target)
+        # Disambiguate: prefer first fuzzy match (has file_rel context)
+        best = search_nodes[0]
+        resolved_name = best.get("symbol_name", target)
+        resolved_file = best.get("file_rel", "")
 
         # Gate 5: Budget check — traversal
         if _elapsed() > _GRAPH_TOTAL_BUDGET_MS:
@@ -210,12 +213,27 @@ class SearchOracleUseCase:
 
         try:
             if relation == "callers":
-                result = self.graph_service.callers(repo_path, best_match)
+                result = self.graph_service.callers(repo_path, resolved_name)
             else:
-                result = self.graph_service.callees(repo_path, best_match)
-        except Exception:
-            timings["graph_signal_ms"] = int(_elapsed())
-            return "unavailable"
+                result = self.graph_service.callees(repo_path, resolved_name)
+        except Exception as exc:
+            # Ambiguous target: symbol exists in multiple files
+            exc_type = type(exc).__name__
+            if exc_type == "AmbiguousGraphTargetError":
+                # Disambiguate: build a qualified node ID from fuzzy search context
+                # and query callers/callees for that specific node
+                try:
+                    segment_ref = resolve_segment_ref(repo_path)
+                    qualified_id = f"{segment_ref.id}:{resolved_file}:{resolved_name}"
+                    result = self._query_related_for_node_id(
+                        repo_path, qualified_id, relation
+                    )
+                except Exception:
+                    timings["graph_signal_ms"] = int(_elapsed())
+                    return "ambiguous_target"
+            else:
+                timings["graph_signal_ms"] = int(_elapsed())
+                return "unavailable"
 
         elapsed_total = _elapsed()
         timings["graph_signal_ms"] = int(elapsed_total)
@@ -226,8 +244,32 @@ class SearchOracleUseCase:
         # Return data even if slightly over budget — work already done
         return {
             "relation": relation,
-            "target": best_match,
+            "target": resolved_name,
             "nodes": trimmed,
             "latency_ms": round(elapsed_total, 1),
             "over_budget": elapsed_total > _GRAPH_TOTAL_BUDGET_MS,
+        }
+
+    def _query_related_for_node_id(
+        self,
+        repo_path: Path,
+        node_id: str,
+        relation: str,
+    ) -> Dict[str, Any]:
+        """Query callers/callees for a specific node ID, bypassing symbol resolution."""
+        from src.infrastructure.graph_store import GraphStore
+
+        segment_ref = resolve_segment_ref(repo_path)
+        db_path = GraphStore.db_path_for_segment(segment_ref.root_abs, segment_ref.id)
+        store = GraphStore.open_readonly(
+            db_path, segment_ref.id,
+            required_tables=GraphStore.RELATION_REQUIRED_TABLES,
+        )
+        reverse = relation == "callers"
+        nodes = store.get_callers_for_node(segment_ref.id, node_id) if reverse else store.get_callees_for_node(segment_ref.id, node_id)
+        return {
+            "status": "ok",
+            "segment_id": segment_ref.id,
+            "symbol": node_id.split(":")[-1],
+            "nodes": [n.to_dict() for n in nodes],
         }

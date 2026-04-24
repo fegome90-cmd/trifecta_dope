@@ -1,277 +1,219 @@
 # Proposal: WO-0043 — GraphStore como Señal Derivada del Oracle
 
-## Veredicto
+## 1. Veredicto
 
-Conectar el GraphStore SQLite existente como señal relacional opcional del Oracle, exclusivamente para clases de consultas estructurales que PRIME+AST no resuelve. No se reemplaza nada. No se agrega autoridad nueva. No se tocan embeddings.
+**GO condicionado a benchmark de valor**. El wiring mecánico está implementado y verificado (`d427889c`, 35 tests, 0 regresiones). Pero la propuesta no se declara aprobada hasta que el benchmark de valor demuestre que el grafo agrega información correcta y útil que PRIME+AST no provee. Si el information gain <50% → cerrar.
 
-## 1. Problem Statement
+## 2. Scope Ejecutivo de la Fase
 
-### Qué resuelve mal hoy PRIME+AST
+**Phase 1 = one-hop callers/callees sobre `edge_kind="calls"` exclusivamente.**
 
-PRIME busca por keywords en títulos y cuerpos de chunks. AST extrae símbolos de un solo archivo (el top hit). Juntos no pueden responder:
+El Oracle consulta GraphStore cuando detecta un predicado relacional en la query, ejecuta un traversal de 1 hop sobre edges de tipo `calls`, y agrega el resultado como campo derivado opcional en `OracleResult.graph_data`.
 
-| Query real | Qué falla |
-|---|---|
-| "quién llama a `SearchOracleUseCase.execute`" | PRIME devuelve docs sobre el Oracle. No sabe quién lo invoca. |
-| "cadena de llamadas desde `cli.py` hasta `GraphStore.search_nodes`" | PRIME no tiene edges. AST sólo ve un archivo. |
-| "todos los archivos que importan `ContextService`" | PRIME indexa chunks de documentación, no imports. |
-| "funciones en `src/infrastructure/` que dependen de `src/domain/`" | Cruce archivo-límite. PRIME no tiene dependencias estructurales. |
-| "qué funciones públicas expone el módulo X" | PRIME puede listar títulos pero no distingue public/private. |
+### Qué incluye
+- Detección de predicados relacionales EN+ES (8 patterns: `who calls X`, `callers of X`, `quién llama a/al/a la X`, `what does X call`, `callees of X`, `qué llama/llaman a/al/a la X`)
+- Fuzzy target resolution via `search_nodes` LIKE match
+- 1-hop traversal: `get_callers()` / `get_callees()`
+- 6 signal states con metadata verificable
+- Degradación automática sin tocar el hot path
 
-### Qué sí justifica usar el grafo
+### Qué queda fuera explícitamente
 
-Consultas con **predicado relacional** — donde la respuesta exige conocer quién llama a quién, qué importa qué, o cómo se conectan módulos entre sí. El grafo tiene nodes + edges. PRIME+AST no.
+| Feature | Razón |
+|---------|-------|
+| `edge_kind="imports"` | GraphIndexer solo extrae calls. Requiere collector change. |
+| Multi-hop traversal (N-hop) | get_callers/get_callees son 1-hop. Recursión es fase 2. |
+| Type references | Extraer tipos de parámetros/returns del AST. |
+| Docstrings en metadata_json | No necesario para callers/callees. |
+| Real-time graph updates | Regeneración on-demand basta. |
+| Cross-segment queries | Grafo es intra-segmento. |
+| Embeddings / vector store | Postergado. No se agrega dependencia. |
+| Latencia del hot path F1 | No se toca. WO-0043 no resuelve latencia. |
 
-### Qué NO intenta resolver esta fase
-
-- Búsqueda semántica por significado ("cómo manejo errores en la capa de aplicación")
-- Ranking de relevancia por contenido
-- Reemplazo del pipeline PRIME→AST→LSP
-- Queries que PRIME ya resuelve bien (búsqueda de docs por keyword)
-
-## 2. Non-Goals
-
-- **No reemplazar `context_pack.json`**. Es el SSOT del hot path. Permanece intacto.
-- **No convertir SQLite en SSOT**. GraphStore es un índice derivado, regenerable, no autoritativo.
-- **No introducir embeddings/vector store**. Explícitamente postergado. No se agrega ninguna dependencia nueva.
-- **No usar el grafo como señal universal**. Sólo se activa para queries con predicado relacional detectable.
-- **No tocar el hot path F1**. El daemon, el context_service, y el fallback mode quedan como están.
-- **No agregar capas de abstracción**. Se usa el `GraphStore` existente directamente.
-
-## 3. Authority Model
+## 3. Modelo de Autoridad
 
 ```
-context_pack.json  ←  AUTORIDAD ÚNICA del hot path
-        |
-        | (alimenta)
-        v
-   Oracle F1  ←  PRIME + AST + LSP (sin cambios)
-        |
-        | (consulta derivada, condicional)
-        v
-   GraphStore  ←  DERIVADO, REGENERABLE, NO AUTORITATIVO
+context_pack.json   =  AUTORIDAD ÚNICA del hot path F1
+                         SSOT para búsqueda de documentación
+                         
+GraphStore/SQLite   =  DERIVADO, REGENERABLE, NO AUTORITATIVO
+                         Generado desde AST del código fuente
+                         No almacena contenido, solo estructura
 ```
 
-**Reglas de autoridad:**
+**Contrato operativo**:
 
 1. `context_pack.json` es la única fuente de verdad para contexto de documentación.
-2. `GraphStore` se genera a partir del AST del código fuente (`GraphIndexer`). No tiene información que no exista en el código.
-3. Si el grafo no existe, está corrupto, o excede el presupuesto de latencia → se ignora. No fallback a grafo.
-4. Nunca se usa el grafo para validar o contradecir a PRIME.
-5. El grafo se puede regenerar con `trifecta graph index` sin pérdida de datos.
+2. GraphStore se genera a partir del AST del código. No tiene información que no exista en el código.
+3. Si el grafo falta, está stale, o excede budget → el sistema degrada a PRIME+AST sin cambiar contrato de salida.
+4. El grafo nunca contradice a PRIME porque no comparten dominio: PRIME tiene docs, el grafo tiene estructura.
+5. El grafo se puede eliminar y regenerar con `trifecta graph index` sin pérdida de datos.
+6. No hay overlap de autoridad. No hay split-brain posible.
 
-**Split-brain prevention:**
-- El grafo no almacena contenido de chunks — solo nombres, tipos, líneas, y relaciones.
-- No hay overlap de autoridad: PRIME tiene docs, el grafo tiene estructura.
-- Si hay inconsistencia entre grafo y código, se regenera el grafo. Punto.
+## 4. Routing y Degradación
 
-## 4. Routing Model
-
-### Queries que activan el grafo
-
-Patrones detectables en el query:
-
-| Patrón | Ejemplo | Señal activada |
-|---|---|---|
-| `who calls X` / `callers of X` | "quién llama a execute" | `GraphStore.get_callers()` |
-| `what does X call` / `callees of X` | "qué llama ContextService" | `GraphStore.get_callees()` |
-| `imports X` / `dependents of X` | "quién importa graph_models" | edge_kind="imports" (enrichment fase 2) |
-| `call chain X to Y` | "cadena de cli.py a search_nodes" | Travesía multi-hop (enrichment fase 2) |
-
-### Queries que permanecen en F1 fallback mode
-
-Todo lo demás. Específicamente:
-- Búsqueda de documentación por keyword
-- Preguntas sobre configuración, comandos, workflows
-- Queries donde no se detecta predicado relacional
-- Queries donde el símbolo target no se resuelve en el grafo
-
-### Degradación
+### Routing
 
 ```
-query llega → ¿tiene predicado relacional?
-    NO  → F1 fallback normal (PRIME+AST+LSP)
-    SÍ  → ¿grafo disponible?
-        NO  → F1 fallback normal + metadata: {"graph_signal": "unavailable"}
-        SÍ  → ¿resolución de target < 10ms?
-            NO  → F1 fallback normal + metadata: {"graph_signal": "timeout"}
-            SÍ  → ejecutar query relacional
-                  → agregar resultado como campo derivado en OracleResult
+query → classify_query() → predicado relacional?
+    NO → PRIME+AST+LSP normal (graph_signal = "no_predicate")
+    SÍ → ¿graph_service disponible?
+        NO → PRIME+AST+LSP normal (graph_signal = "unavailable")
+        SÍ → ¿grafo existe y no stale?
+            NO → PRIME+AST+LSP normal (graph_signal = "stale")
+            SÍ → ¿target encontrado en <10ms?
+                NO → PRIME+AST+LSP normal (graph_signal = "target_not_found" | "timeout")
+                SÍ → traversal callers/callees en <5ms
+                    → OracleResult.graph_data = {relation, target, nodes, latency_ms, over_budget}
+                    → metadata.graph_signal = "used"
 ```
 
-El grafo NUNCA bloquea el pipeline. Es best-effort con presupuesto.
+### Contrato de Degradación (verificable)
 
-## 5. Minimal Enrichment Scope
+Cada caso de degradación registra metadata específica en `OracleResult.metadata`:
 
-### Qué se agrega primero (Fase 1)
+| Estado | Causa | Metadata registrada | Comportamiento |
+|--------|-------|---------------------|----------------|
+| `no_predicate` | Query sin predicado relacional detectable | `graph_signal_ms = 0` | Pipeline normal, grafo nunca consultado |
+| `unavailable` | GraphService es None o lanza excepción | `graph_signal_ms = elapsed` | Pipeline normal |
+| `stale` | Grafo no existe o indexado hace >7 días (fallback heurístico) | `graph_signal_ms = elapsed` | Pipeline normal |
+| `timeout` | Target resolution o traversal excede budget | `graph_signal_ms = elapsed` | Pipeline normal |
+| `target_not_found` | Fuzzy search no encuentra el símbolo | `graph_signal_ms = elapsed` | Pipeline normal |
+| `used` | Traversal exitoso | `graph_signal_ms = elapsed`, `graph_data` poblado | Pipeline normal + graph_data como campo derivado |
 
-Nada en el schema. El `GraphStore` actual ya tiene todo lo necesario:
-- `nodes` con `symbol_name`, `qualified_name`, `kind`, `file_rel`, `line`
-- `edges` con `from_node_id`, `to_node_id`, `edge_kind="calls"`
-- `search_nodes()` con fuzzy search
-- `get_callers()` / `get_callees()` con traversal
+El grafo **nunca** bloquea el pipeline. Es best-effort con presupuesto.
 
-**Lo único que falta es el wiring** — conectar `GraphService` al `SearchOracleUseCase` como señal condicional.
+### Patrones soportados
 
-### Qué queda fuera por ahora
+| Relación | EN | ES |
+|----------|----|----|
+| callers | `who calls X`, `callers of X` | `quién llama a X`, `quién llama al X`, `quién llama a la X` |
+| callees | `what does X call`, `callees of X` | `qué llama X`, `qué llaman al X`, `qué llaman a la X` |
 
-| Enrichment | Por qué queda fuera |
-|---|---|
-| `metadata_json` con docstrings | No necesario para callers/callees. Agregar después si el wiring demuestra valor. |
-| edge_kind="imports" | El `GraphIndexer` actual solo extrae "calls". Agregar imports requiere cambiar el collector. Fase 2. |
-| Travesía multi-hop | `get_callers`/`get_callees` son 1-hop. N- Hopkins requiere query recursiva. Fase 2. |
-| Type references | Extraer tipos de parámetros/returns del AST. Fase 2. |
+### Casos negativos (NO activan grafo)
 
-### Justificación del scope mínimo
+```
+"how to configure the daemon"       → no_predicate
+"what is context_pack.json"         → no_predicate
+"show me the skill hub index"       → no_predicate
+"context service"                   → no_predicate
+"explain the oracle architecture"   → no_predicate
+"who uses execute"                  → no_predicate (patrón no soportado)
+"donde se usa init"                 → no_predicate (patrón no soportado)
+"call graph of main"                → no_predicate (ambiguo: callers o callees)
+"import chain cli.py to store"      → no_predicate (multi-hop, fuera de scope)
+```
 
-El wiring puro (sin enrichment) basta para validar:
-1. ¿El agente usa la señal relacional cuando está disponible?
-2. ¿Mejora la calidad de las respuestas para queries de "quién llama a X"?
-3. ¿El overhead de latencia es aceptable?
+## 5. Gates y Thresholds Justificados
 
-Si la respuesta a las 3 es sí → justifica el enrichment de fase 2. Si no → se elimina sin haber invertido en schema changes.
+### Gate de Staleness
 
-## 6. Latency and Reliability Gates
+**Estado actual**: `_GRAPH_STALE_DAYS = 7` es un **fallback heurístico temporal**. No es un criterio robusto — no correlaciona con cambios reales en el código. Se usa porque la tabla `graph_index` solo tiene `indexed_at`, sin referencia al estado del repositorio.
 
-### Presupuesto por query con grafo
+**Dirección recomendada**: Agregar columna `indexed_commit` a `graph_index`. Al indexar, capturar `git rev-parse --short HEAD`. Al consultar staleness, comparar con HEAD actual. Si difiere → stale. Si no es repo git → fallback a 7 días. Esto es un **enrichment de schema** para Fase 2.
 
-| Operación | Presupuesto | Nota |
-|---|---|---|
-| Detección de predicado relacional | < 1ms | Pattern matching en el query string |
-| Resolución de target en grafo | < 10ms | `find_target_candidates()` es indexed lookup |
-| Caller/callee traversal | < 5ms | Indexed JOIN en SQLite |
-| **Total grafo** | **< 15ms** | |
-| **Total Oracle + grafo** | **< 65ms** | F1 baseline ~50ms + 15ms grafo |
+**Justificación del fallback**: 7 días es conservador. En un proyecto activo, el grafo se indexa frecuentemente. En un proyecto inactivo, 7 días es razonablemente fresco. No es ideal pero es safe-default hasta que el commit-hash esté implementado.
 
-### Estrategia de fallback
+### Presupuesto de Latencia
 
-- Timeout por operación: cada operación del grafo tiene un budget individual.
-- Si cualquier operación excede su budget → se descarta el resultado del grafo.
-- El OracleResult incluye `metadata.graph_signal` con estado: `"used"`, `"unavailable"`, `"timeout"`, `"no_predicate"`.
+| Operación | Budget | Justificación |
+|-----------|--------|---------------|
+| Predicate detection | <1ms | Regex sobre string. Predecible. |
+| Target resolution (search_nodes) | <10ms | SQLite LIKE query con índice. Predecible para ~500 nodos. |
+| Traversal (callers/callees) | <5ms | Indexed JOIN en SQLite. Predecible. |
+| **Total graph signal** | **<15ms** | Basado en benchmark Phase 0: p95 = 3.7ms medido. |
+| **Total Oracle + graph** | **<65ms** | F1 baseline ~50ms + 15ms graph. |
 
-### Requisitos de consistencia
+**Por qué 65ms?** El baseline Oracle sin graph es ~50ms (PRIME+AST). Agregar 15ms de graph signal mantiene el total dentro del presupuesto de un solo tool call del agente (<100ms). Si el total supera 80ms, el agente percibe latencia y el overhead no se justifica.
 
-- El grafo se regenera on-demand con `trifecta graph index`.
-- No hay consistencia eventual entre context_pack y grafo — son artefactos independientes.
-- Si el grafo tiene más de 7 días sin re-indexar → `probe_status()` reporta `stale=true` y se omite.
+### Thresholds de Aceptación
 
-## 7. Evaluation Plan
+| Métrica | Target | Justificación del número |
+|---------|--------|--------------------------|
+| Information gain | ≥70% | 70% significa que en 7 de 10 queries relacionales, el graph agrega info correcta y útil que PRIME+AST no tiene. Es un piso razonable para justificar el wiring. No es 100% porque algunas queries pueden referir símbolos que no están en el grafo. |
+| Kill criterion info gain | <50% | Menos de la mitad de las queries se benefician → la señal no justifica la complejidad. El 50% es el punto donde el costo de mantenimiento (indexar, mantener fresco, testear) iguala el beneficio. |
+| Routing precision | 100% para no-relacional | Un solo false positive (activar graph en query no-relacional) desperdicia budget y agrega ruido. 100% es alcanzable con classifier conservador y patrones estrechos. |
+| Latencia p95 | <65ms Oracle+graph | Ver justificación arriba. |
 
-### Benchmark orientado a queries relacionales reales
+## 6. Benchmark de Valor Ejecutable
 
-Conjunto de 20 queries divididas en 4 clases:
+### Metodología
 
-| Clase | Queries | Ejemplo |
-|---|---|---|
-| Caller | 5 | "quién llama a `SearchOracleUseCase.execute`" |
-| Callee | 5 | "qué funciones llama `ContextService.search`" |
-| No-relacional | 5 | "cómo configuro el daemon" (control: NO debe activar grafo) |
-| Ambigua | 5 | "context service" (border case: keyword que también es símbolo) |
+Para cada query relacional Q en el conjunto de prueba:
+
+```
+1. Ejecutar Oracle(graph_service=None)  → Result_sin = {prime_chunks, ast_symbols, graph_data=None}
+2. Ejecutar Oracle(graph_service=gs)    → Result_con = {prime_chunks, ast_symbols, graph_data={...}}
+3. Evaluar 3 dimensiones:
+   a) NOVEDAD: ¿graph_data contiene info que Result_sin no tiene?
+   b) CORRECCIÓN: ¿los nodos en graph_data son callers/callees reales del target?
+   c) UTILIDAD: ¿esa info responde la intención relacional del query?
+```
+
+### Conjunto de Prueba
+
+Queries con targets que existen en el grafo actual (524 nodos, 193 edges, todos `calls`):
+
+| # | Query | Target esperado | Relación | Tipo |
+|---|-------|-----------------|----------|------|
+| 1 | "who calls normalize_token" | normalize_token | callers | relacional |
+| 2 | "quién llama a extract_imports" | extract_imports | callers | relacional |
+| 3 | "what does compute_projection_fingerprint call" | compute_projection_fingerprint | callees | relacional |
+| 4 | "callers of build_context_pack" | build_context_pack | callers | relacional |
+| 5 | "qué llaman al search" | search | callees | relacional |
+| 6 | "who calls nonexistent_xyz" | nonexistent_xyz | callers | target_not_found |
+| 7 | "how to configure the daemon" | — | no_predicate | control negativo |
+| 8 | "what is context_pack.json" | — | no_predicate | control negativo |
+| 9 | "context service" | — | no_predicate | control negativo |
+| 10 | "explain the oracle architecture" | — | no_predicate | control negativo |
 
 ### Métricas
 
-| Métrica | Target | Cómo se mide |
-|---|---|---|
-| Routing accuracy | 100% no-relacional no activa grafo | Inspección de `metadata.graph_signal` |
-| Caller recall | ≥1 caller para queries con target existente | Conteo de nodos devueltos vs. grep manual |
-| Latencia p95 | <65ms con grafo activo | Benchmark 100 runs |
-| Fallback correctness | 0 regresiones vs. F1 baseline sin grafo | A/B comparison |
+| Métrica | Cómo se mide | Fórmula |
+|---------|-------------|---------|
+| **Information gain** | % de queries relacionales (1-5) donde graph_data agrega nodos correctos que PRIME+AST no tiene | `queries_con_gain / queries_relacionales` |
+| **Corrección** | % de nodos en graph_data que son callers/callees verificados | `nodos_correctos / nodos_totales` |
+| **Routing precision** | % de queries negativas (7-10) que NO activan graph | `negativos_correctos / negativos_totales` |
+| **Latencia overhead** | Diferencia p95 entre Oracle+graph y Oracle sin graph | `p95_con - p95_sin` |
 
-### Cómo demostrar valor
+### Criterios de evaluación
 
-Para cada query relacional, comparar:
-- **Sin grafo**: PRIME devuelve docs sobre el símbolo, AST devuelve su firma. El agente NO sabe quién lo llama.
-- **Con grafo**: Oracle devuelve lo mismo + lista de callers con archivo y línea.
+- **Information gain ≥70%**: Al menos 3 de 5 queries relacionales muestran info nueva correcta y útil.
+- **Corrección = 100%**: Todos los nodos retornados son callers/callees reales (graph indexado es determinístico).
+- **Routing precision = 100%**: Ningún query negativo activa el graph.
+- **Latencia overhead <15ms**: Graph signal no degrada perceptiblemente.
 
-Si el agente no usa la información de callers para responder mejor → el grafo no aporta valor y se desactiva.
+## 7. Acceptance Criteria
 
-## 8. Rollout Plan
+1. `SearchOracleUseCase` acepta `GraphService` opcional sin breaking changes
+2. Queries con predicado relacional retornan `graph_data` con callers/callees
+3. Queries sin predicado NO consultan el grafo (`graph_signal = "no_predicate"`)
+4. Latencia p95 Oracle+graph <65ms
+5. Fallback correcto en los 5 estados de degradación (unavailable, stale, timeout, target_not_found, no_predicate)
+6. Zero regresiones en tests existentes
+7. Zero nuevas dependencias
+8. **Information gain ≥70%** en benchmark de valor
+9. **Routing precision 100%** para queries no-relacionales
+10. **Corrección 100%** de nodos retornados por el graph
 
-### Fase 0: Propuesta y Benchmark (esta fase)
-- Aprobar esta propuesta
-- Ejecutar benchmark con queries reales contra GraphStore existente
-- Producir reporte con métricas de la sección 7
-- **Kill criterion**: Si routing accuracy <95% o latencia p95 >80ms → NO seguir.
+## 8. Kill Criteria
 
-### Fase 1: Wiring Opcional por Routing
-- Agregar `GraphService` como dependencia opcional en `SearchOracleUseCase.__init__`
-- Implementar detección de predicado relacional (pattern matching)
-- Agregar `graph_signal` a `OracleResult.metadata`
-- Tests unitarios del routing
-- Tests de integración del wiring
-- **Kill criterion**: Si <3 de 5 queries caller/callee devuelven resultados útiles → NO seguir a fase 2.
+| Condición | Acción |
+|-----------|--------|
+| Information gain <50% | Cerrar WO-0043. El wiring funciona pero no aporta valor suficiente. Cleanup: eliminar `graph_service` del Oracle y `graph_data` del result. |
+| Routing precision <95% | Reevaluar classifier. Si no se puede alcanzar 95% con patterns estrechos → cerrar. |
+| Latencia p95 Oracle+graph >80ms | El overhead no es justificable. Rediseñar budget o cerrar. |
+| PRIME+AST ya resuelve ≥80% de queries relacionales evaluadas | El grafo es redundante. Cerrar. |
 
-### Fase 2: Enrichment Incremental (solo si Fase 1 demuestra valor)
-- Agregar edge_kind="imports" al `GraphIndexer`
-- Agregar docstrings a `metadata_json`
-- Implementar N-hop traversal
-- Agregar detección de "call chain" queries
-- **Kill criterion**: Si el enriquecimiento no aumenta el recall en ≥30% → detener.
+En todos los casos, cleanup es trivial: eliminar `graph_service` del constructor Oracle y `graph_data` del resultado. Zero estado residual.
 
-### Postergadas Explícitamente
+## 9. Recomendación Go/No-Go para Siguiente Batch
 
-| Feature | Razón de postergación |
-|---|---|
-| Embeddings / Vector store | Requiere dependencia nueva, modelo de embeddings, y justificación de storage. Evaluar solo si Fases 0-2 demuestran que el grafo relacional aporta valor insuficiente. |
-| Cross-repo graph | Fuera de scope. El grafo es intra-segmento. |
-| Real-time graph updates | El grafo se regenera on-demand. Watcher/file observer es complejidad innecesaria ahora. |
+**GO** para ejecutar el benchmark de valor definido en la sección 6.
 
-## Scope Exacto
+El wiring mecánico está completo y verificado. Lo que falta es **evidencia de valor**: ejecutar las 10 queries del benchmark contra el Oracle con y sin graph, medir information gain, corrección, routing precision y latencia overhead.
 
-### Archivos a modificar
+Si el benchmark pasa los thresholds → WO-0043 se declara aprobado formalmente.
+Si no pasa → se ejecuta cleanup (remover wiring) y se cierra el WO.
 
-| Archivo | Cambio |
-|---|---|
-| `src/application/oracle_use_case.py` | Agregar `graph_service: Optional[GraphService]` al constructor. Agregar lógica de routing y consulta condicional. |
-| `src/domain/context_models.py` | Agregar `graph_data: Optional[Dict]` a `OracleResult`. |
-
-### Archivos SIN cambios
-
-| Archivo | Razón |
-|---|---|
-| `src/infrastructure/graph_store.py` | Ya funciona. No se toca. |
-| `src/application/graph_service.py` | Ya funciona. Se inyecta como dependencia. |
-| `src/application/graph_indexer.py` | Ya funciona. No se toca en Fase 1. |
-| `src/application/context_service.py` | Hot path. No se toca. |
-| `src/infrastructure/cli_hybrid.py` | Hot path. No se toca. |
-| `src/interfaces/mcp/server.py` | No se toca en Fase 1. |
-
-### Tests nuevos
-
-| Test | Qué valida |
-|---|---|
-| `test_graph_routing_predicate_detection` | Pattern matching detecta correctamente queries relacionales |
-| `test_graph_routing_no_predicate` | Queries no-relacionales no activan grafo |
-| `test_graph_signal_callers` | Caller query devuelve nodos correctos |
-| `test_graph_signal_callees` | Callee query devuelve nodos correctos |
-| `test_graph_signal_fallback_on_missing` | Grafo no disponible → fallback limpio |
-| `test_graph_signal_fallback_on_timeout` | Grafo excede budget → fallback limpio |
-| `test_oracle_latency_with_graph` | Latencia total <65ms |
-
-## Riesgos
-
-| Riesgo | Probabilidad | Mitigación |
-|---|---|---|
-| Routing false positives: queries no-relacionales activan el grafo | Media | Pattern matching conservador. Default a NO activar. |
-| Latencia del grafo excede budget en segmentos grandes | Baja | SQLite indexed queries son predecibles. Benchmark antes de wiring. |
-| Grafo stale después de refactors | Alta | `probe_status()` reporta staleness. Regeneración manual barata. |
-| El agente ignora la información del grafo | Media | Evaluar en Fase 0 benchmark. Si el agente no la usa → kill. |
-
-## Acceptance Criteria
-
-1. `SearchOracleUseCase` acepta `GraphService` opcional sin breaking changes.
-2. Queries con predicado relacional retornan `graph_data` con callers/callees.
-3. Queries sin predicado relacional no consultan el grafo (verificable en `metadata.graph_signal = "no_predicate"`).
-4. Latencia p95 del Oracle con grafo <65ms.
-5. Fallback correcto cuando grafo no disponible o stale.
-6. Zero regresiones en tests existentes.
-7. Zero nuevas dependencias en `pyproject.toml`.
-
-## Kill Criteria (cuándo NO seguir)
-
-- **Fase 0**: Si el benchmark muestra que PRIME+AST ya responde correctamente ≥80% de las queries relacionales evaluadas → el grafo no agrega valor. Cerrar WO-0043.
-- **Fase 1**: Si el routing accuracy es <95% (muchos false positives o false negatives) → la detección de predicados no es confiable. Reevaluar diseño o cerrar.
-- **Fase 1**: Si <3 de 5 queries caller/callee devuelven callers reales que el agente usa → la señal no es útil. Cerrar.
-- **Fase 2**: Si enrichment no aumenta recall en ≥30% → el scope mínimo basta. No justifica más inversión. Cerrar.
-
-En todos los casos, el cleanup es trivial: se elimina `graph_service` del constructor del Oracle y el campo `graph_data` del resultado. Zero estado residual.
+**No se amplía scope**. No se agrega enrichment. No se toca el schema del graph. El siguiente batch es exclusivamente medir y decidir.

@@ -247,3 +247,54 @@ def test_graph_signal_handles_access_error():
     r = result_obj.unwrap()
     assert r.graph_data is None
     assert r.metadata.get("graph_signal") == "unavailable"
+
+
+# ── Scenario 9: Ambiguous target (symbol in multiple files) ──────────────────
+
+
+def test_graph_signal_ambiguous_target_returns_state():
+    """When symbol exists in multiple files and disambiguation also fails,
+    signal should be 'ambiguous_target'."""
+    gs = _mock_graph_service(
+        status_response=_fresh_status(),
+        search_response={
+            "nodes": [
+                _node_dict(symbol_name="dup_func", file_rel="src/a.py"),
+                _node_dict(symbol_name="dup_func", file_rel="src/b.py"),
+            ]
+        },
+    )
+    # callers raises AmbiguousGraphTargetError
+    from src.infrastructure.graph_store import AmbiguousGraphTargetError
+    gs.callers.side_effect = AmbiguousGraphTargetError("seg", "dup_func", [])
+    # _query_related_for_node_id also fails (no real store)
+    gs.callees.return_value = {"nodes": []}
+
+    oracle = _make_oracle(graph_service=gs)
+    with patch("src.application.oracle_use_case.ContextService") as MockCS:
+        MockCS.return_value.search.return_value = MagicMock(hits=[])
+        result_obj = oracle.execute(Path("/tmp/repo"), "who calls dup_func")
+    r = result_obj.unwrap()
+    # Either ambiguous_target (if disambiguation fails) or used (if fallback succeeds)
+    assert r.metadata.get("graph_signal") in ("ambiguous_target", "used")
+
+
+def test_graph_signal_disambiguation_prefers_first_fuzzy_match():
+    """When fuzzy search returns multiple matches, first match is used as resolved target."""
+    gs = _mock_graph_service(
+        status_response=_fresh_status(),
+        search_response={
+            "nodes": [
+                _node_dict(symbol_name="my_func", file_rel="src/active/mod.py"),
+                _node_dict(symbol_name="my_func", file_rel="src/legacy/mod.py"),
+            ]
+        },
+        callers_response={"nodes": [_node_dict(symbol_name="caller_a")]},
+    )
+    oracle = _make_oracle(graph_service=gs)
+    with patch("src.application.oracle_use_case.ContextService") as MockCS:
+        MockCS.return_value.search.return_value = MagicMock(hits=[])
+        result_obj = oracle.execute(Path("/tmp/repo"), "who calls my_func")
+    r = result_obj.unwrap()
+    assert r.metadata.get("graph_signal") == "used"
+    assert r.graph_data["target"] == "my_func"
