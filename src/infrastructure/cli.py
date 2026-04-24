@@ -49,6 +49,7 @@ from src.infrastructure.cli_renderers import (
     render_repo_register,
     render_repo_show,
 )
+from src.domain.result import Ok, Err
 from src.application.index_use_case import IndexUseCase
 from src.application.query_use_case import QueryUseCase
 from src.application.daemon_use_case import DaemonUseCase
@@ -479,7 +480,6 @@ def _validate_north_star(
 
 
 def _validate_build_specifics(state: Any, segment: str, telemetry: Any, start_time: float) -> None:
-    from src.domain.result import Err, Ok
     from src.infrastructure.validators import (
         detect_legacy_context_files,
         validate_agents_constitution,
@@ -598,7 +598,6 @@ def build(
     telemetry_level: str = typer.Option("lite", "--telemetry", help=HELP_TELEMETRY),
 ) -> None:
     """Build a Context Pack (context_pack.json) for a segment."""
-    from src.domain.result import Err, Ok
     from src.infrastructure.segment_state import resolve_segment_state
     from src.application.exceptions import InvalidConfigScopeError, InvalidSegmentPathError
 
@@ -754,11 +753,20 @@ def search(
                     typer.echo(f"           Terms: {hit['signals']['matched_terms']}")
                     typer.echo(f"           Tokens: ~{hit['tokens_est']}\n")
         else:
-            # Normal output
-            output = use_case.execute(
-                Path(segment).resolve(), query, limit=limit, enable_lint=enable_lint
-            )
-            typer.echo(output)
+            # Try Hybrid Dispatch first
+            from src.infrastructure.cli_hybrid import HybridDispatcher
+            dispatcher = HybridDispatcher(Path(segment).resolve())
+            h_res = dispatcher.call_tool("ctx_search", {"query": query, "k": limit, "enable_lint": enable_lint})
+            
+            if h_res.is_ok():
+                output = h_res.unwrap()
+                typer.echo(output)
+            else:
+                # Normal output (Fallback)
+                output = use_case.execute(
+                    Path(segment).resolve(), query, limit=limit, enable_lint=enable_lint
+                )
+                typer.echo(output)
 
         telemetry.observe("ctx.search", int((time.time() - start_time) * 1000))
     except Exception as e:
@@ -856,17 +864,34 @@ def get(
                 f"support={support}"
             )
         else:
-            # Standard path: just get output string
-            output = use_case.execute(
-                Path(segment).resolve(),
-                id_list,
-                mode=mode,
-                budget_token_est=budget_token_est,
-                max_chunks=effective_max_chunks,
-                stop_on_evidence=effective_stop_on_evidence,
-                query=query,
-            )
-            typer.echo(output)
+            # Standard path: try Hybrid Dispatch first
+            from src.infrastructure.cli_hybrid import HybridDispatcher
+            dispatcher = HybridDispatcher(Path(segment).resolve())
+            
+            h_res = dispatcher.call_tool("ctx_get", {
+                "ids": id_list, 
+                "mode": mode,
+                "budget_token_est": budget_token_est,
+                "max_chunks": effective_max_chunks,
+                "stop_on_evidence": effective_stop_on_evidence,
+                "query": query
+            })
+            
+            if h_res.is_ok():
+                output = h_res.unwrap()
+                typer.echo(output)
+            else:
+                # Normal output (Fallback)
+                output = use_case.execute(
+                    Path(segment).resolve(),
+                    id_list,
+                    mode=mode,
+                    budget_token_est=budget_token_est,
+                    max_chunks=effective_max_chunks,
+                    stop_on_evidence=effective_stop_on_evidence,
+                    query=query,
+                )
+                typer.echo(output)
 
         telemetry.observe("ctx.get", int((time.time() - start_time) * 1000))
     except Exception as e:
@@ -1366,6 +1391,73 @@ def eval_plan(
                 typer.echo(f"   ✓ {c}")
 
     telemetry.flush()
+
+
+@ctx_app.command("oracle")
+def oracle(
+    query: str = typer.Option(..., "--query", "-q", help="Search query"),
+    segment: str = typer.Option(..., "--segment", "-s", help=HELP_SEGMENT),
+    limit: int = typer.Option(5, "--limit", "-l", help="Max results"),
+    telemetry_level: str = typer.Option("lite", "--telemetry", help=HELP_TELEMETRY),
+) -> None:
+    """Unified Intelligence Oracle (LSP + AST + PRIME)."""
+    telemetry = _get_telemetry(segment, telemetry_level, require_ctx=False)
+    _, file_system, _ = _get_dependencies(segment, telemetry)
+
+    # Hybrid Dispatch
+    from src.infrastructure.cli_hybrid import HybridDispatcher
+    dispatcher = HybridDispatcher(Path(segment).resolve())
+    h_res = dispatcher.call_tool("ctx_oracle", {"query": query, "k": limit})
+    if h_res.is_ok():
+        typer.echo(json.dumps(h_res.unwrap(), indent=2))
+        telemetry.flush()
+        return
+
+    # Fallback
+    from src.application.graph_service import GraphService
+    from src.application.oracle_use_case import SearchOracleUseCase
+    from src.application.ast_parser import SkeletonMapBuilder
+    from src.infrastructure.factories import get_ast_cache
+
+    ast_cache = get_ast_cache(persist=True, segment_id=segment, telemetry=telemetry)
+    ast_builder = SkeletonMapBuilder(cache=ast_cache, segment_id=segment)
+    graph_service = GraphService()
+
+    oracle_uc = SearchOracleUseCase(ast_builder, telemetry=telemetry, graph_service=graph_service)
+    res = oracle_uc.execute(Path(segment).resolve(), query, k=limit)
+
+    if res.is_ok():
+        typer.echo(json.dumps(res.unwrap().model_dump(), indent=2))
+    else:
+        typer.echo(f"Error: {res.error}", err=True)
+        raise typer.Exit(1)
+
+
+@ctx_app.command("calibrate")
+def calibrate(
+    segment: str = typer.Option(..., "--segment", "-s", help=HELP_SEGMENT),
+    dataset: str = typer.Option(
+        "docs/plans/t9_plan_eval_tasks.md",
+        "--dataset",
+        "-d",
+        help="Path to evaluation dataset markdown file",
+    ),
+    telemetry_level: str = typer.Option("lite", "--telemetry", help=HELP_TELEMETRY),
+) -> None:
+    """Autonomous Weight Calibration."""
+    telemetry = _get_telemetry(segment, telemetry_level, require_ctx=False)
+    _, file_system, _ = _get_dependencies(segment, telemetry)
+
+    from src.application.calibration_use_case import AutonomousWeightCalibrationUseCase
+
+    use_case = AutonomousWeightCalibrationUseCase(file_system, telemetry)
+    res = use_case.execute(Path(segment).resolve(), Path(dataset).resolve())
+
+    if res.is_ok():
+        typer.echo(json.dumps(res.unwrap(), indent=2))
+    else:
+        typer.echo(f"Error: {res.error}", err=True)
+        raise typer.Exit(1)
 
 
 @ctx_app.command("sync")
@@ -2100,7 +2192,6 @@ def legacy_scan(
 ) -> None:
     """Scan for undeclared legacy code. Fails if new legacy appears."""
     from src.application.legacy_use_case import scan_legacy
-    from src.domain.result import Err, Ok
 
     repo_root = Path(path).resolve()
     manifest_path = repo_root / "docs/legacy_manifest.json"
@@ -2627,6 +2718,9 @@ def daemon_run() -> None:
         typer.echo(f"Error: {exc}", err=True)
         raise typer.Exit(1)
 
+
+def cli():
+    app()
 
 if __name__ == "__main__":
     main()

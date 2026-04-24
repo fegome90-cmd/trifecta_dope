@@ -1,7 +1,7 @@
 """Domain Models for Trifecta Context."""
 
 from datetime import datetime
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 from pydantic import BaseModel, Field
 
 
@@ -58,6 +58,28 @@ class SearchHit(BaseModel):
     source_path: str
     score: float
     score_details: Optional[dict[str, float]] = Field(default=None)
+
+
+class OracleResult(BaseModel):
+    """Unified result from the Context Oracle (F1 Intelligence Fusion)."""
+
+    fidelity: Literal["full", "degraded", "fallback"] = Field(
+        ..., description="Signal quality: full (LSP), degraded (AST), fallback (PRIME only)"
+    )
+    lsp_data: Optional[Dict[str, Any]] = Field(
+        default=None, description="Deep language analysis results"
+    )
+    ast_symbols: List[str] = Field(default_factory=list, description="Structural symbol maps")
+    prime_chunks: List[SearchHit] = Field(
+        default_factory=list, description="Documentation and metadata hits"
+    )
+    graph_data: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Derived relational signal from GraphStore (callers/callees)",
+    )
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict, description="Latency and source ratio metrics"
+    )
 
 
 class SearchResult(BaseModel):
