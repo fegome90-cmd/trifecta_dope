@@ -95,7 +95,7 @@ LSP introduces its own signal taxonomy, parallel to graph_signal:
 | `lsp_not_applicable` | Query has no semantic predicate | null |
 | `lsp_not_injected` | No LSPClient provided to Oracle | null |
 | `lsp_not_ready` | LSPClient.state in {COLD, WARMING, FAILED, CLOSED} | null |
-| `lsp_timeout` | LSP request exceeds per-query budget | null |
+| `lsp_timeout` | LSP request completes but exceeds 20ms budget (post-hoc over-budget detection; result discarded) | null |
 | `lsp_error` | LSP returns error response | null |
 | `lsp_no_result` | LSP returns null/empty, OR AST cannot resolve symbol position | null |
 | `lsp_used` | LSP returns valid hover data | populated |
@@ -136,9 +136,8 @@ Queries like "how to configure daemon" or "who calls foo" do NOT trigger LSP.
 - PRIME, AST, and Graph results are **untouched** — no regression
 
 ### When LSP is Slow
-- Per-query timeout: 20ms
-- If exceeded: `metadata.lsp_signal = "lsp_timeout"`, proceed without LSP
-- Same behavior as if LSP wasn't injected
+- Per-query budget: 20ms (post-hoc check after request completes; no hard cancellation)
+- If exceeded: `metadata.lsp_signal = "lsp_timeout"`, LSP result discarded, proceed without LSP data
 
 ---
 

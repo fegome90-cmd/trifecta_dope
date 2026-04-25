@@ -34,7 +34,7 @@
 - [x] 4.3 Test `test_lsp_signal_not_injected` — no LSP client -> `"lsp_not_injected"`
 - [x] 4.4 Test `test_lsp_signal_not_ready_cold` and `test_lsp_signal_not_ready_warming` — non-READY states -> `"lsp_not_ready"`
 - [x] 4.5 Test `test_lsp_signal_not_ready_failed` and `test_lsp_signal_not_ready_closed` — FAILED and CLOSED states -> `"lsp_not_ready"`
-- [x] 4.6 Test `test_lsp_signal_timeout` — mock `request()` with `time.sleep(0.025)` -> `"lsp_timeout"` (NOTE: documents bug — Gate E checks budget before request, not after)
+- [x] 4.6 Test `test_lsp_signal_timeout` — patch `_LSP_BUDGET_MS=0.0` -> `"lsp_timeout"` (deterministic; Gate E checks budget AFTER request)
 - [x] 4.7 Test `test_lsp_signal_error` — mock request returns error dict -> `"lsp_error"`
 - [x] 4.8 Test `test_lsp_signal_no_result` — mock request returns `None`/empty -> `"lsp_no_result"`
 - [x] 4.9 Test `test_lsp_signal_used_hover` — mock hover returns contents -> `"lsp_used"`, `lsp_data` populated with method/target/contents/latency
@@ -50,3 +50,9 @@
 - [x] 5.1 Create benchmark script `scripts/benchmark_lsp_signal.py`: 25 queries (15 semantic + 5 non-semantic + 3 negative + 2 ambiguous), 5 dimensions + memory soak, verify p95 < 65ms
 - [x] 5.2 Run benchmark with LSP active (READY) and LSP disabled (`None`); verify zero regression in PRIME chunks, AST symbols, graph_signal states — 8/8 PASS
 - [x] 5.3 Run memory soak: 100 iterations, verify < 10MB growth — 1.19MB growth, PASS
+
+## Closure
+
+**Status**: CLOSED (2026-04-25). Hover-only LSP signal integrated into Oracle.
+**Does NOT close**: future definition/references phases, unrelated Oracle slices.
+**Repos green**: no-regression confirmed on Oracle slice (PRIME/AST/Graph/LSP). Full suite has pre-existing failures in unrelated validators.

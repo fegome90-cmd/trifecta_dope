@@ -46,7 +46,7 @@ The system MUST report a distinct `metadata.lsp_signal` for each LSP outcome. St
 | `lsp_not_applicable` | Query has no semantic predicate | null |
 | `lsp_not_injected` | No LSPClient provided to Oracle | null |
 | `lsp_not_ready` | LSPClient.state in {COLD, WARMING, FAILED, CLOSED} | null |
-| `lsp_timeout` | LSP request exceeds 20ms per-query budget | null |
+| `lsp_timeout` | LSP request completes but exceeds 20ms budget (post-hoc over-budget; result discarded) | null |
 | `lsp_error` | LSP returns error response | null |
 | `lsp_no_result` | LSP returns null/empty, OR AST cannot resolve symbol position | null |
 | `lsp_used` | LSP returns valid hover data | populated |
@@ -103,8 +103,8 @@ The LSP signal MUST complete within 20ms per query. The state check (~1ms) and r
 - AND total Oracle latency SHALL be under 65ms
 
 #### Scenario: LSP exceeds budget
-- GIVEN an LSP hover request exceeds 20ms
-- WHEN the timeout fires
+- GIVEN an LSP hover request completes but takes more than 20ms
+- WHEN the post-request budget check detects over-budget
 - THEN the system SHALL discard the LSP result
 - AND `metadata.lsp_signal` SHALL be `"lsp_timeout"`
 

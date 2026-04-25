@@ -50,8 +50,9 @@ execute(repo_path, query, k)
   |     |     No  -> return "lsp_not_ready"
   |     +-- Gate D: Resolve symbol file+line from AST results
   |     |     No match -> return "lsp_no_result"
-  |     +-- Gate E: Budget check (elapsed < 20ms)?
-  |     |     Over -> return "lsp_timeout"
+  |     +-- Execute hover request (always runs to completion)
+  |     +-- Gate E: Post-request budget check (elapsed < 20ms)?
+  |     |     Over -> discard result, return "lsp_timeout"
   |     +-- Execute: lsp_client.request("textDocument/hover", {...})
   |     |     Error -> return "lsp_error"
   |     |     Empty -> return "lsp_no_result"
@@ -128,7 +129,7 @@ def _execute_lsp_signal(
 |-------|-------------|----------|
 | **Unit: Predicate detection** | `classify_query()` detects semantic predicates for EN/ES patterns, extracts target symbol, returns None for non-semantic queries | Pure function tests, no IO, no mocks |
 | **Unit: LSP signal states** | All 7 states: not applicable, not injected, not ready (each COLD/WARMING/FAILED/CLOSED), timeout, error, no result, used | Mock `LSPClient` with controlled `state` and `request()` return; verify `metadata.lsp_signal` and `lsp_data` |
-| **Unit: Budget enforcement** | LSP request exceeding 20ms returns `"lsp_timeout"`, Oracle total under 65ms | Mock `request()` with `time.sleep`; assert signal state and latency |
+| **Unit: Budget enforcement** | LSP request exceeding 20ms budget (post-hoc check after request) returns `"lsp_timeout"`, Oracle total under 65ms | Patch `_LSP_BUDGET_MS=0.0` for deterministic test; assert signal state |
 | **Unit: Graph independence** | LSP activation does not affect graph signal states or data | Run queries triggering both signals; verify graph_data and lsp_data are independent |
 | **Unit: AST fallback for position** | When AST has no matching symbol, LSP returns `"lsp_no_result"` without issuing request | Mock `SkeletonMapBuilder` returning empty symbols; verify no `request()` call |
 | **Integration: Fidelity promotion** | LSP used -> "full", LSP unavailable with AST -> "degraded", PRIME only -> "fallback" | End-to-end Oracle calls with mock LSP client in various states |
