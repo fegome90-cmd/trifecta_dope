@@ -8,7 +8,6 @@ Signal states:
   lsp_timeout, lsp_error, lsp_no_result, lsp_used
 """
 
-import time
 from pathlib import Path
 from typing import Any, Dict, Optional
 from unittest.mock import MagicMock, patch
@@ -195,13 +194,16 @@ def test_lsp_signal_not_ready_closed():
 
 
 def test_lsp_signal_timeout():
-    """LSP request exceeding 20ms budget -> lsp_timeout."""
+    """LSP request exceeding budget -> lsp_timeout (deterministic: budget set to 0ms)."""
     lsp = _mock_lsp(
         state=LSPState.READY,
-        request_side_effect=lambda *a, **kw: time.sleep(0.025),
+        request_return={"contents": [{"language": "python", "value": "def foo()"}]},
     )
     oracle = _make_oracle(lsp_client=lsp)
-    r = _run_with_hit(oracle, "what is resolve_segment_ref")
+
+    # Set budget to 0ms so any real elapsed time exceeds it — no sleep needed
+    with patch("src.application.oracle_use_case._LSP_BUDGET_MS", 0.0):
+        r = _run_with_hit(oracle, "what is resolve_segment_ref")
 
     assert r.metadata["lsp_signal"] == "lsp_timeout"
     assert r.lsp_data is None
