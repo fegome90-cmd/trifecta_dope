@@ -20,6 +20,7 @@ from src.domain.result import Ok, Err, Result
 
 _GRAPH_STALE_DAYS = 7
 _GRAPH_TOTAL_BUDGET_MS = 15.0
+_LSP_BUDGET_MS = 20.0
 
 _TRIMMED_NODE_KEYS = frozenset({"symbol_name", "qualified_name", "file_rel", "line", "kind"})
 
@@ -77,6 +78,8 @@ class SearchOracleUseCase:
         # 2. Structural Signal: AST (Always available if file found)
         t0 = time.time()
         ast_symbols: List[str] = []
+        ast_res: Optional[Any] = None
+        ast_file_path: Optional[Path] = None
         if hits:
             top_hit = hits[0]
             file_path = repo_path / top_hit.source_path
@@ -84,34 +87,35 @@ class SearchOracleUseCase:
                 try:
                     ast_res = self.ast_builder.build(file_path)
                     ast_symbols = [s.name for s in ast_res.symbols]
+                    ast_file_path = file_path
                 except Exception:
                     pass
         timings["ast_resolution_ms"] = int((time.time() - t0) * 1000)
 
-        # 3. Graph Signal: Relational (NEW, conditional)
+        # 3. Graph Signal: Relational (conditional)
         graph_data: Optional[Dict[str, Any]] = None
         graph_signal = self._execute_graph_signal(repo_path, query, timings)
         if isinstance(graph_signal, dict):
             graph_data = graph_signal
 
-        # 4. Deep Signal: LSP (Gated by state)
-        t0 = time.time()
-        lsp_data = None
-        fidelity: Literal["full", "degraded", "fallback"] = "fallback"
+        # 4. Deep Signal: LSP (Gated by predicate + state + budget)
+        lsp_signal_result = self._execute_lsp_signal(
+            repo_path, query, timings, ast_result=ast_res, file_path=ast_file_path,
+        )
+        if isinstance(lsp_signal_result, dict):
+            lsp_data: Optional[Dict[str, Any]] = lsp_signal_result
+            lsp_signal: str = "lsp_used"
+        else:
+            lsp_data = None
+            lsp_signal = lsp_signal_result
 
-        if self.lsp_client and hasattr(self.lsp_client, "state"):
-            from src.infrastructure.lsp_client import LSPState
-            if self.lsp_client.state == LSPState.READY:
-                lsp_data = {"status": "available", "info": "Deep language analysis ready"}
-                fidelity = "full"
-            elif self.lsp_client.state == LSPState.WARMING:
-                fidelity = "degraded"
-            else:
-                fidelity = "fallback"
-
-        if fidelity == "fallback" and ast_symbols:
+        # 5. Fidelity determination
+        if lsp_signal == "lsp_used":
+            fidelity: Literal["full", "degraded", "fallback"] = "full"
+        elif ast_symbols:
             fidelity = "degraded"
-        timings["lsp_signal_ms"] = int((time.time() - t0) * 1000)
+        else:
+            fidelity = "fallback"
 
         latency_ms = int((time.time() - start_time) * 1000)
 
@@ -122,6 +126,7 @@ class SearchOracleUseCase:
             "hit_count": len(hits),
             "ast_symbol_count": len(ast_symbols),
             "graph_signal": graph_signal if isinstance(graph_signal, str) else "used",
+            "lsp_signal": lsp_signal,
         }
 
         result = OracleResult(
@@ -143,6 +148,8 @@ class SearchOracleUseCase:
                     "fidelity": fidelity,
                     "graph_signal": graph_signal_str,
                     "graph_signal_ms": timings.get("graph_signal_ms", 0),
+                    "lsp_signal": lsp_signal,
+                    "lsp_signal_ms": timings.get("lsp_signal_ms", 0),
                     "ast_symbol_count": len(ast_symbols),
                 },
                 timing_ms=latency_ms,
@@ -255,6 +262,96 @@ class SearchOracleUseCase:
             "nodes": trimmed,
             "latency_ms": round(elapsed_total, 1),
             "over_budget": elapsed_total > _GRAPH_TOTAL_BUDGET_MS,
+        }
+
+    def _execute_lsp_signal(
+        self,
+        repo_path: Path,
+        query: str,
+        timings: Dict[str, Any],
+        ast_result: Optional[Any] = None,
+        file_path: Optional[Path] = None,
+    ) -> str | Dict[str, Any]:
+        """Execute LSP signal if query has semantic predicate.
+
+        Returns either a signal state string or an lsp_data dict.
+        Populates timings with lsp-specific metrics.
+        """
+        # Gate A: Detect semantic predicate
+        cls = classify_query(query)
+        if cls.semantic is None:
+            timings["lsp_signal_ms"] = 0
+            return "lsp_not_applicable"
+
+        # Gate B: LSP client injected?
+        if self.lsp_client is None:
+            timings["lsp_signal_ms"] = 0
+            return "lsp_not_injected"
+
+        # Gate C: LSP client ready?
+        from src.infrastructure.lsp_client import LSPState
+
+        if self.lsp_client.state != LSPState.READY:
+            timings["lsp_signal_ms"] = 0
+            return "lsp_not_ready"
+
+        # Gate D: Resolve symbol position from AST
+        target = cls.semantic.target
+        resolved_symbol = None
+        if ast_result is not None and hasattr(ast_result, "symbols"):
+            for sym in ast_result.symbols:
+                if sym.name == target:
+                    resolved_symbol = sym
+                    break
+
+        if resolved_symbol is None or file_path is None:
+            timings["lsp_signal_ms"] = 0
+            return "lsp_no_result"
+
+        t_lsp_start = time.time()
+
+        def _elapsed() -> float:
+            return (time.time() - t_lsp_start) * 1000
+
+        # Execute hover request
+        file_uri = file_path.as_uri()
+        line = resolved_symbol.start_line
+        result = self.lsp_client.request(
+            "textDocument/hover",
+            {
+                "textDocument": {"uri": file_uri},
+                "position": {"line": line - 1, "character": 0},  # LSP uses 0-based lines
+            },
+        )
+
+        elapsed = _elapsed()
+        timings["lsp_signal_ms"] = int(elapsed)
+
+        # Gate E: Budget check — AFTER request to detect slow LSP
+        if elapsed > _LSP_BUDGET_MS:
+            return "lsp_timeout"
+
+        # Handle error response
+        if result is None:
+            return "lsp_no_result"
+
+        if isinstance(result, dict) and result.get("__lsp_error__"):
+            return "lsp_error"
+
+        # Handle empty contents
+        contents = result.get("contents")
+        if contents is None or contents == "":
+            return "lsp_no_result"
+
+        file_rel = str(file_path.relative_to(repo_path)) if file_path.is_relative_to(repo_path) else str(file_path)
+
+        return {
+            "method": "hover",
+            "target": resolved_symbol.name,
+            "contents": contents,
+            "latency_ms": round(elapsed, 1),
+            "source_file": file_rel,
+            "source_line": line,
         }
 
     def _query_related_for_node_id(
