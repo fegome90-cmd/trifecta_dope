@@ -65,7 +65,7 @@ execute(repo_path, query, k)
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/domain/query_classifier.py` | MODIFY | Add `SemanticPredicate` dataclass, `semantic` field to `QueryClass`, EN/ES pattern lists for "what is X", "definition of X", "show me X" |
+| `src/domain/query_classifier.py` | MODIFY | Add `SemanticPredicate` dataclass, `semantic` field to `QueryClass`, EN/ES hover pattern lists for "what is X", "show me X", "qué es X", "mostrame X" |
 | `src/application/oracle_use_case.py` | MODIFY | Replace LSP stub (lines 97-113) with `_execute_lsp_signal()` method call; update metadata and telemetry to include `lsp_signal` |
 | `src/application/ast_parser.py` | MODIFY (minor) | Add `find_symbol(name: str) -> Optional[SymbolInfo]` method to `ParseResult` for LSP position lookup |
 | `tests/unit/test_lsp_signal.py` | CREATE | >=20 tests covering all 6 LSP signal states |
