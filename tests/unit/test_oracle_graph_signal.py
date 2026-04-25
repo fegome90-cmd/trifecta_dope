@@ -386,3 +386,61 @@ def test_graph_signal_degradation_preserves_prime_ast():
     assert r.metadata.get("graph_signal") == "ambiguous_target"
     assert len(r.prime_chunks) == 1
     assert r.fidelity in ("degraded", "fallback")
+
+
+# ── Telemetry: graph_signal observability ─────────────────────────────────────
+
+
+def test_telemetry_records_graph_signal_state():
+    """Telemetry event MUST include graph_signal in result dict."""
+    gs = _mock_graph_service(
+        status_response=_fresh_status(),
+        search_response={"nodes": [_node_dict(symbol_name="foo")]},
+        callers_response={"nodes": [_node_dict(symbol_name="bar")]},
+    )
+    mock_telemetry = MagicMock()
+    oracle = _make_oracle(graph_service=gs)
+    oracle.telemetry = mock_telemetry
+
+    with patch("src.application.oracle_use_case.ContextService") as MockCS:
+        MockCS.return_value.search.return_value = MagicMock(hits=[])
+        oracle.execute(Path("/tmp/repo"), "who calls foo")
+
+    mock_telemetry.event.assert_called_once()
+    call_kwargs = mock_telemetry.event.call_args
+    result = call_kwargs[1]["result"] if "result" in call_kwargs[1] else call_kwargs[0][2]
+    assert "graph_signal" in result
+    assert result["graph_signal"] == "used"
+    assert "graph_signal_ms" in result
+    assert isinstance(result["graph_signal_ms"], int)
+
+
+def test_telemetry_records_no_predicate_state():
+    """When graph_signal is no_predicate, telemetry MUST reflect it."""
+    gs = _mock_graph_service()
+    mock_telemetry = MagicMock()
+    oracle = _make_oracle(graph_service=gs)
+    oracle.telemetry = mock_telemetry
+
+    with patch("src.application.oracle_use_case.ContextService") as MockCS:
+        MockCS.return_value.search.return_value = MagicMock(hits=[])
+        oracle.execute(Path("/tmp/repo"), "how to configure daemon")
+
+    result = mock_telemetry.event.call_args[1]["result"]
+    assert result["graph_signal"] == "no_predicate"
+    assert result["graph_signal_ms"] == 0
+
+
+def test_telemetry_records_unavailable_state():
+    """When graph_service is None, telemetry MUST record unavailable."""
+    mock_telemetry = MagicMock()
+    oracle = _make_oracle(graph_service=None)
+    oracle.telemetry = mock_telemetry
+
+    with patch("src.application.oracle_use_case.ContextService") as MockCS:
+        MockCS.return_value.search.return_value = MagicMock(hits=[])
+        oracle.execute(Path("/tmp/repo"), "who calls foo")
+
+    result = mock_telemetry.event.call_args[1]["result"]
+    assert result["graph_signal"] == "unavailable"
+

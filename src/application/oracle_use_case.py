@@ -134,10 +134,17 @@ class SearchOracleUseCase:
         )
 
         if self.telemetry:
+            graph_signal_str = metadata.get("graph_signal", "unknown")
             self.telemetry.event(
                 "ctx_oracle",
                 args={"query": query, "fidelity": fidelity},
-                result={"hit_count": len(hits), "fidelity": fidelity},
+                result={
+                    "hit_count": len(hits),
+                    "fidelity": fidelity,
+                    "graph_signal": graph_signal_str,
+                    "graph_signal_ms": timings.get("graph_signal_ms", 0),
+                    "ast_symbol_count": len(ast_symbols),
+                },
                 timing_ms=latency_ms,
                 level="lite",
             )
