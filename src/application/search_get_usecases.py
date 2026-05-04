@@ -17,6 +17,74 @@ from src.domain.query_linter import LinterPlan
 logger = logging.getLogger(__name__)
 
 
+def _human_readable_preview(preview: str, *, max_len: int = 120) -> str:
+    """Return a user-facing preview, hiding skill-hub indexing scaffolding."""
+    candidates: list[str] = []
+    for raw_line in (preview or "").replace("\\n", "\n").splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        lowered = line.lower()
+        if (
+            line.startswith("<!--")
+            or lowered.startswith("read ")
+            or lowered in {"---", "..."}
+            or lowered.startswith("# skill:")
+            or lowered.startswith("**source**:")
+            or lowered.startswith("**resolved path**:")
+            or lowered.startswith("source:")
+            or lowered.startswith("name:")
+            or lowered.startswith("origin:")
+        ):
+            continue
+        if lowered.startswith("description:"):
+            candidates.insert(0, line.split(":", 1)[1].strip())
+            continue
+        candidates.append(line)
+
+    text = candidates[0] if candidates else (preview or "").strip()
+    text = " ".join(text.split())
+    if len(text) > max_len:
+        return f"{text[:max_len].rstrip()}..."
+    return text
+
+
+def _extract_skill_hub_read_path(preview: str) -> str | None:
+    """Extract the canonical source skill path from managed skill-hub previews."""
+    resolved_path: str | None = None
+    for raw_line in (preview or "").replace("\\n", "\n").splitlines():
+        line = raw_line.strip()
+        lowered = line.lower()
+        if lowered.startswith("read "):
+            path = line[5:].strip()
+            return path or None
+        if lowered.startswith("**resolved path**:"):
+            path = line.split(":", 1)[1].strip()
+            resolved_path = path or None
+    return resolved_path
+
+
+def _load_skill_hub_display_texts(target_path: Path, hits: list[Any]) -> dict[str, str]:
+    """Load full skill chunks so the search surface can show stable path + useful preview."""
+    skill_ids = [hit.id for hit in hits if str(hit.id).startswith("skill:")]
+    if not skill_ids:
+        return {}
+
+    try:
+        service = ContextService(target_path)
+        result = service.get(
+            skill_ids,
+            mode="raw",
+            budget_token_est=10_000,
+            max_chunks=len(skill_ids),
+        )
+    except Exception as exc:  # pragma: no cover - fail-open display fallback
+        logger.debug("Failed to load skill-hub display texts: %s", exc)
+        return {}
+
+    return {chunk.id: chunk.text for chunk in result.chunks}
+
+
 @dataclass
 class SearchPipelineResult:
     """Resultados del pipeline de búsqueda compartido.
@@ -159,6 +227,7 @@ class SearchUseCase:
         limit: int = 5,
         enable_lint: bool = False,
         track_matched_terms: bool = False,
+        segment: str | None = None,
     ) -> SearchPipelineResult:
         """
         Execute the shared search pipeline.
@@ -220,7 +289,9 @@ class SearchUseCase:
             repo_root = resolve_segment_root(target_path)
             anchors_cfg = ConfigLoader.load_anchors(repo_root)
             aliases_cfg = ConfigLoader.load_linter_aliases(repo_root)
-            lint_plan = lint_query(normalized_query, anchors_cfg, aliases_cfg)
+            lint_plan = lint_query(
+                normalized_query, anchors_cfg, aliases_cfg, segment=segment
+            )
 
             # If config missing, force disabled state
             if anchors_cfg.get("_missing_config") or aliases_cfg.get("_missing_config"):
@@ -284,7 +355,12 @@ class SearchUseCase:
         )
 
     def execute(
-        self, target_path: Path, query: str, limit: int = 5, enable_lint: bool = False
+        self,
+        target_path: Path,
+        query: str,
+        limit: int = 5,
+        enable_lint: bool = False,
+        segment: str | None = None,
     ) -> str:
         """Execute search with query linting, alias expansion and format output.
 
@@ -305,7 +381,9 @@ class SearchUseCase:
             Formatted search results string
         """
         # Execute the shared search pipeline
-        result = self._execute_search_pipeline(target_path, query, limit, enable_lint)
+        result = self._execute_search_pipeline(
+            target_path, query, limit, enable_lint, segment=segment
+        )
 
         # Early return for invalid queries WITH telemetry
         if not result.is_valid:
@@ -482,16 +560,27 @@ class SearchUseCase:
         if not final_hits:
             return f"No results found for query: '{query}'"
 
+        skill_display_texts = _load_skill_hub_display_texts(target_path, final_hits)
         output = [f"Search Results ({len(final_hits)} hits):\n"]
         for i, hit in enumerate(final_hits, 1):
+            display_text = skill_display_texts.get(hit.id, hit.preview)
             output.append(f"{i}. [{hit.id}] {hit.title_path[0]}")
             output.append(f"   Score: {hit.score:.2f} | Tokens: ~{hit.token_est}")
-            output.append(f"   Preview: {hit.preview[:120]}...\n")
+            if hit.id.startswith("skill:") and (
+                skill_path := _extract_skill_hub_read_path(display_text)
+            ):
+                output.append(f"   Path: {skill_path}")
+            output.append(f"   Preview: {_human_readable_preview(display_text)}\n")
 
         return "\n".join(output)
 
     def execute_with_explanation(
-        self, target_path: Path, query: str, limit: int = 5, enable_lint: bool = False
+        self,
+        target_path: Path,
+        query: str,
+        limit: int = 5,
+        enable_lint: bool = False,
+        segment: str | None = None,
     ) -> dict[str, Any]:
         """
         Execute search and return structured explanation.
@@ -507,7 +596,8 @@ class SearchUseCase:
         """
         # Execute the shared search pipeline with term tracking enabled
         result = self._execute_search_pipeline(
-            target_path, query, limit, enable_lint, track_matched_terms=True
+            target_path, query, limit, enable_lint,
+            track_matched_terms=True, segment=segment,
         )
 
         # Early return for invalid queries

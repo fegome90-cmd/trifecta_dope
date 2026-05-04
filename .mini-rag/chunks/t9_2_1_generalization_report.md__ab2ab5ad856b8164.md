@@ -1,6 +1,6 @@
 ## Second Segment Analysis
 
-**Segment**: `/Users/felipe_gonzalez/Developer/AST`
+**Segment**: `<REPO_ROOT>/Developer/AST`
 
 | Characteristic | Value |
 |----------------|-------|

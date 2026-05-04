@@ -15,7 +15,7 @@ from typing import Any
 
 import yaml
 
-ROOT = Path('/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope')
+ROOT = Path('<REPO_ROOT>/Developer/agent_h/trifecta_dope')
 SEGMENT = Path.home() / '.trifecta/segments/skills-hub'
 WRAPPER = Path.home() / '.local/bin/skill-hub'
 BASELINE_PRESENTATION = Path.home() / '.local/bin/skill_hub_info_card.py'

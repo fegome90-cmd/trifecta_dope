@@ -5,7 +5,7 @@
 {
   "ts": "2025-12-29T22:06:52.060304+00:00",
   "run_id": "run_1767046012",
-  "segment": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope",
+  "segment": "<REPO_ROOT>/Developer/agent_h/trifecta_dope",
   "cmd": "ctx.sync",
   "args": {"segment": "."},
   "result": {"status": "ok"},

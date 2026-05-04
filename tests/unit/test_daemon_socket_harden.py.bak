@@ -1,0 +1,81 @@
+import json
+import socket
+import threading
+import time
+import pytest
+from unittest.mock import patch, MagicMock
+from src.interfaces.mcp.server import TrifectaF1Server, ServerState
+
+@pytest.fixture
+def running_server(tmp_path, monkeypatch):
+    import io
+    monkeypatch.setattr("sys.stdin", io.StringIO(""))
+    
+    server = TrifectaF1Server(str(tmp_path), sync_mode="manual")
+    server.state = ServerState.READY
+    # Mock handlers so we don't actually process logic
+    server._handle_tool_call = MagicMock()
+    
+    # Start thread
+    t = threading.Thread(target=server.run, daemon=True)
+    t.start()
+    time.sleep(0.5) # Let socket bind
+    
+    import hashlib
+    repo_hash = hashlib.sha256(str(server.repo_path.resolve()).encode()).hexdigest()[:12]
+    socket_path = f"/tmp/trifecta_f1_{repo_hash}.sock"
+    
+    yield server, socket_path
+    
+    server.state = ServerState.FAILED # Stop cleanly if we had logic
+
+def test_socket_invalid_json_does_not_crash(running_server):
+    server, sock_path = running_server
+    
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+        s.settimeout(2.0)
+        s.connect(sock_path)
+        s.sendall(b"{ invalid json }\n")
+        
+    time.sleep(0.1)
+    # Server should still be alive
+    assert server._handle_tool_call.call_count == 0
+    
+    # Can we still connect and send valid JSON?
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+        s.settimeout(2.0)
+        s.connect(sock_path)
+        s.sendall(b"{\"jsonrpc\": \"2.0\", \"method\": \"tools/call\", \"id\": 1, \"params\": {\"name\": \"ctx_search\"}}\n")
+        
+    time.sleep(0.1)
+    assert server._handle_tool_call.call_count == 1
+
+def test_socket_payload_too_large(running_server):
+    server, sock_path = running_server
+    
+    large_payload = b"a" * (10 * 1024 * 1024 + 100) # Exceed 10MB
+    
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+        s.settimeout(2.0)
+        s.connect(sock_path)
+        try:
+            s.sendall(large_payload)
+            # The server will drop the connection once it sees size > 10MB
+        except Exception:
+            pass
+            
+    time.sleep(0.1)
+    assert server._handle_tool_call.call_count == 0
+
+def test_socket_no_newline(running_server):
+    server, sock_path = running_server
+    
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+        s.settimeout(2.0)
+        s.connect(sock_path)
+        # Send without newline, then close
+        s.sendall(b"{\"jsonrpc\": \"2.0\", \"method\": \"tools/call\", \"id\": 1, \"params\": {\"name\": \"ctx_search\"}}")
+        
+    time.sleep(0.1)
+    # Server should drop the partial payload and not call handler
+    assert server._handle_tool_call.call_count == 0

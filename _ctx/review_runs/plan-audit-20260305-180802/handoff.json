@@ -4,19 +4,19 @@
   "generated_at": "2026-03-05T18:08:04.422522",
   "run_id": "plan-audit-20260305-180802",
   "session_name": "plan-audit",
-  "plan_path": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+  "plan_path": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
   "agent_outputs": {
-    "logic": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-180802/agent-logic.json",
-    "code_quality": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-180802/agent-code-quality.json",
-    "silent_failure": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-180802/agent-silent-failure.json",
-    "testing_static": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-180802/agent-testing-static.json"
+    "logic": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-180802/agent-logic.json",
+    "code_quality": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-180802/agent-code-quality.json",
+    "silent_failure": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-180802/agent-silent-failure.json",
+    "testing_static": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-180802/agent-testing-static.json"
   },
   "findings": [
     {
       "severity": "Media",
       "title": "Ambigüedad de alcance",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
         "line": 44,
         "snippet": "3. Definir inventario de fuentes de skills (pi + anthropic + custom)."
       },
@@ -29,7 +29,7 @@
       "severity": "Media",
       "title": "Ambigüedad de alcance",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
         "line": 65,
         "snippet": "1. Definir convención: primero consultar skills-hub antes de fallback local."
       },
@@ -42,7 +42,7 @@
       "severity": "Media",
       "title": "Necesidad de observabilidad y semántica HTTP",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
         "line": 6,
         "snippet": "**Status**: `PENDING`"
       },
@@ -55,7 +55,7 @@
       "severity": "Media",
       "title": "Riesgo de degradación ambigua",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
         "line": 65,
         "snippet": "1. Definir convención: primero consultar skills-hub antes de fallback local."
       },
@@ -68,7 +68,7 @@
       "severity": "Media",
       "title": "Riesgo de degradación ambigua",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
         "line": 112,
         "snippet": "- Si skills-hub falla, fallback a rutas actuales"
       },
@@ -107,7 +107,7 @@
       "severity": "Baja",
       "title": "Sin smells claros en plan (heurística)",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
         "line": 1,
         "snippet": "No matches"
       },
@@ -120,7 +120,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
         "line": 58,
         "snippet": "2. Validar búsquedas de smoke test:"
       },
@@ -133,7 +133,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
         "line": 60,
         "snippet": "- `ctx search --query \"python testing\"`"
       },
@@ -146,7 +146,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
         "line": 72,
         "snippet": "3. Medir cobertura (% skills encontrables por query representativa)."
       },
@@ -159,7 +159,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
         "line": 106,
         "snippet": "### Smoke tests"
       },
@@ -172,7 +172,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
         "line": 110,
         "snippet": "### Tests de regresión operativa"
       },
@@ -185,7 +185,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
         "line": 117,
         "snippet": "- `coverage_rate` en set de queries representativas"
       },

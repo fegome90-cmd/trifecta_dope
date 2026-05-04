@@ -133,5 +133,5 @@ See: `skills/trifecta-global-usage/SKILL.md`
 
 ## Skill-Hub Location
 
-- **Local:** `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/skills/trifecta-global-usage/`
+- **Local:** `<REPO_ROOT>/Developer/agent_h/trifecta_dope/skills/trifecta-global-usage/`
 - **Global:** `~/.trifecta/segments/skills-hub/trifecta-global-usage.md`

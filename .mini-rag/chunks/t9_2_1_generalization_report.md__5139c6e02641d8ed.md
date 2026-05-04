@@ -1,6 +1,6 @@
 ### 2. Evaluation v2 on trifecta_dope
 ```bash
-cd /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope
+cd <REPO_ROOT>/Developer/agent_h/trifecta_dope
 uv run trifecta ctx eval-plan -s . --dataset docs/plans/t9_plan_eval_tasks_v2.md
 ```
 

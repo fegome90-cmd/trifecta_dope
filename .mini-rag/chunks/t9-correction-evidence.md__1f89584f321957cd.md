@@ -1,4 +1,4 @@
-# cat /Users/felipe_gonzalez/Developer/AST/src/infrastructure/extractors/symbol-extractor.ts
+# cat <REPO_ROOT>/Developer/AST/src/infrastructure/extractors/symbol-extractor.ts
 ```
 
 **Result:** ✅ PASS - Flow documented, prime contains allowlist

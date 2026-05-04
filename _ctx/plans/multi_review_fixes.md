@@ -291,11 +291,11 @@ def test_get_worktrees_from_git_outside_repo():
 def test_get_worktrees_from_git_relative_path():
     """Test parsing worktree with relative path."""
     git_output = """../.worktrees/WO-0010 abc123 [feat/wo-WO-0010]
-/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope feat/wo-WO-0011 def456"""
+<REPO_ROOT>/Developer/agent_h/trifecta_dope feat/wo-WO-0011 def456"""
 
     with patch("subprocess.check_output", return_value=git_output.encode()):
         worktrees = get_worktrees_from_git(
-            Path("/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope")
+            Path("<REPO_ROOT>/Developer/agent_h/trifecta_dope")
         )
 
         assert "WO-0010" in worktrees

@@ -1,7 +1,7 @@
 ## 2. Setup del entorno
 
 ```bash
-cd /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope
+cd <REPO_ROOT>/Developer/agent_h/trifecta_dope
 uv sync
 source .venv/bin/activate
 python ~/Developer/Minirag/scripts/install_improved.py --source ~/Developer/Minirag

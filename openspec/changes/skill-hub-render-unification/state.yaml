@@ -1,0 +1,26 @@
+change: skill-hub-render-unification
+status: post-impl-audit
+artifacts:
+  spec: engram:sdd/skill-hub-render-unification/spec
+  design: engram:sdd/skill-hub-render-unification/design
+  tasks: engram:sdd/skill-hub-render-unification/tasks
+  verify-report: engram:sdd/skill-hub-render-unification/verify-report
+audits:
+  - id: audit-1-mr-thorough
+    skill: mr-plan (thorough preset)
+    status: complete
+    agents: [structure, risk, design, simplification]
+    findings: {critical: 0, high: 3, medium: 8, low: 9}
+    engram_obs: 2615
+  - id: audit-2-bug-hunter
+    skill: real-world-bug-hunter
+    status: complete
+    agents: [ripper, walker, sniper]
+    findings: {critical: 0, high: 5, medium: 8, low: 6}
+    engram_obs: 2616
+  - id: audit-3-authority-flow
+    skill: authority-flow-audit
+    status: complete
+    verdict: HEALTHY
+    findings: {critical: 0, high: 0, medium: 0, low: 3, info: 1}
+    engram_obs: 2617

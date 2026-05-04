@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 from src.application.plan_use_case import PlanUseCase
 
 segment = Path('.')
-dataset_path = Path('/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/t9-3-6-clamp-calibration/docs/plans/t9_plan_eval_tasks_v2_nl.md').resolve()
+dataset_path = Path('<REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/t9-3-6-clamp-calibration/docs/plans/t9_plan_eval_tasks_v2_nl.md').resolve()
 content = dataset_path.read_text()
 
 tasks = re.findall(r'^\d+\.\s+"([^"]+)"', content, re.MULTILINE)

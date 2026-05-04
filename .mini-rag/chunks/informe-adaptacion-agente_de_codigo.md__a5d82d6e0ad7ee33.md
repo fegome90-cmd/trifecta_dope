@@ -1,6 +1,6 @@
 ### 3) Tool Registry
 
-- Fuente: ` /Users/felipe_gonzalez/Developer/agente_de_codigo/packages/shared/src/tool-registry/tool-registry.ts`
+- Fuente: ` <REPO_ROOT>/Developer/agente_de_codigo/packages/shared/src/tool-registry/tool-registry.ts`
 
 Hallazgos:
 - Registro central de herramientas con validacion (zod), metricas y control de ejecucion.

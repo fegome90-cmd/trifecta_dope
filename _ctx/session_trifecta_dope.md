@@ -125,3 +125,66 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Files**: src/application/graph_service.py, tests/unit/test_graph_service.py
 - **Commands**: uv run pytest -q tests/unit/test_graph_service.py -k alias_path_for_injected_store, uv run pytest -q tests/integration/test_graph_store_schema.py tests/unit/test_graph_indexer.py tests/unit/test_graph_service.py tests/integration/cli/test_graph_cli.py, uv run ruff check src/application/graph_indexer.py src/application/graph_service.py src/infrastructure/graph_store.py tests/integration/test_graph_store_schema.py tests/unit/test_graph_indexer.py tests/unit/test_graph_service.py tests/integration/cli/test_graph_cli.py
 - **Pack SHA**: `005855ec718feceb`
+
+## 2026-04-29 UTC
+- **Summary**: Full dry-run audit of skill-hub search/cards/runtime after reported regressions.
+- **Findings**: Runtime receipt verifies and promoted files match repo; sandbox blocks uv cache; manifest has 489 entries with 0 orphans/dups/truncated descriptions; audit still reports 12 broken registered source paths and coverage gap.
+- **Findings**: Search is degraded by vague-query expansion adding `agent.md prime.md`, causing code-review/pae-agent noise; wrapper canonical alias logic still assumes `repo:{term}.md:` while live ids are `skill:{name}:{hash}`.
+- **Findings**: Cards render outside sandbox, but intro/banner contract is broken; focused tests show runtime-promotion failures and render parity tests fail collection due stale `SkillCardViewModel` API expectations.
+- **Commands**: skill-hub smoke, uv run trifecta ctx search --explain, audit_skill_hub.py --report-out, pytest focused skill-hub card/runtime slices.
+- **Files**: scripts/skill-hub, scripts/skill_hub_cards_core.py, scripts/skill-hub-runtime, tests/unit/test_skill_hub_runtime_promotion.py, tests/unit/test_skill_hub_render_parity.py, _ctx/session_trifecta_dope.md
+
+## 2026-04-29 UTC
+- **Summary**: Started SDD cycle `skill-hub-surgical-repair` with explore phase.
+- **Artifact**: openspec/changes/skill-hub-surgical-repair/exploration.md
+- **Findings**: Five drifts confirmed: legacy-only alias refs, skills-hub-inappropriate vague query anchors, split cards authority, intro/banner contract drift, and governed-only registration repair requirement.
+- **Decision**: Use surgical governed-runtime repair; no rebuild masivo and no manual manifest/receipt edits.
+- **Next**: Run sdd-propose/spec/design for the same change before apply.
+
+## 2026-04-30 UTC
+- **Summary**: Fixed recurring `skill-hub --cards` rich render regression by changing the wrapper to use the project Python/uv environment before falling back to system `python3`.
+- **Findings**: Root cause was Python interpreter dependency drift: system `python3` lacked `rich`, so `render_cards_rich()` silently fell back to plain even though `uv run python` had `rich`.
+- **Commands**: uv run pytest focused skill-hub runtime/card suites; scripts/skill-hub-runtime promote; scripts/skill-hub-runtime verify; skill-hub --cards python --limit 1 in TTY and non-TTY.
+- **Files**: scripts/skill-hub, tests/unit/test_skill_hub_runtime_promotion.py, ~/.codex/skills/skill-hub-doctor/resources/diagnostic-checks.md, ~/.codex/skills/skill-hub-doctor/resources/known-failures.md, ~/.codex/skills/skill-hub-doctor/resources/repair-procedures.md, _ctx/session_trifecta_dope.md
+
+## 2026-04-30 UTC
+- **Summary**: Fixed missing `skill-hub --cards` intro/banner handoff after rich cards were restored.
+- **Findings**: Root cause was an integration gap: `scripts/skill_hub_runtime_ux.py::render_intro()` was correct, but `scripts/skill_hub_cards_core.py::cli()` printed rendered cards directly and never called the governed intro renderer.
+- **Fix**: Cards CLI now computes `is_tty` once, passes it to `_select_renderer(...)`, and prepends `render_intro(query_hint=args.query, rich=is_tty and args.style == "rich")` for non-JSON renderable card output only.
+- **Commands**: uv run pytest focused skill-hub suite (48 passed); scripts/skill-hub --cards python --limit 1 non-TTY + TTY; scripts/skill-hub-runtime promote; scripts/skill-hub-runtime verify; skill-hub --cards python --limit 1 non-TTY + TTY.
+- **Files**: scripts/skill_hub_cards_core.py, tests/unit/test_skill_hub_cards_adapter.py, ~/.codex/skills/skill-hub-doctor/resources/diagnostic-checks.md, ~/.codex/skills/skill-hub-doctor/resources/known-failures.md, ~/.codex/skills/skill-hub-doctor/resources/repair-procedures.md, _ctx/session_trifecta_dope.md
+
+## 2026-04-30 UTC
+- **Summary**: Closed four real HIGH findings from the parallel skill-hub hunt and rejected the null-byte finding as an argv-layer false HIGH.
+- **Findings**: H-001/H-002 shared a root cause: managed skill excerpts start with indexing scaffolding (`<!-- managed-by... -->`, `read ...`, `# Skill`, `**Source**`) and the renderers were using raw preview/too-narrow description patterns instead of extracting the first human content line.
+- **Findings**: H-003 cannot be fixed inside skill-hub because NUL bytes cannot survive `argv`; `python3 -c 'print(repr(sys.argv[1]), len(sys.argv[1]))' $'test\x00null'` receives only `'test'` length 4 before skill-hub runs.
+- **Fix**: Plain search preview now hides managed scaffolding; cards promote generic managed descriptions to healthy/full cards; cards whitespace-only queries now reject before search with the same message as plain mode; no-args wrapper now prints full help including `--cards` and `--limit`.
+- **Commands**: uv run pytest focused skill-hub render/runtime suite (52 passed); bash scripts/skill-hub security; bash scripts/skill-hub --cards testing --limit 3; bash scripts/skill-hub --cards '   '; bash scripts/skill-hub; scripts/skill-hub-runtime promote; scripts/skill-hub-runtime verify; promoted `skill-hub` smokes for preview/cards/whitespace/no-args/TTY.
+- **Files**: src/application/search_get_usecases.py, scripts/skill_hub_cards_core.py, scripts/skill-hub, tests/unit/test_skill_hub_search_render_surface.py, tests/unit/test_skill_hub_cards_adapter.py, tests/unit/test_skill_hub_runtime_promotion.py, _ctx/session_trifecta_dope.md
+
+## 2026-05-01 UTC
+- **Summary**: Fixed skill-hub plain search path discoverability after the default render stopped exposing usable skill source paths.
+- **Findings**: `skill-hub --cards "skill-hub doctor"` already showed `read /.../SKILL.md`; the broken surface was plain `skill-hub`/`trifecta ctx search`, where `read ...` was filtered from previews and truncated index previews could show `**Resolved Path**` instead of a useful description.
+- **Fix**: Plain search now loads full skill chunks for display, emits a dedicated `Path: .../SKILL.md` line for `skill:` hits, and still uses a human-readable preview with managed scaffolding hidden.
+- **Commands**: `.venv/bin/pytest tests/unit/test_skill_hub_search_render_surface.py tests/unit/test_skill_hub_cards_adapter.py::test_cli_cards_output_includes_plain_intro_before_rendered_cards -q`; `.venv/bin/trifecta ctx search --segment ~/.trifecta/segments/skills-hub --query "skill-hub doctor" --limit 1`; `~/.local/bin/skill-hub "skill-hub doctor" --limit 1`; `~/.local/bin/skill-hub --cards "skill-hub doctor" --limit 1`.
+- **Files**: src/application/search_get_usecases.py, tests/unit/test_skill_hub_search_render_surface.py, _ctx/session_trifecta_dope.md
+
+## 2026-05-01 UTC
+- **Summary**: Validated the proposed 8 HIGH findings for `skill-hub-render-unification` using Engram context plus code/runtime evidence.
+- **Findings**: H-1, H-2, H-4, and H-5 are confirmed as real issues. H-3 is duplicated code but not HIGH by itself. H-6 is not a real CLI NUL-byte bug because argv cannot carry NUL; direct API sanitization does strip it silently. H-7 is not independent; it is H-1 plus promoted-wrapper drift. H-8 is confirmed behavior but MEDIUM because degraded/minimal metadata distinguishes it.
+- **Commands**: Engram lookup for audit #2618; `nl`/`grep` over `scripts/skill_hub_cards_core.py` and `scripts/skill-hub`; direct `.venv/bin/python` reproduction for H-1/H-2/H-3/H-5/H-6/H-8; real `~/.local/bin/skill-hub --cards --json test --limit 1`; real `~/.local/bin/skill-hub --cards --style rich test --limit 1`; whitespace and argv-NUL probes.
+- **Files**: scripts/skill_hub_cards_core.py, scripts/skill-hub, _ctx/session_trifecta_dope.md
+
+## 2026-05-01 UTC
+- **Summary**: Reviewed agent verification for `skill-hub-render-hardening-followup`.
+- **Findings**: Source tests match the report (`73 passed`), and source behavior fixes H-1/H-2/H-5/H-8 plus wrapper flag forwarding. However, promoted runtime artifacts are stale: `scripts/skill-hub-runtime verify` fails with `source hash mismatch for skill-hub`; direct `~/.local/bin/skill-hub-cards "   " --limit 1` still exits 0, and `~/.local/bin/skill-hub --cards test --limit 101` still succeeds.
+- **Verdict**: Source tree is PASS WITH WARNINGS; end-user runtime is NOT PASS until promotion/verification is completed.
+- **Commands**: `.venv/bin/pytest tests/unit/test_skill_hub_render_unification.py tests/unit/test_skill_hub_cards_adapter.py -q`; `scripts/skill-hub-runtime verify`; source vs promoted runtime smokes for `--json`, whitespace, and `--limit 101`.
+- **Files**: scripts/skill_hub_cards_core.py, scripts/skill-hub, scripts/skill-hub-runtime, tests/unit/test_skill_hub_render_unification.py, _ctx/session_trifecta_dope.md
+
+## 2026-05-01 UTC
+- **Summary**: Re-reviewed `skill-hub-render-hardening-followup` v2 after runtime promotion and P2 test fixes.
+- **Findings**: Previous P1 runtime drift is resolved: `scripts/skill-hub-runtime verify` now passes. Promoted runtime smokes pass: whitespace query exits 4, `--limit 101` exits 1, `--json` emits whitelisted JSON fields only, and missing `--style` exits 2. P2 tests were also corrected: wrapper JSON now asserts returncode before parsing, and all-synthetic coverage now calls `build_render_plan()` with a fake ref and empty `chunk_texts`.
+- **Verdict**: PASS for source tree + promoted runtime. No build was run.
+- **Commands**: `scripts/skill-hub-runtime verify`; `.venv/bin/pytest tests/unit/test_skill_hub_render_unification.py tests/unit/test_skill_hub_cards_adapter.py -q`; promoted runtime smokes for whitespace, `--limit 101`, `--json`, missing `--style`, and direct helper limit cap.
+- **Files**: tests/unit/test_skill_hub_render_unification.py, scripts/skill-hub, scripts/skill_hub_cards_core.py, scripts/skill_hub_runtime_ux.py, _ctx/session_trifecta_dope.md

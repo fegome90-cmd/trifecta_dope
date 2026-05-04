@@ -2,9 +2,9 @@
 
 **Ubicación**:
 
-- prime.md L8: `/Users/felipe_gonzalez/Developer/agent_h`
-- agent.md frontmatter L4: `repo_root: /Users/felipe_gonzalez/Developer/agent_h`
-- skill.md L8: `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/`
+- prime.md L8: `<REPO_ROOT>/Developer/agent_h`
+- agent.md frontmatter L4: `repo_root: <REPO_ROOT>/Developer/agent_h`
+- skill.md L8: `<REPO_ROOT>/Developer/agent_h/trifecta_dope/`
 
 **Análisis**: No es duplicación real, cada uno tiene propósito:
 

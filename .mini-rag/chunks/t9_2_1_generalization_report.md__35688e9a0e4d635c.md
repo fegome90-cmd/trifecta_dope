@@ -1,6 +1,6 @@
 ### 4. Regression Tests
 ```bash
-cd /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope
+cd <REPO_ROOT>/Developer/agent_h/trifecta_dope
 uv run pytest tests/test_plan_use_case.py -v
 ```
 

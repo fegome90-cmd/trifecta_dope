@@ -764,7 +764,7 @@ You are executing WO-0010 to establish a quantitative benchmark f...
 
 ## Context
 
-This report lists the dirty files in `/Users/felipe_gonzalez/Developer/agent_h/t...
+This report lists the dirty files in `<REPO_ROOT>/Developer/agent_h/t...
 
 
 STDERR:
@@ -917,7 +917,7 @@ Work orders move through these states:
 
 ## Context
 
-This report lists the dirty files in `/Users/felipe_gonzalez/Developer/agent_h/t...
+This report lists the dirty files in `<REPO_ROOT>/Developer/agent_h/t...
 
 7. [skill:269d20e0fa] skill.md
    Score: 0.50 | Tokens: ~1514

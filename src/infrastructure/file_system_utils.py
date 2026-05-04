@@ -4,6 +4,8 @@ from contextlib import contextmanager
 from typing import Generator
 
 
+import os
+
 class AtomicWriter:
     """Handles atomic writes to ensure file integrity."""
 
@@ -18,7 +20,10 @@ class AtomicWriter:
 
         temp_path = path.with_suffix(f"{path.suffix}.tmp")
         try:
-            temp_path.write_text(content)
+            with open(temp_path, "w", encoding="utf-8") as f:
+                f.write(content)
+                f.flush()
+                os.fsync(f.fileno())
             temp_path.replace(path)
         except Exception:
             if temp_path.exists():

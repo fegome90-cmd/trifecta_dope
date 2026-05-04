@@ -9,7 +9,7 @@
       "severity": "Media",
       "title": "Necesidad de observabilidad y semántica HTTP",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
         "line": 6,
         "snippet": "**Status**: `PENDING`"
       },
@@ -22,7 +22,7 @@
       "severity": "Media",
       "title": "Riesgo de degradación ambigua",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
         "line": 65,
         "snippet": "1. Definir convención: primero consultar skills-hub antes de fallback local."
       },
@@ -35,7 +35,7 @@
       "severity": "Media",
       "title": "Riesgo de degradación ambigua",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
         "line": 112,
         "snippet": "- Si skills-hub falla, fallback a rutas actuales"
       },

@@ -1,0 +1,18 @@
+{
+  "items": [
+    {
+      "type": "TODO",
+      "message": "Implement telemetry extraction",
+      "file": "src/application/obsidian_sync_use_case.py",
+      "line": 113,
+      "column": 14
+    },
+    {
+      "type": "TODO",
+      "message": "Implement micro-audit extraction",
+      "file": "src/application/obsidian_sync_use_case.py",
+      "line": 117,
+      "column": 14
+    }
+  ]
+}

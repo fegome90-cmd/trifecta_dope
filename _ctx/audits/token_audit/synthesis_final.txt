@@ -15,9 +15,9 @@ SECCIÓN 1 — DEFINICIÓN DEL EXPERIMENTO
 SECCIÓN 2 — DATOS MEDIDOS
 | Item | Tokens In | Tokens Out | Fuente | Tipo |
 |---|---:|---:|---|---|
-| A `ctx.search` (`run_1771428828`) | 100 | 132 | `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/telemetry/events.jsonl` | MEDIDO |
-| A `ctx.get` (`run_1771428838`) | 43 | 255 | `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/telemetry/events.jsonl` | MEDIDO |
-| B1 lectura manual archivos | 3653 | 0 | `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/docs/backlog/WORKFLOW.md` | MEDIDO |
+| A `ctx.search` (`run_1771428828`) | 100 | 132 | `<REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/telemetry/events.jsonl` | MEDIDO |
+| A `ctx.get` (`run_1771428838`) | 43 | 255 | `<REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/telemetry/events.jsonl` | MEDIDO |
+| B1 lectura manual archivos | 3653 | 0 | `<REPO_ROOT>/Developer/agent_h/trifecta_dope/docs/backlog/WORKFLOW.md` | MEDIDO |
 | B2 lectura manual archivos | 14485 | 0 | lista B2 (abajo) | MEDIDO |
 | B3 lectura manual archivos | 27173 | 0 | lista B3 (abajo) | MEDIDO |
 | Output LLM para B1/B2/B3 | 0 | 387 | igualado a output A | MODELADO |
@@ -45,7 +45,7 @@ SECCIÓN 3 — ESCENARIO A (TRIFECTA)
 
 SECCIÓN 4 — ESCENARIO B1 (MANUAL ESTRICTO)
 - Archivos estrictamente necesarios (equivalentes a lo realmente usado en A):
-  - `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/docs/backlog/WORKFLOW.md`
+  - `<REPO_ROOT>/Developer/agent_h/trifecta_dope/docs/backlog/WORKFLOW.md`
 - Dedupe: sin duplicados.
 - Input tokens:
   - `TOTAL_IN_B1 = 3653`
@@ -62,10 +62,10 @@ SECCIÓN 5 — ESCENARIO B2 (REALISTA)
 - Supuestos explícitos:
   - Humano abre varios documentos candidatos devueltos por search antes de cerrar diagnóstico.
 - Archivos añadidos (dedupe aplicado):
-  - `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/docs/backlog/WORKFLOW.md`
-  - `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/docs/CLI_WORKFLOW.md`
-  - `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/docs/guides/work_orders_usage.md`
-  - `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/docs/plans/2026-01-05-backlog-wo-dod-pipeline-plan.md`
+  - `<REPO_ROOT>/Developer/agent_h/trifecta_dope/docs/backlog/WORKFLOW.md`
+  - `<REPO_ROOT>/Developer/agent_h/trifecta_dope/docs/CLI_WORKFLOW.md`
+  - `<REPO_ROOT>/Developer/agent_h/trifecta_dope/docs/guides/work_orders_usage.md`
+  - `<REPO_ROOT>/Developer/agent_h/trifecta_dope/docs/plans/2026-01-05-backlog-wo-dod-pipeline-plan.md`
 - Cálculo:
   - `TOTAL_IN_B2 = 14485`
   - `TOTAL_OUT_B2 = 387` (MODELADO, `ratio=1.0`)
@@ -79,9 +79,9 @@ SECCIÓN 6 — ESCENARIO B3 (PEOR CASO)
   - Dumping amplio de docs + scripts operativos + WO activo.
 - Archivos/directorios (instanciados a archivos concretos, dedupe aplicado):
   - B2 +
-  - `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/scripts/ctx_wo_finish.py`
-  - `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/scripts/verify.sh`
-  - `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/jobs/pending/WO-0056.yaml`
+  - `<REPO_ROOT>/Developer/agent_h/trifecta_dope/scripts/ctx_wo_finish.py`
+  - `<REPO_ROOT>/Developer/agent_h/trifecta_dope/scripts/verify.sh`
+  - `<REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/jobs/pending/WO-0056.yaml`
 - Cálculo:
   - `TOTAL_IN_B3 = 27173`
   - `TOTAL_OUT_B3 = 387` (MODELADO, `ratio=1.0`)

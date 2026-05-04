@@ -757,7 +757,7 @@ The Error→Prompt system generates actionable recovery prompts when CLI command
 
 ## Context
 
-This report lists the dirty files in `/Users/felipe_gonzalez/Developer/agent_h/t...
+This report lists the dirty files in `<REPO_ROOT>/Developer/agent_h/t...
 
 10. [repo:docs/research/futuro/Advance context enhance 2 (1).md:cdd1776c3a] Advance context enhance 2 (1).md
    Score: 1.00 | Tokens: ~3733
@@ -916,7 +916,7 @@ Work orders move through these states:
 
 ## Context
 
-This report lists the dirty files in `/Users/felipe_gonzalez/Developer/agent_h/t...
+This report lists the dirty files in `<REPO_ROOT>/Developer/agent_h/t...
 
 7. [skill:269d20e0fa] skill.md
    Score: 0.50 | Tokens: ~1514

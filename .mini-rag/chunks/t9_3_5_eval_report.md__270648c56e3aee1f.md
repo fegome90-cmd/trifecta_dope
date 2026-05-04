@@ -8,7 +8,7 @@
 # - Expose l2_blocked + l2_block_reason for telemetry
 
 # 2. Run evaluation
-cd /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/t9-3-5-audit-fix
+cd <REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/t9-3-5-audit-fix
 uv run trifecta ctx eval-plan -s . --dataset docs/plans/t9_plan_eval_tasks_v2_nl.md
 ```
 

@@ -48,6 +48,12 @@ Solo escala a código cuando es estrictamente necesario y siguiendo rutas/contra
 - `agents.md`: contrato operativo para otros runtimes/agentes.
 - `skill.md`: runbook operativo del segmento (reglas + ciclo Search/Get + gates).
 - `llms.txt`: resumen corto para carga rápida por LLM.
+
+## Motor F1 & Unified Intelligence
+Trifecta v2.2 introduce el **Motor F1**, un sistema de inteligencia estructural de alta performance que incluye:
+- **Context Oracle**: Fusión de señales de LSP (Pyright), AST (M1) y PRIME (Docs).
+- **Hybrid Dispatcher**: El CLI detecta automáticamente el Daemon F1 y desvía las consultas vía Sockets Unix para latencia cero.
+- **Autonomous Calibration**: Optimización dinámica de pesos de búsqueda basada en métricas empíricas (PCC).
 - `_ctx/agent_trifecta_dope.md`: estado técnico activo (features/gates/stack).
 - `_ctx/prime_trifecta_dope.md`: lista de lectura priorizada.
 - `_ctx/session_trifecta_dope.md`: bitácora append-only de handoff.
@@ -179,7 +185,7 @@ Para usar `trifecta` desde cualquier carpeta sin instalarlo globalmente:
 
 ```fish
 # Agregar a ~/.config/fish/config.fish
-alias trifecta="/Users/felipe_gonzalez/.local/bin/uv --directory /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope run trifecta"
+alias trifecta="<REPO_ROOT>/.local/bin/uv --directory <REPO_ROOT>/Developer/agent_h/trifecta_dope run trifecta"
 ```
 
 Luego:

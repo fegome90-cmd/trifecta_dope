@@ -2,7 +2,7 @@
 
 **DATOS PROHIBIDOS**:
 
-1. **Paths absolutos** — Ejemplo: `/Users/felipe_gonzalez/Developer/...`
+1. **Paths absolutos** — Ejemplo: `<REPO_ROOT>/Developer/...`
 2. **API keys / tokens** — Ejemplo: `GEMINI_API_KEY=xxx`
 3. **Segment full paths** — Debe ser hash: `segment_id: "6f25e381"` NO `/path/to/segment`
 

@@ -6,7 +6,7 @@ HEAD: `796b5a5039766e5fd928ef533504c8ec98109e12`
 
 ## What Changed
 
-- Created isolated worktree `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-source-bias-investigation` on branch `codex/skill-hub-source-bias-investigation` from clean PR103 tip `796b5a50`.
+- Created isolated worktree `<REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-source-bias-investigation` on branch `codex/skill-hub-source-bias-investigation` from clean PR103 tip `796b5a50`.
 - Reproduced the observed query skew: `security`, `worktree`, and `openai-docs` return only `pi-agent-skills`, while `codex` returns mixed `pi-agent-skills` and `codex-skills`.
 - Confirmed the runtime authority for skill-hub search/cards is the promoted set under `~/.trifecta/segments/skills-hub/_ctx` (`skills_manifest.json`, `context_pack.json`, `skill_hub_promotion_receipt.json`) rather than `export_skills_catalog.py`.
 - Verified historical evidence that the corpus used to be broad: 279 skills on 2026-03-06, 261 on 2026-03-19, and a 457-total-skills audit on 2026-03-19, all including claude/codex sources.
@@ -31,10 +31,10 @@ HEAD: `796b5a5039766e5fd928ef533504c8ec98109e12`
 
 - Use $checkpoint-resume before doing any new work.
 - Use $checkpoint-resume before any repo exploration or implementation.
-- repo: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-source-bias-investigation
-- checkpoint: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-source-bias-investigation/_ctx/checkpoints/2026-04-15/checkpoint_122101_skill-hub-source-bias-diagnosis-pre-propose.md
-- supporting bundle: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-source-bias-investigation/{'workspace_bundle': ['/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-source-bias-investigation', '/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/docs/reports/skill-hub-source-bias-diagnosis-explore.md'], 'engram_topics': ['skill-hub/source-authority', 'discovery/skill-hub-corpus-collapse-window', 'discovery/skill-hub-collapsed-writer-event', 'preference/sdd-mode-skill-hub-source-investigation']}
-- handoff: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/handoffs/skill-hub-source-bias-diagnosis-pre-propose-handoff.md
-- checklist: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/checklists/skill-hub-source-bias-diagnosis-pre-propose-next-agent-checklist.md
+- repo: <REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-source-bias-investigation
+- checkpoint: <REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-source-bias-investigation/_ctx/checkpoints/2026-04-15/checkpoint_122101_skill-hub-source-bias-diagnosis-pre-propose.md
+- supporting bundle: <REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-source-bias-investigation/{'workspace_bundle': ['<REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-source-bias-investigation', '<REPO_ROOT>/Developer/agent_h/trifecta_dope/docs/reports/skill-hub-source-bias-diagnosis-explore.md'], 'engram_topics': ['skill-hub/source-authority', 'discovery/skill-hub-corpus-collapse-window', 'discovery/skill-hub-collapsed-writer-event', 'preference/sdd-mode-skill-hub-source-investigation']}
+- handoff: <REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/handoffs/skill-hub-source-bias-diagnosis-pre-propose-handoff.md
+- checklist: <REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/checklists/skill-hub-source-bias-diagnosis-pre-propose-next-agent-checklist.md
 Context loaded only. Waiting for your instruction.
 - Use $checkpoint-resume before any repo exploration or implementation. Resume from the isolated worktree and start with `sdd-propose` for `skill-hub-source-bias-diagnosis`, using the confirmed `ctx.sync` writer event and promoted-set collapse evidence. Do not touch PR #103 branch/worktree during this new change. Context loaded only. Waiting for your instruction.

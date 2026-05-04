@@ -9,7 +9,7 @@ Search Results (3 hits):
    Preview: ---
 segment: .
 scope: Verification
-repo_root: /Users/felipe_gonzalez/Developer/agent_h
+repo_root: <REPO_ROOT>/Developer/agent_h
 last_verified: 2026-01-01
 default...
 

@@ -1,7 +1,7 @@
 # Handoff: Trifecta CLI hardening context transfer
 
 Date: 2026-03-13
-Repo: `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope`
+Repo: `<REPO_ROOT>/Developer/agent_h/trifecta_dope`
 
 ## Selected skill
 Used `checkpoint-handoff` via `skill-hub` because the task is to transfer execution state to a new agent/window with a checkpoint + resumable context.

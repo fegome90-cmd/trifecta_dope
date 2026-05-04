@@ -1,6 +1,6 @@
 import pytest
 import yaml
-from src.domain.query_linter import lint_query
+from src.domain.query_linter import lint_query, expand_query, classify_query
 
 
 # Fixtures from real config files
@@ -110,3 +110,83 @@ def test_reasons_no_duplicates(anchors_cfg, aliases_cfg):
         assert reasons.count("vague_default_boost") == 1, (
             "vague_default_boost should appear only once"
         )
+
+
+# --- Phase 1: Segment + Profile Awareness (AUTH-004, AUTH-005, AUTH-006) ---
+
+
+def test_expand_query_skills_hub_excludes_defaults(anchors_cfg, aliases_cfg):
+    """AUTH-004: segment='skills-hub' MUST NOT inject agent.md/prime.md defaults."""
+    query = "help"
+    analysis = classify_query(query, anchors_cfg, aliases_cfg)
+
+    result = expand_query(query, analysis, anchors_cfg, segment="skills-hub")
+
+    assert "agent.md" not in result["added_strong"]
+    assert "prime.md" not in result["added_strong"]
+    assert "vague_default_boost" not in result["reasons"]
+
+
+def test_expand_query_default_segment_retains_defaults(anchors_cfg, aliases_cfg):
+    """AUTH-005: No segment MUST retain agent.md/prime.md injection."""
+    query = "help"
+    analysis = classify_query(query, anchors_cfg, aliases_cfg)
+
+    result = expand_query(query, analysis, anchors_cfg)
+
+    assert "agent.md" in result["added_strong"] or "prime.md" in result["added_strong"]
+    assert "vague_default_boost" in result["reasons"]
+
+
+def test_expand_query_profile_overrides_segment(anchors_cfg, aliases_cfg):
+    """AUTH-006: lint_profile override MUST skip defaults regardless of segment."""
+    query = "help"
+    analysis = classify_query(query, anchors_cfg, aliases_cfg)
+    profile = {"disable_entrypoint_anchors": True}
+
+    # Even with a non-skills-hub segment, profile wins
+    result = expand_query(
+        query, analysis, anchors_cfg, segment="general", lint_profile=profile
+    )
+
+    assert "agent.md" not in result["added_strong"]
+    assert "prime.md" not in result["added_strong"]
+    assert "vague_default_boost" not in result["reasons"]
+
+
+def test_expand_query_regression_existing_behavior(anchors_cfg, aliases_cfg):
+    """AUTH-005 baseline: No new params = identical output to current behavior."""
+    query = "help"
+    analysis = classify_query(query, anchors_cfg, aliases_cfg)
+
+    result = expand_query(query, analysis, anchors_cfg)
+
+    assert result["added_strong"]  # Should have defaults
+    assert "vague_default_boost" in result["reasons"]
+
+
+def test_lint_query_propagates_segment(anchors_cfg, aliases_cfg):
+    """AUTH-004: lint_query MUST forward segment to expand_query."""
+    query = "help"
+
+    plan = lint_query(query, anchors_cfg, aliases_cfg, segment="skills-hub")
+
+    assert plan["query_class"] == "vague"
+    assert "agent.md" not in plan["changes"]["added_strong"]
+    assert "prime.md" not in plan["changes"]["added_strong"]
+    assert "vague_default_boost" not in plan["changes"]["reasons"]
+
+
+def test_lint_query_propagates_profile(anchors_cfg, aliases_cfg):
+    """AUTH-006: lint_query MUST forward lint_profile to expand_query."""
+    query = "help"
+    profile = {"disable_entrypoint_anchors": True}
+
+    plan = lint_query(
+        query, anchors_cfg, aliases_cfg, lint_profile=profile
+    )
+
+    assert plan["query_class"] == "vague"
+    assert "agent.md" not in plan["changes"]["added_strong"]
+    assert "prime.md" not in plan["changes"]["added_strong"]
+    assert "vague_default_boost" not in plan["changes"]["reasons"]

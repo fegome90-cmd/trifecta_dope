@@ -6,10 +6,10 @@
   "session_name": "plan-audit",
   "plan_path": ".pi/plan/trifecta-global-architecture.md",
   "agent_outputs": {
-    "logic": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-171103/agent-logic.json",
-    "code_quality": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-171103/agent-code-quality.json",
-    "silent_failure": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-171103/agent-silent-failure.json",
-    "testing_static": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-171103/agent-testing-static.json"
+    "logic": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-171103/agent-logic.json",
+    "code_quality": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-171103/agent-code-quality.json",
+    "silent_failure": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-171103/agent-silent-failure.json",
+    "testing_static": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-171103/agent-testing-static.json"
   },
   "findings": [
     {

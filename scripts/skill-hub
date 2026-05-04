@@ -42,11 +42,71 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
 fi
 
 SEGMENT="${SKILL_HUB_SEGMENT:-$HOME/.trifecta/segments/skills-hub}"
-TRIFECTA_ROOT="$(dirname "$SCRIPT_DIR")"
+
+resolve_trifecta_root() {
+    if [ -n "${SKILL_HUB_TRIFECTA_ROOT:-}" ]; then
+        printf '%s\n' "$SKILL_HUB_TRIFECTA_ROOT"
+        return
+    fi
+
+    # Source-tree invocation: scripts/skill-hub lives directly under the repo.
+    local source_root
+    source_root="$(dirname "$SCRIPT_DIR")"
+    if [ -f "$source_root/pyproject.toml" ] && [ -d "$source_root/src" ]; then
+        printf '%s\n' "$source_root"
+        return
+    fi
+
+    # Promoted runtime invocation cannot infer the repo from SCRIPT_DIR,
+    # so use the canonical local checkout when present.
+    local default_root="$HOME/Developer/agent_h/trifecta_dope"
+    if [ -f "$default_root/pyproject.toml" ] && [ -d "$default_root/src" ]; then
+        printf '%s\n' "$default_root"
+        return
+    fi
+
+    printf '%s\n' "$source_root"
+}
+
+TRIFECTA_ROOT="$(resolve_trifecta_root)"
 CARDS_HELPER="$SCRIPT_DIR/skill-hub-cards"
 CARDS_MODE=0
 LIMIT=5
 QUERY_PARTS=()
+JSON_OUTPUT=0
+STYLE_OVERRIDE=""
+
+# Cleanup temp files on exit (robustness against early termination)
+trap 'rm -f /tmp/skill_hub_stderr_$$ /tmp/skill_hub_explain_stderr_$$' EXIT
+
+run_cards_helper() {
+    local query="$1"
+    local limit="$2"
+    local segment="$3"
+    local style="$4"
+    local json_flag="$5"
+    local project_python="$TRIFECTA_ROOT/.venv/bin/python"
+
+    query="$(printf '%s' "$query" | tr -d '\0')"
+    if [ -z "$(printf '%s' "$query" | tr -d '[:space:]')" ]; then
+        echo "skill-hub: Query cannot be empty or whitespace-only" >&2
+        return 4
+    fi
+
+    local args=("$query" --limit "$limit" --segment "$segment" --style "$style")
+    if [ "$json_flag" -eq 1 ]; then args+=(--json); fi
+
+    if [ -x "$project_python" ]; then
+        exec "$project_python" "$CARDS_HELPER" "${args[@]}"
+    fi
+
+    if command -v uv >/dev/null 2>&1; then
+        exec uv run python "$CARDS_HELPER" "${args[@]}"
+    fi
+
+    echo "skill-hub: WARNING: project Python unavailable; rich card dependencies may be missing under system python3" >&2
+    exec python3 "$CARDS_HELPER" "${args[@]}"
+}
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -58,12 +118,24 @@ while [ $# -gt 0 ]; do
             CARDS_MODE=1
             shift
             ;;
+        -j|--json)
+            JSON_OUTPUT=1
+            shift
+            ;;
         -l|--limit)
             if [ $# -lt 2 ]; then
                 echo "skill-hub: --limit requires a value" >&2
                 exit 2
             fi
             LIMIT="$2"
+            shift 2
+            ;;
+        --style)
+            if [ $# -lt 2 ]; then
+                echo "skill-hub: --style requires a value (plain or rich)" >&2
+                exit 2
+            fi
+            STYLE_OVERRIDE="$2"
             shift 2
             ;;
         --)
@@ -88,27 +160,50 @@ fi
 QUERY="${QUERY_PARTS[*]}"
 
 if [ -z "$QUERY" ]; then
-    echo "Usage: skill-hub \"query\""
-    echo "Example: skill-hub \"refactor\""
-    echo ""
-    echo "Run 'skill-hub --help' for more information."
+    print_help
     exit 1
+fi
+
+if [ -z "$(printf '%s' "$QUERY" | tr -d '[:space:]')" ]; then
+    echo "skill-hub: Query cannot be empty or whitespace-only" >&2
+    exit 4
 fi
 
 cd "$TRIFECTA_ROOT"
 
 if [ "$CARDS_MODE" -eq 1 ]; then
-    exec python3 "$CARDS_HELPER" "$QUERY" --limit "$LIMIT" --segment "$SEGMENT"
+    STYLE=plain
+    if [ -t 1 ]; then
+        STYLE=rich
+    fi
+    FINAL_STYLE="${STYLE_OVERRIDE:-$STYLE}"
+    run_cards_helper "$QUERY" "$LIMIT" "$SEGMENT" "$FINAL_STYLE" "$JSON_OUTPUT"
 fi
 
 run_search_capture() {
-    local output status
+    local output status _stderr_file
+    _stderr_file="/tmp/skill_hub_stderr_$$"
     set +e
-    output="$(TRIFECTA_LINT=1 uv run trifecta ctx search --segment "$SEGMENT" "$@" 2>&1)"
+    output="$(TRIFECTA_LINT=1 TRIFECTA_SEGMENT=skills-hub uv run trifecta ctx search --segment "$SEGMENT" "$@" 2>"$_stderr_file")"
     status=$?
     set -e
+    rm -f "$_stderr_file"
     printf '%s' "$output"
     return "$status"
+}
+
+resolve_doctor_alias_match() {
+    local normalized
+    normalized="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
+    case "$normalized" in
+        "exit code drift"|"no me aparecen skills"|"hub de skills")
+            printf '%s
+' "skill-hub-doctor"
+            ;;
+        *)
+            printf '%s' ""
+            ;;
+    esac
 }
 
 RERANK_MODE="${SKILL_HUB_RERANK:-auto}"
@@ -129,7 +224,13 @@ esac
 
 EXPLAIN_JSON=""
 CANONICAL_ALIAS_MATCH=""
-if [ "$SHOULD_RERANK" -eq 1 ] && EXPLAIN_JSON="$(TRIFECTA_LINT=1 uv run trifecta ctx search --segment "$SEGMENT" --query "$QUERY" --limit 20 --explain --explain-format json 2>/dev/null)"; then
+if [ "$SHOULD_RERANK" -eq 1 ] && EXPLAIN_JSON="$(
+    _explain_stderr="/tmp/skill_hub_explain_stderr_$$"
+    TRIFECTA_LINT=1 uv run trifecta ctx search --segment "$SEGMENT" --query "$QUERY" --limit 20 --explain --explain-format json 2>"$_explain_stderr"
+    _explain_status=$?
+    rm -f "$_explain_stderr"
+    exit $_explain_status
+  )"; then
     CANONICAL_ALIAS_MATCH="$(EXPLAIN_JSON="$EXPLAIN_JSON" python3 - <<'PY'
 import json
 import os
@@ -152,9 +253,10 @@ for term in expanded_terms:
     if not re.fullmatch(r"[a-z0-9-]+", term):
         continue
     repo_prefix = f"repo:{term}.md:"
+    skill_prefix = f"skill:{term}:"
     for hit in hits:
         ref = hit.get("ref", "")
-        if ref.startswith(repo_prefix):
+        if ref.startswith(repo_prefix) or ref.startswith(skill_prefix):
             if ref != top_ref:
                 print(term)
             else:
@@ -164,6 +266,10 @@ for term in expanded_terms:
 print("")
 PY
 )"
+fi
+
+if [ "$SHOULD_RERANK" -eq 1 ] && [ -z "$CANONICAL_ALIAS_MATCH" ]; then
+    CANONICAL_ALIAS_MATCH="$(resolve_doctor_alias_match "$QUERY")"
 fi
 
 if [ "$SHOULD_RERANK" -eq 1 ] && [ -n "$CANONICAL_ALIAS_MATCH" ]; then

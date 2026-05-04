@@ -9,7 +9,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 39,
         "snippet": "- **Testing**: Cobertura >80% para nuevo código"
       },
@@ -22,7 +22,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 244,
         "snippet": "### FASE 6: Testing (4-6 horas)"
       },
@@ -35,7 +35,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 246,
         "snippet": "**Objetivo**: Comprehensive testing de la nueva arquitectura"
       },
@@ -48,7 +48,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 249,
         "snippet": "1. [ ] Unit tests para `GlobalConfigManager`"
       },
@@ -61,7 +61,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 250,
         "snippet": "- `test_load_default_config()`"
       },
@@ -74,7 +74,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 251,
         "snippet": "- `test_load_custom_config()`"
       },
@@ -87,7 +87,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 252,
         "snippet": "- `test_merge_with_repo_config()`"
       },
@@ -100,7 +100,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 253,
         "snippet": "- `test_validate_schema()`"
       },
@@ -113,7 +113,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 255,
         "snippet": "2. [ ] Unit tests para `GlobalConfigManager`"
       },
@@ -126,7 +126,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 256,
         "snippet": "- `test_load_config()`"
       },
@@ -139,7 +139,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 257,
         "snippet": "- `test_save_config()`"
       },
@@ -152,7 +152,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 258,
         "snippet": "- `test_merge_with_repo()`"
       },
@@ -165,7 +165,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 259,
         "snippet": "- `test_validate_config()`"
       },
@@ -178,7 +178,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 261,
         "snippet": "3. [ ] Unit tests para paths globalizados"
       },
@@ -191,7 +191,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 262,
         "snippet": "- `test_get_global_root()`"
       },
@@ -204,7 +204,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 263,
         "snippet": "- `test_get_global_cache_dir()`"
       },
@@ -217,7 +217,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 264,
         "snippet": "- `test_get_ast_cache_db_path_with_fingerprint()`"
       },
@@ -230,7 +230,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 265,
         "snippet": "- `test_get_daemon_lock_path()`"
       },
@@ -243,7 +243,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 267,
         "snippet": "4. [ ] Integration tests para migración"
       },
@@ -256,7 +256,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 268,
         "snippet": "- `test_repo_migrate_full()`"
       },
@@ -269,7 +269,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 269,
         "snippet": "- `test_repo_migrate_preserves_config()`"
       },
@@ -282,7 +282,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 270,
         "snippet": "- `test_repo_migrate_preserves_cache()`"
       },
@@ -295,7 +295,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 271,
         "snippet": "- `test_repo_cleanup_old()`"
       },
@@ -308,7 +308,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 273,
         "snippet": "5. [ ] Integration tests para comandos globales"
       },
@@ -321,7 +321,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 274,
         "snippet": "- `test_global_install_creates_structure()`"
       },
@@ -334,7 +334,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 275,
         "snippet": "- `test_global_status_shows_info()`"
       },
@@ -347,7 +347,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 276,
         "snippet": "- `test_global_cache_cleanup()`"
       },
@@ -360,7 +360,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 278,
         "snippet": "6. [ ] E2E tests para flujo completo"
       },
@@ -373,7 +373,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 279,
         "snippet": "- `test_global_install_then_repo_init()`"
       },
@@ -386,7 +386,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 280,
         "snippet": "- `test_repo_init_then_ctx_sync()`"
       },
@@ -399,7 +399,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 281,
         "snippet": "- `test_repo_migrate_then_cleanup()`"
       },
@@ -412,7 +412,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 284,
         "snippet": "- `tests/unit/test_global_config.py`"
       },
@@ -425,7 +425,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 285,
         "snippet": "- `tests/unit/test_global_config_manager.py`"
       },
@@ -438,7 +438,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 286,
         "snippet": "- `tests/unit/test_global_paths.py`"
       },
@@ -451,7 +451,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 287,
         "snippet": "- `tests/integration/test_repo_migrate.py`"
       },
@@ -464,7 +464,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 288,
         "snippet": "- `tests/integration/test_global_commands.py`"
       },
@@ -477,7 +477,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 289,
         "snippet": "- `tests/e2e/test_global_architecture.py`"
       },
@@ -490,7 +490,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 377,
         "snippet": "### 4.4 Tests (Nuevos)"
       },
@@ -503,7 +503,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 379,
         "snippet": "- `tests/unit/test_global_config.py` (NEW)"
       },
@@ -516,7 +516,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 380,
         "snippet": "- `tests/unit/test_global_config_manager.py` (NEW)"
       },
@@ -529,7 +529,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 381,
         "snippet": "- `tests/unit/test_global_paths.py` (NEW)"
       },
@@ -542,7 +542,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 382,
         "snippet": "- `tests/integration/test_repo_migrate.py` (NEW)"
       },
@@ -555,7 +555,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 383,
         "snippet": "- `tests/integration/test_global_commands.py` (NEW)"
       },
@@ -568,7 +568,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 384,
         "snippet": "- `tests/e2e/test_global_architecture.py` (NEW)"
       },
@@ -581,7 +581,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 459,
         "snippet": "### 6.1 Unit Tests"
       },
@@ -594,7 +594,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 461,
         "snippet": "**Objetivo**: Cobertura >80% para nuevo código"
       },
@@ -607,7 +607,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 463,
         "snippet": "**Tests requeridos**:"
       },
@@ -620,7 +620,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 472,
         "snippet": "**Tools**: pytest, pytest-cov, coverage"
       },
@@ -633,7 +633,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 474,
         "snippet": "### 6.2 Integration Tests"
       },
@@ -646,7 +646,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 478,
         "snippet": "**Tests requeridos**:"
       },
@@ -659,7 +659,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 479,
         "snippet": "- `test_repo_migrate_full()`: Migración completa"
       },
@@ -672,7 +672,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 480,
         "snippet": "- `test_repo_migrate_preserves_config()`: Config migrado correctamente"
       },
@@ -685,7 +685,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 481,
         "snippet": "- `test_repo_migrate_preserves_cache()`: Cache migrado correctamente"
       },
@@ -698,7 +698,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 482,
         "snippet": "- `test_global_install_creates_structure()`: Directorios creados"
       },
@@ -711,7 +711,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 483,
         "snippet": "- `test_global_status_shows_info()`: Información correcta"
       },
@@ -724,7 +724,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 484,
         "snippet": "- `test_global_cache_cleanup()`: Cleanup funciona"
       },
@@ -737,7 +737,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 486,
         "snippet": "**Setup**: Temp directories para cada test"
       },
@@ -750,7 +750,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 488,
         "snippet": "### 6.3 E2E Tests"
       },
@@ -763,7 +763,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 492,
         "snippet": "**Tests requeridos**:"
       },
@@ -776,7 +776,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 493,
         "snippet": "- `test_global_install_then_repo_init()`: Flujo nuevo usuario"
       },
@@ -789,7 +789,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 494,
         "snippet": "- `test_repo_init_then_ctx_sync()`: Context sync funciona"
       },
@@ -802,7 +802,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 495,
         "snippet": "- `test_repo_migrate_then_cleanup()`: Migración completa"
       },
@@ -815,7 +815,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 496,
         "snippet": "- `test_backward_compatibility()`: Paths locales si flag no set"
       },
@@ -828,7 +828,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 500,
         "snippet": "### 6.4 Regression Tests"
       },
@@ -841,7 +841,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 504,
         "snippet": "**Tests requeridos**:"
       },
@@ -854,7 +854,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 505,
         "snippet": "- Todos los tests existentes deben pasar"
       },
@@ -867,7 +867,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 506,
         "snippet": "- `test_ast_symbols()`: Funciona con paths globales"
       },
@@ -880,7 +880,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 507,
         "snippet": "- `test_ctx_sync()`: Context pack se genera"
       },
@@ -893,7 +893,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 508,
         "snippet": "- `test_ctx_search()`: Búsqueda funciona"
       },
@@ -906,7 +906,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 510,
         "snippet": "**Automation**: CI pipeline runs all tests on PR"
       },
@@ -919,7 +919,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 512,
         "snippet": "### 6.5 Manual Testing"
       },
@@ -932,7 +932,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 516,
         "snippet": "**Tests manuales**:"
       },
@@ -945,7 +945,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 535,
         "snippet": "- Testing extensivo requerido"
       },
@@ -958,7 +958,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 559,
         "snippet": "- [ ] Cobertura de tests >80%"
       },
@@ -971,7 +971,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 560,
         "snippet": "- [ ] Todos los tests existentes pasan"
       },

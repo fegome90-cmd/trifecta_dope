@@ -25,7 +25,7 @@ $ uv run pytest tests/unit/test_t9_alias_expansion.py -v
 ============================= test session starts ==============================
 platform darwin -- Python 3.14.2, pytest-9.2, pluggy-1.6.0
 cachedir: .pytest_cache
-rootdir: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope
+rootdir: <REPO_ROOT>/Developer/agent_h/trifecta_dope
 configfile: pyproject.toml
 plugins: cov-7.0.0
 collecting ... collected 6 items

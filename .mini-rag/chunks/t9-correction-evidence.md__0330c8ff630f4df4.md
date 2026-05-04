@@ -21,7 +21,7 @@ def validate_source_files(files: list[Path]) -> None:
 **Step 1: ctx.search**
 
 ```bash
-$ trifecta ctx search --segment /Users/felipe_gonzalez/Developer/AST --query "symbol extraction" --limit 5
+$ trifecta ctx search --segment <REPO_ROOT>/Developer/AST --query "symbol extraction" --limit 5
 No results found for query: 'symbol extraction'
 ```
 
@@ -30,4 +30,4 @@ No results found for query: 'symbol extraction'
 **Step 2: Escalation to prime_ast.md**
 
 ```bash
-$ cat /Users/felipe_gonzalez/Developer/AST/_ctx/prime_ast.md | head -50
+$ cat <REPO_ROOT>/Developer/AST/_ctx/prime_ast.md | head -50

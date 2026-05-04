@@ -15,12 +15,12 @@
 | REQ-03 | Changed source files align with handoff claims | `git diff HEAD -- src/application/context_service.py src/application/use_cases.py src/domain/context_models.py src/domain/models.py .gitignore src/domain/skill_hub_corpus_integrity.py tests/unit/test_skill_hub_corpus_integrity.py tests/unit/test_skill_hub_corpus_integrity_receipt.py tests/unit/test_authority_state_transport.py tests/unit/test_skill_hub_corpus_integrity_read_path.py` shows only authority-state transport, integrity guard, receipt/publication-state plumbing, and `.fork/` ignore changes within the scoped files | PASS |
 
 ### Test Results
-- `cd /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope && uv run pytest tests/unit/test_skill_hub_corpus_integrity.py tests/unit/test_skill_hub_corpus_integrity_receipt.py tests/unit/test_authority_state_transport.py -v`
+- `cd <REPO_ROOT>/Developer/agent_h/trifecta_dope && uv run pytest tests/unit/test_skill_hub_corpus_integrity.py tests/unit/test_skill_hub_corpus_integrity_receipt.py tests/unit/test_authority_state_transport.py -v`
   - Result: `72 passed in 0.20s`
-- `cd /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope && uv run pytest tests/unit/test_skill_hub_corpus_integrity_read_path.py -v`
+- `cd <REPO_ROOT>/Developer/agent_h/trifecta_dope && uv run pytest tests/unit/test_skill_hub_corpus_integrity_read_path.py -v`
   - Result: `14 passed in 0.13s`
 - Additional broad check observed during orchestration and re-run directly:
-  - `cd /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope && uv run pytest tests/unit/test_build_context_pack.py -v --tb=short`
+  - `cd <REPO_ROOT>/Developer/agent_h/trifecta_dope && uv run pytest tests/unit/test_build_context_pack.py -v --tb=short`
   - Result: `6 failed in 0.16s`
   - Failure mode: `Err(error=['Failed Constitution: segment canon is invalid'])` plus downstream missing `_ctx/context_pack.json` in `TestBuildContextPackUseCase`.
 

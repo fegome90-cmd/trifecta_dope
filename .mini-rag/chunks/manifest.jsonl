@@ -362,7 +362,7 @@
 {"hash": "f33f6df091c6af7c", "doc": "t9-correction-evidence.md", "title_path": ["Prime - AST Service", "Reading Order", "4. Session Context (if resuming)"], "source_path": "docs/plans/t9-correction-evidence.md", "char_count": 79}
 {"hash": "94962dbcc6c1cf74", "doc": "t9-correction-evidence.md", "title_path": ["Prime - AST Service", "Key Concepts"], "source_path": "docs/plans/t9-correction-evidence.md", "char_count": 1001}
 {"hash": "3a5ca18029a4602a", "doc": "t9-correction-evidence.md", "title_path": ["Agent would execute:"], "source_path": "docs/plans/t9-correction-evidence.md", "char_count": 23}
-{"hash": "1f89584f321957cd", "doc": "t9-correction-evidence.md", "title_path": ["cat /Users/felipe_gonzalez/Developer/AST/src/infrastructure/extractors/symbol-extractor.ts"], "source_path": "docs/plans/t9-correction-evidence.md", "char_count": 363}
+{"hash": "1f89584f321957cd", "doc": "t9-correction-evidence.md", "title_path": ["cat <REPO_ROOT>/Developer/AST/src/infrastructure/extractors/symbol-extractor.ts"], "source_path": "docs/plans/t9-correction-evidence.md", "char_count": 363}
 {"hash": "8efddcdc9179bb0b", "doc": "t9-correction-evidence.md", "title_path": ["=== ROUTING TO skill.md ==="], "source_path": "docs/plans/t9-correction-evidence.md", "char_count": 200}
 {"hash": "6f72375e8e185a86", "doc": "t9-correction-evidence.md", "title_path": ["=== ROUTING TO prime_ast.md ==="], "source_path": "docs/plans/t9-correction-evidence.md", "char_count": 216}
 {"hash": "b530a667c6a3759d", "doc": "t9-correction-evidence.md", "title_path": ["=== ROUTING TO agent.md ==="], "source_path": "docs/plans/t9-correction-evidence.md", "char_count": 173}

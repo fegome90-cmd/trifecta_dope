@@ -29,10 +29,10 @@ HEAD: `69b89722ae776e1838bbba6e1014d827c4d87ced`
 
 - Use $checkpoint-resume before doing any new work.
 - Use $checkpoint-resume before any repo exploration or implementation.
-- repo: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/wo-lifecycle-harness-anchor
-- checkpoint: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/wo-lifecycle-harness-anchor/_ctx/checkpoints/2026-03-22/checkpoint_111005_v3-legacy-reference-alignment-closed.md
-- supporting bundle: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/wo-lifecycle-harness-anchor
-- handoff: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/wo-lifecycle-harness-anchor/_ctx/checkpoints/2026-03-22/v3-legacy-reference-alignment-closed-handoff.md
-- checklist: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/wo-lifecycle-harness-anchor/_ctx/checkpoints/2026-03-22/v3-legacy-reference-alignment-closed-next-agent-checklist.md
+- repo: <REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/wo-lifecycle-harness-anchor
+- checkpoint: <REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/wo-lifecycle-harness-anchor/_ctx/checkpoints/2026-03-22/checkpoint_111005_v3-legacy-reference-alignment-closed.md
+- supporting bundle: <REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/wo-lifecycle-harness-anchor
+- handoff: <REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/wo-lifecycle-harness-anchor/_ctx/checkpoints/2026-03-22/v3-legacy-reference-alignment-closed-handoff.md
+- checklist: <REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/wo-lifecycle-harness-anchor/_ctx/checkpoints/2026-03-22/v3-legacy-reference-alignment-closed-next-agent-checklist.md
 Context loaded only. Waiting for your instruction.
 - Use $checkpoint-resume before any repo exploration. Treat V3 legacy reference alignment as already closed locally and technically. Do not reopen resolver + create, validate/fallback, install_trifecta_context.py, or templates.py unless new evidence shows regression. Package the closure first (commit/push/PR), then continue with V3 repeatability/certification as the next real program batch.

@@ -4,7 +4,7 @@
 ================================================================================
 EVALUATION REPORT: ctx.plan
 ================================================================================
-Dataset: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/docs/plans/t9_plan_eval_tasks_v2_l1.md
+Dataset: <REPO_ROOT>/Developer/agent_h/trifecta_dope/docs/plans/t9_plan_eval_tasks_v2_l1.md
 Dataset SHA256: fa60cff2fccb4cb1
 Dataset mtime: 2025-12-31T13:49:05.363348
 Segment: .

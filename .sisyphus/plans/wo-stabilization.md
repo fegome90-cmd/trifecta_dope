@@ -143,7 +143,7 @@ Restore **operational integrity** of the WO system and eliminate commit blocks, 
   ```
 - [ ] **T2.2** Remove worktree
   ```bash
-  git worktree remove /Users/felipe_gonzalez/Developer/agent_h/.worktrees/WO-0052
+  git worktree remove <REPO_ROOT>/Developer/agent_h/.worktrees/WO-0052
   ```
 - [ ] **T2.3** Log before/after to `data/wo_forensics_baseline/ghost_cleanup.txt`
 

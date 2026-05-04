@@ -77,3 +77,19 @@ def test_emit_intro_uses_plain_fallback_for_non_tty(monkeypatch) -> None:
     assert SKILL_HUB_INTRO_BANNER in output
     assert "███████" not in output
     assert ANSI_BRIGHT_WHITE not in output
+
+
+# --- Task 4.3: Only two intro variants, no render_intro outside runtime_ux ---
+
+
+def test_render_intro_only_two_variants() -> None:
+    """UX-008: render_intro output matches exactly one of two contracts."""
+    plain = render_intro(rich=False)
+    rich_output = render_intro(rich=True)
+
+    assert SKILL_HUB_INTRO_BANNER in plain
+    assert SKILL_HUB_SENTENCE_GUIDANCE in plain
+    assert "███████" not in plain
+
+    assert any(line in rich_output for line in SKILL_HUB_HERO_BANNER)
+    assert SKILL_HUB_SENTENCE_GUIDANCE in rich_output

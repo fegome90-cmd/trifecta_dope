@@ -1,7 +1,7 @@
 ---
 segment: trifecta_dope
 scope: Scope
-repo_root: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope
+repo_root: <REPO_ROOT>/Developer/agent_h/trifecta_dope
 last_verified: 2026-03-06
 default_profile: impl_patch
 ---

@@ -1,7 +1,7 @@
 ### A.3 Get: session_ast.md (Budget Test)
 
 ```bash
-$ trifecta ctx get --segment /Users/felipe_gonzalez/Developer/AST --ids "session:b6d0238267" --mode excerpt --budget-token-est 900
+$ trifecta ctx get --segment <REPO_ROOT>/Developer/AST --ids "session:b6d0238267" --mode excerpt --budget-token-est 900
 Retrieved 1 chunk(s) (mode=excerpt, tokens=~195):
 
 ## [session:b6d0238267] session_ast.md

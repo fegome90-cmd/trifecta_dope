@@ -55,7 +55,59 @@ def test_wrapper_chain_uses_only_governed_runtime_dependencies() -> None:
     assert "skill_hub_info_card.py" not in text
     assert 'python3 "$TRIFECTA_ROOT/scripts/skill-hub-cards"' not in text
     assert 'CARDS_HELPER="$SCRIPT_DIR/skill-hub-cards"' in text
-    assert 'python3 "$CARDS_HELPER"' in text
+    assert 'project_python="$TRIFECTA_ROOT/.venv/bin/python"' in text
+    assert 'exec "$project_python" "$CARDS_HELPER"' in text
+    assert 'exec uv run python "$CARDS_HELPER"' in text
+    assert "rich card dependencies may be missing under system python3" in text
+    assert 'run_cards_helper "$QUERY" "$LIMIT" "$SEGMENT" "$STYLE"' in text
+
+
+def test_cards_mode_prefers_project_venv_python_for_runtime_dependencies(tmp_path: Path) -> None:
+    repo_root = clone_governed_repo(tmp_path)
+    (repo_root / "pyproject.toml").write_text("[project]\nname = 'fake-trifecta'\n")
+    (repo_root / "src").mkdir()
+
+    venv_bin = repo_root / ".venv" / "bin"
+    venv_bin.mkdir(parents=True)
+    venv_python = venv_bin / "python"
+    venv_python.write_text(
+        "#!/usr/bin/env bash\n"
+        "echo VENV_PYTHON_USED \"$@\"\n"
+    )
+    venv_python.chmod(0o755)
+
+    runtime_bin = tmp_path / "bin"
+    runtime_bin.mkdir()
+    shutil.copy2(repo_root / "scripts" / "skill-hub", runtime_bin / "skill-hub")
+    helper = runtime_bin / "skill-hub-cards"
+    helper.write_text("print('SYSTEM_PYTHON_HELPER_USED')\n")
+
+    run = subprocess.run(
+        ["bash", str(runtime_bin / "skill-hub"), "--cards", "python"],
+        text=True,
+        capture_output=True,
+        check=False,
+        env={**os.environ, "SKILL_HUB_TRIFECTA_ROOT": str(repo_root)},
+    )
+
+    assert run.returncode == 0, run.stderr
+    assert "VENV_PYTHON_USED" in run.stdout
+    assert str(helper) in run.stdout
+    assert "SYSTEM_PYTHON_HELPER_USED" not in run.stdout
+
+
+def test_no_args_shows_full_help_surface() -> None:
+    run = subprocess.run(
+        ["bash", str(WRAPPER)],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert run.returncode == 1
+    assert 'Usage: skill-hub [OPTIONS] "query"' in run.stdout
+    assert "--cards" in run.stdout
+    assert "--limit" in run.stdout
 
 
 def test_wrapper_runtime_framing_does_not_depend_on_src_modules_or_legacy_fallback() -> None:

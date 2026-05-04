@@ -161,6 +161,34 @@ trifecta ast symbols "sym://python/mod/src.domain.result" --segment /tmp/my_segm
 
 ---
 
+## Advanced Intelligence (F1 Oracle)
+
+### 1. Context Oracle (Unified Signal)
+
+**Command**:
+```bash
+trifecta ctx oracle -s <path> -q "<question>"
+```
+
+**What it does**: Unified search that merges LSP (definitions), AST (symbols), and PRIME (docs).
+
+**Preconditions**:
+- Context pack must exist.
+- **Daemon F1** should be running for best fidelity (LSP signals).
+
+**Success**: Unified JSON response with fidelity level (full/degraded/fallback).
+
+### 2. Autonomous Calibration
+
+**Command**:
+```bash
+trifecta ctx calibrate -s <path> -d <dataset_path>
+```
+
+**What it does**: Automatically optimizes search weights in `_ctx/aliases.yaml` based on evaluation results.
+
+---
+
 ## Full Workflow Example (Copy/Paste)
 
 ```bash

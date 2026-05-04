@@ -1,7 +1,7 @@
 ## Setup (una vez)
 
 ```bash
-cd /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope
+cd <REPO_ROOT>/Developer/agent_h/trifecta_dope
 uv sync
 
 # Instalar Mini-RAG desde el repo local

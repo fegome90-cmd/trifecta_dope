@@ -1,4 +1,4 @@
-$ cat /Users/felipe_gonzalez/Developer/AST/_ctx/context_pack.json | python3 -c "..."
+$ cat <REPO_ROOT>/Developer/AST/_ctx/context_pack.json | python3 -c "..."
 Total chunks: 7
 1. skill:b2c01090b8 - skill.md (468 tokens)
 2. agent:3801d98813 - agent.md (654 tokens)
@@ -42,5 +42,5 @@ doc_id: Document identifier (e.g., "skill")
 **Grep for src/ in application layer:**
 
 ```bash
-$ grep -r "src/" /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/src/application
+$ grep -r "src/" <REPO_ROOT>/Developer/agent_h/trifecta_dope/src/application
 No results found

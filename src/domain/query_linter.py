@@ -56,7 +56,12 @@ def classify_query(
 
 
 def expand_query(
-    query: str, analysis: dict[str, Any], anchors_cfg: dict[str, Any]
+    query: str,
+    analysis: dict[str, Any],
+    anchors_cfg: dict[str, Any],
+    *,
+    segment: str | None = None,
+    lint_profile: dict | None = None,
 ) -> dict[str, Any]:
     """
     Expande una query VAGUE de forma determinista.
@@ -99,7 +104,13 @@ def expand_query(
     # Si aun tenemos espacio para strong anchors y no hay intención documental clara,
     # podríamos añadir "agent.md" o "prime.md" como entrypoints por defecto para queries muy vagas
     # pero el mandato dice "limitado".
-    if len(added_strong) < 2:
+    # Guard: segment/profile can disable entrypoint anchor injection
+    disable_entrypoint_anchors = bool(
+        lint_profile and lint_profile.get("disable_entrypoint_anchors")
+    )
+    skip_defaults = segment == "skills-hub" or disable_entrypoint_anchors
+
+    if len(added_strong) < 2 and not skip_defaults:
         defaults = ["agent.md", "prime.md"]
         added_any = False
         for cand in defaults:
@@ -133,7 +144,14 @@ def expand_query(
     }
 
 
-def lint_query(query: str, anchors_cfg: dict[str, Any], aliases_cfg: dict[str, Any]) -> LinterPlan:
+def lint_query(
+    query: str,
+    anchors_cfg: dict[str, Any],
+    aliases_cfg: dict[str, Any],
+    *,
+    segment: str | None = None,
+    lint_profile: dict | None = None,
+) -> LinterPlan:
     """
     Orquesta clasificación y expansión para producir un plan auditable.
 
@@ -154,7 +172,10 @@ def lint_query(query: str, anchors_cfg: dict[str, Any], aliases_cfg: dict[str, A
     changes: LinterChanges
 
     if q_class == "vague":
-        expansion = expand_query(query, analysis, anchors_cfg)
+        expansion = expand_query(
+            query, analysis, anchors_cfg,
+            segment=segment, lint_profile=lint_profile,
+        )
         expanded_query = expansion["expanded_query"]
         changed = expanded_query != query
         changes = {

@@ -96,5 +96,5 @@ description: Use when working on Scope
 - **Scope**: Scope
 - **Default Profile**: `impl_patch`
 - **Last Verified**: 2026-03-06
-- **Repo Root**: `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope`
+- **Repo Root**: `<REPO_ROOT>/Developer/agent_h/trifecta_dope`
 - **Writing Skills**: `~/.claude/skills/superpowers/writing-skills/SKILL.md`

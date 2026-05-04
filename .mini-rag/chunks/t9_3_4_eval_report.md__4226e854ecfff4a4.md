@@ -2,7 +2,7 @@
 
 ```bash
 # 1. Run initial evaluation with confusion report
-cd /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope
+cd <REPO_ROOT>/Developer/agent_h/trifecta_dope
 uv run trifecta ctx eval-plan -s . --dataset docs/plans/t9_plan_eval_tasks_v2_nl.md
 
 # 2. Apply bounded patches (3 nl_triggers)

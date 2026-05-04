@@ -31,7 +31,6 @@ def test_parity_nominal_renderable_cards():
         description="A clear description",
         metadata_message=None,
         metadata_reason=None,
-        authority_state="healthy"
     )
     c_res = ClassifiedResult(kind="renderable_skill", normalized=norm, reason="ok")
     old_card = SkillCardViewModel(id="my-skill", name="My Skill", path="/path/to/skill", source="agent", description="A clear description", authority_state="healthy", relevance=0.9)
@@ -63,9 +62,8 @@ def test_parity_degraded_renderable_cards():
         description="A clear description",
         metadata_message=None,
         metadata_reason=None,
-        authority_state="degraded"
     )
-    c_res = ClassifiedResult(kind="renderable_skill", normalized=norm, reason="ok")
+    c_res = ClassifiedResult(kind="renderable_skill", normalized=norm, reason="ok", authority_state="degraded")
     old_card = SkillCardViewModel(id="my-skill", name="My Skill", path="/path/to/skill", source="agent", description="A clear description", authority_state="healthy", relevance=0.9)
     # The old pipeline ignores degraded implicitly because it wasn't threading it
     plan = RenderPlan(outcome_kind="renderable_skill", exit_code=EXIT_RENDERABLE, cards=[old_card], message="", classified_results=[c_res])
@@ -94,7 +92,6 @@ def test_parity_metadata_only():
         description=None,
         metadata_message="Metadata here",
         metadata_reason="admin",
-        authority_state="healthy"
     )
     c_res = ClassifiedResult(kind="metadata_only", normalized=norm, reason="admin")
     plan = RenderPlan(outcome_kind="metadata_only", exit_code=EXIT_NON_RENDERABLE, cards=[], message="Administrative metadata.", classified_results=[c_res])
@@ -132,7 +129,6 @@ def test_parity_nominal_rich():
         description="A clear description",
         metadata_message=None,
         metadata_reason=None,
-        authority_state="healthy"
     )
     c_res = ClassifiedResult(kind="renderable_skill", normalized=norm, reason="ok")
     plan = RenderPlan(outcome_kind="renderable_skill", exit_code=0, cards=[SkillCardViewModel(id="rich-skill", name="Rich Skill", path="/path/to/skill", source="agent", description="A clear description", authority_state="healthy", relevance=0.9)], message="", classified_results=[c_res])
@@ -163,9 +159,8 @@ def test_parity_degraded_rich():
         description="A clear description",
         metadata_message=None,
         metadata_reason=None,
-        authority_state="degraded"
     )
-    c_res = ClassifiedResult(kind="renderable_skill", normalized=norm, reason="ok")
+    c_res = ClassifiedResult(kind="renderable_skill", normalized=norm, reason="ok", authority_state="degraded")
     plan = RenderPlan(outcome_kind="renderable_skill", exit_code=0, cards=[SkillCardViewModel(id="rich-skill", name="Rich Skill", path="/path/to/skill", source="agent", description="A clear description", authority_state="healthy", relevance=0.9)], message="", classified_results=[c_res])
 
     # Post-cleanup: render_rich no longer handles renderable_skill.
@@ -192,7 +187,6 @@ def test_parity_nominal_compact():
         description="A short description",
         metadata_message=None,
         metadata_reason=None,
-        authority_state="healthy"
     )
     c_res = ClassifiedResult(kind="renderable_skill", normalized=norm, reason="ok")
     plan = RenderPlan(outcome_kind="renderable_skill", exit_code=0, cards=[SkillCardViewModel(id="compact-skill", name="Compact Skill", path="/path/to/skill", source="agent", description="A short description", authority_state="healthy", relevance=0.9)], message="", classified_results=[c_res])
@@ -221,9 +215,8 @@ def test_parity_degraded_compact():
         description="A short description",
         metadata_message=None,
         metadata_reason=None,
-        authority_state="degraded"
     )
-    c_res = ClassifiedResult(kind="renderable_skill", normalized=norm, reason="ok")
+    c_res = ClassifiedResult(kind="renderable_skill", normalized=norm, reason="ok", authority_state="degraded")
     plan = RenderPlan(outcome_kind="renderable_skill", exit_code=0, cards=[SkillCardViewModel(id="compact-skill", name="Compact Skill", path="/path/to/skill", source="agent", description="A short description", authority_state="healthy", relevance=0.9)], message="", classified_results=[c_res])
 
     vms = [build_view_model(r) for r in plan.classified_results if build_view_model(r) is not None]

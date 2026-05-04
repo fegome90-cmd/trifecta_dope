@@ -11,7 +11,7 @@ BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-REPO_ROOT="/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope"
+REPO_ROOT="$(pwd)"
 SIDECAR_DIR="/tmp/sidecar"
 
 echo -e "${BLUE}════════════════════════════════════════════════════════════════════${NC}"

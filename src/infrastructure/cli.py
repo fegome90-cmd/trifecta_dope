@@ -730,10 +730,14 @@ def search(
         # Determine if linting should be enabled (conservative default)
         enable_lint = _get_lint_enabled(no_lint)
 
+        # Read segment hint from environment (e.g. TRIFECTA_SEGMENT=skills-hub)
+        segment_hint = os.environ.get("TRIFECTA_SEGMENT")
+
         if explain:
             # Return structured explanation
             explanation = use_case.execute_with_explanation(
-                Path(segment).resolve(), query, limit=limit, enable_lint=enable_lint
+                Path(segment).resolve(), query, limit=limit,
+                enable_lint=enable_lint, segment=segment_hint,
             )
             if explain_format == "json":
                 typer.echo(json.dumps(explanation, indent=2))
@@ -764,7 +768,8 @@ def search(
             else:
                 # Normal output (Fallback)
                 output = use_case.execute(
-                    Path(segment).resolve(), query, limit=limit, enable_lint=enable_lint
+                    Path(segment).resolve(), query, limit=limit,
+                    enable_lint=enable_lint, segment=segment_hint,
                 )
                 typer.echo(output)
 

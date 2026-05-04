@@ -17,16 +17,16 @@ Expected: hash remains constant throughout.
 
 **Step 2: Run baseline eval (T9.3.4)**
 
-From `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/t9-3-4-baseline`:
+From `<REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/t9-3-4-baseline`:
 ```bash
-uv run trifecta ctx eval-plan -s . --dataset /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/t9-3-6-clamp-calibration/docs/plans/t9_plan_eval_tasks_v2_nl.md \
+uv run trifecta ctx eval-plan -s . --dataset <REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/t9-3-6-clamp-calibration/docs/plans/t9_plan_eval_tasks_v2_nl.md \
   | tee tmp_plan_test/t9_3_4_baseline.txt
 ```
 Expected: `EVALUATION REPORT: ctx.plan` output and file created.
 
 **Step 3: Run current eval (T9.3.5)**
 
-From `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/t9-3-6-clamp-calibration`:
+From `<REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/t9-3-6-clamp-calibration`:
 ```bash
 uv run trifecta ctx eval-plan -s . --dataset docs/plans/t9_plan_eval_tasks_v2_nl.md \
   | tee tmp_plan_test/t9_3_5_current.txt

@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-baseline = json.loads(Path('/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/t9-3-4-baseline/tmp_plan_test/t9_3_4_baseline_tasks.json').read_text())
+baseline = json.loads(Path('<REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/t9-3-4-baseline/tmp_plan_test/t9_3_4_baseline_tasks.json').read_text())
 current = json.loads(Path('tmp_plan_test/t9_3_5_current_tasks.json').read_text())
 
 baseline_map = {item['task_id']: item for item in baseline}

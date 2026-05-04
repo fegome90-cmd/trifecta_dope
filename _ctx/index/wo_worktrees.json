@@ -2,7 +2,7 @@
   "version": 1,
   "schema": "trifecta.sidecar.wo_index.v1",
   "generated_at": "2026-03-15T12:39:43.888851+00:00",
-  "repo_root": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope",
+  "repo_root": "<REPO_ROOT>/Developer/agent_h/trifecta_dope",
   "git_head_sha_repo_root": "76257453b0fa6007db65fbd4108dc62844bb1055",
   "work_orders": [
     {
@@ -983,7 +983,7 @@
     }
   ],
   "errors": [
-    "DUPLICATE_WO: WO-0009 appears multiple times. Keeping first occurrence from done/. Duplicate at /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/jobs/done/WO-0009.yaml skipped.",
-    "DUPLICATE_WO: WO-0008 appears multiple times. Keeping first occurrence from done/. Duplicate at /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/jobs/done/WO-0008.yaml skipped."
+    "DUPLICATE_WO: WO-0009 appears multiple times. Keeping first occurrence from done/. Duplicate at <REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/jobs/done/WO-0009.yaml skipped.",
+    "DUPLICATE_WO: WO-0008 appears multiple times. Keeping first occurrence from done/. Duplicate at <REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/jobs/done/WO-0008.yaml skipped."
   ]
 }

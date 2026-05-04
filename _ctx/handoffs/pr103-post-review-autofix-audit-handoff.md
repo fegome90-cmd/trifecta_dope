@@ -28,10 +28,10 @@ HEAD: `4ce1df39481c61521731d29b776bcc2f6bd1288c`
 
 - Use $checkpoint-resume before doing any new work.
 - Use $checkpoint-resume before any repo exploration or implementation.
-- repo: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-ssot-rebuild
-- checkpoint: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-ssot-rebuild/_ctx/checkpoints/2026-04-14/checkpoint_111902_pr103-post-review-autofix-audit.md
-- supporting bundle: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-ssot-rebuild/{'workspace_bundle': ['/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-ssot-rebuild/openspec/changes/skill-hub-cards-governed-rebuild', '/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-ssot-rebuild/openspec/changes/daemon-runtime-mergefix-review'], 'pr': 'https:/github.com/fegome90-cmd/trifecta_dope/pull/103'}
-- handoff: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/handoffs/pr103-post-review-autofix-audit-handoff.md
-- checklist: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/checklists/pr103-post-review-autofix-audit-next-agent-checklist.md
+- repo: <REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-ssot-rebuild
+- checkpoint: <REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-ssot-rebuild/_ctx/checkpoints/2026-04-14/checkpoint_111902_pr103-post-review-autofix-audit.md
+- supporting bundle: <REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-ssot-rebuild/{'workspace_bundle': ['<REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-ssot-rebuild/openspec/changes/skill-hub-cards-governed-rebuild', '<REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-ssot-rebuild/openspec/changes/daemon-runtime-mergefix-review'], 'pr': 'https:/github.com/fegome90-cmd/trifecta_dope/pull/103'}
+- handoff: <REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/handoffs/pr103-post-review-autofix-audit-handoff.md
+- checklist: <REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/checklists/pr103-post-review-autofix-audit-next-agent-checklist.md
 Context loaded only. Waiting for your instruction.
-- Use $checkpoint-resume before any repo exploration or implementation.\n- checkpoint: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/checkpoints/2026-04-14/checkpoint_111756_pr103-post-review-autofix-audit.md\n- handoff: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/handoffs/pr103-post-review-autofix-audit-handoff.md\n- checklist: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/checklists/pr103-post-review-autofix-audit-next-agent-checklist.md\nContext loaded only. Waiting for your instruction.
+- Use $checkpoint-resume before any repo exploration or implementation.\n- checkpoint: <REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/checkpoints/2026-04-14/checkpoint_111756_pr103-post-review-autofix-audit.md\n- handoff: <REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/handoffs/pr103-post-review-autofix-audit-handoff.md\n- checklist: <REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/checklists/pr103-post-review-autofix-audit-next-agent-checklist.md\nContext loaded only. Waiting for your instruction.

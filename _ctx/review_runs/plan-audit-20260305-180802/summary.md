@@ -2,8 +2,8 @@
 
 - **Session:** plan-audit
 - **Run ID:** plan-audit-20260305-180802
-- **Plan:** /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md
-- **Run dir:** /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-180802
+- **Plan:** <REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md
+- **Run dir:** <REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-180802
 - **Timeout:** 300s
 - **Auto-cleanup:** true
 

@@ -18,7 +18,7 @@ src/
 **Step 3: Extract allowlisted paths**
 
 ```bash
-$ grep -n "src/" /Users/felipe_gonzalez/Developer/AST/_ctx/prime_ast.md | head -20
+$ grep -n "src/" <REPO_ROOT>/Developer/AST/_ctx/prime_ast.md | head -20
 29:src/
 71:- ✅ Integration tests (src/integration/integration.test.ts)
 ```

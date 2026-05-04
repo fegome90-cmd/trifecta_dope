@@ -53,7 +53,7 @@ def test_skill_card_view_model_authority_state_must_be_strict():
         )
 
 def test_skill_card_view_model_id_name_not_none():
-    with pytest.raises(ValueError, match="id and name must be provided, not None"):
+    with pytest.raises(ValueError, match="id must be provided"):
         SkillCardViewModel(
             id=None, # type: ignore
             name="n",

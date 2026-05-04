@@ -9,7 +9,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
         "line": 58,
         "snippet": "2. Validar búsquedas de smoke test:"
       },
@@ -22,7 +22,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
         "line": 60,
         "snippet": "- `ctx search --query \"python testing\"`"
       },
@@ -35,7 +35,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
         "line": 72,
         "snippet": "3. Medir cobertura (% skills encontrables por query representativa)."
       },
@@ -48,7 +48,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
         "line": 106,
         "snippet": "### Smoke tests"
       },
@@ -61,7 +61,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
         "line": 110,
         "snippet": "### Tests de regresión operativa"
       },
@@ -74,7 +74,7 @@
       "severity": "Baja",
       "title": "Referencia a testing/quality gates",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-skills-pilot.md",
         "line": 117,
         "snippet": "- `coverage_rate` en set de queries representativas"
       },

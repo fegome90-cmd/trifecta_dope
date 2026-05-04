@@ -1,7 +1,7 @@
 ### A.2 Search: "integration" (Zero Hits)
 
 ```bash
-$ trifecta ctx search --segment /Users/felipe_gonzalez/Developer/AST --query "integration" --limit 5
+$ trifecta ctx search --segment <REPO_ROOT>/Developer/AST --query "integration" --limit 5
 No results found for query: 'integration'
 ```
 

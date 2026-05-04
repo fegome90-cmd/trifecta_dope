@@ -1,6 +1,6 @@
 | # | Hallazgo | Severidad | Evidencia (archivo:línea) | Impacto | Recomendación |
 |---|----------|-----------|---------------------------|---------|---------------|
-| 1 | **PATH HYGIENE VIOLATION** | CRÍTICA | `_ctx/context_pack.json` contiene `/Users/felipe_gonzalez/Developer/agent_h` | PII expuesto, no portable | Sanitizar rutas en write + test tripwire |
+| 1 | **PATH HYGIENE VIOLATION** | CRÍTICA | `_ctx/context_pack.json` contiene `<REPO_ROOT>/Developer/agent_h` | PII expuesto, no portable | Sanitizar rutas en write + test tripwire |
 | 2 | **pytest ImportError (3 files)** | ALTA | `test_ast_lsp_pr2.py:16`, `test_pr2_integration.py:12`, `test_telemetry_extension.py:10` | Tests no ejecutan, feedback perdido | Crear compat shims o arreglar imports |
 | 3 | **SymbolInfo no existe** | ALTA | Tests importan `SymbolInfo` de `ast_parser`, grep returns nada | Bloquea tests PR2 | Definir clase o stub compatible |
 | 4 | **_relpath privado expuesto** | MEDIA | `test_telemetry_extension.py:10` importa `_relpath` (privado) | Violación encapsulación | Usar API pública o re-exportar |

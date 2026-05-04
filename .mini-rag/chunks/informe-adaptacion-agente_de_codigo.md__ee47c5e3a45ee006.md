@@ -1,10 +1,10 @@
 ### 1) MemTech (almacenamiento multi-tier)
 
-- Ubicacion: ` /Users/felipe_gonzalez/Developer/agente_de_codigo/packages/memtech/manager.py`
-- Complementos: ` /Users/felipe_gonzalez/Developer/agente_de_codigo/packages/memtech/storage_l0.py`
-- Complementos: ` /Users/felipe_gonzalez/Developer/agente_de_codigo/packages/memtech/storage_l1.py`
-- Complementos: ` /Users/felipe_gonzalez/Developer/agente_de_codigo/packages/memtech/storage_l2.py`
-- Complementos: ` /Users/felipe_gonzalez/Developer/agente_de_codigo/packages/memtech/storage_l3.py`
+- Ubicacion: ` <REPO_ROOT>/Developer/agente_de_codigo/packages/memtech/manager.py`
+- Complementos: ` <REPO_ROOT>/Developer/agente_de_codigo/packages/memtech/storage_l0.py`
+- Complementos: ` <REPO_ROOT>/Developer/agente_de_codigo/packages/memtech/storage_l1.py`
+- Complementos: ` <REPO_ROOT>/Developer/agente_de_codigo/packages/memtech/storage_l2.py`
+- Complementos: ` <REPO_ROOT>/Developer/agente_de_codigo/packages/memtech/storage_l3.py`
 
 Hallazgos:
 - Orquesta almacenamiento L0 (local), L1 (cache), L2 (PostgreSQL), L3 (Chroma).

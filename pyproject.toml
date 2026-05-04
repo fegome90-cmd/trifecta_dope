@@ -43,7 +43,9 @@ telemetry = [
 ]
 
 [project.scripts]
-trifecta = "src.infrastructure.cli:main"
+trifecta = "src.infrastructure.cli:cli"
+
+trifecta-mcp = "src.interfaces.mcp.server:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -89,6 +91,7 @@ TRIFECTA_AST_PERSIST = 1
 
 [dependency-groups]
 dev = [
+    "build>=1.4.3",
     "mypy>=1.19.1",
     "pytest-env>=1.2.0",
 ]

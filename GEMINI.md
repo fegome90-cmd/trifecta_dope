@@ -139,4 +139,4 @@ Usa los "Superpowers" para asegurar una ejecución de grado auditoría:
 ## 📜 History
 
 > **Moved to separate file:** `HISTORY.md`
-> Valid session summaries should be appended to `/Users/felipe_gonzalez/.gemini/HISTORY.md`.
+> Valid session summaries should be appended to `<REPO_ROOT>/.gemini/HISTORY.md`.

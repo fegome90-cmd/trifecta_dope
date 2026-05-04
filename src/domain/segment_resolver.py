@@ -12,6 +12,7 @@ Date: 2026-02-15
 """
 
 import hashlib
+import os
 import warnings
 from pathlib import Path
 from typing import Optional
@@ -168,6 +169,29 @@ def get_segment_id(segment_input: Optional[Path | str] = None) -> str:
     Convenience function - equivalent to resolve_segment_ref().id
     """
     return resolve_segment_ref(segment_input).id
+
+
+def get_repo_root() -> Path:
+    """
+    Find repository root by walking up from current directory to find pyproject.toml.
+    """
+    current = Path.cwd().resolve()
+    while True:
+        if (current / "pyproject.toml").exists():
+            return current
+        parent = current.parent
+        if parent == current:
+            return Path.cwd().resolve()
+        current = parent
+
+
+def get_home_path() -> Path:
+    """
+    Get home directory, allowing override via TRIFECTA_HOME.
+    """
+    if override := os.environ.get("TRIFECTA_HOME"):
+        return Path(override).expanduser().resolve()
+    return Path.home()
 
 
 def compute_segment_id_deprecated(segment_root: Path) -> str:

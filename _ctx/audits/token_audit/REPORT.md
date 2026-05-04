@@ -7,11 +7,11 @@ A) Definición del experimento
 B) Datos medidos
 | Item | Tokens In | Tokens Out | Fuente | Tipo |
 |---|---:|---:|---|---|
-| ctx.search (run_1771428828) | 100 | 132 | /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/telemetry/events.jsonl | MEDIDO |
-| ctx.get (run_1771428838) | 43 | 255 | /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/telemetry/events.jsonl | MEDIDO |
-| A tools totals | 143 | 387 | /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/telemetry/events.jsonl | MEDIDO |
-| Synthesis OUT | 0 | 2157 | /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/audits/token_audit/synthesis_final.txt | MEDIDO |
-| Synthesis IN | MISSING | 0 | /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/audits/token_audit/synthesis_prompt.txt | MISSING |
+| ctx.search (run_1771428828) | 100 | 132 | <REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/telemetry/events.jsonl | MEDIDO |
+| ctx.get (run_1771428838) | 43 | 255 | <REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/telemetry/events.jsonl | MEDIDO |
+| A tools totals | 143 | 387 | <REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/telemetry/events.jsonl | MEDIDO |
+| Synthesis OUT | 0 | 2157 | <REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/audits/token_audit/synthesis_final.txt | MEDIDO |
+| Synthesis IN | MISSING | 0 | <REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/audits/token_audit/synthesis_prompt.txt | MISSING |
 
 C) Escenario A tools-only (100% medido)
 - TOTAL_IN_A_TOOLS = 143

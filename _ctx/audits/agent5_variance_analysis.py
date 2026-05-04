@@ -474,7 +474,7 @@ def generate_markdown_report(baseline: ScenarioStats, cli: ScenarioStats) -> str
 
 def main():
     """Main entry point."""
-    csv_dir = Path("/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/data")
+    csv_dir = Path("<REPO_ROOT>/Developer/agent_h/trifecta_dope/data")
 
     print("Agent 5: Variance Analysis")
     print("=" * 50)
@@ -487,7 +487,7 @@ def main():
 
     report = generate_markdown_report(baseline, cli)
 
-    output_path = Path("/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/docs/hn_results_agent5_variance.md")
+    output_path = Path("<REPO_ROOT>/Developer/agent_h/trifecta_dope/docs/hn_results_agent5_variance.md")
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     with open(output_path, 'w') as f:

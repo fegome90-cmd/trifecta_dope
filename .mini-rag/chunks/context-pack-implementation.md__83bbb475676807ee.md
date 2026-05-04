@@ -17,7 +17,7 @@ $ python scripts/ingest_trifecta.py --segment debug_terminal
     • 34 chunks
     • 5 digest entries
     • 34 index entries
-    → /Users/felipe_gonzalez/Developer/agent_h/debug_terminal/_ctx/context_pack.json
+    → <REPO_ROOT>/Developer/agent_h/debug_terminal/_ctx/context_pack.json
 ```
 
 ### Digest Output

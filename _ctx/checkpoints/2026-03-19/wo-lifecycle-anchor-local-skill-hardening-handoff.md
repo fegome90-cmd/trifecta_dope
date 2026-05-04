@@ -21,7 +21,7 @@ HEAD: `8805101849f7a688b2f7599677fb115e892ba7e8`
    Preview: # Skill: checkpoint-handoff
 
 **Source**: claude-skills
-**Path**: /Users/felipe_gonzalez/.claude/skills/checkpoint-handof...
+**Path**: <REPO_ROOT>/.claude/skills/checkpoint-handof...
 
 2. [repo:checkpoint-c
 
@@ -41,10 +41,10 @@ HEAD: `8805101849f7a688b2f7599677fb115e892ba7e8`
 
 - Use $checkpoint-resume before doing any new work.
 - Use $checkpoint-resume before any repo exploration or implementation.
-- repo: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/wo-lifecycle-harness-anchor
-- checkpoint: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/wo-lifecycle-harness-anchor/_ctx/checkpoints/2026-03-19/checkpoint_130814_wo-lifecycle-anchor-local-skill-hardening.md
-- supporting bundle: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/{'anchor': '/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/wo-lifecycle-harness-anchor/docs/plans/WO-LIFECYCLE-HARNESS-ANCHOR.md', 'local_skill': '/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/wo-lifecycle-harness-anchor/skills/wo-lifecycle-harness/SKILL.md', 'local_agents': '/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/wo-lifecycle-harness-anchor/skills/wo-lifecycle-harness/resources/agents.md', 'local_prime': '/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/wo-lifecycle-harness-anchor/skills/wo-lifecycle-harness/resources/prime.md'}
-- handoff: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/wo-lifecycle-harness-anchor/_ctx/checkpoints/2026-03-19/wo-lifecycle-anchor-local-skill-hardening-handoff.md
-- checklist: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/wo-lifecycle-harness-anchor/_ctx/checkpoints/2026-03-19/wo-lifecycle-anchor-local-skill-hardening-next-agent-checklist.md
+- repo: <REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/wo-lifecycle-harness-anchor
+- checkpoint: <REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/wo-lifecycle-harness-anchor/_ctx/checkpoints/2026-03-19/checkpoint_130814_wo-lifecycle-anchor-local-skill-hardening.md
+- supporting bundle: <REPO_ROOT>/Developer/agent_h/trifecta_dope/{'anchor': '<REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/wo-lifecycle-harness-anchor/docs/plans/WO-LIFECYCLE-HARNESS-ANCHOR.md', 'local_skill': '<REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/wo-lifecycle-harness-anchor/skills/wo-lifecycle-harness/SKILL.md', 'local_agents': '<REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/wo-lifecycle-harness-anchor/skills/wo-lifecycle-harness/resources/agents.md', 'local_prime': '<REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/wo-lifecycle-harness-anchor/skills/wo-lifecycle-harness/resources/prime.md'}
+- handoff: <REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/wo-lifecycle-harness-anchor/_ctx/checkpoints/2026-03-19/wo-lifecycle-anchor-local-skill-hardening-handoff.md
+- checklist: <REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/wo-lifecycle-harness-anchor/_ctx/checkpoints/2026-03-19/wo-lifecycle-anchor-local-skill-hardening-next-agent-checklist.md
 Context loaded only. Waiting for your instruction.
 - Use $checkpoint-resume first. Resume only from the latest WO lifecycle anchor/local-skill hardening checkpoint. Treat the current state as anchor-discipline work plus local-skill binding, not as permission to broaden runtime refactors. Start by reading the checkpoint, handoff, checklist, anchor, and local skill, then continue only on the narrowest remaining path toward durable SSOT adoption.

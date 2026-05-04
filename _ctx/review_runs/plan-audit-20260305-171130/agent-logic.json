@@ -9,7 +9,7 @@
       "severity": "Baja",
       "title": "Sin red flags lógicas por heurística",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 1,
         "snippet": "No matches"
       },

@@ -9,7 +9,7 @@
       "severity": "Media",
       "title": "Necesidad de observabilidad y semántica HTTP",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 6,
         "snippet": "**Status**: `PENDING`"
       },
@@ -22,7 +22,7 @@
       "severity": "Media",
       "title": "Necesidad de observabilidad y semántica HTTP",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 29,
         "snippet": "8. **Comandos de gestión** (global status, cache cleanup, daemon management)"
       },
@@ -35,7 +35,7 @@
       "severity": "Media",
       "title": "Necesidad de observabilidad y semántica HTTP",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 36,
         "snippet": "- **Error handling**: Mensajes claros y accionables"
       },
@@ -48,7 +48,7 @@
       "severity": "Media",
       "title": "Necesidad de observabilidad y semántica HTTP",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 140,
         "snippet": "- `status`: Show global status"
       },
@@ -61,7 +61,7 @@
       "severity": "Media",
       "title": "Necesidad de observabilidad y semántica HTTP",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 154,
         "snippet": "4. [ ] Implementar `trifecta global status`"
       },
@@ -74,7 +74,7 @@
       "severity": "Media",
       "title": "Necesidad de observabilidad y semántica HTTP",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 158,
         "snippet": "- Show telemetry status"
       },
@@ -87,7 +87,7 @@
       "severity": "Media",
       "title": "Necesidad de observabilidad y semántica HTTP",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 204,
         "snippet": "6. [ ] Implementar `trifecta status` (updated)"
       },
@@ -100,7 +100,7 @@
       "severity": "Media",
       "title": "Necesidad de observabilidad y semántica HTTP",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 205,
         "snippet": "- Show repo status"
       },
@@ -113,7 +113,7 @@
       "severity": "Media",
       "title": "Necesidad de observabilidad y semántica HTTP",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 207,
         "snippet": "- Show daemon status"
       },
@@ -126,7 +126,7 @@
       "severity": "Media",
       "title": "Necesidad de observabilidad y semántica HTTP",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 312,
         "snippet": "4. [ ] Mejorar mensajes de error"
       },
@@ -139,7 +139,7 @@
       "severity": "Media",
       "title": "Necesidad de observabilidad y semántica HTTP",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 409,
         "snippet": "- Warning en log si fingerprint colisiona con existente"
       },
@@ -152,7 +152,7 @@
       "severity": "Media",
       "title": "Riesgo de degradación ambigua",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 419,
         "snippet": "- Fallback a paths locales si `~/.trifecta/` no existe"
       },
@@ -165,7 +165,7 @@
       "severity": "Media",
       "title": "Necesidad de observabilidad y semántica HTTP",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 430,
         "snippet": "- Error descriptivo si hay conflicto"
       },
@@ -178,7 +178,7 @@
       "severity": "Media",
       "title": "Necesidad de observabilidad y semántica HTTP",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 553,
         "snippet": "- [ ] `trifecta global status` muestra información correcta"
       },
@@ -191,7 +191,7 @@
       "severity": "Media",
       "title": "Necesidad de observabilidad y semántica HTTP",
       "evidence": {
-        "file": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
+        "file": "<REPO_ROOT>/Developer/agent_h/trifecta_dope/.pi/plan/trifecta-global-architecture.md",
         "line": 564,
         "snippet": "- [ ] Mensajes de error claros y accionables"
       },

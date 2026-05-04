@@ -3,7 +3,7 @@
 - **Session:** plan-audit
 - **Run ID:** plan-audit-20260305-171103
 - **Plan:** .pi/plan/trifecta-global-architecture.md
-- **Run dir:** /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-171103
+- **Run dir:** <REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/review_runs/plan-audit-20260305-171103
 - **Timeout:** 300s
 - **Auto-cleanup:** true
 

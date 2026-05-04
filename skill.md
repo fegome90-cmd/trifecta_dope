@@ -9,7 +9,7 @@ description: Use when working on Scope
 Scope
 
 ## When to Use
-Working on `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/trifecta_dope/`
+Working on `<REPO_ROOT>/Developer/agent_h/trifecta_dope/trifecta_dope/`
 
 ## Core Pattern
 

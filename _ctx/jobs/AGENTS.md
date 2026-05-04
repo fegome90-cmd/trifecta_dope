@@ -12,7 +12,7 @@ Este documento es la guía operativa para que cualquier agente pueda trabajar co
 1. **Sync & Search**: `uv run trifecta ctx sync --segment .` → `uv run trifecta ctx search --segment . --query "..."`
 2. **Preflight (OBLIGATORIO)**: `make wo-preflight WO=WO-XXXX`
 3. **Take**: `uv run python scripts/ctx_wo_take.py WO-XXXX`
-4. **Work**: `cd /Users/felipe_gonzalez/Developer/agent_h/.worktrees/WO-XXXX` → implementar → `git commit`
+4. **Work**: `cd <REPO_ROOT>/Developer/agent_h/.worktrees/WO-XXXX` → implementar → `git commit`
 5. **(Opcional avanzado)**: `uv run python ../../scripts/ctx_wo_finish.py WO-XXXX --generate-only` para previsualizar DoD si el WO lo documenta.
 6. **Finish (único cierre válido)**: `uv run python scripts/ctx_wo_finish.py WO-XXXX`
 

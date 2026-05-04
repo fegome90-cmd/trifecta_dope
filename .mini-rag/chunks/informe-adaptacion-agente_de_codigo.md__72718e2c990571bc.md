@@ -1,6 +1,6 @@
 ### 4) Supervisor / Routing
 
-- Fuente: ` /Users/felipe_gonzalez/Developer/agente_de_codigo/packages/supervisor-agent/README.md`
+- Fuente: ` <REPO_ROOT>/Developer/agente_de_codigo/packages/supervisor-agent/README.md`
 
 Hallazgos:
 - Modelo de validacion de agentes, routing y prioridad con fallback.

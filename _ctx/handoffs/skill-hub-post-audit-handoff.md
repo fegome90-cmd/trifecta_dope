@@ -28,9 +28,9 @@ HEAD: `abb02938d602f40c789809415e85d451cca092d6`
 
 - Use $checkpoint-resume before doing any new work.
 - Use $checkpoint-resume before any repo exploration or implementation.
-- repo: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope
-- checkpoint: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/checkpoints/2026-04-12/checkpoint_112712_skill-hub-post-audit.md
-- handoff: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/handoffs/skill-hub-post-audit-handoff.md
-- checklist: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/checklists/skill-hub-post-audit-next-agent-checklist.md
+- repo: <REPO_ROOT>/Developer/agent_h/trifecta_dope
+- checkpoint: <REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/checkpoints/2026-04-12/checkpoint_112712_skill-hub-post-audit.md
+- handoff: <REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/handoffs/skill-hub-post-audit-handoff.md
+- checklist: <REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/checklists/skill-hub-post-audit-next-agent-checklist.md
 Context loaded only. Waiting for your instruction.
 - Use $checkpoint-resume first, confirm the intended publish scope, then stage only the verified skill-hub restoration slice without mixing unrelated dirt.

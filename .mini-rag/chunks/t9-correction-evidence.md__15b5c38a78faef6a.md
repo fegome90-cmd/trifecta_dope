@@ -21,11 +21,11 @@
 ### Setup
 
 ```bash
-cd /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope
+cd <REPO_ROOT>/Developer/agent_h/trifecta_dope
 git checkout b1b5b2d4c449722d33292f2f88c0e98d74822ec2
 ```
 
 ### Test 1: Validate Segment
 
 ```bash
-uv run trifecta ctx validate --segment /Users/felipe_gonzalez/Developer/AST
+uv run trifecta ctx validate --segment <REPO_ROOT>/Developer/AST

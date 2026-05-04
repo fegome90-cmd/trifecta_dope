@@ -1,0 +1,21 @@
+{
+  "query": "daemon",
+  "iterations": 100,
+  "search": {
+    "avg_ms": 260.32450675964355,
+    "median_ms": 259.64105129241943,
+    "stdev": 4.317983272663036,
+    "p95_ms": 265.6248688697815,
+    "avg_hits": 0
+  },
+  "oracle": {
+    "avg_ms": 225.4971146583557,
+    "median_ms": 225.1044511795044,
+    "stdev": 2.3697408935736526,
+    "p95_ms": 228.68070602416992,
+    "fidelity_distribution": {
+      "fallback": 100
+    },
+    "avg_symbols": 0
+  }
+}

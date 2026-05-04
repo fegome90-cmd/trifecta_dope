@@ -105,7 +105,7 @@ Using a ±5% equivalence margin:
 ## 6. Command to Reproduce
 
 ```bash
-cd /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope
+cd <REPO_ROOT>/Developer/agent_h/trifecta_dope
 python3 scripts/run_gaia_lite.py \
   --policies heuristic cli bm25 dump \
   --trials 30 \

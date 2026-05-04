@@ -55,7 +55,7 @@ def test_query_with_skill_result_renders_card_and_exit_zero() -> None:
     assert plan.outcome_kind == "renderable_skill"
     assert plan.exit_code == 0
     assert [card.id for card in plan.cards] == ["test-driven-development"]
-    assert "before writing implementation code" in mod.render_plain(plan)
+    assert "before writing implementation code" in mod._select_renderer(plan, use_json=False, style="plain", is_tty=False)
 
 
 def test_repo_result_promotes_only_when_confidence_is_sufficient() -> None:
@@ -82,6 +82,11 @@ def test_repo_result_promotes_only_when_confidence_is_sufficient() -> None:
 
 
 def test_repo_result_fails_closed_when_confidence_is_insufficient() -> None:
+    """Partial-field repo results now render as degraded instead of unsupported.
+
+    With build_view_model() replacing strict _to_card(), repo results with
+    stable_id but missing path/source are promoted as RENDERABLE_SKILL (degraded).
+    """
     mod = load_module()
     payload = search_payload({"ref": "repo:mystery-card.md:deadbeef", "score": 1.5})
     chunks = {
@@ -93,10 +98,10 @@ def test_repo_result_fails_closed_when_confidence_is_insufficient() -> None:
 
     plan = mod.build_render_plan(payload, chunks, limit=5)
 
-    assert plan.outcome_kind == "unsupported"
-    assert plan.exit_code == 3
-    assert not plan.cards
-    assert "could not be promoted safely" in plan.message.lower()
+    assert plan.outcome_kind == "renderable_skill"
+    assert plan.exit_code == 0
+    assert len(plan.cards) == 1
+    assert plan.cards[0].authority_state == "degraded"
 
 
 def test_metadata_only_results_do_not_claim_no_skills_found() -> None:
@@ -121,7 +126,7 @@ def test_metadata_only_results_do_not_claim_no_skills_found() -> None:
     }
 
     plan = mod.build_render_plan(payload, chunks, limit=5)
-    plain = mod.render_plain(plan)
+    plain = mod._select_renderer(plan, use_json=False, style="plain", is_tty=False)
 
     assert plan.outcome_kind == "metadata_only"
     assert plan.exit_code == 3
@@ -153,8 +158,8 @@ def test_plain_and_rich_render_share_same_classification() -> None:
     }
 
     plan = mod.build_render_plan(payload, chunks, limit=5)
-    plain = mod.render_plain(plan)
-    rich = strip_ansi(mod.render_rich(plan))
+    plain = mod._select_renderer(plan, use_json=False, style="plain", is_tty=False)
+    rich = strip_ansi(mod._select_renderer(plan, use_json=False, style="rich", is_tty=True))
 
     assert plan.outcome_kind == "renderable_skill"
     assert plan.exit_code == 0
@@ -245,7 +250,7 @@ def test_repo_title_prefers_ref_over_generic_skill_filename() -> None:
 
     plan = mod.build_render_plan(payload, chunks, limit=5)
 
-    assert plan.cards[0].title == "checkpoint-card"
+    assert plan.cards[0].name == "checkpoint-card"
     assert plan.cards[0].id == "checkpoint-card"
 
 
@@ -286,6 +291,11 @@ def test_mixed_renderable_and_metadata_only_batch_is_success() -> None:
 
 
 def test_mixed_unsupported_and_metadata_only_batch_is_non_renderable() -> None:
+    """Partial-field repo result is now degraded-renderable, not unsupported.
+
+    With build_view_model(), repo results with stable_id but partial fields
+    get promoted as RENDERABLE_SKILL (degraded) instead of UNSUPPORTED.
+    """
     mod = load_module()
     payload = search_payload(
         {"ref": "repo:mystery-card.md:deadbeef", "score": 1.5},
@@ -306,12 +316,18 @@ def test_mixed_unsupported_and_metadata_only_batch_is_non_renderable() -> None:
 
     plan = mod.build_render_plan(payload, chunks, limit=5)
 
-    assert plan.outcome_kind == "unsupported"
-    assert plan.exit_code == 3
-    assert not plan.cards
+    assert plan.outcome_kind == "renderable_skill"
+    assert plan.exit_code == 0
+    assert len(plan.cards) == 1
+    assert plan.cards[0].authority_state == "degraded"
 
 
 def test_later_renderable_hit_wins_batch_even_if_first_hit_is_not_renderable() -> None:
+    """Both hits are now renderable: first as degraded, second as healthy.
+
+    With build_view_model(), partial-field repo results promote as degraded.
+    Both cards appear in the output.
+    """
     mod = load_module()
     payload = search_payload(
         {"ref": "repo:mystery-card.md:deadbeef", "score": 1.5},
@@ -335,7 +351,9 @@ def test_later_renderable_hit_wins_batch_even_if_first_hit_is_not_renderable() -
 
     assert plan.outcome_kind == "renderable_skill"
     assert plan.exit_code == 0
-    assert [card.id for card in plan.cards] == ["tdd-coach"]
+    assert [card.id for card in plan.cards] == ["mystery-card", "tdd-coach"]
+    assert plan.cards[0].authority_state == "degraded"
+    assert plan.cards[1].authority_state == "healthy"
 
 
 def test_stdin_search_output_malformed_json_exits_with_parse_error() -> None:
@@ -379,8 +397,8 @@ def test_plain_and_rich_keep_same_batch_semantics_for_metadata_only() -> None:
     }
 
     plan = mod.build_render_plan(payload, chunks, limit=5)
-    plain = mod.render_plain(plan)
-    rich = strip_ansi(mod.render_rich(plan))
+    plain = mod._select_renderer(plan, use_json=False, style="plain", is_tty=False)
+    rich = strip_ansi(mod._select_renderer(plan, use_json=False, style="rich", is_tty=True))
 
     assert plan.outcome_kind == "metadata_only"
     assert plan.exit_code == 3

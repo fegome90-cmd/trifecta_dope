@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from src.domain.segment_resolver import resolve_segment_ref
+from src.domain.sanitizer import Sanitizer
 
 
 _SURROGATE_RE = re.compile(r"[\ud800-\udfff]")
@@ -39,36 +40,7 @@ def _relpath(root: Path, target: Path) -> str:
     If target is inside workspace, returns relative path.
     If target is external, returns external/<hash>-<filename>.
     """
-    try:
-        # Try to make it relative
-        rel = target.relative_to(root)
-        return str(rel)
-    except ValueError:
-        # External file - hash the full path for privacy
-        path_hash = hashlib.sha256(str(target).encode()).hexdigest()[:8]
-        return f"external/{path_hash}-{target.name}"
-
-
-def _sanitize_value(value: str) -> str:
-    """Redact absolute paths/PII from string values.
-
-    Returns:
-        Redacted string if value contains PII patterns, otherwise original value.
-    """
-    # Posix absolute paths
-    if value.startswith(("/Users/", "/home/", "/private/var/", "/mnt/c/", "/mnt/C/")):
-        return "<ABS_PATH_REDACTED>"
-
-    # Windows paths (C:\Users\, D:\Users\, etc.)
-    if len(value) > 2 and value[1:3] == ":\\" and value[0].isalpha():
-        if "Users\\" in value or "users\\" in value:
-            return "<ABS_PATH_REDACTED>"
-
-    # File URIs
-    if value.startswith("file://"):
-        return "<ABS_URI_REDACTED>"
-
-    return value
+    return Sanitizer.get_repo_relative_path(root, target)
 
 
 def _sanitize_event(event: dict[str, Any]) -> dict[str, Any]:
@@ -77,23 +49,7 @@ def _sanitize_event(event: dict[str, Any]) -> dict[str, Any]:
     Sanitizes common path keys: segment, cwd, path, root, repo_root, file, uri.
     Respects TRIFECTA_PII=allow env var for opt-in bypass.
     """
-    # Opt-in bypass for debug/local development
-    if os.environ.get("TRIFECTA_PII") == "allow":
-        return event
-
-    # Keys that commonly contain paths
-    PATH_KEYS = ["segment", "cwd", "path", "root", "repo_root", "file", "uri"]
-
-    # Sanitize args.* path keys if present
-    if "args" in event and isinstance(event["args"], dict):
-        for key in PATH_KEYS:
-            if key in event["args"]:
-                value = event["args"][key]
-                # Only sanitize string values (avoid crash on Path objects, ints, etc.)
-                if isinstance(value, str):
-                    event["args"][key] = _sanitize_value(value)
-
-    return event
+    return Sanitizer().sanitize_dict(event)
 
 
 class Telemetry:

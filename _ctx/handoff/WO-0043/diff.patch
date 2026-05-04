@@ -663,7 +663,7 @@ index b0cb1f5..1bd6ad6 100644
 +{"ts": "2026-02-13T15:13:56-0300", "run_id": "run_1771006436", "segment_id": "088cf48d", "cmd": "ctx.sync.stub_regen", "args": {"stub_name": "repo_map.md"}, "result": {"regen_ok": true, "reason": ""}, "timing_ms": 1, "warnings": [], "x": {}}
 +{"ts": "2026-02-13T15:13:56-0300", "run_id": "run_1771006436", "segment_id": "088cf48d", "cmd": "ctx.sync.stub_regen", "args": {"stub_name": "symbols_stub.md"}, "result": {"regen_ok": true, "reason": ""}, "timing_ms": 1, "warnings": [], "x": {}}
 +{"ts": "2026-02-13T15:13:56-0300", "run_id": "run_1771006436", "segment_id": "088cf48d", "cmd": "ctx.sync", "args": {"segment": "<ABS_PATH_REDACTED>", "segment_id_resolved": "test_segment", "segment_root_resolved": "/private/var/folders/k1/jz_hmygd3k36tzkffsbyb5x00000gn/T/pytest-of-felipe_gonzalez/pytest-456/test_telemetry_no_pii_in_activ0/test_segment", "segment_state_source": "config"}, "result": {"status": "ok"}, "timing_ms": 3, "warnings": [], "x": {}}
-+{"ts": "2026-02-13T15:32:25-0300", "run_id": "run_1771007545", "segment_id": "088cf48d", "cmd": "ctx.sync", "args": {"segment": ".", "segment_id_resolved": "wo-0043", "segment_root_resolved": "/Users/felipe_gonzalez/Developer/agent_h/.worktrees/WO-0043", "segment_state_source": "dirname"}, "result": {"status": "error", "error_code": "SEGMENT_NOT_INITIALIZED", "errors": 3}, "timing_ms": 1, "warnings": [], "x": {}}
++{"ts": "2026-02-13T15:32:25-0300", "run_id": "run_1771007545", "segment_id": "088cf48d", "cmd": "ctx.sync", "args": {"segment": ".", "segment_id_resolved": "wo-0043", "segment_root_resolved": "<REPO_ROOT>/Developer/agent_h/.worktrees/WO-0043", "segment_state_source": "dirname"}, "result": {"status": "error", "error_code": "SEGMENT_NOT_INITIALIZED", "errors": 3}, "timing_ms": 1, "warnings": [], "x": {}}
 +{"ts": "2026-02-13T15:35:25-0300", "run_id": "run_1771007725", "segment_id": "088cf48d", "cmd": "ctx.build", "args": {"segment": "<ABS_PATH_REDACTED>", "segment_id_resolved": "clean_project", "segment_root_resolved": "/private/var/folders/k1/jz_hmygd3k36tzkffsbyb5x00000gn/T/pytest-of-felipe_gonzalez/pytest-461/test_e2e_build_fails_on_contam0/clean_project", "segment_state_source": "dirname"}, "result": {"status": "ok"}, "timing_ms": 2, "warnings": [], "x": {}}
 +{"ts": "2026-02-13T15:35:25-0300", "run_id": "run_1771007725", "segment_id": "088cf48d", "cmd": "ctx.build", "args": {"segment": "<ABS_PATH_REDACTED>", "segment_id_resolved": "clean_project", "segment_root_resolved": "/private/var/folders/k1/jz_hmygd3k36tzkffsbyb5x00000gn/T/pytest-of-felipe_gonzalez/pytest-461/test_e2e_build_fails_on_contam0/clean_project", "segment_state_source": "dirname"}, "result": {"status": "validation_failed", "error_code": "NORTH_STAR_AMBIGUOUS", "errors": 1}, "timing_ms": 1, "warnings": [], "x": {}}
 +{"ts": "2026-02-13T15:49:02-0300", "run_id": "run_1771008542", "segment_id": "088cf48d", "cmd": "ctx.build", "args": {"segment": "<ABS_PATH_REDACTED>", "segment_id_resolved": "clean_project", "segment_root_resolved": "/private/var/folders/k1/jz_hmygd3k36tzkffsbyb5x00000gn/T/pytest-of-felipe_gonzalez/pytest-476/test_e2e_build_fails_on_contam0/clean_project", "segment_state_source": "dirname"}, "result": {"status": "ok"}, "timing_ms": 2, "warnings": [], "x": {}}
@@ -723,7 +723,7 @@ index b5806d2..dbb3929 100644
  applied: True
  issues:
 -- RUNNING_WO_WITHOUT_WORKTREE WO-0003 ['/workspaces/trifecta_dope/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/jobs/running/WO-0003.yaml']
-+- RUNNING_WO_WITHOUT_WORKTREE WO-0003 ['/Users/felipe_gonzalez/Developer/agent_h/.worktrees/WO-0043/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/jobs/running/WO-0003.yaml']
++- RUNNING_WO_WITHOUT_WORKTREE WO-0003 ['<REPO_ROOT>/Developer/agent_h/.worktrees/WO-0043/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/jobs/running/WO-0003.yaml']
  - WORKTREE_WITHOUT_RUNNING_WO None ['worktree']
 -- WORKTREE_WITHOUT_RUNNING_WO None ['branch']
  - WORKTREE_WITHOUT_RUNNING_WO None ['HEAD']
@@ -1728,7 +1728,7 @@ index 6825740..9c3a034 100644
 + applied: True
 + issues:
 +-- RUNNING_WO_WITHOUT_WORKTREE WO-0003 ['/workspaces/trifecta_dope/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/jobs/running/WO-0003.yaml']
-++- RUNNING_WO_WITHOUT_WORKTREE WO-0003 ['/Users/felipe_gonzalez/Developer/agent_h/.worktrees/WO-0043/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/jobs/running/WO-0003.yaml']
+++- RUNNING_WO_WITHOUT_WORKTREE WO-0003 ['<REPO_ROOT>/Developer/agent_h/.worktrees/WO-0043/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/jobs/running/WO-0003.yaml']
 + - WORKTREE_WITHOUT_RUNNING_WO None ['worktree']
 +-- WORKTREE_WITHOUT_RUNNING_WO None ['branch']
 + - WORKTREE_WITHOUT_RUNNING_WO None ['HEAD']
@@ -3094,7 +3094,7 @@ index 6825740..9c3a034 100644
 ++ applied: True
 ++ issues:
 ++-- RUNNING_WO_WITHOUT_WORKTREE WO-0003 ['/workspaces/trifecta_dope/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/jobs/running/WO-0003.yaml']
-+++- RUNNING_WO_WITHOUT_WORKTREE WO-0003 ['/Users/felipe_gonzalez/Developer/agent_h/.worktrees/WO-0043/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/jobs/running/WO-0003.yaml']
++++- RUNNING_WO_WITHOUT_WORKTREE WO-0003 ['<REPO_ROOT>/Developer/agent_h/.worktrees/WO-0043/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/jobs/running/WO-0003.yaml']
 +++- WORKTREE_WITHOUT_RUNNING_WO None ['HEAD']
 ++ - WORKTREE_WITHOUT_RUNNING_WO None ['worktree']
 ++ - WORKTREE_WITHOUT_RUNNING_WO None ['branch']
@@ -4550,7 +4550,7 @@ index 6825740..9c3a034 100644
 +++ applied: True
 +++ issues:
 +++-- RUNNING_WO_WITHOUT_WORKTREE WO-0003 ['/workspaces/trifecta_dope/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/jobs/running/WO-0003.yaml']
-++++- RUNNING_WO_WITHOUT_WORKTREE WO-0003 ['/Users/felipe_gonzalez/Developer/agent_h/.worktrees/WO-0043/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/jobs/running/WO-0003.yaml']
+++++- RUNNING_WO_WITHOUT_WORKTREE WO-0003 ['<REPO_ROOT>/Developer/agent_h/.worktrees/WO-0043/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/jobs/running/WO-0003.yaml']
 +++ - WORKTREE_WITHOUT_RUNNING_WO None ['worktree']
 +++-- WORKTREE_WITHOUT_RUNNING_WO None ['branch']
 +++ - WORKTREE_WITHOUT_RUNNING_WO None ['HEAD']
@@ -5910,7 +5910,7 @@ index 6825740..9c3a034 100644
 ++++ applied: True
 ++++ issues:
 ++++-- RUNNING_WO_WITHOUT_WORKTREE WO-0003 ['/workspaces/trifecta_dope/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/jobs/running/WO-0003.yaml']
-+++++- RUNNING_WO_WITHOUT_WORKTREE WO-0003 ['/Users/felipe_gonzalez/Developer/agent_h/.worktrees/WO-0043/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/jobs/running/WO-0003.yaml']
++++++- RUNNING_WO_WITHOUT_WORKTREE WO-0003 ['<REPO_ROOT>/Developer/agent_h/.worktrees/WO-0043/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/jobs/running/WO-0003.yaml']
 ++++ - WORKTREE_WITHOUT_RUNNING_WO None ['worktree']
 ++++ - WORKTREE_WITHOUT_RUNNING_WO None ['branch']
 ++++ - WORKTREE_WITHOUT_RUNNING_WO None ['HEAD']
@@ -7173,7 +7173,7 @@ index 6825740..9c3a034 100644
 +++++ applied: True
 +++++ issues:
 +++++-- RUNNING_WO_WITHOUT_WORKTREE WO-0003 ['/workspaces/trifecta_dope/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/jobs/running/WO-0003.yaml']
-++++++- RUNNING_WO_WITHOUT_WORKTREE WO-0003 ['/Users/felipe_gonzalez/Developer/agent_h/.worktrees/WO-0043/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/jobs/running/WO-0003.yaml']
+++++++- RUNNING_WO_WITHOUT_WORKTREE WO-0003 ['<REPO_ROOT>/Developer/agent_h/.worktrees/WO-0043/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/jobs/running/WO-0003.yaml']
 ++++++- WORKTREE_WITHOUT_RUNNING_WO None ['HEAD']
 +++++ - WORKTREE_WITHOUT_RUNNING_WO None ['worktree']
 +++++ - WORKTREE_WITHOUT_RUNNING_WO None ['branch']
@@ -12320,7 +12320,7 @@ index 6825740..9c3a034 100644
 ++++++ applied: True
 ++++++ issues:
 ++++++-- RUNNING_WO_WITHOUT_WORKTREE WO-0003 ['/workspaces/trifecta_dope/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/jobs/running/WO-0003.yaml']
-+++++++- RUNNING_WO_WITHOUT_WORKTREE WO-0003 ['/Users/felipe_gonzalez/Developer/agent_h/.worktrees/WO-0043/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/jobs/running/WO-0003.yaml']
++++++++- RUNNING_WO_WITHOUT_WORKTREE WO-0003 ['<REPO_ROOT>/Developer/agent_h/.worktrees/WO-0043/tests/fixtures/reconcile/running_wo_without_worktree/_ctx/jobs/running/WO-0003.yaml']
 ++++++ - WORKTREE_WITHOUT_RUNNING_WO None ['worktree']
 ++++++-- WORKTREE_WITHOUT_RUNNING_WO None ['branch']
 ++++++ - WORKTREE_WITHOUT_RUNNING_WO None ['HEAD']

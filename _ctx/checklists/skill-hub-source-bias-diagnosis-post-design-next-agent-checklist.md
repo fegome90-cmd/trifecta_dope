@@ -1,12 +1,12 @@
 # Next Agent Checklist
 
 ## Start Here
-- /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/skill.md
-- /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/agent_trifecta_dope.md
-- /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/session_trifecta_dope.md
-- /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/prime_trifecta_dope.md
-- /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/docs/adr/ADR-004-skill-hub-runtime-promotion-policy.md
-- /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/docs/reports/skill-hub-source-bias-diagnosis-explore.md
+- <REPO_ROOT>/Developer/agent_h/trifecta_dope/skill.md
+- <REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/agent_trifecta_dope.md
+- <REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/session_trifecta_dope.md
+- <REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/prime_trifecta_dope.md
+- <REPO_ROOT>/Developer/agent_h/trifecta_dope/docs/adr/ADR-004-skill-hub-runtime-promotion-policy.md
+- <REPO_ROOT>/Developer/agent_h/trifecta_dope/docs/reports/skill-hub-source-bias-diagnosis-explore.md
 
 ## Guardrails
 - Interactive SDD flow; stop after each phase for user review.
@@ -21,7 +21,7 @@
 - Continue on the narrowest remaining path.
 
 ## Current Status Snapshot
-- {'repo': '/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-source-bias-investigation', 'branch': 'codex/skill-hub-source-bias-investigation', 'head': '796b5a5039766e5fd928ef533504c8ec98109e12', 'next_sdd_phase': 'sdd-tasks', 'artifact_store': 'engram', 'execution_mode': 'interactive', 'workspace_bundle': ['/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-source-bias-investigation', '/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/docs/reports/skill-hub-source-bias-diagnosis-explore.md']}
+- {'repo': '<REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-source-bias-investigation', 'branch': 'codex/skill-hub-source-bias-investigation', 'head': '796b5a5039766e5fd928ef533504c8ec98109e12', 'next_sdd_phase': 'sdd-tasks', 'artifact_store': 'engram', 'execution_mode': 'interactive', 'workspace_bundle': ['<REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-source-bias-investigation', '<REPO_ROOT>/Developer/agent_h/trifecta_dope/docs/reports/skill-hub-source-bias-diagnosis-explore.md']}
 
 ## Stop Conditions
 - Stop if the next step reopens an out-of-scope front.

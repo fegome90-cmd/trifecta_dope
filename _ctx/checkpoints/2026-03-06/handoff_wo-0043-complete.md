@@ -53,7 +53,7 @@ Se implementó completamente el **WO-0043 (SQLite + Daemon + Operación Real)** 
 
 ## Descubrimientos Importantes
 
-1. **WO-0041 y WO-0042 ya estaban mergeados a main** pero el código no estaba en HEAD de main - se encontró en worktree en `/Users/felipe_gonzalez/Developer/agent_h/.worktrees/WO-0042`
+1. **WO-0041 y WO-0042 ya estaban mergeados a main** pero el código no estaba en HEAD de main - se encontró en worktree en `<REPO_ROOT>/Developer/agent_h/.worktrees/WO-0042`
 
 2. **CLI method names diferentes**: 
    - Existente: `list_repos`, `show`

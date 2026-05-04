@@ -179,7 +179,7 @@ Para usar `trifecta` desde cualquier carpeta sin instalarlo globalmente:
 
 ```fish
 # Agregar a ~/.config/fish/config.fish
-alias trifecta="/Users/felipe_gonzalez/.local/bin/uv --directory /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope run trifecta"
+alias trifecta="<REPO_ROOT>/.local/bin/uv --directory <REPO_ROOT>/Developer/agent_h/trifecta_dope run trifecta"
 ```
 
 Luego:

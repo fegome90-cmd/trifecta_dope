@@ -6,7 +6,7 @@
   "backendAuthType": "public",
   "executionArgs": {
     "projectName": "trifecta_dope",
-    "projectPath": "/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope",
+    "projectPath": "<REPO_ROOT>/Developer/agent_h/trifecta_dope",
     "testIds": [],
     "additionalInstruction": "This is a CLI Python project using Typer. Tests should use subprocess to call CLI commands. Focus on TC001-TC010 from the test plan.",
     "envs": {

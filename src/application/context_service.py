@@ -43,6 +43,21 @@ def parse_chunk_id(chunk_id: str) -> tuple[str, str]:
 class ContextService:
     """Handles ctx.search and ctx.get logic."""
 
+    # Cache format: (ContextPack, authority_state, mtime, size)
+    _pack_cache: dict[str, tuple[ContextPack, str, float, int]] = {}
+    MAX_CACHED_PACKS = 5
+    _cache_hits = 0
+    _cache_misses = 0
+
+    @classmethod
+    def get_cache_stats(cls) -> dict[str, int]:
+        return {
+            "hits": cls._cache_hits,
+            "misses": cls._cache_misses,
+            "size": len(cls._pack_cache),
+            "max": cls.MAX_CACHED_PACKS
+        }
+
     def __init__(self, target_path: Path):
         self.target_path = target_path
         self.ctx_dir = target_path / "_ctx"
@@ -62,9 +77,35 @@ class ContextService:
         if not self.pack_path.exists():
             raise FileNotFoundError(f"Context pack not found at {self.pack_path}")
 
+        stat = self.pack_path.stat()
+        mtime = stat.st_mtime
+        size = stat.st_size
+        cache_key = str(self.pack_path)
+        
+        if cache_key in ContextService._pack_cache:
+            pack, state, cached_mtime, cached_size = ContextService._pack_cache[cache_key]
+            if mtime == cached_mtime and size == cached_size:
+                ContextService._cache_hits += 1
+                # Move to end for LRU
+                ContextService._pack_cache[cache_key] = ContextService._pack_cache.pop(cache_key)
+                return pack, state
+
+        ContextService._cache_misses += 1
+
+        # Atomic replacement: read and parse first, then assign to cache.
         with open(self.pack_path, "r", encoding="utf-8") as f:
             data = json.load(f)
-            return ContextPack(**data), "healthy"
+            pack = ContextPack(**data)
+            state = "healthy"
+            
+            # Enforce maximum cache size
+            if len(ContextService._pack_cache) >= ContextService.MAX_CACHED_PACKS:
+                oldest_key = next(iter(ContextService._pack_cache))
+                ContextService._pack_cache.pop(oldest_key)
+                
+            # Assignment in a single bytecode operation (atomic in CPython due to GIL)
+            ContextService._pack_cache[cache_key] = (pack, state, mtime, size)
+            return pack, state
 
     @staticmethod
     def _sha256(path: Path) -> str:

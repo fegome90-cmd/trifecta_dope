@@ -1,0 +1,12 @@
+change: doctor-ranking-optimization
+mode: auto
+artifact_store: hybrid
+current_phase: archived
+phases:
+  proposal: completed
+  spec: completed
+  design: completed
+  tasks: completed
+  apply: completed
+  verify: completed
+  archive: completed

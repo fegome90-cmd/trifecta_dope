@@ -28,14 +28,14 @@ HEAD: `796b5a5039766e5fd928ef533504c8ec98109e12`
 
 - Use $checkpoint-resume before doing any new work.
 - Use $checkpoint-resume before any repo exploration or implementation.
-- repo: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-source-bias-investigation
-- checkpoint: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-source-bias-investigation/_ctx/checkpoints/2026-04-16/checkpoint_093415_skill-hub-source-bias-diagnosis-post-design.md
-- supporting bundle: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-source-bias-investigation/{'engram_topics': ['sdd/skill-hub-source-bias-diagnosis/proposal', 'sdd/skill-hub-source-bias-diagnosis/spec', 'sdd/skill-hub-source-bias-diagnosis/design', 'skill-hub/source-authority', 'discovery/skill-hub-corpus-collapse-window', 'discovery/skill-hub-collapsed-writer-event', 'architecture/skill-hub-last-valid-healthy-only']}
-- handoff: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/handoffs/skill-hub-source-bias-diagnosis-post-design-handoff.md
-- checklist: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/checklists/skill-hub-source-bias-diagnosis-post-design-next-agent-checklist.md
+- repo: <REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-source-bias-investigation
+- checkpoint: <REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-source-bias-investigation/_ctx/checkpoints/2026-04-16/checkpoint_093415_skill-hub-source-bias-diagnosis-post-design.md
+- supporting bundle: <REPO_ROOT>/Developer/agent_h/trifecta_dope/.worktrees/skill-hub-source-bias-investigation/{'engram_topics': ['sdd/skill-hub-source-bias-diagnosis/proposal', 'sdd/skill-hub-source-bias-diagnosis/spec', 'sdd/skill-hub-source-bias-diagnosis/design', 'skill-hub/source-authority', 'discovery/skill-hub-corpus-collapse-window', 'discovery/skill-hub-collapsed-writer-event', 'architecture/skill-hub-last-valid-healthy-only']}
+- handoff: <REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/handoffs/skill-hub-source-bias-diagnosis-post-design-handoff.md
+- checklist: <REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/checklists/skill-hub-source-bias-diagnosis-post-design-next-agent-checklist.md
 Context loaded only. Waiting for your instruction.
-- [$checkpoint-resume](/Users/felipe_gonzalez/.codex/skills/checkpoint-resume/SKILL.md) before any repo exploration or implementation.
+- [$checkpoint-resume](<REPO_ROOT>/.codex/skills/checkpoint-resume/SKILL.md) before any repo exploration or implementation.
 - checkpoint: {checkpoint}
-- handoff: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/handoffs/skill-hub-source-bias-diagnosis-post-design-handoff.md
-- checklist: /Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/_ctx/checklists/skill-hub-source-bias-diagnosis-post-design-next-agent-checklist.md
+- handoff: <REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/handoffs/skill-hub-source-bias-diagnosis-post-design-handoff.md
+- checklist: <REPO_ROOT>/Developer/agent_h/trifecta_dope/_ctx/checklists/skill-hub-source-bias-diagnosis-post-design-next-agent-checklist.md
 Context loaded only. Waiting for your instruction.
