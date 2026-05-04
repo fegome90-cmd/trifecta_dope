@@ -75,6 +75,9 @@ eval/results/
 # Runtime config (local)
 _ctx/trifecta_config.json
 
+# Local hygiene backups too large for GitHub
+/hygiene/*.patch
+
 # Claude agent runtime state (session memory, counters)
 .claude/context_memory/
 .atl/
