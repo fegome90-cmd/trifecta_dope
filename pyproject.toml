@@ -30,7 +30,7 @@ dev = [
     # Analysis tools (kept in dev for convenience during development)
     "jupyter>=1.0.0",
     "plotly>=5.18.0",
-    "pandas>=2.0.0",
+    "pandas>=3.0.2",
     "kaleido>=0.2.0",
 ]
 # Production-ready optional group for telemetry analysis
@@ -38,7 +38,7 @@ dev = [
 telemetry = [
     "jupyter>=1.0.0",
     "plotly>=5.18.0",
-    "pandas>=2.0.0",
+    "pandas>=3.0.2",
     "kaleido>=0.2.0",
 ]
 
