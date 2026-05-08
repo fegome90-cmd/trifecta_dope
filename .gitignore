@@ -82,3 +82,6 @@ _ctx/trifecta_config.json
 .claude/context_memory/
 .atl/
 .fork/
+
+# Claude agent worktrees (runtime)
+.claude/worktrees/
