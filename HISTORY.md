@@ -60,3 +60,9 @@
       capa_modificada: "Hygiene | Dependencies | GitHub Issues | Documentation"
       impacto_contrato: "None. Pure hygiene — no functional code changes."
       siguiente_paso_tecnico: "Address remaining out-of-scope items: 3 PRESERVE branches, 2 REVIEW branches, mypy floor update, dependabot.yml recreation, issue bug fixes."
+- history:
+    - user_prompt_summary: "Complete Phase 6 document authority fix, archive SDD change, execute closed-PR semantic memo follow-up."
+    - agent_response_summary: "Phase 6: created authority registry, STATUS headers in 3 docs, corrected PRESERVED/DELETED counts. Archived change (#2747). Anchored hygiene docs to main from remote branch. Created closed-pr semantic memo documenting rationale for 6 branch decisions (3 PRESERVED, 3 DELETED). Updated authority registry to reference memo."
+      capa_modificada: "Documentation | Audit Trail | Governance"
+      impacto_contrato: "None. Documentation-only."
+      siguiente_paso_tecnico: "Execute stash-retention-policy (#2749) and dependabot-policy (#2748) follow-ups."

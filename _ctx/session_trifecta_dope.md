@@ -134,3 +134,13 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Engram artifacts**: #2727 (explore), #2730 (proposal), #2732 (design), #2733 (spec), #2734 (tasks), #2735 (gate), #2736 (apply-progress), #2738 (verify-report)
 - **Commit**: `e6e115d0` chore: remove plotly ghost dep, update tree-sitter floors
 - **Next**: sdd-archive
+
+## 2026-05-09 Git Hygiene Phase 5+6 Closeout + Archive + Follow-ups
+- **Summary**: Completed Phase 6 (document authority fix), archived SDD change, executed follow-up #1 (closed-pr semantic memo)
+- **Phase 6** (`f50bc595`): Created authority registry, inserted STATUS headers in 3 docs, corrected phase-2-closeout PRESERVED/DELETED counts
+- **Archive**: SDD change archived in engram #2747. Follow-ups registered: #2748 (dependabot policy), #2749 (stash retention), #2750 (closed-pr memo)
+- **Anchor docs** (`e2627999`, `5a201707`): Cherry-picked hygiene/ from remote branch, updated with Phase 4+5 resolution, anchored to main
+- **Closed-PR semantic memo** (`c6ea4112`): Documented PRESERVED vs DELETED rationale for 6 closed-PR branches. Authority registry updated.
+- **Commits**: `e2627999`, `3b9f13dd`, `5a201707`, `f50bc595`, `c6ea4112`
+- **Remaining follow-ups**: stash-retention-policy (#2749), dependabot-policy (#2748)
+- **Next**: stash-retention-policy or close session

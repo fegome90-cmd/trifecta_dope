@@ -23,6 +23,11 @@ These documents contain **actionable** or **resolved** state. Their resolution s
 - **Authority scope**: Full document — authoritative for stash/patch closeout state.
 - Documents the Phase 3 working tree stabilization and stash preservation.
 
+### closed-pr-semantic-memo-20260509.md
+- **Authority scope**: Full document — authoritative for closed-PR branch PRESERVED vs DELETED classification rationale.
+- Documents the decision criteria, evidence sources, and uncertainties for each branch decision.
+- This is the semantic trace for destructive decisions already taken — do NOT reclassify without updating this memo.
+
 ### post-audit-execution-20260504.md
 - **Authority scope**: Full document — authoritative for Phase 2 execution evidence.
 - Records the actual commands executed and their outcomes during Phase 2.
@@ -62,6 +67,7 @@ These documents are retained for audit trail only. Do NOT execute any commands f
 | Topic | Authoritative Document | Section |
 |-------|----------------------|---------|
 | Branch fate (deleted vs preserved) | `branch-audit-20260504.md` | Resolution Status (Updated 2026-05-09) |
+| Branch decision rationale (PRESERVED vs DELETED) | `closed-pr-semantic-memo-20260509.md` | Full document |
 | Current remote branches (7 remaining) | `summary-20260504.md` | Post-Audit Resolution → Current Remote Branches |
 | Stash state (dropped, content on branch) | `summary-20260504.md` | Post-Audit Resolution → Updated "Next Safe Commands" Status |
 | Dependabot resolution | `dependabot-phase-4-plan-20260504.md` | Resolution (Updated 2026-05-09) |
