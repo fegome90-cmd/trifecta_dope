@@ -1,0 +1,7 @@
+branch.main.remote=origin
+branch.main.vscode-merge-base=origin/main
+branch.main.merge=refs/heads/main
+branch.hygiene/git-audit-20260504.remote=origin
+branch.hygiene/git-audit-20260504.merge=refs/heads/hygiene/git-audit-20260504
+branch.hygiene/stash-preserve-codex-freeze.remote=origin
+branch.hygiene/stash-preserve-codex-freeze.merge=refs/heads/hygiene/stash-preserve-codex-freeze

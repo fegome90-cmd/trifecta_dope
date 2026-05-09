@@ -1,0 +1,24 @@
+# Ghost Config Backup — 2026-05-04
+# Raw output of: git config --local --list | grep 'branch\.'
+
+branch.main.remote=origin
+branch.main.vscode-merge-base=origin/main
+branch.main.merge=refs/heads/main
+branch.feat/wo-WO-0011.remote=origin
+branch.feat/wo-WO-0011.merge=refs/heads/feat/wo-WO-0011
+branch.codex/chore-wo-hygiene.remote=origin
+branch.codex/chore-wo-hygiene.merge=refs/heads/codex/chore-wo-hygiene
+branch.codex/ci-main-unblock.remote=origin
+branch.codex/ci-main-unblock.merge=refs/heads/codex/ci-main-unblock
+branch.codex/wo-hygiene-rebase.remote=origin
+branch.codex/wo-hygiene-rebase.merge=refs/heads/codex/chore-wo-hygiene
+branch.codex/wo-guard-wave1.remote=origin
+branch.codex/wo-guard-wave1.merge=refs/heads/codex/wo-guard-wave1
+branch.codex/wo-take-immediate-validation.remote=origin
+branch.codex/wo-take-immediate-validation.merge=refs/heads/codex/wo-take-immediate-validation
+branch.codex/chore-wo-hygiene-safe.remote=origin
+branch.codex/chore-wo-hygiene-safe.merge=refs/heads/codex/chore-wo-hygiene-safe
+branch.codex/merge-trifecta-wo-sidecar-hardening.remote=origin
+branch.codex/merge-trifecta-wo-sidecar-hardening.merge=refs/heads/codex/merge-trifecta-wo-sidecar-hardening
+branch.codex/main-consolidation.remote=origin
+branch.codex/main-consolidation.merge=refs/heads/codex/main-consolidation
