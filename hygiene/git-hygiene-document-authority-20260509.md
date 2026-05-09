@@ -28,6 +28,11 @@ These documents contain **actionable** or **resolved** state. Their resolution s
 - Documents the decision criteria, evidence sources, and uncertainties for each branch decision.
 - This is the semantic trace for destructive decisions already taken — do NOT reclassify without updating this memo.
 
+### closed-pr-semantic-memo-correction-20260509.md
+- **Authority scope**: Full document — correction to the closed-pr semantic memo.
+- Adds evidence strength column per deleted branch, adjusts Rule 5 for honest post-hoc classification, and documents accepted residual risks.
+- This correction does NOT revert any operational decision.
+
 ### post-audit-execution-20260504.md
 - **Authority scope**: Full document — authoritative for Phase 2 execution evidence.
 - Records the actual commands executed and their outcomes during Phase 2.
@@ -68,6 +73,7 @@ These documents are retained for audit trail only. Do NOT execute any commands f
 |-------|----------------------|---------|
 | Branch fate (deleted vs preserved) | `branch-audit-20260504.md` | Resolution Status (Updated 2026-05-09) |
 | Branch decision rationale (PRESERVED vs DELETED) | `closed-pr-semantic-memo-20260509.md` | Full document |
+| Branch decision evidence strength + residual risk | `closed-pr-semantic-memo-correction-20260509.md` | Full document |
 | Current remote branches (7 remaining) | `summary-20260504.md` | Post-Audit Resolution → Current Remote Branches |
 | Stash state (dropped, content on branch) | `summary-20260504.md` | Post-Audit Resolution → Updated "Next Safe Commands" Status |
 | Dependabot resolution | `dependabot-phase-4-plan-20260504.md` | Resolution (Updated 2026-05-09) |
@@ -84,4 +90,4 @@ These documents are retained for audit trail only. Do NOT execute any commands f
 2. **mypy floor update pending** — mypy >=1.20.1 was auto-closed; the floor update needs a separate SDD cycle.
 3. **`codex/wo-frictionless-closeout`** — Preserved with 16 unique commits and no PR. Requires human decision on integration or archival.
 4. **Large patch artifacts** — `_ctx/handoff/WO-0005/diff.patch` (57.9 MB) and `tests/fixtures/.../reconcile.patch` (83.26 MB) still present.
-5. **`hygiene/stash-20260504.patch`** — 100.64 MB, exceeds GitHub 100 MB limit. Local only. Content preserved in remote branch.
+5. **`hygiene/stash-20260504.patch`** — 100.64 MB. **Deleted in Phase 3** (redundant; exceeded GitHub 100 MB push limit). Content preserved in remote branch `origin/hygiene/stash-preserve-codex-freeze` (commit `07a8cf4d`). See `phase-3-closeout-20260504.md`.

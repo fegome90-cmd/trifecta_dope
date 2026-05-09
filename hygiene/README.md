@@ -2,6 +2,7 @@
 
 > **Authority registry**: See `git-hygiene-document-authority-20260509.md` for which documents are current authority vs historical/superseded.
 > **Do NOT execute commands** from documents marked as HISTORICAL or SUPERSEDED.
+> **Duplicate warning**: Exported review bundles may contain older copies of the same filename. The authoritative copy is the version indexed by `git-hygiene-document-authority-20260509.md` and committed after Phase 6 / follow-up 1. Do not use stale exported duplicates.
 
 ---
 

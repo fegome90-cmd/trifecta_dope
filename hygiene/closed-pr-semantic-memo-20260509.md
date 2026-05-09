@@ -82,6 +82,7 @@ La decisión fue ejecutada el 2026-05-09. Las ramas DELETED ya no existen en ori
 | **Commits únicos** | 33 (antes de eliminación) |
 | **Superficie principal** | Context/onboarding docs refresh, `skill-hub-cards` helper script, historical reports for 2026-03-19 skill-hub discovery fix batch, manifest-driven indexing, context reset command |
 | **Diffstat** | 316 files, +122,000 / -169,000 (aprox.) |
+| **Evidence strength** | **MEDIUM-LOW** — Redundancia inferida con batch-2d basada en descripciones de PR y superficie funcional similar, pero **no verificada commit-by-commit**. |
 | **Riesgo de pérdida** | **BAJO-MEDIO** — La mayoría del contenido era documentación de soporte y contexto. Las funcionalidades principales (skill-hub cards, manifest-driven indexing, context reset) también están presentes en `codex/batch-2d-runtime-manager` (PRESERVED), que contiene commits superpuestos. |
 | **Valor recuperable** | Bajo — El contenido funcional overlap con batch-2d. Los docs históricos y de contexto pueden reconstruirse desde engram. |
 | **Razón de DELETED** | Contenido funcional redundante con `codex/batch-2d-runtime-manager` (PRESERVED). La rama era principalmente documental. El PR #80 fue el primer caso de inflated-tier cleanup (engram #741) — cerrado sin merger durante la campaña de hygiene. |
@@ -98,6 +99,7 @@ La decisión fue ejecutada el 2026-05-09. Las ramas DELETED ya no existen en ori
 | **Commits únicos** | 14 (antes de eliminación) |
 | **Superficie principal** | Skill metadata contracts, LinterPlan integration, `--explain` flag para `ctx search` (structured JSON output), `_build_disabled_lint_plan` helper refactor, CI skill-lint step |
 | **Diffstat** | 558 files, +17,000 / -213,000 (aprox.) |
+| **Evidence strength** | **LOW-MEDIUM** — Valor recuperable medio reconocido, pero **no se verificó si LinterPlan o skill metadata contracts fueron reintroducidos** en commits posteriores de main. |
 | **Riesgo de pérdida** | **MEDIO** — El `--explain` flag y los skill metadata contracts no se mergearon a main por otro PR. Sin embargo, el PR #69 (`refactor(search): extract common search pipeline Steps 1-2/5`) fue MERGED y puede haber absorbido parte del refactor de search. El skill lint como concepto fue reemplazado por el sistema actual. |
 | **Valor recuperable** | Medio — Los skill metadata contracts y el LinterPlan son conceptos que podrían reaprovecharse. El `--explain` JSON output nunca llegó a main. |
 | **Razón de DELETED** | El PR #68 fue cerrado como parte de la campaña hygiene con etiqueta `closed+reevaluate` (engram #719), indicando que la intención era revisitar su payload más amplio. El sistema de skill contracts evolucionó independientemente. El `--explain` flag se consideró obsoleto frente al diseño actual de search. |
@@ -114,6 +116,7 @@ La decisión fue ejecutada el 2026-05-09. Las ramas DELETED ya no existen en ori
 | **Commits únicos** | 36 (antes de eliminación) |
 | **Superficie principal** | `src/application/context_service.py` (search in full chunk text), `src/application/use_cases.py` (preview[:500]), `src/application/skill_hub_indexing_strategy.py` (preview[:500]), `tests/unit/test_search_preview_length.py`, `tests/unit/test_search_full_text.py` |
 | **Diffstat** | 290 files, +122,000 / -164,000 (aprox.) |
+| **Evidence strength** | **HIGH** — PR #84 mergeó el fix funcional real (commit `9094b7b5`). Evidencia directa vía `git log --all --oneline --grep="full chunk text"`. Confirmación inequívoca. |
 | **Riesgo de pérdida** | **BAJO** — El bug funcional fue corregido y MERGED vía PR #84 (`fix(search): use full chunk text instead of truncated preview`, commit `9094b7b5`, merged 2026-04-01). PR #84 es una versión más limpia del mismo fix con scope mínimo (2 files). |
 | **Valor recuperable** | Muy bajo — El fix funcional está en main vía PR #84. PR #83 era una versión más amplia que incluía Phase 1 (preview length bump) + Phase 2 (full text search). PR #84 solo incluyó Phase 2, que era la corrección real. |
 | **Razón de DELETED** | El fix funcional ya fue mergeado a main vía PR #84 (commit `9094b7b5`). PR #83 era un superset que incluía cambios de preview length y otros elementos que no se consideraron necesarios. Confirmación directa: `git log --all --oneline --grep="full chunk text"` → `9094b7b5 fix(search): use full chunk text instead of truncated preview (#84)`. |
@@ -138,14 +141,31 @@ Si el contenido funcional de la rama overlap significativamente con una rama PRE
 ### Regla 4: Valor residual bajo = DELETED
 Si la rama contenía principalmente documentación histórica, artefactos de contexto (`_ctx/`), o código que evolucionó independientemente, se DELETED.
 
-### Regla 5: En caso de duda = PRESERVED (default)
-Si no había evidencia suficiente para confirmar que el contenido era recuperable o redundante, la rama se PRESERVED. Este es el principio fail-safe.
+### Regla 5: Fail-safe con honestidad post-hoc
+Antes de ejecutar una decisión destructiva, la duda sustantiva debe inclinar a PRESERVED. Este es el principio fail-safe prospectivo.
 
-**Nota**: Las reglas 2-4 se aplicaron a las ramas DELETED. La regla 5 habría protegido una rama si no se pudiera confirmar su redundancia, pero en los 3 casos DELETED existía evidencia razonable (aunque con incertidumbres documentadas).
+Sin embargo, para ramas ya eliminadas con incertidumbre documentada, la clasificación correcta es **accepted residual risk** — no debe presentarse como "safe deletion comprobado" cuando la evidencia fue incompleta. Las tres ramas DELETED se clasifican según su evidence strength (HIGH / MEDIUM-LOW / LOW-MEDIUM) en la sección 3.
+
+**Nota**: Las reglas 2-4 se aplicaron a las ramas DELETED. La regla 5 habría protegido una rama si no se pudiera confirmar su redundancia, pero en los 3 casos DELETED existía evidencia razonable (aunque con incertidumbres documentadas). La evidence strength de cada caso permite calibrar la confianza de la decisión.
 
 ---
 
-## 5. Riesgos Residuales
+## 5. Accepted Residual Risk from Already-Deleted Branches
+
+> These risks are **accepted** — the operational decision to delete is not being reverted.
+> This section exists because the original memo presented the Rule 5 fail-safe as absolute,
+> while in practice some DELETED branches had incomplete evidence. Honesty requires
+> acknowledging that gap.
+
+| Branch | Evidence Strength | Accepted Risk | Reversibility |
+|--------|------------------|---------------|---------------|
+| `codex/docs-skillhub-context-refresh-20260327` | MEDIUM-LOW | Possible loss of unique commits not verified against `batch-2d`. Redundancy was inferred from PR descriptions and surface similarity, not commit-by-commit comparison. | SHA `82862131` registered. Recovery possible via GitHub reflog or Support within retention window. |
+| `feat/skills-contracts-explain` | LOW-MEDIUM | Possible loss of `LinterPlan`, skill metadata contracts, and `--explain` JSON output if these were never reintroduced in main via other commits. | SHA `3e15a215` registered. Recovery possible via GitHub reflog or Support. |
+| `fix/search-context-preview-truncation` | HIGH | Low — PR #84 merged the actual fix (commit `9094b7b5`). Only Phase 1 preview length bump (200→500) was not merged, which was intentional. | Fix is in main. No recovery needed. |
+
+---
+
+## 6. Riesgos Residuales
 
 | # | Riesgo | Severidad | Mitigación |
 |---|--------|-----------|------------|
@@ -156,7 +176,7 @@ Si no había evidencia suficiente para confirmar que el contenido era recuperabl
 
 ---
 
-## 6. Qué NO Se Decidió en Este Memo
+## 7. Qué NO Se Decidió en Este Memo
 
 1. **No se evaluó la calidad del código** en las ramas PRESERVED. Este memo no opina sobre si el código debería haberse mergeado.
 2. **No se decidió la política de retención a futuro** para las ramas PRESERVED. Podrían convertirse a tags/bundles o eliminarse después de un período.
@@ -168,7 +188,7 @@ Si no había evidencia suficiente para confirmar que el contenido era recuperabl
 
 ---
 
-## 7. Recomendación Final
+## 8. Recomendación Final
 
 ### Para las ramas PRESERVED
 

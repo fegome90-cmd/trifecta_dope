@@ -71,5 +71,5 @@
 1. **`dependabot.yml` not recreated** — No automated dependency updates until recreated.
 2. **mypy floor update pending** — Needs separate SDD cycle.
 3. **`codex/wo-frictionless-closeout`** — 16 unique commits preserved, no PR. Awaiting human decision.
-4. **Large patch artifacts** — `diff.patch` (57.9 MB), `reconcile.patch` (83.26 MB), `stash-20260504.patch` (100.64 MB) still present.
+4. **Large patch artifacts** — `diff.patch` (57.9 MB), `reconcile.patch` (83.26 MB) still present. **`stash-20260504.patch` was deleted in Phase 3** (redundant; exceeded GitHub 100 MB push limit). Content preserved on remote branch `origin/hygiene/stash-preserve-codex-freeze` (commit `07a8cf4d`). See `phase-3-closeout-20260504.md` for details.
 5. **Future agents** — Must consult `git-hygiene-document-authority-20260509.md` before acting on any hygiene document.
