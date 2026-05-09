@@ -66,3 +66,15 @@
       capa_modificada: "Documentation | Audit Trail | Governance"
       impacto_contrato: "None. Documentation-only."
       siguiente_paso_tecnico: "Execute stash-retention-policy (#2749) and dependabot-policy (#2748) follow-ups."
+- history:
+    - user_prompt_summary: "Apply micro-correction to closed-pr semantic memo: evidence strength, honest rule 5, residual risk disclosure."
+    - agent_response_summary: "Added evidence strength per deleted branch, adjusted Rule 5 from absolute fail-safe to honest 'accepted residual risk' for post-hoc uncertainty, added residual risk section, clarified patch status, created correction report. No operational Git changes."
+      capa_modificada: "Documentation | Audit Trail"
+      impacto_contrato: "None"
+      siguiente_paso_tecnico: "Execute stash-retention-policy (#2749)"
+- history:
+    - user_prompt_summary: "Draft stash retention policy for origin/hygiene/stash-preserve-codex-freeze."
+    - agent_response_summary: "Audited branch content (310 files, 188K insertions, 132K deletions, 5 files >1MB), evaluated 4 retention options (maintain branch, tag+branch, tag+bundle, delete). Drafted policy recommending Option B (annotated tag + maintain branch). No operational changes — no branches deleted, no tags created, no code modified."
+      capa_modificada: "Documentation | Policy"
+      impacto_contrato: "None"
+      siguiente_paso_tecnico: "Human review → approve tag creation → execute recommended retention action from policy"

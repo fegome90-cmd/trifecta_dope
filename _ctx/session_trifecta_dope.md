@@ -144,3 +144,16 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Commits**: `e2627999`, `3b9f13dd`, `5a201707`, `f50bc595`, `c6ea4112`
 - **Remaining follow-ups**: stash-retention-policy (#2749), dependabot-policy (#2748)
 - **Next**: stash-retention-policy or close session
+
+## 2026-05-09 Closed-PR Semantic Memo Correction
+- **Summary**: Micro-corrección documental al closed-pr semantic memo. No operational changes.
+- **Changes**: Added evidence strength column (HIGH/MEDIUM-LOW/LOW-MEDIUM), adjusted Rule 5 for honesty, added accepted residual risk section, clarified patch status in phase-6 report, added duplicate warning to README, created correction report.
+- **Commits**: `22f7158a` docs: clarify closed-pr semantic risk levels and residual uncertainty
+- **Next**: stash-retention-policy (#2749)
+
+## 2026-05-09 Stash Retention Policy Draft
+- **Summary**: Audited `origin/hygiene/stash-preserve-codex-freeze` (310 files, 188,689 insertions, 132,771 deletions, commit `07a8cf4d`), evaluated 4 retention options, drafted policy. No operational changes.
+- **Findings**: 310 files across 30+ top-level dirs. 5 files >1MB (largest: 87.3MB reconcile.patch). No actual secrets found (only audit reports about secrets/tokens). Content is superset of old stash/codex freeze. Categories: ~197 .md docs, ~55 .py files, ~38 config/data files.
+- **Recommendation**: Option B — create annotated tag `stash-preserve-codex-freeze-v1` + maintain branch. Zero data loss risk, minimal cost, discoverable by agents.
+- **Commits**: (pending commit)
+- **Next**: Human review → approve tag creation → update policy status to APPROVED → mark follow-up COMPLETE.

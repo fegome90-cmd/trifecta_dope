@@ -17,6 +17,7 @@
 | `branch-audit-20260504.md` | Full branch classification — only **Resolution Status** section is authoritative | HISTORICAL body + AUTHORITATIVE appendix |
 | `post-audit-execution-20260504.md` | Phase 2+4+5 execution evidence with actual commands run | **AUTHORITY** |
 | `phase-3-closeout-20260504.md` | Stash/patch closeout state | **AUTHORITY** |
+| `stash-retention-policy-20260509.md` | Retention policy for `origin/hygiene/stash-preserve-codex-freeze` branch | **AUTHORITY** (DRAFT) |
 | `phase-2-closeout-20260504.md` | Phase 2 closeout with residual risks resolved | HISTORICAL body + AUTHORITATIVE appendix |
 
 ## Historical / Superseded (audit trail only)
@@ -49,6 +50,7 @@
 | 2026-05-09 | Phase 6 | `f50bc595` | Document authority fix: STATUS headers, authority registry, contradiction corrections |
 | 2026-05-09 | Archive | engram #2747 | SDD change archived. Follow-ups registered. |
 | 2026-05-09 | Follow-up 1 | `c6ea4112` | Closed-PR semantic memo: PRESERVED vs DELETED rationale |
+| 2026-05-09 | Follow-up 2 | (pending) | Stash retention policy: drafted, awaiting approval for tag creation |
 
 ---
 
@@ -57,5 +59,5 @@
 | Priority | Change | Engram | Status |
 |----------|--------|--------|--------|
 | 1 | Closed-PR semantic memo | #2750, #2751 | ✅ Complete |
-| 2 | Stash retention policy | #2749 | Pending |
+| 2 | Stash retention policy | #2749 | 📝 DRAFTED — see `stash-retention-policy-20260509.md` |
 | 3 | Dependabot policy | #2748 | Pending |
