@@ -86,3 +86,85 @@
 | 8 | `origin/dependabot/pip/tree-sitter-gte-0.25.2` | `c1172a3e` | 2026-04-13 | #98 | OPEN | 🚫 DO_NOT_DELETE |
 | 9 | `origin/dependabot/pip/typer-gte-0.24.1` | `b1a1be02` | 2026-04-13 | #93 | OPEN | 🚫 DO_NOT_DELETE |
 | 10 | `origin/dependabot/pip/types-pyyaml-gte-6.0.12.20260408` | `a79c4d87` | 2026-04-13 | #95 | OPEN | 🚫 DO_NOT_DELETE |
+
+---
+
+## Resolution Status (Updated 2026-05-09)
+
+### Section A: Fully Merged Branches — ALL DELETED
+
+| # | Branch | Resolution | Date | Phase |
+|---|--------|------------|------|-------|
+| 1 | `origin/feat/documentation-skill-phase1` | ✅ DELETED | 2026-05-04 | Task 6 |
+| 2 | `origin/fegome90-cmd/wo-skills-system` | ✅ DELETED | 2026-05-04 | Task 6 |
+| 3 | `origin/job/WO-0042` | ✅ DELETED | 2026-05-04 | Task 6 |
+| 4 | `origin/job/WO-0052` | ✅ DELETED | 2026-05-04 | Task 6 |
+
+### Section B: Squash-Merged Branches — ALL DELETED
+
+| # | Branch | Resolution | Date | Phase |
+|---|--------|------------|------|-------|
+| 1 | `origin/codex/skill-hub-ssot-rebuild` | ✅ DELETED | 2026-05-04 (orig) → 2026-05-06 (archive) | Task 7 + Phase 4 |
+| 2 | `origin/codex/skill-hub-authority-anchor-closeout` | ✅ DELETED | 2026-05-04 (orig) → 2026-05-06 (archive) | Task 7 + Phase 4 |
+| 3 | `origin/codex/graph-mvp` | ✅ DELETED | 2026-05-04 (orig) → 2026-05-06 (archive) | Task 7 + Phase 4 |
+
+### Section C.1: Merged PRs (Squash) — ALL DELETED
+
+| # | Branch | Resolution | Date | Phase |
+|---|--------|------------|------|-------|
+| 1 | `origin/feat/wo-WO-0042` | ✅ DELETED | 2026-05-04 (orig) → 2026-05-06 (archive) | Task 7 + Phase 4 |
+| 2 | `origin/feat/wo-WO-0044` | ✅ DELETED | 2026-05-04 (orig) → 2026-05-06 (archive) | Task 7 + Phase 4 |
+| 3 | `origin/feat/wo-WO-0047` | ✅ DELETED | 2026-05-04 (orig) → 2026-05-06 (archive) | Task 7 + Phase 4 |
+| 4 | `origin/fix/wo-0055-code-review-issues` | ✅ DELETED | 2026-05-04 (orig) → 2026-05-06 (archive) | Task 7 + Phase 4 |
+
+### Section C.2: Closed PRs (Not Merged) — Resolved in Phase 5
+
+| # | Branch | Resolution | Date | Note |
+|---|--------|------------|------|------|
+| 1 | `origin/codex/batch-2d-runtime-manager` | 🔒 PRESERVED | 2026-05-09 | 38 unique commits, kept on remote |
+| 2 | `origin/codex/docs-skillhub-context-refresh-20260327` | ✅ DELETED | 2026-05-09 | Phase 5 cleanup |
+| 3 | `origin/codex/wo-remediation-ci-baseline` | 🔒 PRESERVED | 2026-05-09 | 12 unique commits, kept on remote |
+| 4 | `origin/feat/skills-contracts-explain` | ✅ DELETED | 2026-05-09 | Phase 5 cleanup |
+| 5 | `origin/fegome90-cmd/wo-0015-work` | 🔒 PRESERVED | 2026-05-09 | 16 unique commits, kept on remote |
+| 6 | `origin/fix/search-context-preview-truncation` | ✅ DELETED | 2026-05-09 | Phase 5 cleanup |
+
+### Section C.3: Open PRs — Resolved
+
+| # | Branch | Resolution | Date | Note |
+|---|--------|------------|------|------|
+| 1 | `origin/copilot-pull-request-reviewer/audit-github-history` | ✅ PR CLOSED | 2026-05-09 | PR #85 closed (empty bot PR, 0 files changed) |
+
+### Section C.4: No PR Found — Resolved
+
+| # | Branch | Resolution | Date | Note |
+|---|--------|------------|------|------|
+| 1 | `origin/codex/wo-frictionless-closeout` | 🔒 PRESERVED | 2026-05-09 | 16 unique commits, no PR, kept on remote |
+| 2 | `origin/feat/e-v1-daemon-run` | ✅ DELETED | 2026-05-09 | Phase 5 cleanup |
+
+### Section C.5: Dependabot Branches — ALL AUTO-CLOSED
+
+| # | Branch | Resolution | Date | Note |
+|---|--------|------------|------|------|
+| 1 | `origin/dependabot/pip/filelock-gte-3.25.2` | ✅ AUTO-CLOSED | 2026-05-06 | dependabot.yml deleted |
+| 2 | `origin/dependabot/pip/mypy-gte-1.20.1` | ✅ AUTO-CLOSED | 2026-05-06 | dependabot.yml deleted |
+| 3 | `origin/dependabot/pip/pypy-gte-3.0.2` | ✅ AUTO-CLOSED | 2026-05-06 | dependabot.yml deleted |
+| 4 | `origin/dependabot/pip/plotly-gte-6.7.0` | ✅ AUTO-CLOSED | 2026-05-06 | dependabot.yml deleted (plotly was ghost dep) |
+| 5 | `origin/dependabot/pip/pytest-env-gte-1.6.0` | ✅ AUTO-CLOSED | 2026-05-06 | dependabot.yml deleted |
+| 6 | `origin/dependabot/pip/ruamel-yaml-gte-0.19.1` | ✅ AUTO-CLOSED | 2026-05-06 | dependabot.yml deleted |
+| 7 | `origin/dependabot/pip/safety-gte-3.7.0` | ✅ AUTO-CLOSED | 2026-05-06 | dependabot.yml deleted |
+| 8 | `origin/dependabot/pip/tree-sitter-gte-0.25.2` | ✅ AUTO-CLOSED | 2026-05-06 | dependabot.yml deleted (floor manually updated) |
+| 9 | `origin/dependabot/pip/typer-gte-0.24.1` | ✅ AUTO-CLOSED | 2026-05-06 | dependabot.yml deleted |
+| 10 | `origin/dependabot/pip/types-pyyaml-gte-6.0.12.20260408` | ✅ AUTO-CLOSED | 2026-05-06 | dependabot.yml deleted |
+
+### Summary: 31 → 7 Remote Branches
+
+| Category | Original | Deleted | Preserved |
+|----------|----------|---------|-----------|
+| Fully merged (Section A) | 4 | 4 | 0 |
+| Squash-merged (Section B) | 3 | 3 | 0 |
+| Merged PRs squash (C.1) | 4 | 4 | 0 |
+| Closed PRs (C.2) | 6 | 4 | 2 (+1 PRESERVED) |
+| Open PRs (C.3) | 1 | 1 | 0 |
+| No PR / orphan (C.4) | 2 | 1 | 1 |
+| Dependabot (C.5) | 10 | 10 | 0 |
+| **Total** | **30** (+ main) | **27** | **4** (+ main + 2 hygiene) |

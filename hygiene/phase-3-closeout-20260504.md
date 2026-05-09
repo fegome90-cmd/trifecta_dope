@@ -40,3 +40,13 @@ No un-preserved work identified. All stash content exists in 2 independent locat
 ---
 
 *Generated: 2026-05-04 | Auditor: automated | Phase: 3 closeout*
+
+---
+
+## Resolution (Updated 2026-05-09)
+
+- Stash `stash@{0}` was dropped in Phase 4 closeout (2026-05-06)
+- Content preserved in remote branch `origin/hygiene/stash-preserve-codex-freeze` (commit 07a8cf4d)
+- Local branch `hygiene/stash-preserve-codex-freeze` deleted in Phase 5 (content in remote)
+- Worktree `/private/tmp/hygiene-docs` removed in Phase 5
+- Local branch `hygiene/git-audit-20260504` deleted in Phase 5 (docs anchored to main)

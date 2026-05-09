@@ -182,3 +182,34 @@ All 31 branches enumerated and verified before any action.
 ### Branches that FAILED Verification: NONE
 All 4 fully-merged branches passed `merge-base --is-ancestor` check.
 All 7 archive branches passed existence verification.
+
+---
+
+## Phase 4: SDD git-hygiene-closeout-20260506 (2026-05-06)
+
+- Dropped 3 stashes (stash@{0} codex freeze + 2 others)
+- Removed 5 worktrees
+- Deleted 5 local branches
+- Deleted 3 tags
+- Deleted all 7 archive/* remote branches
+- All dependabot PRs auto-closed (dependabot.yml deleted from repo)
+- Added `.claude/worktrees/` to `.gitignore`
+- Commit: `49031bd2`
+- Full SDD cycle: 42/42 tasks, 8/8 verify PASS
+
+---
+
+## Phase 5: SDD git-hygiene-phase5-cleanup (2026-05-09)
+
+- Deleted dead `.git/hooks/pre-commit`
+- Removed worktree `/private/tmp/hygiene-docs`
+- Deleted 2 local branches: `hygiene/git-audit-20260504`, `hygiene/stash-preserve-codex-freeze`
+- Closed PR #85 (empty bot PR)
+- Created 10 GitHub labels + assigned 6 issues (#87-#92)
+- Removed plotly ghost dep from pyproject.toml
+- Updated tree-sitter floors: >=0.25.2, >=0.25.0
+- Deleted 11 remote branches
+- Post-audit corrections: #90 label fix, `git fetch --prune`
+- Commits: `e6e115d0`, `3b9f13dd`, `e2627999`
+- Anchored hygiene docs to main
+- Full SDD cycle: 32/32 tasks, 6/6 spec COMPLIANT, PASS

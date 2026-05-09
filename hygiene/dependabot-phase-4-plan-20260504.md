@@ -68,3 +68,26 @@ The pandas branch is `dependabot/pip/pandas-gte-3.0.2` — it targets pandas, NO
 ---
 
 *Generated: 2026-05-04 | Status: PLAN ONLY — NO MERGE*
+
+---
+
+## Resolution (Updated 2026-05-09)
+
+**STATUS: SUPERSEDED — All 10 dependabot PRs auto-closed.**
+
+`dependabot.yml` was deleted from the repo, causing all dependabot PRs (#93-#102) to auto-close. Resolution per package:
+
+| PR | Package | Resolution |
+|-----|---------|------------|
+| #94 | safety | Auto-closed (dependabot.yml deleted) |
+| #95 | types-pyyaml | Auto-closed (dependabot.yml deleted) |
+| #97 | filelock | Auto-closed (dependabot.yml deleted) |
+| #101 | pytest-env | Auto-closed — version already in uv.lock via `uv lock` |
+| #96 | mypy | Auto-closed — still needed, separate change required |
+| #100 | plotly | Ghost dep — removed from pyproject.toml entirely |
+| #99 | ruamel-yaml | Auto-closed (dependabot.yml deleted) |
+| #98 | tree-sitter | Resolved manually — floor updated to >=0.25.2 |
+| #102 | pandas | Auto-closed — version already in uv.lock via `uv lock` |
+| #93 | typer | Auto-closed (dependabot.yml deleted) |
+
+**Remaining action**: Recreate `dependabot.yml` and handle mypy floor update in a future SDD cycle.

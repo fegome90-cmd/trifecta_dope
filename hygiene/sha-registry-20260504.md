@@ -39,3 +39,47 @@
 | origin/dependabot/pip/tree-sitter-gte-0.25.2 | `c1172a3edc96f83932cba9079f51bdd23b957a78` | Task 6 |
 | origin/dependabot/pip/typer-gte-0.24.1 | `b1a1be026646a653e39a7120267de73492618849` | Task 6 |
 | origin/dependabot/pip/types-pyyaml-gte-6.0.12.20260408 | `a79c4d87649dd8a9f8b62c2c2b07db38ef0c11a5` | Task 6 |
+
+---
+
+## Resolution (Updated 2026-05-09)
+
+### New Baseline
+| Ref | SHA | Date |
+|-----|-----|------|
+| origin/main | `e2627999` | 2026-05-09 |
+
+### Branch Fates
+
+| Branch | SHA | Resolution | Phase |
+|--------|-----|------------|-------|
+| origin/feat/documentation-skill-phase1 | `c1cfaf03` | ✅ DELETED | Task 6 (2026-05-04) |
+| origin/fegome90-cmd/wo-skills-system | `b4c0645f` | ✅ DELETED | Task 6 (2026-05-04) |
+| origin/job/WO-0042 | `7aa43673` | ✅ DELETED | Task 6 (2026-05-04) |
+| origin/job/WO-0052 | `5e733e5b` | ✅ DELETED | Task 6 (2026-05-04) |
+| origin/codex/skill-hub-ssot-rebuild | `796b5a50` | ✅ DELETED | Task 7 + Phase 4 (archive deleted 2026-05-06) |
+| origin/codex/skill-hub-authority-anchor-closeout | `abb02938` | ✅ DELETED | Task 7 + Phase 4 (archive deleted 2026-05-06) |
+| origin/codex/graph-mvp | `ef56233c` | ✅ DELETED | Task 7 + Phase 4 (archive deleted 2026-05-06) |
+| origin/feat/wo-WO-0042 | `f065927d` | ✅ DELETED | Task 7 + Phase 4 (archive deleted 2026-05-06) |
+| origin/feat/wo-WO-0044 | `e62b6a0b` | ✅ DELETED | Task 7 + Phase 4 (archive deleted 2026-05-06) |
+| origin/feat/wo-WO-0047 | `2fcc80cd` | ✅ DELETED | Task 7 + Phase 4 (archive deleted 2026-05-06) |
+| origin/fix/wo-0055-code-review-issues | `7cb317c1` | ✅ DELETED | Task 7 + Phase 4 (archive deleted 2026-05-06) |
+| origin/codex/batch-2d-runtime-manager | `d91a01ad` | 🔒 PRESERVED | Phase 5 (2026-05-09) |
+| origin/codex/docs-skillhub-context-refresh-20260327 | `82862131` | ✅ DELETED | Phase 5 (2026-05-09) |
+| origin/codex/wo-remediation-ci-baseline | `15761042` | 🔒 PRESERVED | Phase 5 (2026-05-09) |
+| origin/feat/skills-contracts-explain | `3e15a215` | ✅ DELETED | Phase 5 (2026-05-09) |
+| origin/fegome90-cmd/wo-0015-work | `3c594fa2` | 🔒 PRESERVED | Phase 5 (2026-05-09) |
+| origin/fix/search-context-preview-truncation | `9bd392ac` | ✅ DELETED | Phase 5 (2026-05-09) |
+| origin/copilot-pull-request-reviewer/audit-github-history | `2c25b0b7` | ✅ DELETED | Phase 5 (PR #85 closed, 2026-05-09) |
+| origin/codex/wo-frictionless-closeout | `c9fca10a` | 🔒 PRESERVED | Phase 5 (2026-05-09) |
+| origin/feat/e-v1-daemon-run | `c7c63e3e` | ✅ DELETED | Phase 5 (2026-05-09) |
+| origin/dependabot/pip/filelock-gte-3.25.2 | `5a1d37cf` | ✅ AUTO-CLOSED | Phase 4 (dependabot.yml deleted) |
+| origin/dependabot/pip/mypy-gte-1.20.1 | `6ec19136` | ✅ AUTO-CLOSED | Phase 4 (dependabot.yml deleted) |
+| origin/dependabot/pip/pandas-gte-3.0.2 | `84fffe34` | ✅ AUTO-CLOSED | Phase 4 (dependabot.yml deleted) |
+| origin/dependabot/pip/plotly-gte-6.7.0 | `19cf0fa3` | ✅ AUTO-CLOSED | Phase 4 (dependabot.yml deleted, ghost dep removed) |
+| origin/dependabot/pip/pytest-env-gte-1.6.0 | `113c6ee6` | ✅ AUTO-CLOSED | Phase 4 (dependabot.yml deleted) |
+| origin/dependabot/pip/ruamel-yaml-gte-0.19.1 | `45947618` | ✅ AUTO-CLOSED | Phase 4 (dependabot.yml deleted) |
+| origin/dependabot/pip/safety-gte-3.7.0 | `7ea710c4` | ✅ AUTO-CLOSED | Phase 4 (dependabot.yml deleted) |
+| origin/dependabot/pip/tree-sitter-gte-0.25.2 | `c1172a3e` | ✅ AUTO-CLOSED | Phase 4 (dependabot.yml deleted, floor manually updated to >=0.25.2) |
+| origin/dependabot/pip/typer-gte-0.24.1 | `b1a1be02` | ✅ AUTO-CLOSED | Phase 4 (dependabot.yml deleted) |
+| origin/dependabot/pip/types-pyyaml-gte-6.0.12.20260408 | `a79c4d87` | ✅ AUTO-CLOSED | Phase 4 (dependabot.yml deleted) |
