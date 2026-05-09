@@ -78,3 +78,9 @@
       capa_modificada: "Documentation | Policy"
       impacto_contrato: "None"
       siguiente_paso_tecnico: "Human review → approve tag creation → execute recommended retention action from policy"
+- history:
+    - user_prompt_summary: "Implement stash retention policy Option B: annotated tag + maintain branch."
+    - agent_response_summary: "Created annotated tag stash-preserve-codex-freeze-v1 pointing to commit 07a8cf4d. Branch maintained. Both verified to same commit. No deletions, no bundle."
+      capa_modificada: "Git Tags | Documentation | Policy"
+      impacto_contrato: "None"
+      siguiente_paso_tecnico: "Execute dependabot-policy (#2748)"

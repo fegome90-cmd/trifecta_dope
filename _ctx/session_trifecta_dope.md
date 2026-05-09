@@ -157,3 +157,11 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Recommendation**: Option B — create annotated tag `stash-preserve-codex-freeze-v1` + maintain branch. Zero data loss risk, minimal cost, discoverable by agents.
 - **Commits**: `6d47e3c4` docs: draft stash retention policy for hygiene/stash-preserve-codex-freeze
 - **Next**: Human review → approve tag creation → update policy status to APPROVED → mark follow-up COMPLETE.
+
+## 2026-05-09 Stash Retention Policy Implemented
+- **Summary**: Executed Option B — created annotated tag `stash-preserve-codex-freeze-v1` pointing to same commit as branch. Branch maintained. No operational deletions.
+- **Tag**: stash-preserve-codex-freeze-v1 → 07a8cf4d1527148ef2910ae69277c049e40f4179
+- **Branch**: origin/hygiene/stash-preserve-codex-freeze → 07a8cf4d1527148ef2910ae69277c049e40f4179
+- **Verification**: Both resolve to same commit ✅
+- **Commits**: `03eede58` docs: implement stash retention policy with annotated tag
+- **Next**: dependabot-policy (#2748)

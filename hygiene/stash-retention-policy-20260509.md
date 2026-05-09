@@ -1,17 +1,22 @@
 # Stash Retention Policy — `origin/hygiene/stash-preserve-codex-freeze`
 
 > **Date**: 2026-05-09
-> **Status**: DRAFT
+> **Status**: ACCEPTED / IMPLEMENTED
 > **Authority**: This document is a follow-up to the Git Hygiene cycle. See `git-hygiene-document-authority-20260509.md` for the full authority registry.
 > **Scope**: Define retention policy for `origin/hygiene/stash-preserve-codex-freeze` remote branch. No operational changes in this document.
 
 ---
 
-## 1. Veredicto Preliminar
+## 1. Decisión Implementada
 
-**Recomendación: Opción B — Crear tag anotado + mantener branch (status quo).**
+**Decisión: Opción B — Tag anotado + mantener branch (IMPLEMENTADO).**
 
-La branch debe mantenerse como respaldo vivo. Un tag anotado debe crearse para visibilidad y discoverability. No se debe eliminar la branch sin un ciclo adicional de revisión humana.
+- **Tag creado**: `stash-preserve-codex-freeze-v1` → `07a8cf4d1527148ef2910ae69277c049e40f4179`
+- **Branch mantenida**: `origin/hygiene/stash-preserve-codex-freeze` → `07a8cf4d1527148ef2910ae69277c049e40f4179`
+- **Verificación**: Ambos resuelven al mismo commit ✅
+- **No se creó bundle**
+- **No se eliminó branch**
+- **Riesgo de pérdida**: bajo; mitigado por branch remota + tag anotado (no cero — depender de un solo remoto sin backup independiente)
 
 ---
 
@@ -29,7 +34,7 @@ La branch debe mantenerse como respaldo vivo. Un tag anotado debe crearse para v
 | Deletions | 132,771 |
 | Local stash | Dropped in Phase 4 |
 | Local patch (`hygiene/stash-20260504.patch`) | Deleted in Phase 3 |
-| Other preservation | None (no bundle, no tag) |
+| Other preservation | Annotated tag `stash-preserve-codex-freeze-v1` |
 
 ### Origination
 
@@ -106,9 +111,9 @@ No actual secret files (`.env`, `credentials`, private keys) were found. The fol
 
 ---
 
-## 5. Recomendación
+## 5. Recomendación (IMPLEMENTADO)
 
-### **Opción B: Crear tag anotado + mantener branch**
+### **Opción B: Crear tag anotado + mantener branch** ✅ IMPLEMENTADO
 
 **Justificación**:
 
@@ -148,7 +153,7 @@ git push origin stash-preserve-codex-freeze-v1
 ## 7. Acciones Explícitamente NO Tomadas
 
 - ❌ No se eliminó la branch `origin/hygiene/stash-preserve-codex-freeze`.
-- ❌ No se creó tag (se propone pero no se ejecuta en este documento).
+- ✅ Se creó tag anotado `stash-preserve-codex-freeze-v1`.
 - ❌ No se creó git bundle.
 - ❌ No se integró contenido de la branch a `main`.
 - ❌ No se modificó código funcional.
@@ -158,12 +163,12 @@ git push origin stash-preserve-codex-freeze-v1
 
 ---
 
-## 8. Próximo Paso Propuesto
+## 8. Estado Post-Implementación
 
-1. **Revisión humana**: Confirmar recomendación (Opción B) y aprobar creación de tag anotado.
-2. **Ejecutar**: `git tag -a stash-preserve-codex-freeze-v1 07a8cf4d -m "..." && git push origin stash-preserve-codex-freeze-v1`
-3. **Actualizar este documento**: Cambiar status de DRAFT a APPROVED tras aprobación.
-4. **Cierre**: Marcar follow-up como COMPLETE en `hygiene/README.md`.
+1. **Tag creado**: `stash-preserve-codex-freeze-v1` apuntando a `07a8cf4d1527148ef2910ae69277c049e40f4179` ✅
+2. **Branch mantenida**: `origin/hygiene/stash-preserve-codex-freeze` sin cambios ✅
+3. **Verificación**: Ambos resuelven al mismo commit ✅
+4. **Documentación actualizada**: Este documento y `hygiene/README.md` reflejan estado COMPLETE ✅
 5. **Future consideration**: En un próximo ciclo de higiene, evaluar si la branch puede eliminarse (tag + main history como respaldo suficiente).
 
 ---

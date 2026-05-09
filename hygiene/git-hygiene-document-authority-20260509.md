@@ -39,8 +39,12 @@ These documents contain **actionable** or **resolved** state. Their resolution s
 
 ### stash-retention-policy-20260509.md
 - **Authority scope**: Full document — authoritative for stash preservation branch retention policy.
-- Audits content of `origin/hygiene/stash-preserve-codex-freeze` (310 files, commit `07a8cf4d`), evaluates 4 retention options, and recommends Option B (annotated tag + maintain branch).
-- Status: DRAFT — awaiting human approval to execute recommended tag creation.
+- Audits content of `origin/hygiene/stash-preserve-codex-freeze` (310 files, commit `07a8cf4d`), evaluates 4 retention options, and implements Option B (annotated tag + maintain branch).
+- Status: ACCEPTED / IMPLEMENTED — tag `stash-preserve-codex-freeze-v1` created, branch maintained.
+
+### stash-retention-policy-implementation-20260509.md
+- **Authority scope**: Full document — implementation report for stash retention policy execution.
+- Records tag creation, SHA verification, actions not taken, and residual risks.
 
 ---
 
@@ -84,7 +88,8 @@ These documents are retained for audit trail only. Do NOT execute any commands f
 | Dependabot resolution | `dependabot-phase-4-plan-20260504.md` | Resolution (Updated 2026-05-09) |
 | Phase execution evidence | `post-audit-execution-20260504.md` | Full document |
 | Stash/patch closeout | `phase-3-closeout-20260504.md` | Full document |
-| Stash retention policy | `stash-retention-policy-20260509.md` | Full document (DRAFT) |
+| Stash retention policy | `stash-retention-policy-20260509.md` | Full document (IMPLEMENTED) |
+| Stash retention implementation | `stash-retention-policy-implementation-20260509.md` | Full document |
 | Phase 2 execution log | `phase-2-closeout-20260504.md` | Full document |
 | Ghost cleanup evidence | `ghost-before/after-20260504.txt` | Snapshots (historical) |
 
