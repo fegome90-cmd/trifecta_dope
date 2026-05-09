@@ -155,5 +155,5 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Summary**: Audited `origin/hygiene/stash-preserve-codex-freeze` (310 files, 188,689 insertions, 132,771 deletions, commit `07a8cf4d`), evaluated 4 retention options, drafted policy. No operational changes.
 - **Findings**: 310 files across 30+ top-level dirs. 5 files >1MB (largest: 87.3MB reconcile.patch). No actual secrets found (only audit reports about secrets/tokens). Content is superset of old stash/codex freeze. Categories: ~197 .md docs, ~55 .py files, ~38 config/data files.
 - **Recommendation**: Option B — create annotated tag `stash-preserve-codex-freeze-v1` + maintain branch. Zero data loss risk, minimal cost, discoverable by agents.
-- **Commits**: (pending commit)
+- **Commits**: `6d47e3c4` docs: draft stash retention policy for hygiene/stash-preserve-codex-freeze
 - **Next**: Human review → approve tag creation → update policy status to APPROVED → mark follow-up COMPLETE.
