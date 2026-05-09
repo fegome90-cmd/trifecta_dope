@@ -125,3 +125,12 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Files**: src/application/graph_service.py, tests/unit/test_graph_service.py
 - **Commands**: uv run pytest -q tests/unit/test_graph_service.py -k alias_path_for_injected_store, uv run pytest -q tests/integration/test_graph_store_schema.py tests/unit/test_graph_indexer.py tests/unit/test_graph_service.py tests/integration/cli/test_graph_cli.py, uv run ruff check src/application/graph_indexer.py src/application/graph_service.py src/infrastructure/graph_store.py tests/integration/test_graph_store_schema.py tests/unit/test_graph_indexer.py tests/unit/test_graph_service.py tests/integration/cli/test_graph_cli.py
 - **Pack SHA**: `005855ec718feceb`
+
+## 2026-05-09 Git Hygiene Phase 5 Cleanup
+- **Summary**: SDD git-hygiene-phase5-cleanup — 6 cleanup actions, 32 tasks across 7 phases. Full SDD cycle (explore→verify). Committed `e6e115d0` on main.
+- **Actions**: Deleted dead `.git/hooks/pre-commit`, removed worktree + 2 local branches, closed PR #85, created 10 GitHub labels + assigned 6 issues (#87-#92), removed plotly ghost dep from pyproject.toml, updated tree-sitter floors to >=0.25.2/>=0.25.0, deleted 11+1 remote branches
+- **Post-audit corrections**: Added missing `good first issue` label to #90, ran `git fetch --prune` to clean stale remote tracking ref
+- **Verification**: 6/6 spec requirements COMPLIANT, 8/8 design decisions followed, PASS
+- **Engram artifacts**: #2727 (explore), #2730 (proposal), #2732 (design), #2733 (spec), #2734 (tasks), #2735 (gate), #2736 (apply-progress), #2738 (verify-report)
+- **Commit**: `e6e115d0` chore: remove plotly ghost dep, update tree-sitter floors
+- **Next**: sdd-archive

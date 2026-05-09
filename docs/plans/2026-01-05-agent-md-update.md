@@ -1,5 +1,7 @@
 # Agent_trifecta_dope.md Update Implementation Plan
 
+> **⚠️ STALE (2026-05-09):** Dependency versions listed below are outdated. Current: `tree-sitter>=0.25.2`, `tree-sitter-python>=0.25.0`. `plotly` removed (ghost dep). See pyproject.toml for current truth.
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Actualizar _ctx/agent_trifecta_dope.md para reflejar CLI v2.0, features actuales (AST M1 production, telemetry system complete, LSP relaxed-ready, Error Cards, Deprecation tracking), y remover rutas obsoletas.

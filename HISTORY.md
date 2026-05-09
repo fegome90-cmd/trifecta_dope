@@ -54,3 +54,9 @@
       capa_modificada: "Infrastructure | Verification | Configuration"
       impacto_contrato: "None"
       siguiente_paso_tecnico: "Maintain zero telemetry debt via strict pre-commit gates."
+- history:
+    - user_prompt_summary: "Execute SDD git-hygiene-phase5-cleanup: 6 low-risk cleanup actions."
+    - agent_response_summary: "Full SDD cycle (explore→verify). Deleted dead .git/hooks/pre-commit, removed worktree + 2 local branches, closed PR #85 (empty bot PR), created 10 GitHub labels and assigned 6 issues (#87-#92), removed plotly ghost dep from pyproject.toml, updated tree-sitter floors to >=0.25.2/>=0.25.0, deleted 12 remote branches. Post-audit: corrected #90 missing label, pruned stale remote refs. Verification: 6/6 COMPLIANT, PASS."
+      capa_modificada: "Hygiene | Dependencies | GitHub Issues | Documentation"
+      impacto_contrato: "None. Pure hygiene — no functional code changes."
+      siguiente_paso_tecnico: "Address remaining out-of-scope items: 3 PRESERVE branches, 2 REVIEW branches, mypy floor update, dependabot.yml recreation, issue bug fixes."
