@@ -1,5 +1,9 @@
 # Branch Audit — 2026-05-04
 
+> **STATUS: HISTORICAL AUDIT + RESOLUTION.**
+> Original tables may contain stale branch names and the known pypy/pandas typo.
+> Current branch fates are defined by "Resolution Status (Updated 2026-05-09)".
+
 ## Baseline
 - **origin/main**: `86739d27f5f0f44ec4a6c63363d1894ac5439d2b`
 

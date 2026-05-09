@@ -1,0 +1,81 @@
+# Git Hygiene — Document Authority Registry
+
+> **Date**: 2026-05-09
+> **Purpose**: Declare authoritative vs historical/superseded status for every document in the Git Hygiene cycle.
+
+---
+
+## Current Authority
+
+These documents contain **actionable** or **resolved** state. Their resolution sections are the source of truth.
+
+### summary-20260504.md
+- **Authority scope**: Only the **Post-Audit Resolution (Updated 2026-05-09)** section at the bottom.
+- The original audit tables, stash section, ghost section, and "Next Safe Commands" are **historical**.
+- Do NOT execute commands from "Next Safe Commands" — all are resolved per the "Updated Next Safe Commands Status" table.
+
+### branch-audit-20260504.md
+- **Authority scope**: Only the **Resolution Status (Updated 2026-05-09)** section at the bottom.
+- Original Section C.5 contains a known typo: `pypy-gte-3.0.2` should be `pandas-gte-3.0.2` (PR #102 is pandas, not pypy).
+- Original classification tables may contain stale branch names; always cross-reference with Resolution Status.
+
+### phase-3-closeout-20260504.md
+- **Authority scope**: Full document — authoritative for stash/patch closeout state.
+- Documents the Phase 3 working tree stabilization and stash preservation.
+
+### post-audit-execution-20260504.md
+- **Authority scope**: Full document — authoritative for Phase 2 execution evidence.
+- Records the actual commands executed and their outcomes during Phase 2.
+
+---
+
+## Historical / Superseded
+
+These documents are retained for audit trail only. Do NOT execute any commands from them.
+
+| Document | Status | Reason |
+|----------|--------|--------|
+| `dependabot-phase-4-plan-20260504.md` | **SUPERSEDED** | All 10 dependabot PRs were auto-closed after `dependabot.yml` was deleted. Merge plan is void. Remaining action: recreate `dependabot.yml` and handle mypy floor update in a future SDD cycle. |
+| `preflight-20260504.md` | **HISTORICAL** | Preflight data collected before audit. `.mailmap` was created in Phase 2. |
+| `stash-audit-20260504.md` | **HISTORICAL** | Stash was dropped in Phase 4. Content preserved on remote branch `origin/hygiene/stash-preserve-codex-freeze`. |
+| `ghost-cleanup-plan-20260504.md` | **HISTORICAL** | Ghost config cleanup executed in Phase 2. Plan is void. |
+| `ghost-entries-backup-20260504.txt` | **HISTORICAL** | Backup of ghost config before cleanup. Retained for audit trail. |
+| `ghost-before-20260504.txt` | **HISTORICAL** | Snapshot before ghost cleanup. Retained for audit trail. |
+| `ghost-after-20260504.txt` | **HISTORICAL** | Snapshot after ghost cleanup. Retained for audit trail. |
+
+---
+
+## Known Corrections
+
+| Correction | Source | Detail |
+|-----------|--------|--------|
+| PR #102 is pandas, not pypy | `branch-audit-20260504.md` Section C.5 | The branch name `dependabot/pip/pypy-gte-3.0.2` is incorrect. The package is **pandas** (`dependabot/pip/pandas-gte-3.0.2`). The `dependabot-phase-4-plan` correctly identifies it as pandas. |
+| Dependabot PRs were NOT merged | `dependabot-phase-4-plan-20260504.md` | All 10 Dependabot PRs (#93-#102) were **auto-closed** after `dependabot.yml` was deleted from the repo. None were merged. |
+| Stash was dropped in Phase 4 | `stash-audit-20260504.md`, `summary-20260504.md` | `stash@{0}` was dropped during Phase 4 closeout. Content remains preserved on remote branch `origin/hygiene/stash-preserve-codex-freeze`. |
+| Archive branches deleted in Phase 4 | `branch-audit-20260504.md` | All 7 `archive/*` remote branches were deleted in Phase 4 after prior preservation. |
+| Closed-PR branch count | `phase-2-closeout-20260504.md` | Original text stated "6 closed-PR branches resolved: 5 deleted..." which was inaccurate. 3 were PRESERVED and 3 were DELETED. |
+
+---
+
+## Authority Map by Topic
+
+| Topic | Authoritative Document | Section |
+|-------|----------------------|---------|
+| Branch fate (deleted vs preserved) | `branch-audit-20260504.md` | Resolution Status (Updated 2026-05-09) |
+| Current remote branches (7 remaining) | `summary-20260504.md` | Post-Audit Resolution → Current Remote Branches |
+| Stash state (dropped, content on branch) | `summary-20260504.md` | Post-Audit Resolution → Updated "Next Safe Commands" Status |
+| Dependabot resolution | `dependabot-phase-4-plan-20260504.md` | Resolution (Updated 2026-05-09) |
+| Phase execution evidence | `post-audit-execution-20260504.md` | Full document |
+| Stash/patch closeout | `phase-3-closeout-20260504.md` | Full document |
+| Phase 2 execution log | `phase-2-closeout-20260504.md` | Full document |
+| Ghost cleanup evidence | `ghost-before/after-20260504.txt` | Snapshots (historical) |
+
+---
+
+## Residual Risks
+
+1. **`dependabot.yml` must be recreated** — Without it, Dependabot will not open new PRs for security updates.
+2. **mypy floor update pending** — mypy >=1.20.1 was auto-closed; the floor update needs a separate SDD cycle.
+3. **`codex/wo-frictionless-closeout`** — Preserved with 16 unique commits and no PR. Requires human decision on integration or archival.
+4. **Large patch artifacts** — `_ctx/handoff/WO-0005/diff.patch` (57.9 MB) and `tests/fixtures/.../reconcile.patch` (83.26 MB) still present.
+5. **`hygiene/stash-20260504.patch`** — 100.64 MB, exceeds GitHub 100 MB limit. Local only. Content preserved in remote branch.

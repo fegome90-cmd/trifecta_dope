@@ -1,5 +1,10 @@
 # Phase 4 Plan — Dependabot PR Merge Order
 
+> **STATUS: SUPERSEDED.**
+> Do not execute this merge plan.
+> All Dependabot PRs #93-#102 were auto-closed after dependabot.yml was deleted.
+> Remaining action: recreate dependabot.yml and handle mypy floor update in a future SDD cycle.
+
 **Date**: 2026-05-04
 **Status**: PLAN ONLY — DO NOT MERGE
 **Total PRs**: 10

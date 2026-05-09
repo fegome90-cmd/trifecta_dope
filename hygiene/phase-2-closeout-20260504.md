@@ -24,7 +24,9 @@
 
 ## Resolution (Updated 2026-05-09)
 
-- ✅ 6 closed-PR branches resolved: 5 deleted in Phase 5 (codex/docs-skillhub, feat/e-v1-daemon-run, feat/skills-contracts-explain, fix/search-context-preview-truncation, codex/batch-2d-runtime-manager as PRESERVED)
+- ✅ 6 closed-PR branches resolved:
+  - PRESERVED: `codex/batch-2d-runtime-manager`, `codex/wo-remediation-ci-baseline`, `fegome90-cmd/wo-0015-work`
+  - DELETED: `codex/docs-skillhub-context-refresh-20260327`, `feat/skills-contracts-explain`, `fix/search-context-preview-truncation`
 - ✅ 2 orphan branches resolved: `codex/wo-frictionless-closeout` PRESERVED (16 unique commits), `feat/e-v1-daemon-run` DELETED in Phase 5
 - ✅ 10 dependabot branches: all auto-closed (dependabot.yml deleted)
 - ✅ Copilot PR #85: CLOSED in Phase 5
