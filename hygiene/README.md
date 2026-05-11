@@ -11,13 +11,15 @@
 | File | Purpose | Status |
 |------|---------|--------|
 | `git-hygiene-document-authority-20260509.md` | Central registry: which docs are authority, which are historical, known corrections | **AUTHORITY** |
-| `closed-pr-semantic-memo-20260509.md` | Rationale for PRESERVED vs DELETED closed-PR branch decisions | **AUTHORITY** |
+| `closed-pr-semantic-memo-20260509.md` | Rationale for PRESERVED vs DELETED closed-PR branch decisions, evidence strength, accepted residual risk | **AUTHORITY** |
+| `closed-pr-semantic-memo-correction-20260509.md` | Correction report: evidence strength added, Rule 5 made honest, residual risks documented | **AUTHORITY** |
 | `phase-6-document-authority-fix-20260509.md` | Report of document authority corrections applied (STATUS headers, contradictions fixed) | **AUTHORITY** |
 | `summary-20260504.md` | Overall audit summary — only **Post-Audit Resolution** section is authoritative | HISTORICAL body + AUTHORITATIVE appendix |
 | `branch-audit-20260504.md` | Full branch classification — only **Resolution Status** section is authoritative | HISTORICAL body + AUTHORITATIVE appendix |
 | `post-audit-execution-20260504.md` | Phase 2+4+5 execution evidence with actual commands run | **AUTHORITY** |
 | `phase-3-closeout-20260504.md` | Stash/patch closeout state | **AUTHORITY** |
 | `stash-retention-policy-20260509.md` | Retention policy for `origin/hygiene/stash-preserve-codex-freeze` branch | **AUTHORITY** (IMPLEMENTED) |
+| `stash-retention-policy-implementation-20260509.md` | Implementation report: tag created, branch maintained, SHA verification | **AUTHORITY** |
 | `phase-2-closeout-20260504.md` | Phase 2 closeout with residual risks resolved | HISTORICAL body + AUTHORITATIVE appendix |
 
 ## Historical / Superseded (audit trail only)
@@ -50,6 +52,7 @@
 | 2026-05-09 | Phase 6 | `f50bc595` | Document authority fix: STATUS headers, authority registry, contradiction corrections |
 | 2026-05-09 | Archive | engram #2747 | SDD change archived. Follow-ups registered. |
 | 2026-05-09 | Follow-up 1 | `c6ea4112` | Closed-PR semantic memo: PRESERVED vs DELETED rationale |
+| 2026-05-09 | Follow-up 1 fix | `22f7158a` | Semantic memo correction: evidence strength, honest Rule 5, residual risk |
 | 2026-05-09 | Follow-up 2 | `6d47e3c4` | Stash retention policy: drafted, awaiting approval for tag creation |
 | 2026-05-09 | Follow-up 2 impl | `03eede58` | Stash retention policy: IMPLEMENTED — tag `stash-preserve-codex-freeze-v1` created, branch maintained |
 
