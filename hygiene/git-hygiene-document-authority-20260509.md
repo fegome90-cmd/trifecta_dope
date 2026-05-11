@@ -53,6 +53,11 @@ These documents contain **actionable** or **resolved** state. Their resolution s
 - Clarifies commit provenance (README had incorrect `03eede58`; corrected to `c6c55cb9`).
 - No operational changes — tag, branch, and decision (Option B) unchanged.
 
+### dependabot-policy-20260509.md
+- **Authority scope**: Full document — DRAFT dependabot policy awaiting human review.
+- Audits current dependency inventory, reconstructs PR #93-#102 history, classifies dependencies by risk (LOW/MEDIUM/HIGH/SECURITY), proposes improved dependabot.yml config with lower queue limits and major-update ignore rules.
+- **Status**: DRAFT — no operational changes until human approval.
+
 ---
 
 ## Historical / Superseded
@@ -101,6 +106,8 @@ These documents are retained for audit trail only. Do NOT execute any commands f
 | Stash retention policy | `stash-retention-policy-20260509.md` | Full document (IMPLEMENTED) |
 | Stash retention implementation | `stash-retention-policy-implementation-20260509.md` | Full document |
 | Stash retention corrections | `stash-retention-policy-correction-20260509.md` | Full document |
+| Dependabot policy (draft) | `dependabot-policy-20260509.md` | Full document (DRAFT) |
+| Dependabot PR history | `dependabot-policy-20260509.md` | Section 3 |
 | Phase 2 execution log | `phase-2-closeout-20260504.md` | Full document |
 | Ghost cleanup evidence | `ghost-before/after-20260504.txt` | Snapshots (historical) |
 

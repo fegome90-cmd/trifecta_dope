@@ -11,6 +11,7 @@
 | File | Purpose | Status |
 |------|---------|--------|
 | `git-hygiene-document-authority-20260509.md` | Central registry: which docs are authority, which are historical, known corrections | **AUTHORITY** |
+| `dependabot-policy-20260509.md` | Dependabot policy: risk classification, proposed config, merge protocol | **DRAFT** — awaiting human review |
 | `closed-pr-semantic-memo-20260509.md` | Rationale for PRESERVED vs DELETED closed-PR branch decisions, evidence strength, accepted residual risk | **AUTHORITY** |
 | `closed-pr-semantic-memo-correction-20260509.md` | Correction report: evidence strength added, Rule 5 made honest, residual risks documented | **AUTHORITY** |
 | `phase-6-document-authority-fix-20260509.md` | Report of document authority corrections applied (STATUS headers, contradictions fixed) | **AUTHORITY** |
@@ -57,6 +58,7 @@
 | 2026-05-09 | Follow-up 2 | `6d47e3c4` | Stash retention policy: drafted, awaiting approval for tag creation |
 | 2026-05-09 | Follow-up 2 impl | `c6c55cb9` | Stash retention policy: IMPLEMENTED — tag `stash-preserve-codex-freeze-v1` created, branch maintained |
 | 2026-05-09 | Follow-up 2 correction | `52eb6455` | Micro-correction: risk phrasing, "sole" claim, commit provenance clarified |
+| 2026-05-09 | Follow-up 3 | (pending) | Dependabot policy: audited deps, classified by risk, proposed conservative config |
 
 ---
 
@@ -66,7 +68,7 @@
 |----------|--------|--------|--------|
 | 1 | Closed-PR semantic memo | #2750, #2751 | ✅ Complete |
 | 2 | Stash retention policy | #2749 | ✅ COMPLETE — tag `stash-preserve-codex-freeze-v1` created, branch maintained |
-| 3 | Dependabot policy | #2748 | Pending |
+| 3 | Dependabot policy | #2748 | **DRAFTED** — `dependabot-policy-20260509.md` |
 
 ### Stash Preservation Authority
 

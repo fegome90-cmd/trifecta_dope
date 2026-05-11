@@ -170,3 +170,10 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Summary**: Micro-corrección documental: replaced "zero risk" with "low risk, not zero", corrected "sole preservation" to acknowledge tag as additional reference, clarified commit provenance (README had `03eede58`, corrected to `c6c55cb9`).
 - **Commits**: `0b8a64db` docs: clarify stash retention residual risk and commit provenance
 - **Next**: dependabot-policy (#2748)
+
+## 2026-05-09 Dependabot Policy Draft
+- **Summary**: Audited current dependency state, reconstructed Dependabot history from Phase 4 docs, classified dependencies by risk, proposed policy and conceptual dependabot.yml. No operational changes.
+- **Key findings**: (1) dependabot.yml STILL EXISTS in repo — Phase 4 docs incorrectly stated it was deleted. (2) Of 10 Dependabot PRs #93-#102, five were MERGED (#94 safety, #97 filelock, #99 ruamel-yaml, #101 pytest-env, #102 pandas), five were CLOSED (#93 typer, #95 types-pyyaml, #96 mypy, #98 tree-sitter, #100 plotly). (3) Current config is overly permissive (open-pull-requests-limit: 10, no major-update ignores). (4) mypy floor update and typer major gap remain as residual risks.
+- **Recommendation**: Replace existing dependabot.yml with proposed conservative config (limit 3, major ignores for HIGH-risk packages, proper grouping). Address mypy and typer in separate SDD cycles.
+- **Commits**: (pending)
+- **Next**: Human review → approve policy → recreate dependabot.yml
