@@ -168,5 +168,5 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 
 ## 2026-05-09 Stash Retention Policy Correction
 - **Summary**: Micro-corrección documental: replaced "zero risk" with "low risk, not zero", corrected "sole preservation" to acknowledge tag as additional reference, clarified commit provenance (README had `03eede58`, corrected to `c6c55cb9`).
-- **Commits**: (pending commit)
+- **Commits**: `0b8a64db` docs: clarify stash retention residual risk and commit provenance
 - **Next**: dependabot-policy (#2748)
