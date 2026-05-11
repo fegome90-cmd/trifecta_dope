@@ -83,7 +83,13 @@ git checkout -b restore origin/hygiene/stash-preserve-codex-freeze
 
 ---
 
-## 6. Referencias
+## 6. Commit Provenance
+
+```
+Commit provenance: policy draft commits were 6d47e3c4 / e314914b; implementation landed on main as c6c55cb9. This file records the final main commit as the authoritative reference.
+```
+
+## 7. Referencias
 
 - `stash-retention-policy-20260509.md` — Policy document (autoridad)
 - `git-hygiene-document-authority-20260509.md` — Authority registry

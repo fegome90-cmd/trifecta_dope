@@ -20,6 +20,7 @@
 | `phase-3-closeout-20260504.md` | Stash/patch closeout state | **AUTHORITY** |
 | `stash-retention-policy-20260509.md` | Retention policy for `origin/hygiene/stash-preserve-codex-freeze` branch | **AUTHORITY** (IMPLEMENTED) |
 | `stash-retention-policy-implementation-20260509.md` | Implementation report: tag created, branch maintained, SHA verification | **AUTHORITY** |
+| `stash-retention-policy-correction-20260509.md` | Correction report: risk phrasing, "sole" claim, commit provenance | **AUTHORITY** |
 | `phase-2-closeout-20260504.md` | Phase 2 closeout with residual risks resolved | HISTORICAL body + AUTHORITATIVE appendix |
 
 ## Historical / Superseded (audit trail only)
@@ -54,7 +55,8 @@
 | 2026-05-09 | Follow-up 1 | `c6ea4112` | Closed-PR semantic memo: PRESERVED vs DELETED rationale |
 | 2026-05-09 | Follow-up 1 fix | `22f7158a` | Semantic memo correction: evidence strength, honest Rule 5, residual risk |
 | 2026-05-09 | Follow-up 2 | `6d47e3c4` | Stash retention policy: drafted, awaiting approval for tag creation |
-| 2026-05-09 | Follow-up 2 impl | `03eede58` | Stash retention policy: IMPLEMENTED — tag `stash-preserve-codex-freeze-v1` created, branch maintained |
+| 2026-05-09 | Follow-up 2 impl | `c6c55cb9` | Stash retention policy: IMPLEMENTED — tag `stash-preserve-codex-freeze-v1` created, branch maintained |
+| 2026-05-09 | Follow-up 2 correction | `52eb6455` | Micro-correction: risk phrasing, "sole" claim, commit provenance clarified |
 
 ---
 

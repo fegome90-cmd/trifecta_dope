@@ -38,7 +38,7 @@
 
 ### Origination
 
-This branch was created during Phase 3 of the Git Hygiene cycle as a safety preservation of `stash@{0}` content (codex freeze snapshot). The local stash was subsequently dropped in Phase 4 and the patch was deleted in Phase 3 after exceeding GitHub's 100 MB push limit. The branch is the **sole remaining preservation** of this content.
+This branch was created during Phase 3 of the Git Hygiene cycle as a safety preservation of `stash@{0}` content (codex freeze snapshot). The local stash was subsequently dropped in Phase 4 and the patch was deleted in Phase 3 after exceeding GitHub's 100 MB push limit. The branch is the **primary material preservation** of this content. The annotated tag `stash-preserve-codex-freeze-v1` is an additional immutable reference to the same commit, not an independent backup.
 
 ---
 
@@ -117,7 +117,7 @@ No actual secret files (`.env`, `credentials`, private keys) were found. The fol
 
 **Justificación**:
 
-1. **Zero data loss risk**: La branch sigue existiendo como respaldo vivo. El tag agrega una referencia inmutable y discoverable.
+1. **Low data-loss risk, not zero**: Branch and annotated tag both point to the same commit, but both depend on the same GitHub remote. La branch sigue existiendo como respaldo vivo. El tag agrega una referencia inmutable y discoverable.
 2. **Discoverability para agentes**: Un tag anotado aparece en `git tag -l` y lleva metadata (mensaje, autor, fecha). Los agentes futuros pueden identificar su propósito sin inspeccionar la branch.
 3. **Costo mínimo**: Un tag es un puntero inmutable (~cero overhead). No se crea archivo adicional.
 4. **Decisión postergable**: La eliminación de la branch puede decidirse en un futuro ciclo de revisión, cuando se confirme que el tag es suficiente.

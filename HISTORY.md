@@ -84,3 +84,9 @@
       capa_modificada: "Git Tags | Documentation | Policy"
       impacto_contrato: "None"
       siguiente_paso_tecnico: "Execute dependabot-policy (#2748)"
+- history:
+    - user_prompt_summary: "Micro-correct stash retention policy: fix zero-risk claims, sole-preservation phrasing, commit provenance."
+    - agent_response_summary: "Replaced 'zero data loss risk' with 'low risk, not zero'. Corrected 'sole preservation' to acknowledge tag as additional immutable reference. Clarified commit provenance (README had incorrect 03eede58, corrected to c6c55cb9). No operational changes."
+      capa_modificada: "Documentation | Policy"
+      impacto_contrato: "None"
+      siguiente_paso_tecnico: "Execute dependabot-policy (#2748)"

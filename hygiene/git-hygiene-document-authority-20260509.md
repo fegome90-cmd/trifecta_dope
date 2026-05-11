@@ -45,6 +45,13 @@ These documents contain **actionable** or **resolved** state. Their resolution s
 ### stash-retention-policy-implementation-20260509.md
 - **Authority scope**: Full document — implementation report for stash retention policy execution.
 - Records tag creation, SHA verification, actions not taken, and residual risks.
+- Includes commit provenance section (policy drafts `6d47e3c4`/`e314914b`, implementation `c6c55cb9`).
+
+### stash-retention-policy-correction-20260509.md
+- **Authority scope**: Full document — correction report for stash retention policy documentation.
+- Corrects "zero data loss risk" → "low data-loss risk, not zero" and "sole remaining preservation" → "primary material preservation".
+- Clarifies commit provenance (README had incorrect `03eede58`; corrected to `c6c55cb9`).
+- No operational changes — tag, branch, and decision (Option B) unchanged.
 
 ---
 
@@ -73,6 +80,9 @@ These documents are retained for audit trail only. Do NOT execute any commands f
 | Stash was dropped in Phase 4 | `stash-audit-20260504.md`, `summary-20260504.md` | `stash@{0}` was dropped during Phase 4 closeout. Content remains preserved on remote branch `origin/hygiene/stash-preserve-codex-freeze`. |
 | Archive branches deleted in Phase 4 | `branch-audit-20260504.md` | All 7 `archive/*` remote branches were deleted in Phase 4 after prior preservation. |
 | Closed-PR branch count | `phase-2-closeout-20260504.md` | Original text stated "6 closed-PR branches resolved: 5 deleted..." which was inaccurate. 3 were PRESERVED and 3 were DELETED. |
+| Stash retention risk phrasing | `stash-retention-policy-20260509.md` | "Zero data loss risk" was inaccurate — both tag and branch depend on the same remote. Corrected to "Low data-loss risk, not zero". See `stash-retention-policy-correction-20260509.md`. |
+| Stash retention "sole preservation" | `stash-retention-policy-20260509.md` | "Sole remaining preservation" became obsolete after tag creation. Corrected to acknowledge tag as additional reference. See `stash-retention-policy-correction-20260509.md`. |
+| Implementation commit hash in README | `hygiene/README.md` | Listed `03eede58` as implementation commit. Actual commit is `c6c55cb9`. Corrected. See `stash-retention-policy-correction-20260509.md`. |
 
 ---
 
@@ -90,6 +100,7 @@ These documents are retained for audit trail only. Do NOT execute any commands f
 | Stash/patch closeout | `phase-3-closeout-20260504.md` | Full document |
 | Stash retention policy | `stash-retention-policy-20260509.md` | Full document (IMPLEMENTED) |
 | Stash retention implementation | `stash-retention-policy-implementation-20260509.md` | Full document |
+| Stash retention corrections | `stash-retention-policy-correction-20260509.md` | Full document |
 | Phase 2 execution log | `phase-2-closeout-20260504.md` | Full document |
 | Ghost cleanup evidence | `ghost-before/after-20260504.txt` | Snapshots (historical) |
 
