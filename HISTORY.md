@@ -108,3 +108,9 @@
       capa_modificada: "Documentation | Policy | Dependencies"
       impacto_contrato: "None"
       siguiente_paso_tecnico: "Human review → approve policy → apply dependabot.yml"
+- history:
+    - user_prompt_summary: "Align dependabot policy: HIGH packages = patch-only in both policy text and YAML conceptual."
+    - agent_response_summary: "Added semver-minor ignores for HIGH stable packages (pandas, pydantic, filelock, jsonschema, pyyaml/PyYAML). Corrected section 5.4. All HIGH now patch-only. dependabot.yml NOT modified."
+      capa_modificada: "Documentation | Policy | Dependencies"
+      impacto_contrato: "None"
+      siguiente_paso_tecnico: "Human review → approve policy → apply dependabot.yml"

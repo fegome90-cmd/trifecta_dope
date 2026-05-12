@@ -68,6 +68,11 @@ These documents contain **actionable** or **resolved** state. Their resolution s
 - Documents the 0.x SemVer risk: packages at `0.x` (typer*, tree-sitter*, ruamel.yaml, tiktoken) can have breaking semver-minor bumps. Adds semver-minor ignores for affected packages. Corrects Major Update Policy for explicit tier handling. Adds `prod-cli` group. Syncs grouping table with YAML conceptual config.
 - No operational changes — `.github/dependabot.yml` not modified.
 
+### dependabot-policy-high-patch-only-correction-20260509.md
+- **Authority scope**: Full document — HIGH patch-only consistency correction report for dependabot policy.
+- Corrects contradiction: policy said "HIGH = patch-only" but YAML conceptual only ignored semver-major for stable HIGH packages. Added semver-minor ignores for pandas, pydantic, filelock, jsonschema, pyyaml/PyYAML. Corrected Section 5.4 major update rule. Updated YAML comments. All HIGH packages now patch-only by Dependabot.
+- No operational changes — `.github/dependabot.yml` not modified.
+
 ---
 
 ## Historical / Superseded
@@ -101,6 +106,7 @@ These documents are retained for audit trail only. Do NOT execute any commands f
 | mypy risk classification | `dependabot-policy-20260509.md` | Originally classified as LOW. Upgraded to MEDIUM — touches the type gate and can break CI. See `dependabot-policy-correction-20260509.md`. |
 | Dependabot authority source | `git-hygiene-document-authority-20260509.md` | Authority Map previously pointed to `dependabot-phase-4-plan-20260504.md`. Updated to `dependabot-policy-20260509.md`. See `dependabot-policy-correction-20260509.md`. |
 | 0.x SemVer risk not controlled | `dependabot-policy-20260509.md` | Original policy only blocked semver-major for HIGH packages, leaving 0.x packages (typer, tree-sitter, ruamel.yaml, tiktoken) vulnerable to breaking semver-minor bumps. Corrected: semver-minor ignores added for HIGH 0.x packages, Major Update Policy rewritten, prod-cli group added. See `dependabot-policy-semver-correction-20260509.md`. |
+| HIGH patch-only inconsistency | `dependabot-policy-20260509.md` | Policy said "HIGH = patch-only" but YAML conceptual only ignored semver-major for stable HIGH packages (pandas, pydantic, filelock, jsonschema, pyyaml). Corrected: semver-minor ignores added for ALL HIGH packages. Section 5.4 rule rewritten. YAML comment fixed. See `dependabot-policy-high-patch-only-correction-20260509.md`. |
 
 ---
 
@@ -123,6 +129,7 @@ These documents are retained for audit trail only. Do NOT execute any commands f
 | Dependabot PR history | `dependabot-policy-20260509.md` | Section 3 |
 | Dependabot policy corrections | `dependabot-policy-correction-20260509.md` | Full document |
 | Dependabot semver 0.x corrections | `dependabot-policy-semver-correction-20260509.md` | Full document |
+| Dependabot HIGH patch-only correction | `dependabot-policy-high-patch-only-correction-20260509.md` | Full document |
 | Phase 2 execution log | `phase-2-closeout-20260504.md` | Full document |
 | Ghost cleanup evidence | `ghost-before/after-20260504.txt` | Snapshots (historical) |
 

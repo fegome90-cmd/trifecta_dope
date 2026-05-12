@@ -187,3 +187,8 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Summary**: Corrected 0.x semver risk in dependabot policy draft. HIGH 0.x packages (typer, tree-sitter, ruamel.yaml, tiktoken) now ignore semver-minor + semver-major. Added prod-cli group. Fixed Major Update Policy for 0.x. Corrected grouping table to match YAML. dependabot.yml NOT modified.
 - **Commits**: (fill in after commit)
 - **Next**: Human review → approve policy → apply dependabot.yml
+
+## 2026-05-09 Dependabot Policy HIGH Patch-Only Correction
+- **Summary**: Aligned policy with YAML conceptual: all HIGH packages now patch-only by Dependabot. Added semver-minor ignores for pandas, pydantic, filelock, jsonschema, pyyaml/PyYAML. Corrected section 5.4. All HIGH now patch-only. dependabot.yml NOT modified.
+- **Commits**: (fill in after commit)
+- **Next**: Human review → approve policy → apply dependabot.yml

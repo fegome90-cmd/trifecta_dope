@@ -180,6 +180,7 @@
 - **HIGH packages**: patch-only by Dependabot.
   - HIGH semver-major: **ignored**, SDD required.
   - HIGH 0.x semver-minor: **ignored**, SDD required (see Section 4.6).
+  - HIGH stable semver-minor: **ignored**, SDD required.
 - **MEDIUM packages**: allow only if grouped minor/patch; semver-major requires manual review.
 - **LOW packages**: may be proposed, never auto-merged.
 - **SECURITY**: priority lane — may bypass normal order, but CI baseline still required.
@@ -197,7 +198,7 @@ In packages with a `0.x` major version, a SemVer "minor" bump can introduce **br
 - These upgrades MUST be handled via SDD/manual review with targeted testing.
 - Affected packages: `typer*`, `tree-sitter*`, `ruamel.yaml`, `tiktoken`.
 
-**Non-0.x HIGH packages** (pandas, pydantic, filelock, jsonschema, pyyaml) follow standard semver-major-only ignores, as their stable major version provides backward-compatible minor bumps.
+**Non-0.x HIGH packages** (pandas, pydantic, filelock, jsonschema, pyyaml) ALSO ignore semver-minor — these are patch-only by Dependabot. Minor/major upgrades require SDD/manual review.
 
 ---
 
@@ -225,7 +226,7 @@ In packages with a `0.x` major version, a SemVer "minor" bump can introduce **br
 
 ### 5.4 Major Updates
 
-- **Rule**: Dependabot opens major updates as INDIVIDUAL PRs (not grouped)
+- **Rule**: Dependabot must not auto-propose HIGH major upgrades. HIGH upgrades beyond patch are handled through SDD/manual review. Non-HIGH major upgrades may appear as individual PRs only if not explicitly ignored, and still require manual review.
 - **Action**: Major updates require manual review + targeted testing
 - **0.x minors**: For HIGH 0.x packages, semver-minor updates are ALSO individual PRs (ignored by Dependabot, require SDD)
 - **Ignore rules**:
@@ -233,11 +234,11 @@ In packages with a `0.x` major version, a SemVer "minor" bump can introduce **br
   - `tree-sitter*`: semver-major + semver-minor (0.x: minors are breaking)
   - `ruamel.yaml`: semver-major + semver-minor (0.x: round-trip behavior can change)
   - `tiktoken`: semver-major + semver-minor (0.x: token counts can shift)
-  - `pandas` semver-major: requires telemetry group validation
-  - `pydantic` semver-major: requires full model validation
-  - `filelock` semver-major: concurrency behavior validation
-  - `jsonschema` semver-major: schema validation pipeline check
-  - `pyyaml` / `PyYAML` semver-major: YAML parsing core check
+  - `pandas`: semver-major + semver-minor (patch-only by Dependabot)
+  - `pydantic`: semver-major + semver-minor (patch-only by Dependabot)
+  - `filelock`: semver-major + semver-minor (patch-only by Dependabot)
+  - `jsonschema`: semver-major + semver-minor (patch-only by Dependabot)
+  - `pyyaml` / `PyYAML`: semver-major + semver-minor (patch-only by Dependabot)
 
 ### 5.5 Security Updates
 
@@ -297,7 +298,7 @@ updates:
     allow:
       - dependency-type: "all"
     # Ignore rules for high-risk packages
-    # HIGH 0.x packages: ignore semver-major AND semver-minor (0.x minors can be breaking)
+    # HIGH packages: Dependabot patch-only. Minor/major require SDD/manual review.
     ignore:
       - dependency-name: "typer*"
         update-types:
@@ -315,25 +316,31 @@ updates:
         update-types:
           - "version-update:semver-major"
           - "version-update:semver-minor"
-      # HIGH stable-major packages: semver-major only (0.x semver-minor is safe)
+      # HIGH packages: Dependabot patch-only. Minor/major require SDD/manual review.
       - dependency-name: "pandas"
         update-types:
           - "version-update:semver-major"
+          - "version-update:semver-minor"
       - dependency-name: "pydantic"
         update-types:
           - "version-update:semver-major"
+          - "version-update:semver-minor"
       - dependency-name: "filelock"
         update-types:
           - "version-update:semver-major"
+          - "version-update:semver-minor"
       - dependency-name: "jsonschema"
         update-types:
           - "version-update:semver-major"
+          - "version-update:semver-minor"
       - dependency-name: "pyyaml"
         update-types:
           - "version-update:semver-major"
+          - "version-update:semver-minor"
       - dependency-name: "PyYAML"
         update-types:
           - "version-update:semver-major"
+          - "version-update:semver-minor"
     groups:
       dev-test-deps:
         patterns:
@@ -395,7 +402,7 @@ updates:
 |---------|---------|----------|--------|
 | `open-pull-requests-limit` (pip) | 10 | **3** | Prevent noisy queue |
 | `open-pull-requests-limit` (actions) | 5 | **2** | Actions rarely need updates |
-| `ignore` rules | None | **11 entries** (typer*, tree-sitter*, ruamel.yaml, tiktoken with semver-major+minor; pandas, pydantic, filelock, jsonschema, pyyaml, PyYAML with semver-major) | Block auto-major for HIGH risk; block semver-minor for 0.x HIGH |
+| `ignore` rules | None | **11 entries** — ALL HIGH packages ignore semver-major + semver-minor (typer*, tree-sitter*, ruamel.yaml, tiktoken, pandas, pydantic, filelock, jsonschema, pyyaml, PyYAML). HIGH = patch-only by Dependabot. |
 | Groups: `prod-core` | Missing | **Added** | Group pydantic/pyyaml/ruamel/jsonschema patches |
 | Groups: `prod-parser` | Missing | **Added** | Group tree-sitter patches |
 | Groups: `prod-cli` | Missing | **Added** | Group typer patches (0.x — minor blocked) |
@@ -486,7 +493,7 @@ gh pr close <number> --comment "Reverted due to regression: <description>"
 | **types-pyyaml update missed** | LOW | PR #95 was closed; stubs don't affect runtime but type coverage is stale |
 | **dependabot.yml still has old config** | MEDIUM | Active but permissive; needs replacement with proposed config |
 | **pyright pinned to ==1.1.408** | LOW | Intentional pin; may need periodic manual updates |
-| **No dependabot groups for filelock/tiktoken** | LOW | These fall outside current groups; will be individual PRs |
+| **filelock/tiktoken not in dependabot groups** | LOW | Both controlled by ignore rules (semver-major + semver-minor); Dependabot will only propose patch updates. Minor/major still require manual SDD review. |
 | **CI failures may be pre-existing** | LOW | Previous 10 PRs all showed CI failures from base branch issues |
 | **0.x SemVer risk for CLI/parser/tokenization packages** | MEDIUM | typer*, tree-sitter*, ruamel.yaml, tiktoken are 0.x — semver-minor bumps can be breaking. Mitigated by semver-minor ignores in proposed config. Requires vigilance if config is modified. |
 
@@ -518,4 +525,4 @@ gh pr close <number> --comment "Reverted due to regression: <description>"
 
 ---
 
-*Generated: 2026-05-09 | Status: DRAFT (semver 0.x risk corrected) | Change: git-hygiene-dependabot-policy | No operational changes.*
+*Generated: 2026-05-09 | Status: DRAFT (HIGH patch-only consistency corrected) | Change: git-hygiene-dependabot-policy | No operational changes.*
