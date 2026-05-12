@@ -182,3 +182,8 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Summary**: Corrected authority registry: dependabot.yml was NOT deleted, PRs had mixed outcomes (5 merged, 5 closed). Changed mypy LOW→MEDIUM. Added major update policy section. Added semver-major ignores for filelock, jsonschema, tiktoken, pyyaml. dependabot.yml NOT modified.
 - **Commits**: (fill in after commit)
 - **Next**: Human review → approve policy → replace dependabot.yml with proposed config
+
+## 2026-05-09 Dependabot Policy SemVer Correction
+- **Summary**: Corrected 0.x semver risk in dependabot policy draft. HIGH 0.x packages (typer, tree-sitter, ruamel.yaml, tiktoken) now ignore semver-minor + semver-major. Added prod-cli group. Fixed Major Update Policy for 0.x. Corrected grouping table to match YAML. dependabot.yml NOT modified.
+- **Commits**: (fill in after commit)
+- **Next**: Human review → approve policy → apply dependabot.yml

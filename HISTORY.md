@@ -102,3 +102,9 @@
       capa_modificada: "Documentation | Policy | Dependencies"
       impacto_contrato: "None"
       siguiente_paso_tecnico: "Human review → approve policy → replace dependabot.yml"
+- history:
+    - user_prompt_summary: "Correct dependabot policy semver handling: 0.x packages need semver-minor ignores, add prod-cli group, fix grouping/YAML consistency."
+    - agent_response_summary: "Added semver-minor ignores for HIGH 0.x packages (typer, tree-sitter, ruamel.yaml, tiktoken). Added prod-cli group. Fixed Major Update Policy for 0.x. Corrected grouping table to match YAML. dependabot.yml NOT modified."
+      capa_modificada: "Documentation | Policy | Dependencies"
+      impacto_contrato: "None"
+      siguiente_paso_tecnico: "Human review → approve policy → apply dependabot.yml"
