@@ -135,7 +135,6 @@
 | Package | Category | Rationale |
 |---------|----------|-----------|
 | `types-PyYAML` | Type stubs | No runtime code; only affects mypy/pyright |
-| `mypy` | Type checker (dev) | Static analysis tool; CI failures are caught before merge |
 
 ### MEDIUM — Tooling / test / dev dependencies
 
@@ -149,6 +148,7 @@
 | `pyright` | Type checker (pinned) | **Pinned to ==1.1.408** — do NOT auto-update |
 | `bandit[toml]` | Security scanner | Dev-only; rule changes possible |
 | `safety` | Vulnerability scanner | Dev-only; DB format changes possible |
+| `mypy` | Type checker (dev) | **Upgraded from LOW** — touches the type gate; version changes can break CI even though no runtime code affected |
 | `jupyter` | Notebook | Dev/telemetry only; large dependency tree |
 | `kaleido` | Image export | Dev/telemetry only; minor risk |
 
@@ -172,6 +172,15 @@
 | `safety` | Scanner itself — run `safety check` before trusting |
 | `bandit[toml]` | Scanner itself — update for new detection rules |
 | Any dep with CVE | Auto-prioritize; security updates bypass queue limits |
+
+---
+
+## 4.5 Major Update Policy
+
+- **HIGH packages**: ignore semver-major in Dependabot; handle via SDD.
+- **MEDIUM packages**: allow only if grouped minor/patch; major requires manual review.
+- **LOW packages**: may be auto-proposed but never auto-merged.
+- **SECURITY**: may bypass normal order, but still requires CI baseline.
 
 ---
 
@@ -276,6 +285,16 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "ruamel.yaml"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "filelock"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "jsonschema"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "tiktoken"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "pyyaml"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "PyYAML"
+        update-types: ["version-update:semver-major"]
     groups:
       dev-test-deps:
         patterns:
@@ -332,7 +351,7 @@ updates:
 |---------|---------|----------|--------|
 | `open-pull-requests-limit` (pip) | 10 | **3** | Prevent noisy queue |
 | `open-pull-requests-limit` (actions) | 5 | **2** | Actions rarely need updates |
-| `ignore` rules | None | **5 packages** | Block auto-major for HIGH risk |
+| `ignore` rules | None | **11 entries** (typer*, tree-sitter*, pandas, pydantic, ruamel.yaml, filelock, jsonschema, tiktoken, pyyaml, PyYAML) | Block auto-major for HIGH risk |
 | Groups: `prod-core` | Missing | **Added** | Group pydantic/pyyaml/ruamel/jsonschema patches |
 | Groups: `prod-parser` | Missing | **Added** | Group tree-sitter patches |
 | Groups: `dev-test-deps` | Missing (only `dev-dependencies`) | **Replaced** | More specific grouping |

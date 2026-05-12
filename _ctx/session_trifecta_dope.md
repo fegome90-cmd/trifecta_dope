@@ -177,3 +177,8 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Recommendation**: Replace existing dependabot.yml with proposed conservative config (limit 3, major ignores for HIGH-risk packages, proper grouping). Address mypy and typer in separate SDD cycles.
 - **Commits**: `452b283c` docs: draft dependabot policy with risk classification and merge protocol
 - **Next**: Human review → approve policy → recreate dependabot.yml
+
+## 2026-05-09 Dependabot Policy Correction
+- **Summary**: Corrected authority registry: dependabot.yml was NOT deleted, PRs had mixed outcomes (5 merged, 5 closed). Changed mypy LOW→MEDIUM. Added major update policy section. Added semver-major ignores for filelock, jsonschema, tiktoken, pyyaml. dependabot.yml NOT modified.
+- **Commits**: (fill in after commit)
+- **Next**: Human review → approve policy → replace dependabot.yml with proposed config

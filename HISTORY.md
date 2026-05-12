@@ -96,3 +96,9 @@
       capa_modificada: "Documentation | Policy | Dependencies"
       impacto_contrato: "None"
       siguiente_paso_tecnico: "Human review → approve policy → replace dependabot.yml with proposed config"
+- history:
+    - user_prompt_summary: "Correct dependabot policy: fix false 'all PRs auto-closed' claim, upgrade mypy risk, add major update policy, expand semver-major ignores."
+    - agent_response_summary: "Corrected authority registry (dependabot.yml NOT deleted, 5 merged + 5 closed). Changed mypy LOW→MEDIUM. Added major update policy. Added ignores for filelock/jsonschema/tiktoken/pyyaml. No operational changes."
+      capa_modificada: "Documentation | Policy | Dependencies"
+      impacto_contrato: "None"
+      siguiente_paso_tecnico: "Human review → approve policy → replace dependabot.yml"
