@@ -114,3 +114,9 @@
       capa_modificada: "Documentation | Policy | Dependencies"
       impacto_contrato: "None"
       siguiente_paso_tecnico: "Human review → approve policy → apply dependabot.yml"
+- history:
+    - user_prompt_summary: "Finalize dependabot policy authority: scope correction reports as historical, fix 5.4 phrasing, clarify final authority."
+    - agent_response_summary: "Scoped dependabot-policy-correction and semver-correction as historical evidence superseded by high-patch-only correction. Fixed 5.4 'individual PRs' contradiction. Added authority clarification to README. dependabot.yml NOT modified. Ready for apply."
+      capa_modificada: "Documentation | Policy"
+      impacto_contrato: "None"
+      siguiente_paso_tecnico: "Human approval → apply dependabot.yml"

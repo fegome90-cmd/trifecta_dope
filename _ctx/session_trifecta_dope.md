@@ -192,3 +192,8 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Summary**: Aligned policy with YAML conceptual: all HIGH packages now patch-only by Dependabot. Added semver-minor ignores for pandas, pydantic, filelock, jsonschema, pyyaml/PyYAML. Corrected section 5.4. All HIGH now patch-only. dependabot.yml NOT modified.
 - **Commits**: (fill in after commit)
 - **Next**: Human review → approve policy → apply dependabot.yml
+
+## 2026-05-09 Dependabot Policy Final Authority Correction
+- **Summary**: Scoped correction reports as historical evidence, not final authority. Corrected 5.4 phrasing. Added authority clarification note to README. Ready for apply after human approval.
+- **Commits**: (fill in after commit)
+- **Next**: Human approval → apply dependabot.yml

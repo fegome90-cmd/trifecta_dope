@@ -228,7 +228,7 @@ In packages with a `0.x` major version, a SemVer "minor" bump can introduce **br
 
 - **Rule**: Dependabot must not auto-propose HIGH major upgrades. HIGH upgrades beyond patch are handled through SDD/manual review. Non-HIGH major upgrades may appear as individual PRs only if not explicitly ignored, and still require manual review.
 - **Action**: Major updates require manual review + targeted testing
-- **0.x minors**: For HIGH 0.x packages, semver-minor updates are ALSO individual PRs (ignored by Dependabot, require SDD)
+- **0.x minors**: 0.x minors for HIGH packages are ignored by Dependabot and must be handled outside the normal Dependabot flow through SDD/manual review.
 - **Ignore rules**:
   - `typer*`: semver-major + semver-minor (0.x: minors are breaking)
   - `tree-sitter*`: semver-major + semver-minor (0.x: minors are breaking)

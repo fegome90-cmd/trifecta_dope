@@ -12,9 +12,10 @@
 |------|---------|--------|
 | `git-hygiene-document-authority-20260509.md` | Central registry: which docs are authority, which are historical, known corrections | **AUTHORITY** |
 | `dependabot-policy-20260509.md` | Dependabot policy: risk classification, proposed config, merge protocol | **DRAFT** — awaiting human review — premise corrected: dependabot.yml EXISTS and remains active — HIGH patch-only consistency corrected |
-| `dependabot-policy-correction-20260509.md` | Correction report: authority registry fixed (dependabot.yml NOT deleted, mixed PR outcomes), mypy LOW→MEDIUM, major update policy added, semver-major ignores expanded | **AUTHORITY** |
-| `dependabot-policy-semver-correction-20260509.md` | SemVer 0.x correction: 0.x packages (typer*, tree-sitter*, ruamel.yaml, tiktoken) now ignore semver-minor + semver-major. Major Update Policy rewritten. prod-cli group added. Grouping table/YAML synced. | **AUTHORITY** |
+| `dependabot-policy-correction-20260509.md` | Correction report: authority registry fixed (dependabot.yml NOT deleted, mixed PR outcomes), mypy LOW→MEDIUM, major update policy added, semver-major ignores expanded | **HISTORICAL** — superseded by later corrections |
+| `dependabot-policy-semver-correction-20260509.md` | SemVer 0.x correction: 0.x packages (typer*, tree-sitter*, ruamel.yaml, tiktoken) now ignore semver-minor + semver-major. Major Update Policy rewritten. prod-cli group added. Grouping table/YAML synced. | **HISTORICAL** — superseded by later corrections |
 | `dependabot-policy-high-patch-only-correction-20260509.md` | HIGH patch-only correction: stable HIGH packages (pandas, pydantic, filelock, jsonschema, pyyaml/PyYAML) now also ignore semver-minor. All HIGH = patch-only by Dependabot. Section 5.4 rewritten. | **AUTHORITY** |
+| `dependabot-policy-final-authority-correction-20260509.md` | Final authority correction: scopes prior correction reports as historical evidence, fixes 5.4 "ALSO individual PRs" contradiction, adds authority clarification to README | **AUTHORITY** |
 | `closed-pr-semantic-memo-20260509.md` | Rationale for PRESERVED vs DELETED closed-PR branch decisions, evidence strength, accepted residual risk | **AUTHORITY** |
 | `closed-pr-semantic-memo-correction-20260509.md` | Correction report: evidence strength added, Rule 5 made honest, residual risks documented | **AUTHORITY** |
 | `phase-6-document-authority-fix-20260509.md` | Report of document authority corrections applied (STATUS headers, contradictions fixed) | **AUTHORITY** |
@@ -65,10 +66,13 @@
 | 2026-05-09 | Follow-up 3 correction | (pending) | Corrected authority registry: dependabot.yml NOT deleted, mixed PR outcomes, mypy LOW→MEDIUM, major update policy, expanded ignores |
 | 2026-05-09 | Follow-up 3 semver fix | (pending) | Semver 0.x risk corrected: 0.x HIGH packages now ignore semver-minor + semver-major. prod-cli group added. Grouping table/YAML synced. dependabot.yml NOT modified. |
 | 2026-05-09 | Follow-up 3 patch-only fix | (pending) | HIGH patch-only consistency corrected: stable HIGH packages now also ignore semver-minor. All HIGH = patch-only. Section 5.4 rewritten. dependabot.yml NOT modified. |
+| 2026-05-09 | Follow-up 3 authority fix | (pending) | Final authority correction: scoped prior correction reports as historical, fixed 5.4 phrasing, added authority clarification. dependabot.yml NOT modified. Ready for apply. |
 
 ---
 
 ## Open Follow-ups
+
+> **Authority clarification**: Dependabot correction reports are chronological evidence. The final policy authority is `dependabot-policy-20260509.md` plus the latest `dependabot-policy-high-patch-only-correction-20260509.md`.
 
 | Priority | Change | Engram | Status |
 |----------|--------|--------|--------|

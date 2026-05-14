@@ -59,18 +59,23 @@ These documents contain **actionable** or **resolved** state. Their resolution s
 - **Status**: DRAFT — no operational changes until human approval.
 
 ### dependabot-policy-correction-20260509.md
-- **Authority scope**: Full document — correction report for dependabot policy documentation.
+- **Authority scope**: Historical correction report; superseded where contradicted by `dependabot-policy-high-patch-only-correction-20260509.md` and current `dependabot-policy-20260509.md`.
 - Corrects authority registry claims: dependabot.yml was NOT deleted, PRs had mixed outcomes (5 merged, 5 closed). Upgrades mypy from LOW to MEDIUM risk. Adds major update policy section. Adds semver-major ignores for filelock, jsonschema, tiktoken, pyyaml.
 - No operational changes — `.github/dependabot.yml` not modified.
 
 ### dependabot-policy-semver-correction-20260509.md
-- **Authority scope**: Full document — semver 0.x risk correction report for dependabot policy.
+- **Authority scope**: Historical correction report; superseded where contradicted by `dependabot-policy-high-patch-only-correction-20260509.md` and current `dependabot-policy-20260509.md`.
 - Documents the 0.x SemVer risk: packages at `0.x` (typer*, tree-sitter*, ruamel.yaml, tiktoken) can have breaking semver-minor bumps. Adds semver-minor ignores for affected packages. Corrects Major Update Policy for explicit tier handling. Adds `prod-cli` group. Syncs grouping table with YAML conceptual config.
 - No operational changes — `.github/dependabot.yml` not modified.
 
 ### dependabot-policy-high-patch-only-correction-20260509.md
 - **Authority scope**: Full document — HIGH patch-only consistency correction report for dependabot policy.
 - Corrects contradiction: policy said "HIGH = patch-only" but YAML conceptual only ignored semver-major for stable HIGH packages. Added semver-minor ignores for pandas, pydantic, filelock, jsonschema, pyyaml/PyYAML. Corrected Section 5.4 major update rule. Updated YAML comments. All HIGH packages now patch-only by Dependabot.
+- No operational changes — `.github/dependabot.yml` not modified.
+
+### dependabot-policy-final-authority-correction-20260509.md
+- **Authority scope**: Full document — authoritative for scoping of prior correction reports and final authority clarification.
+- Scopes `dependabot-policy-correction-20260509.md` and `dependabot-policy-semver-correction-20260509.md` as historical evidence superseded by later corrections. Corrects Section 5.4 "ALSO individual PRs" contradiction. Adds authority clarification to README.
 - No operational changes — `.github/dependabot.yml` not modified.
 
 ---
@@ -107,6 +112,8 @@ These documents are retained for audit trail only. Do NOT execute any commands f
 | Dependabot authority source | `git-hygiene-document-authority-20260509.md` | Authority Map previously pointed to `dependabot-phase-4-plan-20260504.md`. Updated to `dependabot-policy-20260509.md`. See `dependabot-policy-correction-20260509.md`. |
 | 0.x SemVer risk not controlled | `dependabot-policy-20260509.md` | Original policy only blocked semver-major for HIGH packages, leaving 0.x packages (typer, tree-sitter, ruamel.yaml, tiktoken) vulnerable to breaking semver-minor bumps. Corrected: semver-minor ignores added for HIGH 0.x packages, Major Update Policy rewritten, prod-cli group added. See `dependabot-policy-semver-correction-20260509.md`. |
 | HIGH patch-only inconsistency | `dependabot-policy-20260509.md` | Policy said "HIGH = patch-only" but YAML conceptual only ignored semver-major for stable HIGH packages (pandas, pydantic, filelock, jsonschema, pyyaml). Corrected: semver-minor ignores added for ALL HIGH packages. Section 5.4 rule rewritten. YAML comment fixed. See `dependabot-policy-high-patch-only-correction-20260509.md`. |
+| Correction reports as final authority | `git-hygiene-document-authority-20260509.md` | Earlier correction reports (dependabot-policy-correction, dependabot-policy-semver-correction) were scoped as "Full document" authority, creating potential contradictions with later corrections. Scoped as historical evidence superseded by latest corrections. See `dependabot-policy-final-authority-correction-20260509.md`. |
+| Section 5.4 "ALSO individual PRs" contradiction | `dependabot-policy-20260509.md` | Section 5.4 stated 0.x minors "are ALSO individual PRs (ignored by Dependabot)" — contradiction: ignored packages do NOT generate Dependabot PRs. Corrected to "handled outside the normal Dependabot flow". See `dependabot-policy-final-authority-correction-20260509.md`. |
 
 ---
 
@@ -130,6 +137,7 @@ These documents are retained for audit trail only. Do NOT execute any commands f
 | Dependabot policy corrections | `dependabot-policy-correction-20260509.md` | Full document |
 | Dependabot semver 0.x corrections | `dependabot-policy-semver-correction-20260509.md` | Full document |
 | Dependabot HIGH patch-only correction | `dependabot-policy-high-patch-only-correction-20260509.md` | Full document |
+| Dependabot final authority correction | `dependabot-policy-final-authority-correction-20260509.md` | Full document |
 | Phase 2 execution log | `phase-2-closeout-20260504.md` | Full document |
 | Ghost cleanup evidence | `ghost-before/after-20260504.txt` | Snapshots (historical) |
 
