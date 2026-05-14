@@ -1,14 +1,17 @@
-# Dependabot configuration for automated dependency updates
+# Dependabot configuration — applied 2026-05-09
+# Policy authority: hygiene/dependabot-policy-20260509.md
+# HIGH packages: patch-only by Dependabot. Minor/major require SDD/manual review.
 version: 2
 updates:
-  # Python dependencies (pip/pyproject.toml)
+  # Python dependencies (pip/uv via pyproject.toml)
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
       day: "monday"
       time: "09:00"
-    open-pull-requests-limit: 10
+      timezone: "UTC"
+    open-pull-requests-limit: 3  # REDUCED from 10 to prevent noisy queue
     reviewers:
       - "fegome90-cmd"
     labels:
@@ -17,28 +20,87 @@ updates:
     commit-message:
       prefix: "chore(deps)"
       include: "scope"
-    # Security updates are prioritized
     allow:
       - dependency-type: "all"
-    # Group minor and patch updates together
+    # Ignore rules for high-risk packages
+    # HIGH packages: Dependabot patch-only. Minor/major require SDD/manual review.
+    ignore:
+      - dependency-name: "typer*"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
+      - dependency-name: "tree-sitter*"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
+      - dependency-name: "ruamel.yaml"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
+      - dependency-name: "tiktoken"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
+      # HIGH packages: Dependabot patch-only. Minor/major require SDD/manual review.
+      - dependency-name: "pandas"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
+      - dependency-name: "pydantic"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
+      - dependency-name: "filelock"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
+      - dependency-name: "jsonschema"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
+      - dependency-name: "pyyaml"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
+      - dependency-name: "PyYAML"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
     groups:
-      dev-dependencies:
+      dev-test-deps:
         patterns:
           - "pytest*"
-          - "ruff"
-          - "mypy"
-          - "pyright"
+          - "pytest-env"
+          - "pytest-cov"
         update-types:
           - "minor"
           - "patch"
-      production-dependencies:
+      dev-lint-type:
         patterns:
-          - "typer*"
-          - "pydantic"
-          - "pyyaml"
-          - "tree-sitter*"
+          - "ruff"
+          - "mypy"
+          - "pyrefly"
+          - "types-*"
         update-types:
           - "minor"
+          - "patch"
+      prod-core:
+        patterns:
+          - "pydantic"
+          - "pyyaml"
+          - "ruamel.yaml"
+          - "jsonschema"
+        update-types:
+          - "patch"
+      prod-parser:
+        patterns:
+          - "tree-sitter*"
+        update-types:
+          - "patch"
+      prod-cli:
+        patterns:
+          - "typer*"
+        update-types:
           - "patch"
 
   # GitHub Actions dependencies
@@ -48,7 +110,8 @@ updates:
       interval: "weekly"
       day: "monday"
       time: "09:00"
-    open-pull-requests-limit: 5
+      timezone: "UTC"
+    open-pull-requests-limit: 2  # REDUCED from 5
     reviewers:
       - "fegome90-cmd"
     labels:

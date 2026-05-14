@@ -120,3 +120,9 @@
       capa_modificada: "Documentation | Policy"
       impacto_contrato: "None"
       siguiente_paso_tecnico: "Human approval → apply dependabot.yml"
+- history:
+    - user_prompt_summary: "Apply approved dependabot policy: replace config with conservative HIGH-patch-only settings."
+    - agent_response_summary: "Replaced .github/dependabot.yml with approved config: pip limit 3, github-actions limit 2, 5 groups, 10 HIGH packages patch-only (semver-minor+major ignored). No dependency updates. No code changes. Implementation report created."
+      capa_modificada: "Configuration | CI/CD | Dependencies"
+      impacto_contrato: "None"
+      siguiente_paso_tecnico: "mypy floor update (separate SDD), typer gap (separate SDD)"

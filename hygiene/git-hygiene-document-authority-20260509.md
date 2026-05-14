@@ -54,9 +54,15 @@ These documents contain **actionable** or **resolved** state. Their resolution s
 - No operational changes — tag, branch, and decision (Option B) unchanged.
 
 ### dependabot-policy-20260509.md
-- **Authority scope**: Full document — DRAFT dependabot policy awaiting human review.
-- Audits current dependency inventory, reconstructs PR #93-#102 history, classifies dependencies by risk (LOW/MEDIUM/HIGH/SECURITY), proposes improved dependabot.yml config with lower queue limits and major-update ignore rules.
-- **Status**: DRAFT — no operational changes until human approval.
+- **Authority scope**: Full document — APPLIED dependabot policy.
+- Audits current dependency inventory, reconstructs PR #93-#102 history, classifies dependencies by risk (LOW/MEDIUM/HIGH/SECURITY), defines dependabot.yml config with lower queue limits and major-update ignore rules.
+- **Status**: APPLIED — config implemented 2026-05-09.
+- **Implementation report**: `dependabot-policy-implementation-20260509.md`.
+
+### dependabot-policy-implementation-20260509.md
+- **Authority scope**: Full document — implementation report for dependabot policy application.
+- Records the config change (old vs new), validations performed, actions not taken, and residual risks.
+- **Status**: APPLIED — `.github/dependabot.yml` replaced with approved conservative config.
 
 ### dependabot-policy-correction-20260509.md
 - **Authority scope**: Historical correction report; superseded where contradicted by `dependabot-policy-high-patch-only-correction-20260509.md` and current `dependabot-policy-20260509.md`.
@@ -126,7 +132,8 @@ These documents are retained for audit trail only. Do NOT execute any commands f
 | Branch decision evidence strength + residual risk | `closed-pr-semantic-memo-correction-20260509.md` | Full document |
 | Current remote branches (7 remaining) | `summary-20260504.md` | Post-Audit Resolution → Current Remote Branches |
 | Stash state (dropped, content on branch) | `summary-20260504.md` | Post-Audit Resolution → Updated "Next Safe Commands" Status |
-| Dependabot current policy / PR history | `dependabot-policy-20260509.md` | Full document (DRAFT) |
+| Dependabot current policy / PR history | `dependabot-policy-20260509.md` | Full document (APPLIED) |
+| Dependabot policy implementation | `dependabot-policy-implementation-20260509.md` | Full document (APPLIED) |
 | Phase execution evidence | `post-audit-execution-20260504.md` | Full document |
 | Stash/patch closeout | `phase-3-closeout-20260504.md` | Full document |
 | Stash retention policy | `stash-retention-policy-20260509.md` | Full document (IMPLEMENTED) |
@@ -145,7 +152,7 @@ These documents are retained for audit trail only. Do NOT execute any commands f
 
 ## Residual Risks
 
-1. **`dependabot.yml` needs config update** — File exists and Dependabot IS active, but current config is overly permissive (limit: 10, no major-update ignores). Proposed config in `dependabot-policy-20260509.md` awaits human approval.
+1. **`dependabot.yml` config updated** — ~~File exists and Dependabot IS active, but current config is overly permissive~~ **RESOLVED**: Config replaced with approved conservative policy (limit 3, HIGH patch-only, 5 groups). See `dependabot-policy-implementation-20260509.md`.
 2. **mypy floor update pending** — mypy >=1.20.1 was auto-closed; the floor update needs a separate SDD cycle.
 3. **`codex/wo-frictionless-closeout`** — Preserved with 16 unique commits and no PR. Requires human decision on integration or archival.
 4. **Large patch artifacts** — `_ctx/handoff/WO-0005/diff.patch` (57.9 MB) and `tests/fixtures/.../reconcile.patch` (83.26 MB) still present.

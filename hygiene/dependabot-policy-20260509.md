@@ -1,8 +1,9 @@
 # Dependabot Policy — 2026-05-09
 
-> **Status**: DRAFT — Awaiting human review.
+> **Status**: APPLIED — Config approved and implemented 2026-05-09.
 > **Change**: `git-hygiene-dependabot-policy`
 > **Authority scope**: Follow-up #3 from git hygiene cycle (engram #2748).
+> **Implementation report**: `hygiene/dependabot-policy-implementation-20260509.md`
 > **Constraints**: No dependabot.yml recreation, no PRs opened, no dependencies updated, no functional code touched.
 
 ---
@@ -525,4 +526,4 @@ gh pr close <number> --comment "Reverted due to regression: <description>"
 
 ---
 
-*Generated: 2026-05-09 | Status: DRAFT (HIGH patch-only consistency corrected) | Change: git-hygiene-dependabot-policy | No operational changes.*
+*Generated: 2026-05-09 | Status: APPLIED | Change: git-hygiene-dependabot-policy | Config implemented: pip limit 3, actions limit 2, 5 groups, 10 HIGH packages patch-only.*

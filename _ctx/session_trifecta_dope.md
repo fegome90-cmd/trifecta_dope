@@ -197,3 +197,10 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Summary**: Scoped correction reports as historical evidence, not final authority. Corrected 5.4 phrasing. Added authority clarification note to README. Ready for apply after human approval.
 - **Commits**: (fill in after commit)
 - **Next**: Human approval → apply dependabot.yml
+
+## 2026-05-09 Dependabot Policy Applied
+- **Summary**: Replaced .github/dependabot.yml with approved conservative config. HIGH = patch-only, pip limit 3, github-actions limit 2, 5 groups, 10 HIGH packages with semver-minor+major ignored.
+- **Implementation report**: hygiene/dependabot-policy-implementation-20260509.md
+- **Validations**: No tabs, schema check (groups, ignores, limits), YAML manual validation, no auto-merge, no PyYAML parse available
+- **Commits**: (fill in after commit)
+- **Next**: mypy floor update (separate SDD), typer gap (separate SDD)
