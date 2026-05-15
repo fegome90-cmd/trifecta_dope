@@ -17,6 +17,7 @@ class TestHybridDispatcherStub:
 
     def test_stub_importable(self) -> None:
         from src.infrastructure.cli_hybrid import HybridDispatcher
+
         assert HybridDispatcher is not None
 
     def test_init_accepts_path(self) -> None:
