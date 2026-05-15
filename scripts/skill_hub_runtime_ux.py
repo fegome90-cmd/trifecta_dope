@@ -31,9 +31,22 @@ class RuntimeSkillCard:
     source: str
     description: str
     authority_state: str = "healthy"
+    fidelity_level: str = "full"
+    compact_flag: bool = False
     search_hints: str | None = None
     triggers: tuple[str, ...] = ()
     relevance: float = 0.0
+    synthetic: bool = False
+
+    def __post_init__(self) -> None:
+        if self.id is None:
+            raise ValueError("id must be provided, not None")
+        if self.name is None:
+            raise ValueError("name must be provided, not None")
+        if self.authority_state not in ("healthy", "degraded"):
+            raise ValueError(
+                f"authority_state must be 'healthy' or 'degraded', got {self.authority_state!r}"
+            )
 
 
 def _is_tty(file: IO[str]) -> bool:
@@ -117,14 +130,15 @@ def emit_error_card(
 def render_cards_plain(cards: Iterable[RuntimeSkillCard]) -> str:
     blocks: list[str] = []
     for card in cards:
+        description = card.description if card.description else "Description unavailable"
         lines = [
-            f"# Skill: {card.name}",
+            f"# Skill: {card.name}{' [synthetic]' if card.synthetic else ''}",
             f"read {card.path}",
             f"Source: {card.source}",
         ]
         if card.authority_state == "degraded":
             lines.append("Status: DEGRADED")
-        lines.extend(["", card.description])
+        lines.extend(["", description])
         blocks.append("\n".join(lines))
     return "\n\n---\n\n".join(blocks)
 
@@ -150,15 +164,18 @@ def render_cards_rich(
         console.rule(f"[bold]{title}[/bold]", style="dim blue")
 
     for idx, card in enumerate(cards_list):
+        description = card.description if card.description else "Description unavailable"
         header = Text()
         header.append(card.name, style="bold cyan")
         header.append("  ", style="reset")
         header.append(card.source, style="dim")
         if card.authority_state == "degraded":
             header.append("  [DEGRADED]", style="bold red")
+        if card.synthetic:
+            header.append("  [SYNTHETIC]", style="bold yellow")
 
         body = Text()
-        body.append(card.description, style="white")
+        body.append(description, style="white")
         body.append("\n\n")
         body.append("read ", style="cyan")
         body.append(card.path, style="underline grey50")
