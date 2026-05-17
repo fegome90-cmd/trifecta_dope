@@ -203,6 +203,18 @@ class ContextService:
         if not query_words:
             query_words = [query.lower()]
 
+        # Build expanded forms: each word gets a stem variant for identity matching.
+        # This fixes cases like "skills" not matching "skill-hub-doctor" because
+        # "skills" is not a substring of "skill-hub-doctor.md".
+        _STEM_SUFFIXES = ("s", "es", "ing", "tion")
+        query_stems: dict[str, list[str]] = {}
+        for w in query_words:
+            stems = [w]
+            for suf in _STEM_SUFFIXES:
+                if w.endswith(suf) and len(w) - len(suf) >= 3:
+                    stems.append(w[: -len(suf)])
+            query_stems[w] = stems
+
         chunk_map = {chunk.id: chunk for chunk in pack.chunks}
 
         for entry in pack.index:
@@ -218,13 +230,23 @@ class ContextService:
             # 1. Identity Score (Dimension of Confidence)
             identity_score = 0.0
             title_lower = entry.title_path_norm.lower()
-            
-            # Identity matches (Title and ID slug)
+            id_lower = entry.id.lower()
+
+            # Identity matches (Title and ID slug) with stem expansion
             for word in query_words:
-                if word in title_lower:
+                matched = False
+                for stem in query_stems[word]:
+                    if stem in title_lower:
+                        matched = True
+                        break
+                if matched:
                     identity_score += 4.0  # Dominant identity signal
-                if word in entry.id.lower():
-                    identity_score += 1.0  # Supporting match (ID)
+                else:
+                    # Fallback: check ID slug with stems
+                    for stem in query_stems[word]:
+                        if stem in id_lower:
+                            identity_score += 1.0  # Supporting match (ID)
+                            break
 
             # 2. Information Score (Dimension of Support)
             body_raw_score = 0.0
@@ -246,7 +268,7 @@ class ContextService:
                 kw in query_words for kw in ["regla", "comando", "cómo", "rule", "protocol"]
             ):
                 total_score += 0.2
-            
+
             if total_score > 0:
                 hits.append(
                     SearchHit(
@@ -260,8 +282,8 @@ class ContextService:
                             "identity_score": round(identity_score, 4),
                             "body_raw_score": round(body_raw_score, 4),
                             "length_penalty": round(norm_factor, 4),
-                            "final_score": round(total_score, 4)
-                        }
+                            "final_score": round(total_score, 4),
+                        },
                     )
                 )
 

@@ -1,16 +1,29 @@
 from __future__ import annotations
 
 import argparse
-import io
 import json
 import os
 import re
 import subprocess
 import sys
+import time
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
-from typing import Iterable
+from typing import TYPE_CHECKING, Iterable
+
+if TYPE_CHECKING:
+    from scripts.skill_hub_runtime_ux import RuntimeSkillCard
+
+try:
+    from src.application.skill_card_view_model import SkillCardViewModel  # noqa: F401 — re-export for consumers
+except ImportError:
+    pass
+
+try:
+    from scripts.skill_hub_runtime_ux import RuntimeSkillCard as _RuntimeSkillCard
+except ImportError:
+    from skill_hub_runtime_ux import RuntimeSkillCard as _RuntimeSkillCard  # type: ignore[no-redef]
 
 TRIFECTA_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_SEGMENT_PATH = Path.home() / ".trifecta" / "segments" / "skills-hub"
@@ -67,37 +80,116 @@ class ClassifiedResult:
     kind: OutcomeKind
     normalized: NormalizedResult
     reason: str
+    authority_state: str = "healthy"
 
 
-@dataclass(frozen=True)
-class SkillCard:
-    id: str
-    title: str
-    path: str
-    source: str
-    description: str
-    score: float
+def SkillCard(*, id: str, title: str, path: str, source: str, description: str, score: float) -> _RuntimeSkillCard:
+    """Backward-compatible factory function mapping title→name, score→relevance."""
+    return _RuntimeSkillCard(
+        id=id,
+        name=title,
+        path=path,
+        source=source,
+        description=description,
+        relevance=score,
+    )
 
 
 @dataclass(frozen=True)
 class RenderPlan:
     outcome_kind: OutcomeKind
     exit_code: int
-    cards: list[SkillCard]
+    cards: list[_RuntimeSkillCard]
     message: str
     classified_results: list[ClassifiedResult]
 
 
 class SearchRuntimeError(RuntimeError):
-    pass
+    def __init__(self, message: str, elapsed_seconds: float = 0.0, partial_results: str | None = None) -> None:
+        super().__init__(message)
+        self.elapsed_seconds = elapsed_seconds
+        self.partial_results = partial_results
 
 
 class GetRuntimeError(RuntimeError):
-    pass
+    def __init__(self, message: str, elapsed_seconds: float = 0.0, partial_results: str | None = None) -> None:
+        super().__init__(message)
+        self.elapsed_seconds = elapsed_seconds
+        self.partial_results = partial_results
 
 
 class SearchParseError(RuntimeError):
     pass
+
+
+# Bidi control characters to strip from queries
+_BIDI_CHARS = frozenset(
+    "\u202e\u200f\u202a\u202b\u202c\u202d\u2066\u2067\u2068\u2069"
+)
+
+
+def sanitize_query(query: str, *, max_length: int = 500) -> str:
+    """Strip dangerous characters and enforce length limits on search queries.
+
+    Removes null bytes, BOM, and bidirectional control characters.
+    Truncates queries exceeding *max_length*, appending ``"..."``.
+    Raises :class:`ValueError` on empty or whitespace-only input.
+    """
+    if not query or not query.strip():
+        raise ValueError("Query cannot be empty or whitespace-only")
+    # Strip null bytes
+    cleaned = query.replace("\x00", "")
+    # Strip BOM
+    cleaned = cleaned.replace("\ufeff", "")
+    # Strip bidi control chars
+    cleaned = "".join(ch for ch in cleaned if ch not in _BIDI_CHARS)
+    # Strip leading/trailing whitespace
+    cleaned = cleaned.strip()
+    if not cleaned:
+        raise ValueError("Query cannot be empty or whitespace-only")
+    # Truncate
+    if len(cleaned) > max_length:
+        cleaned = cleaned[:max_length] + "..."
+    return cleaned
+
+
+# --- Adapter: ClassifiedResult → RuntimeSkillCard ---
+
+_TRUSTED_FIELDS = ("stable_id", "visible_title", "path", "source", "description")
+
+
+def build_view_model(result: ClassifiedResult):
+    """Bridge classified result to the render model.
+
+    Returns None when kind != RENDERABLE_SKILL.
+    authority_state comes from ClassifiedResult.
+    fidelity_level derived from field completeness.
+    """
+    if result.kind != OutcomeKind.RENDERABLE_SKILL:
+        return None
+
+    normalized = result.normalized
+    present_count = sum(1 for f in _TRUSTED_FIELDS if getattr(normalized, f, None) is not None)
+
+    if present_count >= 5:
+        fidelity_level = "full"
+    elif present_count >= 3:
+        fidelity_level = "partial"
+    else:
+        fidelity_level = "minimal"
+
+    return _RuntimeSkillCard(
+        id=normalized.stable_id or "",
+        name=normalized.visible_title or normalized.stable_id or "",
+        path=normalized.path or "",
+        source=normalized.source or "",
+        description=normalized.description or "",
+        authority_state=result.authority_state,
+        fidelity_level=fidelity_level,
+        compact_flag=fidelity_level != "full",
+        relevance=normalized.score,
+        synthetic=(normalized.path is None and normalized.source is None and normalized.description is None),
+    )
 
 
 def slugify(value: str) -> str:
@@ -241,6 +333,16 @@ def classify_result(normalized: NormalizedResult) -> ClassifiedResult:
             kind=OutcomeKind.RENDERABLE_SKILL,
             normalized=normalized,
             reason="sufficient trusted fields available for skill card rendering",
+            authority_state="healthy",
+        )
+
+    # Partial fields: still renderable but degraded (needs at minimum stable_id)
+    if normalized.stable_id:
+        return ClassifiedResult(
+            kind=OutcomeKind.RENDERABLE_SKILL,
+            normalized=normalized,
+            reason="partial trusted fields — degraded skill card",
+            authority_state="degraded",
         )
 
     return ClassifiedResult(
@@ -272,17 +374,18 @@ def build_render_plan(
         classify_result(normalize_result(hit, chunk_texts.get(hit.ref, "")))
         for hit in hits[:validated_limit]
     ]
-    cards: list[SkillCard] = [
-        card
+    cards: list[_RuntimeSkillCard] = [
+        vm
         for result in classified_results
         if result.kind == OutcomeKind.RENDERABLE_SKILL
-        if (card := _to_card(result)) is not None
+        if (vm := build_view_model(result)) is not None
     ]
 
     if cards:
+        exit_code = EXIT_EMPTY if all(card.synthetic for card in cards) else EXIT_RENDERABLE
         return RenderPlan(
             outcome_kind=OutcomeKind.RENDERABLE_SKILL,
-            exit_code=EXIT_RENDERABLE,
+            exit_code=exit_code,
             cards=cards,
             message="",
             classified_results=classified_results,
@@ -306,84 +409,43 @@ def build_render_plan(
     )
 
 
-def render_plain(plan: RenderPlan) -> str:
-    if plan.outcome_kind == OutcomeKind.RENDERABLE_SKILL:
-        return "\n\n---\n\n".join(_render_plain_card(card) for card in plan.cards)
-    return _render_non_renderable_message(plan)
-
-
-def render_rich(plan: RenderPlan) -> str:
-    try:
-        from rich import box
-        from rich.console import Console
-        from rich.panel import Panel
-        from rich.text import Text
-    except ImportError:
-        return render_plain(plan)
-
-    buffer = io.StringIO()
-    console = Console(file=buffer, force_terminal=True, width=100)
-
-    if plan.outcome_kind == OutcomeKind.RENDERABLE_SKILL:
-        for index, card in enumerate(plan.cards):
-            header = Text()
-            header.append(card.title, style="bold")
-            header.append("  ")
-            header.append(card.source, style="grey50")
-            if card.score > 0:
-                header.append("  ")
-                header.append(_score_bar(card.score), style="dim")
-
-            body = Text()
-            body.append(card.description, style="white")
-            panel = Panel(
-                body,
-                title=header,
-                border_style="grey37",
-                box=box.ROUNDED,
-                padding=(0, 1),
-                expand=True,
-            )
-            console.print(panel)
-            console.print(
-                f"[bold white on grey19] READ [/bold white on grey19] [grey50]{card.path}[/grey50]"
-            )
-            if index != len(plan.cards) - 1:
-                console.print()
-        return buffer.getvalue().strip()
-
-    style = "yellow" if plan.outcome_kind == OutcomeKind.METADATA_ONLY else "red"
-    title = "Metadata only" if plan.outcome_kind == OutcomeKind.METADATA_ONLY else "Non-renderable result"
-    console.print(Panel(plan.message, title=title, border_style=style, box=box.ROUNDED))
-    return buffer.getvalue().strip()
-
-
-def run_search(query: str, limit: int, *, segment_path: Path | None = None) -> str:
+def run_search(query: str, limit: int, *, segment_path: Path | None = None, timeout: int | None = 30) -> str:
     resolved = segment_path or DEFAULT_SEGMENT_PATH
     env = os.environ.copy()
     env.update({"TRIFECTA_LINT": "1", "TRIFECTA_NO_TELEMETRY": "1"})
-    result = subprocess.run(
-        [
-            "uv",
-            "run",
-            "trifecta",
-            "ctx",
-            "search",
-            "--segment",
-            str(resolved),
-            "--query",
-            query,
-            "--limit",
-            str(limit),
-            "--explain",
-            "--explain-format",
-            "json",
-        ],
-        cwd=str(TRIFECTA_ROOT),
-        capture_output=True,
-        text=True,
-        env=env,
-    )
+    start = time.monotonic()
+    try:
+        result = subprocess.run(
+            [
+                "uv",
+                "run",
+                "trifecta",
+                "ctx",
+                "search",
+                "--segment",
+                str(resolved),
+                "--query",
+                query,
+                "--limit",
+                str(limit),
+                "--explain",
+                "--explain-format",
+                "json",
+            ],
+            cwd=str(TRIFECTA_ROOT),
+            capture_output=True,
+            text=True,
+            env=env,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired as e:
+        elapsed_seconds = time.monotonic() - start
+        partial = e.stdout if isinstance(e.stdout, str) else (e.stdout.decode() if e.stdout else None)
+        raise SearchRuntimeError(
+            f"Search timed out after {elapsed_seconds:.1f}s (limit: {timeout}s)",
+            elapsed_seconds=elapsed_seconds,
+            partial_results=partial,
+        ) from e
     if result.returncode != 0:
         raise SearchRuntimeError(
             result.stderr.strip() or result.stdout.strip() or "unknown search error"
@@ -391,7 +453,7 @@ def run_search(query: str, limit: int, *, segment_path: Path | None = None) -> s
     return result.stdout
 
 
-def run_get(chunk_ids: Iterable[str], *, segment_path: Path | None = None) -> dict[str, str]:
+def run_get(chunk_ids: Iterable[str], *, segment_path: Path | None = None, timeout: int | None = 30) -> dict[str, str]:
     resolved = segment_path or DEFAULT_SEGMENT_PATH
     refs = [chunk_id for chunk_id in chunk_ids if chunk_id]
     if not refs:
@@ -399,28 +461,42 @@ def run_get(chunk_ids: Iterable[str], *, segment_path: Path | None = None) -> di
 
     env = os.environ.copy()
     env.update({"TRIFECTA_LINT": "1", "TRIFECTA_NO_TELEMETRY": "1"})
-    result = subprocess.run(
-        [
-            "uv",
-            "run",
-            "trifecta",
-            "ctx",
-            "get",
-            "--segment",
-            str(resolved),
-            "--ids",
-            ",".join(refs),
-            "--mode",
-            "excerpt",
-        ],
-        cwd=str(TRIFECTA_ROOT),
-        capture_output=True,
-        text=True,
-        env=env,
-    )
+    start = time.monotonic()
+    try:
+        result = subprocess.run(
+            [
+                "uv",
+                "run",
+                "trifecta",
+                "ctx",
+                "get",
+                "--segment",
+                str(resolved),
+                "--ids",
+                ",".join(refs),
+                "--mode",
+                "excerpt",
+            ],
+            cwd=str(TRIFECTA_ROOT),
+            capture_output=True,
+            text=True,
+            env=env,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired as e:
+        elapsed_seconds = time.monotonic() - start
+        partial = e.stdout if isinstance(e.stdout, str) else (e.stdout.decode() if e.stdout else None)
+        raise GetRuntimeError(
+            f"Get timed out after {elapsed_seconds:.1f}s (limit: {timeout}s)",
+            elapsed_seconds=elapsed_seconds,
+            partial_results=partial,
+        ) from e
     if result.returncode != 0:
         raise GetRuntimeError(result.stderr.strip() or result.stdout.strip() or "unknown get error")
     return _parse_get_output(result.stdout)
+
+
+_PUBLIC_CARD_FIELDS = ("id", "name", "path", "source", "description", "authority_state", "relevance", "synthetic")
 
 
 def output_json(plan: RenderPlan) -> str:
@@ -428,7 +504,7 @@ def output_json(plan: RenderPlan) -> str:
         "outcome_kind": plan.outcome_kind.value,
         "exit_code": plan.exit_code,
         "message": plan.message,
-        "cards": [card.__dict__ for card in plan.cards],
+        "cards": [{f: getattr(card, f) for f in _PUBLIC_CARD_FIELDS} for card in plan.cards],
         "classified_results": [
             {
                 "kind": item.kind.value,
@@ -466,8 +542,23 @@ def cli(argv: list[str] | None = None) -> int:
         help="Read legacy search output from stdin instead of executing governed search",
     )
     args = parser.parse_args(argv)
+    # Sanitize query before any processing (skip for stdin mode — no query to sanitize)
+    if not args.stdin_search_output:
+        if args.query is None or not args.query.strip():
+            print("❌ Query rejected: Query cannot be empty or whitespace-only", file=sys.stderr)
+            return EXIT_EMPTY
+        try:
+            args.query = sanitize_query(args.query)
+        except ValueError:
+            print("❌ Query rejected: Query cannot be empty or whitespace-only", file=sys.stderr)
+            return EXIT_EMPTY
+
     segment_path = args.segment
-    validated_limit = _validate_positive_limit(args.limit)
+    try:
+        validated_limit = _validate_positive_limit(args.limit)
+    except ValueError as exc:
+        print(f"skill-hub-cards: {exc}", file=sys.stderr)
+        return EXIT_ERROR
 
     try:
         raw_search_output = _load_search_payload(args, segment_path=segment_path)
@@ -481,19 +572,39 @@ def cli(argv: list[str] | None = None) -> int:
         print(f"skill-hub-cards: {exc}", file=sys.stderr)
         return EXIT_ERROR
 
-    rendered = _select_renderer(plan, use_json=args.json, style=args.style)
+    is_tty = sys.stdout.isatty()
+    rendered = _select_renderer(plan, use_json=args.json, style=args.style, is_tty=is_tty)
     stream = sys.stdout if plan.outcome_kind == OutcomeKind.RENDERABLE_SKILL else sys.stderr
     if rendered:
+        if not args.json and plan.outcome_kind == OutcomeKind.RENDERABLE_SKILL:
+            runtime_ux = _import_runtime_ux("skill_hub_runtime_ux")
+            print(
+                runtime_ux.render_intro(query_hint=args.query, rich=is_tty and args.style == "rich"),
+                file=stream,
+            )
         print(rendered, file=stream)
     return plan.exit_code
 
 
-def _select_renderer(plan: RenderPlan, *, use_json: bool, style: str) -> str:
+def _import_runtime_ux(module: str):
+    try:
+        return __import__(f"scripts.{module}", fromlist=[module])
+    except ImportError:
+        return __import__(module)
+
+
+def _select_renderer(plan: RenderPlan, *, use_json: bool, style: str, is_tty: bool = True) -> str:
     if use_json:
         return output_json(plan)
-    if style == "rich":
-        return render_rich(plan)
-    return render_plain(plan)
+    mod = _import_runtime_ux("skill_hub_runtime_ux")
+    use_rich = style == "rich" or (style != "plain" and is_tty)
+    if plan.cards and use_rich:
+        return mod.render_cards_rich(plan.cards)
+    if plan.cards:
+        return mod.render_cards_plain(plan.cards)
+    return mod.render_non_renderable_message(
+        outcome_kind=plan.outcome_kind.value, message=plan.message
+    )
 
 
 def _load_search_payload(args: argparse.Namespace, *, segment_path: Path | None = None) -> str:
@@ -524,47 +635,6 @@ def _parse_get_output(output: str) -> dict[str, str]:
     return chunks
 
 
-def _render_plain_card(card: SkillCard) -> str:
-    return "\n".join(
-        [
-            f"# Skill: {card.title}",
-            f"read {card.path}",
-            f"Source: {card.source}",
-            "",
-            card.description,
-        ]
-    )
-
-
-def _render_non_renderable_message(plan: RenderPlan) -> str:
-    title_map = {
-        OutcomeKind.METADATA_ONLY: "# Administrative metadata only",
-        OutcomeKind.UNSUPPORTED: "# Non-renderable result",
-        OutcomeKind.EMPTY: "# No search hits found",
-    }
-    title = title_map.get(plan.outcome_kind, "# skill-hub-cards")
-    return f"{title}\n{plan.message}".strip()
-
-
-def _to_card(result: ClassifiedResult) -> SkillCard | None:
-    if result.kind != OutcomeKind.RENDERABLE_SKILL:
-        return None
-    normalized = result.normalized
-    assert normalized.stable_id is not None
-    assert normalized.visible_title is not None
-    assert normalized.path is not None
-    assert normalized.source is not None
-    assert normalized.description is not None
-    return SkillCard(
-        id=normalized.stable_id,
-        title=normalized.visible_title,
-        path=normalized.path,
-        source=normalized.source,
-        description=normalized.description,
-        score=normalized.score,
-    )
-
-
 def _title_from_ref(ref: str) -> str:
     parts = ref.split(":")
     if len(parts) >= 3 and parts[0] in _RENDERABLE_RAW_TYPES:
@@ -591,6 +661,8 @@ def _positive_int(value: str) -> int:
 def _validate_positive_limit(limit: int) -> int:
     if limit <= 0:
         raise ValueError("limit must be a positive integer")
+    if limit > 100:
+        raise ValueError(f"limit must be between 1 and 100 (got {limit})")
     return limit
 
 
@@ -634,6 +706,28 @@ def _extract_useful_description(chunk: str) -> str | None:
         text = _ANSI_ESCAPE_RE.sub("", text)
         if text and not text.lower().startswith("skill:"):
             return text
+    for raw_line in chunk.replace("\\n", "\n").splitlines():
+        line = _ANSI_ESCAPE_RE.sub("", raw_line).strip()
+        if not line:
+            continue
+        lowered = line.lower()
+        if (
+            line.startswith("<!--")
+            or lowered.startswith("## [")
+            or lowered.startswith("read ")
+            or lowered in {"---", "..."}
+            or lowered.startswith("# skill:")
+            or lowered.startswith("**source**:")
+            or lowered.startswith("source:")
+            or lowered.startswith("name:")
+            or lowered.startswith("origin:")
+        ):
+            continue
+        if lowered.startswith("description:"):
+            value = line.split(":", 1)[1].strip()
+            if value:
+                return value
+        return line
     return None
 
 
@@ -664,11 +758,6 @@ def _metadata_message(chunk: str, raw_type: str) -> str:
     if heading:
         return f"{heading}. Administrative metadata only; not an executable skill."
     return f"{raw_type} result is administrative metadata only; not an executable skill."
-
-
-def _score_bar(score: float) -> str:
-    filled = max(0, min(5, int(round(min(score / 5.0, 1.0) * 5))))
-    return "●" * filled + "○" * (5 - filled)
 
 
 def _looks_like_json_payload(text: str) -> bool:
