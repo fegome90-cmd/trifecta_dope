@@ -57,7 +57,7 @@ class SearchHit(BaseModel):
     token_est: int
     source_path: str
     score: float
-    score_details: Optional[dict[str, float]] = Field(default=None)
+    score_details: Optional[dict[str, Any]] = Field(default=None)
 
 
 class OracleResult(BaseModel):

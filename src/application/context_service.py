@@ -217,6 +217,34 @@ class ContextService:
 
         chunk_map = {chunk.id: chunk for chunk in pack.chunks}
 
+        # --- IDF Pre-computation ---
+        # N = total rankable entries; df(token) = entries containing token.
+        # idf(token) = log((N + 1) / (df + 1)) + 1
+        # Rare tokens get higher IDF, common tokens get lower IDF.
+        N = len(pack.index)
+        df_counts: dict[str, int] = {w: 0 for w in query_words}
+        # Build pre-indexed text per entry for DF counting
+        entry_texts: list[tuple[str, str, str]] = []  # (title_lower, id_lower, body_lower)
+        for entry in pack.index:
+            chunk_df = chunk_map.get(entry.id)
+            body_for_df = chunk_df.text.lower() if chunk_df else ""
+            t = entry.title_path_norm.lower()
+            i = entry.id.lower()
+            entry_texts.append((t, i, body_for_df))
+            for word in query_words:
+                # Check all stem variants for DF counting
+                found = False
+                for stem in query_stems[word]:
+                    if stem in t or stem in i or word in body_for_df:
+                        found = True
+                        break
+                if found:
+                    df_counts[word] += 1
+
+        idf_weights: dict[str, float] = {}
+        for word in query_words:
+            idf_weights[word] = math.log((N + 1) / (df_counts[word] + 1)) + 1
+
         for entry in pack.index:
             chunk = chunk_map.get(entry.id)
             if chunk is None:
@@ -232,20 +260,21 @@ class ContextService:
             title_lower = entry.title_path_norm.lower()
             id_lower = entry.id.lower()
 
-            # Identity matches (Title and ID slug) with stem expansion
+            # Identity matches (Title and ID slug) with stem expansion + IDF weighting
             for word in query_words:
+                idf = idf_weights[word]
                 matched = False
                 for stem in query_stems[word]:
                     if stem in title_lower:
                         matched = True
                         break
                 if matched:
-                    identity_score += 4.0  # Dominant identity signal
+                    identity_score += 4.0 * idf  # Dominant identity signal × IDF
                 else:
                     # Fallback: check ID slug with stems
                     for stem in query_stems[word]:
                         if stem in id_lower:
-                            identity_score += 1.0  # Supporting match (ID)
+                            identity_score += 1.0 * idf  # Supporting match (ID) × IDF
                             break
 
             # 2. Information Score (Dimension of Support)
@@ -253,7 +282,7 @@ class ContextService:
             body_lower = chunk.text.lower()
             for word in query_words:
                 if word in body_lower:
-                    body_raw_score += 0.5
+                    body_raw_score += 0.5 * idf_weights[word]  # Body match × IDF
 
             # 3. Apply Length Normalization (Log10 suavizada)
             # C=50 ensures Factor >= 1.7. Factor for 1000 tokens ~ 3.02.
@@ -282,6 +311,7 @@ class ContextService:
                             "identity_score": round(identity_score, 4),
                             "body_raw_score": round(body_raw_score, 4),
                             "length_penalty": round(norm_factor, 4),
+                            "idf_weights": {w: round(idf_weights[w], 4) for w in query_words},
                             "final_score": round(total_score, 4),
                         },
                     )

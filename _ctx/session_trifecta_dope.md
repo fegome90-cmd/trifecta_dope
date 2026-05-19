@@ -204,3 +204,13 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Validations**: No tabs, schema check (groups, ignores, limits), YAML manual validation, no auto-merge, no PyYAML parse available
 - **Commits**: (fill in after commit)
 - **Next**: mypy floor update (separate SDD), typer gap (separate SDD)
+
+## 2026-05-19: IDF Weighting for Skill-Hub Ranking
+
+- **Type**: fix(search)
+- **Scope**: context_service.py scoring loop
+- **Summary**: Implemented IDF weighting in ContextService.search() so rare/specific tokens (e.g. "typescript" appearing in 1 skill) contribute more than common tokens (e.g. "test" appearing in 15 skills). Before this fix, "typescript test error class constructor" ranked typescript-pro at position 16; after the fix it ranks #1.
+- **Files modified**: src/application/context_service.py, src/domain/context_models.py (score_details type), tests/unit/test_idf_scoring.py (new)
+- **Formula**: idf(token) = log((N + 1) / (df + 1)) + 1, where N = total entries, df = entries containing token. Identity and body contributions multiplied by idf(token).
+- **Validation**: 4 new tests (3 RED→GREEN + 1 regression for stem expansion), 6 existing scoring/search tests still pass
+- **Commits**: (pending)
