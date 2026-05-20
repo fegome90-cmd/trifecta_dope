@@ -243,7 +243,13 @@ class ContextService:
 
         idf_weights: dict[str, float] = {}
         for word in query_words:
-            idf_weights[word] = math.log((N + 1) / (df_counts[word] + 1)) + 1
+            # Synthetic tokens from the query linter (e.g. "agent.md", "prime.md")
+            # contain dots and are not user search intent. Give them neutral weight (1.0)
+            # so they don't inflate scores of skills matching the synthetic token.
+            if "." in word:
+                idf_weights[word] = 1.0
+            else:
+                idf_weights[word] = math.log((N + 1) / (df_counts[word] + 1)) + 1
 
         for entry in pack.index:
             chunk = chunk_map.get(entry.id)
