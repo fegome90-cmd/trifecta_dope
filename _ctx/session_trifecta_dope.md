@@ -220,7 +220,8 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Type**: fix(search)
 - **Scope**: query_linter.py — removed vague_default_boost block
 - **Summary**: Removed agent.md/prime.md injection for vague queries (≤2 tokens). These synthetics matched too broadly (agents, .md filenames) and produced false-positive rankings (code-review-agent #1 for "backpressure", "go", "xylophone", etc.). After fix: queries with no signal return 0 results instead of irrelevant skills.
-- **Files modified**: src/domain/query_linter.py (removed injection block), tests/unit/test_no_synthetics.py (new, 10 tests), tests/unit/test_search_usecase_linter.py (updated assertions)
+- **Files modified**: src/domain/query_linter.py (removed injection block), tests/unit/test_no_synthetics.py (new, 10 tests), tests/unit/test_search_usecase_linter.py, tests/unit/test_query_linter.py, tests/unit/test_field_exercises_anchor_metrics.py, tests/integration/test_ctx_search_linter.py (updated assertions)
 - **6 symptoms fixed**: backpressure→no results, go→golang-patterns, xylophone→no results, skills→writing-skills, test.*pattern→no results, nonexistent→no results
 - **No regressions**: typescript test, no encuentra skills (alias), security audit, golang testing, rust — all still rank #1 correctly
-- **Commits**: (pending)
+- **Invariant clarification**: The query `skills` now ranks `writing-skills` #1 (title match). The relevant pathway to `skill-hub-doctor` is preserved via the alias/troubleshooting intent (`no encuentra skills` → skill-hub-doctor #1), not via synthetics. The preserved invariant is: skill-hub troubleshooting intent → skill-hub-doctor without synthetics.
+- **Commits**: d96cee56 (initial), pending (test cleanup)

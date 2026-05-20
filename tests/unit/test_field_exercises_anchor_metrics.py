@@ -56,7 +56,7 @@ def sample_on_event_expanded():
             "linter_expanded": True,
             "linter_added_strong_count": 2,
             "linter_added_weak_count": 0,
-            "linter_reasons": ["vague_default_boost"],
+            "linter_reasons": ["doc_intent_boost"],
         },
         "result": {
             "hits": 8,

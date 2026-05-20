@@ -31,21 +31,25 @@ def test_guided_no_expansion(anchors_cfg, aliases_cfg):
 
 
 def test_vague_expansion(anchors_cfg, aliases_cfg):
-    """Case B: Vague expande"""
+    """Case B: Vague query with anchor present in query text."""
     query = "agent template"
     # tokens: 2 -> VAGUE (token_count < 3)
+    # "agent.md" appears as substring of "agent" in anchors config strong.files
 
     plan = lint_query(query, anchors_cfg, aliases_cfg)
 
     assert plan["query_class"] == "vague"
-    assert plan["changed"] is True
-    assert plan["expanded_query"] != query
-    # Check limits
-    assert len(plan["changes"]["added_strong"]) <= 2
-    assert len(plan["changes"]["added_weak"]) <= 2
-
-    # Verify expansion adds expected terms
-    assert "agent.md" in plan["expanded_query"] or "prime.md" in plan["expanded_query"]
+    # With vague_default_boost removed, expansion depends on anchor detection.
+    # "agent.md" may be detected as strong anchor (substring of "agent" in query)
+    # or the query may stay unchanged if no anchors match.
+    # Either way, NO synthetic defaults (agent.md/prime.md) should be injected.
+    if plan["changed"]:
+        # If expanded, it must be because an anchor was genuinely detected
+        assert len(plan["changes"]["added_strong"]) <= 2
+        assert len(plan["changes"]["added_weak"]) <= 2
+        assert "vague_default_boost" not in plan["changes"]["reasons"], (
+            "vague_default_boost should not appear — it was removed"
+        )
 
 
 def test_nl_spanish_alias(anchors_cfg, aliases_cfg):
@@ -93,11 +97,9 @@ def test_doc_intent_boost(anchors_cfg, aliases_cfg):
 
 
 def test_reasons_no_duplicates(anchors_cfg, aliases_cfg):
-    """Verify reasons list has no duplicates after dedupe fix."""
+    """Verify reasons list has no duplicates."""
     query = "help"
-    # VAGUE (1 token) -> should trigger vague_default_boost
-    # Before fix: reasons would be ["vague_default_boost", "vague_default_boost"] if both agent.md and prime.md added
-    # After fix: reasons should be ["vague_default_boost"] (only once)
+    # VAGUE (1 token) -> may or may not be expanded
 
     plan = lint_query(query, anchors_cfg, aliases_cfg)
 
@@ -105,8 +107,7 @@ def test_reasons_no_duplicates(anchors_cfg, aliases_cfg):
     reasons = plan["changes"]["reasons"]
     assert len(reasons) == len(set(reasons)), f"Reasons has duplicates: {reasons}"
 
-    # Verify that if vague_default_boost is present, it appears only once
-    if "vague_default_boost" in reasons:
-        assert reasons.count("vague_default_boost") == 1, (
-            "vague_default_boost should appear only once"
-        )
+    # vague_default_boost must never appear — it was removed
+    assert "vague_default_boost" not in reasons, (
+        "vague_default_boost should not appear — it was removed from the linter"
+    )

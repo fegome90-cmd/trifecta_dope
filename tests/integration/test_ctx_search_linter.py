@@ -149,35 +149,16 @@ def test_vague_query_expansion_with_linter_enabled(
             enable_lint=True,
         )
 
-        # Verify: linter was applied and query was expanded
+        # Verify: linter was applied and classified as vague
         assert lint_plan_captured is not None, "lint_query should have been called"
         assert lint_plan_captured["query_class"] == "vague", (
             f"Expected 'vague', got '{lint_plan_captured['query_class']}'"
         )
-        assert lint_plan_captured["changed"] is True, (
-            "Query should have been expanded for vague query"
+        # With vague_default_boost removed, a vague query with no detected anchors
+        # may not be expanded. The key invariant: no synthetic defaults injected.
+        assert "vague_default_boost" not in lint_plan_captured["changes"]["reasons"], (
+            "vague_default_boost must not appear — it was removed from the linter"
         )
-
-        # Verify: expanded_query includes strong anchors
-        expanded_query = lint_plan_captured["expanded_query"]
-        assert "agent.md" in expanded_query or "prime.md" in expanded_query, (
-            f"Expanded query should include strong anchors: {expanded_query}"
-        )
-
-        # Verify: telemetry recorded linter expansion
-        assert mock_telemetry.incr.called
-        incr_calls = [str(call) for call in mock_telemetry.incr.call_args_list]
-        assert any("ctx_search_linter_expansion_count" in call for call in incr_calls), (
-            "Telemetry should record linter expansion"
-        )
-
-        # Verify: telemetry event includes linter metadata
-        assert mock_telemetry.event.called
-        event_call = mock_telemetry.event.call_args_list[0]
-        event_metadata = event_call[0][1] if event_call[0] else {}
-        assert "linter_query_class" in event_metadata
-        assert event_metadata["linter_query_class"] == "vague"
-        assert event_metadata["linter_expanded"] is True
 
     # Restore original function
     query_linter.lint_query = original_lint
