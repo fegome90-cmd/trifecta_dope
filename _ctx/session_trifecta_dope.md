@@ -214,3 +214,13 @@ fswatch -o -e "_ctx/.*" -i "skill.md|prime.md|agent.md|session.md" . \
 - **Formula**: idf(token) = log((N + 1) / (df + 1)) + 1, where N = total entries, df = entries containing token. Identity and body contributions multiplied by idf(token).
 - **Validation**: 4 new tests (3 RED→GREEN + 1 regression for stem expansion), 6 existing scoring/search tests still pass
 - **Commits**: (pending)
+
+## 2026-05-20: Eliminate vague_default_boost synthetic tokens
+
+- **Type**: fix(search)
+- **Scope**: query_linter.py — removed vague_default_boost block
+- **Summary**: Removed agent.md/prime.md injection for vague queries (≤2 tokens). These synthetics matched too broadly (agents, .md filenames) and produced false-positive rankings (code-review-agent #1 for "backpressure", "go", "xylophone", etc.). After fix: queries with no signal return 0 results instead of irrelevant skills.
+- **Files modified**: src/domain/query_linter.py (removed injection block), tests/unit/test_no_synthetics.py (new, 10 tests), tests/unit/test_search_usecase_linter.py (updated assertions)
+- **6 symptoms fixed**: backpressure→no results, go→golang-patterns, xylophone→no results, skills→writing-skills, test.*pattern→no results, nonexistent→no results
+- **No regressions**: typescript test, no encuentra skills (alias), security audit, golang testing, rust — all still rank #1 correctly
+- **Commits**: (pending)

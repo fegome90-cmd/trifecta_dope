@@ -97,19 +97,10 @@ def expand_query(
                 reasons.append("doc_intent_boost")
 
     # Si aun tenemos espacio para strong anchors y no hay intención documental clara,
-    # podríamos añadir "agent.md" o "prime.md" como entrypoints por defecto para queries muy vagas
-    # pero el mandato dice "limitado".
-    if len(added_strong) < 2:
-        defaults = ["agent.md", "prime.md"]
-        added_any = False
-        for cand in defaults:
-            if cand not in existing_strong and cand not in added_strong and len(added_strong) < 2:
-                # Solo añadir si la query es REALMENTE vaga (token count muy bajo)
-                if analysis["token_count"] <= 2:
-                    added_strong.append(cand)
-                    added_any = True
-        if added_any:
-            reasons.append("vague_default_boost")
+    # NO inyectamos defaults genéricos (agent.md, prime.md). Fueron eliminados porque
+    # matchean demasiado amplio y producen falsos positivos en ranking (e.g. code-review-agent
+    # rankeando #1 para "backpressure"). Un query sin señal suficiente debe devolver 0 results.
+    # Ver: tests/unit/test_no_synthetics.py
 
     # Construir query expandida
     # Simplemente concatenamos los términos únicos
