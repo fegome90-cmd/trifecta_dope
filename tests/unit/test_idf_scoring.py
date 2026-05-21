@@ -175,20 +175,28 @@ class TestIDFRanking:
         # Simulate linter-expanded query: "typescript agent.md prime.md"
         skills = [
             _make_skill(
-                "typescript-pro", "typescript-pro.md",
-                "TypeScript types generics.", token_est=120,
+                "typescript-pro",
+                "typescript-pro.md",
+                "TypeScript types generics.",
+                token_est=120,
             ),
             _make_skill(
-                "code-review-agent", "code-review-agent.md",
-                "Code review with agent.", token_est=109,
+                "code-review-agent",
+                "code-review-agent.md",
+                "Code review with agent.",
+                token_est=109,
             ),
             _make_skill(
-                "pae-agent", "pae-agent.md",
-                "PAE agent system.", token_est=104,
+                "pae-agent",
+                "pae-agent.md",
+                "PAE agent system.",
+                token_est=104,
             ),
             _make_skill(
-                "mcp-builder", "mcp-builder.md",
-                "Build MCP servers.", token_est=111,
+                "mcp-builder",
+                "mcp-builder.md",
+                "Build MCP servers.",
+                token_est=111,
             ),
         ]
         pack = _build_pack(skills)

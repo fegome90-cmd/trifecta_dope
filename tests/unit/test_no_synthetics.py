@@ -8,7 +8,6 @@ RED phase: all 6 symptom tests should FAIL against the current linter
 that still injects synthetics. GREEN after removing vague_default_boost.
 """
 
-
 from src.domain.query_linter import classify_query, expand_query, lint_query
 from src.application.context_service import ContextService
 from src.domain.context_models import ContextChunk, ContextIndexEntry, ContextPack
@@ -17,6 +16,7 @@ from pathlib import Path
 
 
 # --- Minimal config fixtures ---
+
 
 def _no_anchors_cfg():
     """Empty anchors config — no strong/weak anchors defined."""
@@ -41,6 +41,7 @@ def _anchors_with_agent_prime():
 
 
 # --- Linter-level tests: verify synthetics are NOT injected ---
+
 
 class TestLinterNoSynthetics:
     """Verify that expand_query does NOT inject agent.md/prime.md defaults."""
@@ -102,13 +103,22 @@ class TestLinterNoSynthetics:
 
 # --- Search-level tests: verify no false-positive ranking ---
 
+
 def _make_skill(name: str, title: str, body: str, token_est: int = 100) -> tuple:
     chunk = ContextChunk(
-        id=f"skill:{name}", doc="skill", title_path=[title], text=body,
-        char_count=len(body), token_est=token_est, source_path=title,
+        id=f"skill:{name}",
+        doc="skill",
+        title_path=[title],
+        text=body,
+        char_count=len(body),
+        token_est=token_est,
+        source_path=title,
     )
     entry = ContextIndexEntry(
-        id=f"skill:{name}", title_path_norm=title, preview=body[:60], token_est=token_est,
+        id=f"skill:{name}",
+        title_path_norm=title,
+        preview=body[:60],
+        token_est=token_est,
     )
     return chunk, entry
 
@@ -127,12 +137,11 @@ class TestSearchNoSyntheticFalsePositives:
     def test_backpressure_no_false_agent(self):
         """'backpressure' must NOT rank code-review-agent #1 via synthetics."""
         skills = [
-            _make_skill("code-review-agent", "code-review-agent.md",
-                        "Code review with agent.", 109),
-            _make_skill("pae-agent", "pae-agent.md",
-                        "PAE agent system.", 104),
-            _make_skill("mcp-builder", "mcp-builder.md",
-                        "Build MCP servers.", 111),
+            _make_skill(
+                "code-review-agent", "code-review-agent.md", "Code review with agent.", 109
+            ),
+            _make_skill("pae-agent", "pae-agent.md", "PAE agent system.", 104),
+            _make_skill("mcp-builder", "mcp-builder.md", "Build MCP servers.", 111),
         ]
         pack = _build_pack(skills)
         svc = ContextService(Path("."))
@@ -149,10 +158,10 @@ class TestSearchNoSyntheticFalsePositives:
     def test_nonexistent_token_returns_empty(self):
         """A token that matches no skill must return 0 results."""
         skills = [
-            _make_skill("code-review-agent", "code-review-agent.md",
-                        "Code review with agent.", 109),
-            _make_skill("pae-agent", "pae-agent.md",
-                        "PAE agent system.", 104),
+            _make_skill(
+                "code-review-agent", "code-review-agent.md", "Code review with agent.", 109
+            ),
+            _make_skill("pae-agent", "pae-agent.md", "PAE agent system.", 104),
         ]
         pack = _build_pack(skills)
         svc = ContextService(Path("."))
@@ -161,21 +170,18 @@ class TestSearchNoSyntheticFalsePositives:
         result = svc.search("xylophone", k=3)
 
         assert len(result.hits) == 0, (
-            f"'xylophone' returned {len(result.hits)} hits. "
-            f"Top: {[h.id for h in result.hits]}"
+            f"'xylophone' returned {len(result.hits)} hits. Top: {[h.id for h in result.hits]}"
         )
 
     def test_go_no_false_agent(self):
         """'go' must NOT rank agents over go-related skills."""
         skills = [
-            _make_skill("go-testing", "go-testing.md",
-                        "Go testing patterns for TUI.", 88),
-            _make_skill("golang-patterns", "golang-patterns.md",
-                        "Go design patterns.", 84),
-            _make_skill("code-review-agent", "code-review-agent.md",
-                        "Code review with agent.", 109),
-            _make_skill("pae-agent", "pae-agent.md",
-                        "PAE agent system.", 104),
+            _make_skill("go-testing", "go-testing.md", "Go testing patterns for TUI.", 88),
+            _make_skill("golang-patterns", "golang-patterns.md", "Go design patterns.", 84),
+            _make_skill(
+                "code-review-agent", "code-review-agent.md", "Code review with agent.", 109
+            ),
+            _make_skill("pae-agent", "pae-agent.md", "PAE agent system.", 104),
         ]
         pack = _build_pack(skills)
         svc = ContextService(Path("."))
@@ -190,9 +196,7 @@ class TestSearchNoSyntheticFalsePositives:
             # go-testing should be #1 if present in results
             if "skill:go-testing" in ids:
                 go_rank = ids.index("skill:go-testing")
-                agent_ranks = [
-                    ids.index(a) for a in ids if "agent" in a
-                ]
+                agent_ranks = [ids.index(a) for a in ids if "agent" in a]
                 if agent_ranks:
                     assert go_rank < min(agent_ranks), (
                         f"go-testing (rank {go_rank}) should outrank agents "
@@ -206,10 +210,10 @@ class TestStemAliasStillWorks:
     def test_skills_still_matches_skill_hub_doctor(self):
         """'skills' must still match skill-hub-doctor via stem expansion alone."""
         skills = [
-            _make_skill("skill-hub-doctor", "skill-hub-doctor.md",
-                        "Diagnose skill-hub issues.", 100),
-            _make_skill("unrelated", "unrelated.md",
-                        "Something else.", 80),
+            _make_skill(
+                "skill-hub-doctor", "skill-hub-doctor.md", "Diagnose skill-hub issues.", 100
+            ),
+            _make_skill("unrelated", "unrelated.md", "Something else.", 80),
         ]
         pack = _build_pack(skills)
         svc = ContextService(Path("."))
@@ -219,8 +223,7 @@ class TestStemAliasStillWorks:
 
         ids = [h.id for h in result.hits]
         assert "skill:skill-hub-doctor" in ids, (
-            f"Stem expansion broken: 'skills' should match 'skill-hub-doctor'. "
-            f"Results: {ids}"
+            f"Stem expansion broken: 'skills' should match 'skill-hub-doctor'. Results: {ids}"
         )
 
     def test_guided_query_unchanged(self):
