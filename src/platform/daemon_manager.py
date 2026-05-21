@@ -157,7 +157,7 @@ class DaemonManager:
         finally:
             self._cleanup_files()
 
-    def restart(self) -> bool:
+    def restart(self) -> tuple[bool, Optional[str]]:
         self.stop()
         return self.start()
 
