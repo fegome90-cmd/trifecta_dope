@@ -103,3 +103,35 @@ make doctor
 
 - Evidence: 2019 collected 0 errors; 20/20 daemon tests pass; bug hunt report with reproduction steps
 - Next: Create SDD change for H1 (daemon path validation) and H2 (worktree exclusion) if desired
+
+### 2026-05-22 07:48 -04 — Review of SDD git-hygiene-audit
+
+- Segment: .
+- Objective: Verify whether `openspec/changes/git-hygiene-audit` is well elaborated before execution.
+- Plan: read proposal/spec -> compare against current git state -> report gaps and risks.
+- Evidence: `git status --short --branch` shows `main...origin/main [ahead 12]`; `git branch -r --no-merged main` shows 7 remote branches; `git count-objects -vH` reports 2 garbage objects / 13.71 MiB; `git diff --stat` shows REQ-09 scope is much larger than "formatting + metadata only" because `reconcile.patch` dominates the diff.
+- Next: If requested, convert the review into concrete corrections for `DESIGN.md` + `TASKS.md` and tighten REQ-09 acceptance criteria.
+
+### 2026-05-22 07:51 -04 — Root causes captured for weak git-hygiene-audit SDD
+
+- Segment: .
+- Objective: Preserve why the agent generated a weak SDD so the mistake pattern is reusable.
+- Plan: distill root causes from proposal/spec vs live repo evidence -> save to memory -> log here.
+- Evidence: proposal mixes hygiene with publish/push work; proposal count says 5 stale branches while listing 6; proposal names `stash-preserve-codex-fallback-v1` while repo/spec use `stash-preserve-codex-freeze-v1`; spec stops at proposal+spec with no design/tasks; dirty diff is huge, so REQ-09 risk classification is wrong.
+- Next: If requested, I can turn these causes into a prevention checklist for future SDD generation.
+
+### 2026-05-22 08:13 -04 — Apply gate decision for publish-main-backlog
+
+- Segment: .
+- Objective: Decide whether `publish-main-backlog` is ready for apply after the new gate output.
+- Plan: verify gate claims against `SPEC.md`/`TASKS.md` -> decide if apply can proceed safely.
+- Evidence: `publish-main-backlog/TASKS.md` T2.3 still uses blanket `git add _ctx/ my_project/_ctx/`; `git-hygiene-cleanup/TASKS.md` T2.3 still batches remote deletes; both match the reported medium findings.
+- Next: Recommend proceeding with `publish-main-backlog` only after hardening T2.3 so apply does not stage whole directories blindly.
+
+### 2026-05-22 08:20 -04 — Skill-hub impact verification for pending git changes
+
+- Segment: .
+- Objective: Verify whether `publish-main-backlog` / `git-hygiene-cleanup` would damage `skill-hub`.
+- Plan: compare touched files vs skill-hub implementation surface, then run targeted skill-hub tests.
+- Evidence: `git diff --name-only` shows no `skill_hub*` implementation files are touched; `src/application/skill_hub_indexing_strategy.py` explicitly says segment metadata files like `skill.md` are excluded from skill indexing; targeted skill-hub tests show many preexisting failures plus two integration failures caused by AGENTS.md constitution expectations in temp fixtures, not by the pending git hygiene changes.
+- Next: Safe to say there is no direct new damage path to skill-hub from these changes, but not safe to claim skill-hub is fully healthy on this branch.

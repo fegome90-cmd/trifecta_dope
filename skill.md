@@ -9,7 +9,7 @@ description: Use when working on Scope
 Scope
 
 ## When to Use
-Working on `/Users/felipe_gonzalez/Developer/agent_h/trifecta_dope/trifecta_dope/`
+Working on `./trifecta_dope/`
 
 ## Core Pattern
 
@@ -38,23 +38,23 @@ trifecta ctx get --segment . --ids "<id1>,<id2>" --mode excerpt --budget-token-e
 trifecta session append --segment . --summary "Completed <task>" --files "<touched>" --commands "<executed>"
 ```
 
-### Stale Fail-Closed Protocol
+### Mandatory Validation Protocol (Law V)
 
-If `ctx validate` fails or `stale_detected=true`:
-- STOP immediately
+**STALE FAIL-CLOSED**: If `ctx validate` fails or `stale_detected=true`:
+- **STOP** immediately. Do NOT guess.
 - Run: `trifecta ctx sync --segment .` + `trifecta ctx validate --segment .`
-- Log: "Stale: true -> sync+validate executed"
-- Continue ONLY if PASS
+- Continue ONLY if state is **VALID**.
+- **Evidence**: All mutations MUST be followed by a verification command.
 
 ## Common Mistakes
-- Skipping session logging
-- Using absolute paths outside segment
-- Continuing with stale pack
-- Silent fallback to Plan B
+- Skipping session logging (Law I violation)
+- Writing before reading (Law II violation)
+- Continuing with stale pack (Law VI violation)
+- Model-specific bias in naming (Law VII violation)
 
 ## Resources (On-Demand)
 - `@_ctx/prime_trifecta_dope.md` - Reading list
-- `@_ctx/agent.md` - Tech stack & gates
+- `@_ctx/agent_trifecta_dope.md` - Tech stack & gates
 - `@_ctx/session_trifecta_dope.md` - Session log
 
 ---

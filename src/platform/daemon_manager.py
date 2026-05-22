@@ -62,6 +62,7 @@ class DaemonManager:
             get_daemon_pid_path,
             get_daemon_lock_path,
         )
+
         fp = resolve_segment_ref(str(self._repo_root)).fingerprint
         self._socket_path = get_daemon_socket_path(fp)
         self._pid_path = get_daemon_pid_path(fp)
@@ -97,7 +98,9 @@ class DaemonManager:
         env["TRIFECTA_RUNTIME_DIR"] = str(self._runtime_dir)
         env["TRIFECTA_REPO_ROOT"] = str(self._repo_root.resolve())
         trifecta_root = Path(__file__).parent.parent.parent.resolve()
-        env["PYTHONPATH"] = f"{trifecta_root}:{self._repo_root.resolve()}:{env.get('PYTHONPATH', '')}"
+        env["PYTHONPATH"] = (
+            f"{trifecta_root}:{self._repo_root.resolve()}:{env.get('PYTHONPATH', '')}"
+        )
         # Pass TTL if configured (Fase 4 hardening)
         if self.DAEMON_TTL_IDLE > 0:
             env["TRIFECTA_DAEMON_TTL"] = str(self.DAEMON_TTL_IDLE)
