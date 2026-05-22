@@ -86,3 +86,6 @@ _ctx/trifecta_config.json
 
 # Claude agent worktrees (runtime)
 .claude/worktrees/
+
+# Generated test fixture - regenerates on every ctx rebuild (270K+ lines)
+tests/fixtures/reconcile/running_wo_without_worktree/_ctx/logs/reconcile/reconcile.patch
