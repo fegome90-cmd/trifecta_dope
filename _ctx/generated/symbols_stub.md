@@ -2,7 +2,7 @@
 
 > **Status**: Placeholder for symbol-level navigation
 > **Version**: v1 (Prime-based) → v2 (AST/LSP-based, planned)
-> **Hash**: fb72ae3582cc
+> **Hash**: 65ee40c028d6
 
 ---
 
