@@ -9,15 +9,15 @@ Cleaned up stale git references after publish-main-backlog. Closed 2 Dependabot 
 
 ## Operations Performed
 
-| Operation | Detail |
-|-----------|--------|
-| PRs closed | #106 (pyright), #104 (dependency-review-action) — CI failing |
-| Branches deleted | `codex/batch-2d-runtime-manager`, `codex/wo-frictionless-closeout`, `codex/wo-remediation-ci-baseline`, `fegome90-cmd/wo-0015-work`, 2 dependabot (auto-deleted by GitHub) |
-| Branches preserved | `hygiene/git-audit-20260504`, `hygiene/stash-preserve-codex-freeze` |
-| Worktree pruned | `.worktrees/review-pr-hygiene-campaign-closeout/` |
-| Stash dropped | `stash@{0}` (WIP on main at 49031bd2, verified superseded) |
-| Tags deleted | `archive/dirty-main-2025-01-06`, `backup/wip-fulltext-fallback-audit`, `pre-merge-WO-0045-20260213-202041` |
-| GC | 624 MiB loose → 0, pack 96→59 MiB |
+| Operation          | Detail                                                                                                                                                                     |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PRs closed         | #106 (pyright), #104 (dependency-review-action) — CI failing                                                                                                               |
+| Branches deleted   | `codex/batch-2d-runtime-manager`, `codex/wo-frictionless-closeout`, `codex/wo-remediation-ci-baseline`, `fegome90-cmd/wo-0015-work`, 2 dependabot (auto-deleted by GitHub) |
+| Branches preserved | `hygiene/git-audit-20260504`, `hygiene/stash-preserve-codex-freeze`                                                                                                        |
+| Worktree pruned    | `.worktrees/review-pr-hygiene-campaign-closeout/`                                                                                                                          |
+| Stash dropped      | `stash@{0}` (WIP on main at 49031bd2, verified superseded)                                                                                                                 |
+| Tags deleted       | `archive/dirty-main-2025-01-06`, `backup/wip-fulltext-fallback-audit`, `pre-merge-WO-0045-20260213-202041`                                                                 |
+| GC                 | 624 MiB loose → 0, pack 96→59 MiB                                                                                                                                          |
 
 ## Verification
 
@@ -31,6 +31,7 @@ Cleaned up stale git references after publish-main-backlog. Closed 2 Dependabot 
 ## Recovery SHA Audit (post-archive)
 
 4 of 6 GC-pruned SHAs recovered and preserved as archive tags:
+
 - `archive/branch-batch-2d-runtime-manager-20260522`
 - `archive/branch-wo-remediation-ci-baseline-20260522`
 - `archive/branch-wo-0015-work-20260522`

@@ -4,12 +4,12 @@
 
 ## SHAs Preserved as Archive Tags
 
-| SHA (short) | Original Ref | Archive Tag | Method |
-|-------------|-------------|-------------|--------|
-| `d91a01ad` | `codex/batch-2d-runtime-manager` | `archive/branch-batch-2d-runtime-manager-20260522` | PR #81 `refs/pull/81/head` |
-| `15761042` | `codex/wo-remediation-ci-baseline` | `archive/branch-wo-remediation-ci-baseline-20260522` | PR #78 `refs/pull/78/head` |
-| `3c594fa2` | `fegome90-cmd/wo-0015-work` | `archive/branch-wo-0015-work-20260522` | PR #66 `refs/pull/66/head` |
-| `15bf2a3d` | tag `backup/wip-fulltext-fallback-audit` | `archive/tag-wip-fulltext-fallback-audit-20260522` | `git fetch origin <sha>` |
+| SHA (short) | Original Ref                             | Archive Tag                                          | Method                     |
+| ----------- | ---------------------------------------- | ---------------------------------------------------- | -------------------------- |
+| `d91a01ad`  | `codex/batch-2d-runtime-manager`         | `archive/branch-batch-2d-runtime-manager-20260522`   | PR #81 `refs/pull/81/head` |
+| `15761042`  | `codex/wo-remediation-ci-baseline`       | `archive/branch-wo-remediation-ci-baseline-20260522` | PR #78 `refs/pull/78/head` |
+| `3c594fa2`  | `fegome90-cmd/wo-0015-work`              | `archive/branch-wo-0015-work-20260522`               | PR #66 `refs/pull/66/head` |
+| `15bf2a3d`  | tag `backup/wip-fulltext-fallback-audit` | `archive/tag-wip-fulltext-fallback-audit-20260522`   | `git fetch origin <sha>`   |
 
 All tags are annotated with message: `Archive preserved SHA from git hygiene recovery audit 2026-05-22: <context>`.
 
@@ -17,10 +17,10 @@ All tags pushed to origin and verified via `git ls-remote --tags origin`.
 
 ## SHAs Already Preserved (No Action Needed)
 
-| SHA (short) | Existing Preservation | Verification |
-|-------------|----------------------|-------------|
-| `c5d8e937` | tag `archive/dirty-main-2025-01-06` on origin | `git rev-parse` confirms same commit |
-| `a8766aa9` | ancestor of `main` and `origin/main` | `git merge-base --is-ancestor` confirmed |
+| SHA (short) | Existing Preservation                         | Verification                             |
+| ----------- | --------------------------------------------- | ---------------------------------------- |
+| `c5d8e937`  | tag `archive/dirty-main-2025-01-06` on origin | `git rev-parse` confirms same commit     |
+| `a8766aa9`  | ancestor of `main` and `origin/main`          | `git merge-base --is-ancestor` confirmed |
 
 ## SHAs Irrecuperable — ACCEPTED RESIDUAL RISK
 
@@ -29,6 +29,7 @@ All tags pushed to origin and verified via `git ls-remote --tags origin`.
 **Context**: Branch with no associated PR, deleted during git-hygiene-cleanup. GC pruned the local object.
 
 **Recovery attempts**:
+
 1. `git ls-remote origin refs/heads/codex/wo-frictionless-closeout` → empty (branch deleted)
 2. `gh api repos/fegome90-cmd/trifecta_dope/git/commits/c9fca10a` → HTTP 404
 3. `git fetch origin c9fca10a68c4f8a6e3d0b5f4c2a1e9d8b7f6e5a4` → `remote error: upload-pack: not our ref`

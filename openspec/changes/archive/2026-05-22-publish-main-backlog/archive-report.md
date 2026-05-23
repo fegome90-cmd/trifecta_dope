@@ -25,5 +25,5 @@ Resolved 12 unpushed commits + dirty working tree. Deleted stale test file, giti
 
 ## Residual Follow-ups
 
-- `precommit-ctx-sync-fix` — hook regex causes dirty loop with _ctx/generated/ and _ctx/telemetry/
-- `ctx-generated-artifacts-gitignore-policy` — evaluate if _ctx/generated/ and _ctx/telemetry/ should be fully gitignored
+- `precommit-ctx-sync-fix` — hook regex causes dirty loop with \_ctx/generated/ and \_ctx/telemetry/
+- `ctx-generated-artifacts-gitignore-policy` — evaluate if \_ctx/generated/ and \_ctx/telemetry/ should be fully gitignored
